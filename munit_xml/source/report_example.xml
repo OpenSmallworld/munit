@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite errors="0" failures="0"
+       name="com.networksByteDesign.eMarket.inventory.salesItemTest"
+       tests="2" time="0.169">
+ <properties>
+  <property name="dirs.temp" value="/tmp"></property>
+  <property name="java.vm.version"
+             value="1.4.1_01-12"></property>
+  <property name="java.io.tmpdir" value="/tmp"></property>
+  <property name="os.name" value="Mac OS X"></property>
+  <property name="ant.home"
+             value="/usr/software/ant/"></property>
+             
+  ...
+
+ </properties>
+ <testcase name="testConstructor" time="0.0050"></testcase>
+ <testcase name="testSetter" time="0.0"></testcase>
+ <system-out><![CDATA[]]></system-out>
+ <system-err><![CDATA[]]></system-err>
+</testsuite>
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite errors="0" failures="1"
+       name="com.networksByteDesign.eMarket.inventory.customerTest"
+       tests="2" time="0.027">
+ <properties>
+  <property name="dirs.temp" value="/tmp"></property>
+  <property name="java.vm.version"
+             value="1.4.1_01-12"></property>
+  <property name="java.io.tmpdir" value="/tmp"></property>
+  <property name="os.name" value="Mac OS X"></property>
+  <property name="ant.home"
+             value="/usr/software/ant/"></property>
+             
+  <!-- ... -->
+
+ </properties>
+ <testcase name="testConstructor" time="0.0070">
+  <failure message="Expected exception was not thrown"
+             type="junit.framework.AssertionFailedError">
+        junit.framework.AssertionFailedError:
+          Expected exception was not thrown
+  at com.networksByteDesign.eMarket.inventory.customerTest.
+          testConstructor(Unknown Source)
+  at sun.reflect.NativeMethodAccessorImpl.
+          invoke0(Native Method)
+  at sun.reflect.NativeMethodAccessorImpl.
+          invoke(NativeMethodAccessorImpl.java:39)
+  at sun.reflect.DelegatingMethodAccessorImpl.
+          invoke(DelegatingMethodAccessorImpl.java:25)
+</failure>
+ <system-out><![CDATA[]]></system-out>
+ <system-err><![CDATA[]]></system-err>
+             
+  ...
+
+</testsuite>
+
+
+
+<failure message="expected:<43.0> but was:<41.0>" type="junit.framework.AssertionFailedError">junit.framework.AssertionFailedError: expected:<43.0> but was:<41.0>
+         at com.informit.unittest.metric.MetricTest.testMin(Unknown Source)
+</failure>

@@ -1,0 +1,146 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=restricted,topic=munit)
+def_slotted_exemplar(:colour_progress_bar_item,
+{
+	{:width,            _unset },  
+	{:height,           _unset },  
+	{:progress_label,   _unset },  
+	{:fill_colour,      _unset },
+	{:message_accessor, _unset}
+	
+},
+{:canvas_agent}
+)
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+colour_progress_bar_item.define_shared_constant(:green_bar_fill_style,	
+					 fill_style.new(colour.new_rgb(50/255,205/255,50/255)),
+					 :public)
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+colour_progress_bar_item.define_shared_constant(:red_bar_fill_style,	
+					 fill_style.new(colour.new_rgb(1,0,0)),
+					 :public)
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+colour_progress_bar_item.define_shared_constant(:blue_bar_fill_style,	
+					 fill_style.new(colour.new_rgb(0,0,1)),
+					 :public)
+$
+
+_pragma(classify_level=restricted, topic=munit_gui)
+_method colour_progress_bar_item.bar_fill_style
+
+	>> _self.perform(.fill_colour + :_bar_fill_style)	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic=munit_gui)
+_method colour_progress_bar_item.new(a_frame, _optional width, height , fill_colour , row , col)
+	
+	>> _clone.init(a_frame, width, height , fill_colour , row , col )
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic=munit_gui)
+_private _method colour_progress_bar_item.init(rc, width, height , fill_colour , row , col )
+		
+	_super.init(simple_progress_counter.new(),:size)
+
+	.message_accessor << message_handler.new( _self.class_name )
+	
+	.width       << width.default(100)
+	.height      << height.default(15)
+	.fill_colour << fill_colour.default(:blue)
+
+	.progress_label << label_item.new(rc, _self.message(:progress) + "  0%", :display_length, 15, :row , row , :col , col )
+	.window << canvas.new(rc,width,height,_self , :row , row+1 , :col , col )
+
+	_self.define_redraw(:|redraw()|,_self)
+	.window.retained? << _true 
+
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic=munit_gui)
+_method colour_progress_bar_item.value << a_val
+
+	.model.value << a_val
+	n_percent << .model.percent_complete.truncated
+
+	n_percent_str << _if n_percent < 10
+			 _then
+				 >> "  " + n_percent.write_string
+			 _elif n_percent < 100
+			 _then
+				 >> " " + n_percent.write_string
+			 _else 
+				 >> n_percent.write_string
+			 _endif
+	
+	.progress_label.label << _self.message(:progress) + n_percent_str +"%"
+
+	_self.redraw()
+_endmethod 
+$
+
+_pragma(classify_level=restricted, topic=munit_gui)
+_method colour_progress_bar_item.reset()
+	## Resets the progress bar, clearing the current display
+	
+	_if .window.realised? _then .window.clear() _endif 
+	_self.value << 0.0
+_endmethod 
+$
+
+_pragma(classify_level=restricted, topic=munit_gui)
+_method colour_progress_bar_item.redraw()
+
+	_if .window _isnt _unset _andif .window.realised?
+	_then
+		.window.transform << .window.world_transform(0,0,.width,.height)
+		.window.fill_line_transform(_self.bar_fill_style,_self.coordinate_rectangle)
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic=munit_gui)
+_private _method colour_progress_bar_item.coordinate_rectangle
+	
+	actual_width << (.model.percent_complete*.width)/100.0 	
+
+	>> coords_vector.new_with_xy(0,0,
+				     actual_width,0,
+				     actual_width,.height,
+				     0,.height,
+				     0,0)
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic=munit_gui)
+_method colour_progress_bar_item.set_fill_colour( a_colour )
+
+	.fill_colour << a_colour
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic=munit_gui)
+_private _method colour_progress_bar_item.message( name , _optional default , _gather args)
+
+	>> .message_accessor.human_string( name , default , _scatter args)
+_endmethod
+$
+
+
+
+
+
+
+
+

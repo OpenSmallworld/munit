@@ -1,0 +1,74 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=advanced,topic=m_test_unit,usage=subclassable)
+## A Decorator that runs a test repeatedly. 
+def_slotted_exemplar(:repeated_test,
+{
+	{ :times_repeat , _unset }
+},
+{:test_decorator}
+)
+$
+
+_pragma(classify_level=basic,topic=m_test_unit,usage=subclassable)
+_method repeated_test.new( a_test, repeat)
+	##
+	
+	>> _clone.init( a_test , repeat )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=m_test_unit,usage=subclassable)
+_private _method repeated_test.init( a_test , repeat )
+	## Initialise and return _self.
+	
+	_super.init( a_test )
+	.times_repeat << repeat
+	
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=m_test_unit,usage=subclassable)
+_method repeated_test.count_test_cases()
+	##  Counts the number of test cases that will be run by this test.
+
+	>> _super.count_test_cases() * .times_repeat
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=m_test_unit,usage=subclassable)
+_method repeated_test.run( a_test_result )
+	## Runs a test and collects its result in a test_result instance.
+
+	_for i _over 1.upto( .times_repeat )
+	_loop
+		_if a_test_result.should_stop?()
+		_then
+			_leave
+		_else 
+			_super.run( a_test_result )
+		_endif 
+	_endloop
+
+	>> a_test_result
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=m_test_unit)
+_method repeated_test.write_on( a_stream )
+	## Writes a description of self to A_STREAM.
+
+	_super.write_on( a_stream )
+	a_stream.write( "(repeated)" )
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=m_test_unit,usage=subclassable)
+_method repeated_test.infrastructure?
+	## Return true for children of test case.
+
+	>> _self _is repeated_test
+_endmethod
+$

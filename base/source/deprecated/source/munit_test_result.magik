@@ -1,0 +1,74 @@
+#% text_encoding = iso8859_1
+_package sw
+	 
+_pragma(classify_level=deprecated,topic=MUnit)
+##
+def_slotted_exemplar(:munit_test_result,
+{},
+{:mtest_result}
+)
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_result.error_count
+	## 
+
+	>> _self.error_count()
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_result.failure_count
+	## 
+
+	>> _self.failure_count()
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_result.was_successful?
+	## 
+
+	>> _self.was_successful?()
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_result.run_count
+	## 
+
+	>> _self.run_count()
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_result.failure_and_error_count
+	## 
+
+	>> _self.error_count() + _self.failure_count()
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_result.failures_and_errors
+	## 
+	##
+
+	result << rope.new()
+	
+	_for f _over _self.failures()
+	_loop
+		result.add_last( f )
+	_endloop
+
+	_for e _over _self.errors()
+	_loop
+		result.add_last( e )
+	_endloop
+
+	>> result
+_endmethod
+$
+
+
+

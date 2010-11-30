@@ -1,0 +1,106 @@
+#% text_encoding = iso8859_1
+_package sw
+	 
+_pragma(classify_level=deprecated,topic=MUnit)
+def_slotted_exemplar(:munit_test_suite,
+{},
+{:test_suite})
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_suite.new_for( a_test_case )
+	## 
+
+	>> _super.new( a_test_case )
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_private _method munit_test_suite.is_test_method?( a_method )
+	## 
+	
+	>> 	a_method.name.is_class_of?( symbol ) _andif 
+		a_method.name.matches?( "test*" ) _andif
+		a_method.value.is_kind_of?(procedure) _andif 
+		a_method.value.basic_arglist.size = 0
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_private _method munit_test_suite.test_method_name( a_method )
+	## 
+	
+	>> a_method.name.write_string
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_suite.run(_optional a_test_result)
+	## 
+
+	a_test_result << a_test_result.default( munit_test_result.new() )
+
+	a_test_result.notify_listeners( :start_suite , _self )
+
+	_for a_test _over _self.tests()
+	_loop
+		_if a_test_result.should_stop?()
+		_then
+			_leave
+		_else 
+			_self.run_test( a_test , a_test_result )
+		_endif 
+	_endloop
+
+	a_test_result.notify_listeners( :end_suite , _self )
+	
+	>> a_test_result
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_private _method munit_test_suite.init_from_test_case( a_test_case )
+	## Init tests from A_TEST_CASE.
+
+	_if _not a_test_case.is_kind_of?( test_case )
+	_then
+		a_warning << _self.warning( a_test_case.class_name +
+					    " is not subclass of test_case" )
+		_self.add_test(	a_warning )
+	
+	_elif a_test_case.method( :|new()| ).private?
+	_then
+		a_warning << _self.warning( "Class " +  a_test_case.class_name +
+					    " has no public constructor a_test_case.new( a_name ).")
+		_self.add_test(	a_warning )
+	_else 
+		_for a_method _over a_test_case.define_method_target.local_methods()
+		_loop
+			_self.add_test_method( a_method , a_test_case )
+		_endloop
+
+		_if .tests.size = 0
+		_then
+			a_warning << _self.warning( "No tests found in " + a_test_case.class_name )
+			_self.add_test( a_warning )
+		_endif 
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_suite.add_test_suite( a_test_case )
+	##  Adds a all tests from A_TEST_CASE to the suite.
+	
+	.tests.add( munit_test_suite.new( a_test_case ) )
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_suite.infrastructure?
+	## Return false for children of test case.
+
+	>> _self _is munit_test_suite
+_endmethod
+$
+

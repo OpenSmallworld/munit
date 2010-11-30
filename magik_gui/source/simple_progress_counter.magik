@@ -1,0 +1,63 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=restricted,topic=munit_gui)
+def_slotted_exemplar(:simple_progress_counter,
+{	
+	{:min_value , _unset , :readable }, 
+	{:max_value , _unset , :readable }, 
+	{:value     , _unset , :writable}  
+},{}
+)
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_method simple_progress_counter.new(_optional min_value , max_value , initial_value )
+
+	>>  _clone.init( min_value , max_value , initial_value )
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic=munit_gui)
+_private _method simple_progress_counter.init( min_value , max_value , initial_value )
+	
+	.min_value << min_value.default( 0.0 )
+	.max_value << max_value.default( 100.0 )
+	.value     << initial_value.default( 0.0 )
+
+	_self.range_check_values()
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_private _method simple_progress_counter.range_check_values()
+	
+	_if .max_value <= .min_value
+	_then
+		condition.raise(:user_error, :string, _self.message(:range_error,"Invalid value range"))
+
+	_elif .value < .min_value _orif .value > .max_value
+	_then
+		condition.raise(:user_error, :string, _self.message(:out_of_range_error,"Initial value out of range"))
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_method simple_progress_counter.percent_complete
+	
+	>> 100.0 * .value / (.max_value - .min_value)
+_endmethod 
+$
+
+
+
+
+
+
+
+
+
+

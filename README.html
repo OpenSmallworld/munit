@@ -1,0 +1,184 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<title>MUnit 3.0 </title>
+</head>
+
+<body>
+
+<h1><font color="#00FF00"><b>M</b></font><font color="#FF0000"><b>U</b></font><font
+color="#000000"><b>nit 3.0</b></font></h1>
+
+<hr>
+
+<p><font color="#000000">MUnit is a simple framework to write
+repeatable tests for GE Smallworld environment.
+It is an instance of the xUnit architecture for unit testing
+frameworks. </font></p>
+
+<ul>
+    <li><a href="#Contents"><font color="#000000">Contents</font></a></li>
+    <li><a href="#Installation"><font color="#000000">Installation</font></a></li>
+    <li><a href="#Getting"><font color="#000000">Getting Started</font></a></li>
+</ul>
+
+<h2><a name="Contents"></a><font color="#000000">Contents of the
+Release</font></h2>
+
+<table border="0" cellpadding="0" cellspacing="0">
+    <tr>
+        <td><font color="#000000" face="Times New Roman"><tt>README.html&nbsp;</tt></font></td>
+        <td><font color="#000000">:  this file</font></td>
+    </tr>
+    <tr>
+        <td><font color="#000000" face="Times New Roman"><tt>cpl-v10.html</tt></font></td>
+        <td>:  Common Public License - v 1.0 </td>
+    </tr>
+    <tr>
+        <td><font color="#000000" face="Times New Roman"><tt>base</tt></font></td>
+        <td><font color="#000000">:  the source code of the MUnit framework and text UI</font></td>
+    </tr>
+    <tr>
+        <td><font color="#000000" face="Times New Roman"><tt>munit_xml</tt></font></td>
+        <td><font color="#000000">:  the source code for reporting results to xml</font></td>
+    </tr>
+        <tr>
+        <td><font color="#000000" face="Times New Roman"><tt>magik_gui</tt></font></td>
+        <td><font color="#000000">:  the source code of the MUnit GUI</font></td>
+    </tr>
+</table>
+
+<h2><a name="Installation"></a><font color="#000000">Installation</font></h2>
+
+<p><font color="#000000">Below are the installation steps for
+installing MUnit: </font></p>
+
+<blockquote>
+    <ol>
+        <li>First, <a> download </a>
+            the latest version of MUnit, referred to below as <code>munit_XX.zip</code> from \\uranium\winroot\swdev\release\munit
+        </li>
+        <li>Unzip the <code>munit.zip</code> distribution file to
+            a directory of your choice. (e.g.
+            &quot;c:\munit&quot; )</li>
+        <li>Load module definition to image by <em>sw_module_manager.load_standalone_module_definition(
+            &quot;c:\munit\base&quot; )</em></li>
+        <li>Load MUnit module to image <em>sw_module_manager.load_module(
+            &quot;munit_base&quot; ) </em></li>
+    </ol>
+</blockquote>
+
+<blockquote>
+    <p>Optional</p>
+</blockquote>
+
+<blockquote>
+    <ol type="1" start="5">
+        <li>Load MUnit tests module definition to image by <em>sw_module_manager.load_standalone_module_definition(
+            &quot;c:\munit\tests&quot; )</em></li>
+        <li>Load test module to image <em>sw_module_manager.load_module(
+            &quot;munit_tests&quot; ) </em></li>
+	 
+	<a> and </a>  
+	 
+	<li>Load MUnit magik GUI  module definition to image	by <em>sw_module_manager.load_standalone_module_definition(
+            &quot;c:\munit\magik_gui&quot; )</em></li>
+        <li>Load MUunit magik GUI module to image <em>sw_module_manager.load_module(
+            &quot;munit_magik_gui&quot; ) </em></li>
+    </ol>
+</blockquote>
+
+<blockquote>
+    <blockquote>
+        <p>Test the installation by using either the textual or
+        graphical test runner to run the munit tests distributed
+        with MUnit. <br>
+        </p>
+    </blockquote>
+</blockquote>
+
+<blockquote>
+    <blockquote>
+        <ul type="disc">
+            <li>For the textual test_runner, type: </li>
+        </ul>
+    </blockquote>
+</blockquote>
+
+<blockquote>
+    <blockquote>
+        <blockquote>
+            <p>MagikSF&gt; test_runner.run(
+            all_munit_tests )<br>
+            $<br>
+            ........................................<br>
+	    ........................................<br>
+	    ......................................<br>
+            Time:  1 seconds 172 milliseconds <br>
+            OK (118 tests) [244 assertions]<br>
+            <br></p>
+        </blockquote>
+    </blockquote>
+</blockquote>
+
+<blockquote>
+    <blockquote>
+        <ul type="disc">
+            <li>For the graphical test_runner, type:</li>
+        </ul>
+        <blockquote>
+            <p>MagikSF&gt; test_runner_dialog.open()<br>
+            $<br>
+            a sw:test_runner_dialog </p>
+            <p>and select all_munit_tests suite and use
+            &quot;Run&quot; button to run unit tests.</p>
+            <p><img src="doc/faq/test_runner_dialog.jpg"
+            width="899" height="616"></p>
+        </blockquote>
+    </blockquote>
+</blockquote>
+
+<blockquote>
+    <p>All the tests should pass with an &quot;OK&quot; (textual)
+    or a green bar (graphical). </p>
+</blockquote>
+
+<h2><a name="Documentation"></a><font color="#000000">Documentation</font></h2>
+
+<blockquote>
+    <p><a href="cpl-v10.html"><font color="#000000">License</font></a><font
+    color="#000000"> <br>
+    &nbsp;&nbsp;&nbsp; The terms of the common public license
+    used for MUnit.</font></p>
+</blockquote>
+
+<h2><a name="Extending"></a><font color="#000000">Extending MUnit</font></h2>
+
+<p><font color="#000000">Examples of possible MUnit extensions
+can be found in the </font><font color="#000000"
+face="Times New Roman"><tt>munit/base/source/extensions</tt></font><font
+color="#000000"> directory: </font></p>
+
+<ul>
+    <li><font
+        color="#000000">test_decorator</font></a><font
+        color="#000000"> - A decorator for test. You can use it
+        as the base class for implementing decorators to extend
+        test cases.</font></li>
+    <li><font
+        color="#000000">active_test_suite</font></a><font
+        color="#000000"> - A test suite which runs each test in a
+        separate thread and waits until they are all terminated.</font></li>
+    <li><font
+        color="#000000">test_setup</font></a><font
+        color="#000000"> - A decorator to set up and tear down
+        additional fixture state. Subclass test setup and insert
+        it into your tests when you want to set up additional
+        state once before the tests are run.</font></li>
+</ul>
+
+<hr>
+</body>
+</html>

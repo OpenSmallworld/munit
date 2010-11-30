@@ -1,0 +1,36 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit)
+_method base_text_runner.int!run( a_test )
+
+	# If exemplar run suite.
+	_if a_test.exemplar _is a_test _andif
+	    ( a_test.is_kind_of?( munit_test_suite ) _orif
+	      a_test.is_kind_of?( test_case ) _orif
+	      a_test.is_kind_of?( munit_test_setup ) _orif
+	      a_test.is_kind_of?( munit_test_decorator ) )
+	_then 
+		a_test << a_test.suite()
+	_endif
+
+	.stream.write( newline_char )
+	run_time << _self.run_bare( a_test )
+
+	# write time
+	.stream.write( newline_char )
+	time << time_interval.new( 0 , (run_time*1000).floor )
+	.stream.write( newline_char )
+	.stream.write( "Time: ") 
+	time.write_on( .stream , 5 )
+	.stream.write( newline_char ) 
+
+	# print results 
+	_self.print()
+
+	# emulate_magik_prompt
+	.stream.write( newline_char )
+	_if .stream _is !terminal! _then .stream.write((magik_rep.prompt_generator)(_unset)) _endif 
+	.stream.flush()
+_endmethod
+$

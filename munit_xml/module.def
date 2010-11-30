@@ -1,0 +1,11 @@
+munit_xml 1
+
+description
+	MUnit XML Support
+end
+
+requires
+	munit_base 
+end
+
+language en_gb

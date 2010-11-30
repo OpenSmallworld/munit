@@ -1,0 +1,142 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit)
+## A test_failure collects a failed test together
+## with the caught condition and traceback text.
+def_slotted_exemplar(:test_failure,
+{
+	{ :failed_test,      _unset },
+	{ :raised_condition, _unset },
+	{ :traceback,        _unset },
+	{ :traceback_text,   _unset }
+})
+$
+
+_pragma(classify_level=debug)
+test_failure.define_slot_access( :traceback, :read, :public )
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method test_failure.new( a_test , a_condition )
+	## Constructs a test_failure with the given A_TEST and A_CONDITION
+
+	>> _clone.init( a_test , a_condition )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method test_failure.init( a_test , a_condition )
+	## Initialise and return _self.
+
+	.failed_test << a_test
+	.raised_condition << a_condition
+	_self.init_traceback_text()
+	
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method test_failure.init_traceback_text()
+	## Init slot .traceback_text.
+
+	_global !ts!
+	
+	a_stream << internal_text_output_stream.new()
+	_thisthread.traceback( a_stream , _true , _unset , _false   )
+	.traceback << !ts!
+	a_traceback_text << a_stream.string
+	a_traceback_text << a_traceback_text.slice( a_traceback_text.index_of(%-) , a_traceback_text.size )
+	.traceback_text << a_traceback_text
+
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method test_failure.failed_test()
+	## Gets the failed test.
+	
+	>> .failed_test
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method test_failure.raised_condition()
+	## Gets the raised condition.
+
+	>> .raised_condition
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method test_failure.full_traceback_text()
+	## 
+
+	>> .traceback_text
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method test_failure.short_traceback_text()
+	## Returns sliced traceback text.
+
+	start_index << .traceback_text.index_of_seq( "condition" )
+	
+	test_name <<  .failed_test.class_name.write_string + "."
+	_try test_method_name << .failed_test.get_method_name().default("")
+	_when error
+		test_method_name << ""
+	_endtry 
+	
+	test_name_size << test_name.size
+	_if  (an_index << .traceback_text.index_of_seq( test_name + test_method_name )) _isnt _unset 
+	_then
+		end_index << an_index + test_name_size + test_method_name.size
+		
+	_elif (an_index << .traceback_text.index_of_seq( test_name + "set_up()" )) _isnt _unset
+	_then
+		end_index  << an_index + test_name_size + "set_up()".size
+
+	_elif (an_index << .traceback_text.index_of_seq( test_name + "tear_down()" )) _isnt _unset
+	_then 
+		end_index <<  an_index + test_name_size + "tear_down()".size
+	_else
+		end_index << .traceback_text.size
+	_endif 
+		
+	>> .traceback_text.slice( start_index.default(1) , end_index.default(.traceback_text.size) )
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method test_failure.write_on( a_stream )
+	##  Write to A_STREAM a short description of the failure.
+
+	_if _self _is _self.exemplar
+	_then
+		_super.write_on( a_stream )
+	_else 
+		_self.failed_test().write_on( a_stream )
+		" : '".write_on( a_stream )
+		
+		_if _self.is_failure?()
+		_then
+			_self.raised_condition()[:message].default("").write_on( a_stream )
+		_else
+			_self.raised_condition().write_on( a_stream )
+		_endif
+		
+		%'.write_on( a_stream )
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method test_failure.is_failure?()
+	## Returns true if self is Failure and
+	## false if self is Error.
+
+	>> .raised_condition.name _is :assertion_failed_warning
+_endmethod
+$

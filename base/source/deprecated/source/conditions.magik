@@ -1,0 +1,58 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic, topic=MUnit, usage={external})
+condition.define_condition(:munit_error,
+			   :error,
+			   {},
+			   "")
+$
+_pragma(classify_level=basic, topic=MUnit, usage={external})
+condition.define_condition(:munit_warning,
+			   :warning,
+			   {},
+			   "")
+$
+_pragma(classify_level=basic, topic=MUnit, usage={external})
+condition.define_condition(:munit_assertion_failed_error,
+			   :munit_warning,    
+			   {:message},    
+			   "#1")
+$
+_pragma(classify_level=basic, topic=MUnit, usage={external})
+condition.define_condition(:munit_too_many_errors,
+			   :munit_error,    
+			   {:count},    
+			   "Maximum number of errors (#1) exceeded")
+$
+_pragma(classify_level=basic, topic=MUnit, usage={external})
+condition.define_condition(:munit_too_many_failures,
+			   :munit_error,    
+			   {:count},    
+			   "Maximum number of failures (#1) exceeded")
+$
+_pragma(classify_level=basic, topic=MUnit, usage={external})
+condition.define_condition(:munit_no_methods_error,
+			   :munit_error,    
+			   {:class},
+			   "No testable methods on class #1")
+$			   
+
+_pragma(classify_level=basic, topic=MUnit, usage={external})
+condition.define_condition(:munit_not_a_method_error,
+			   :munit_error,    
+			   {:method, :class},    
+			   "Method #1 on class #2 is not a valid testable method")
+$
+_pragma(classify_level=basic, topic=MUnit, usage={external})
+condition.define_condition(:munit_use_of_deprecated_method_warning,
+			   :munit_warning,    
+			   {:method},    
+			   "Method #1 is deprecated")
+$
+_pragma(classify_level=basic, topic=MUnit, usage={external})
+condition.define_condition(:munit_no_subclass_of_error,
+			   :munit_error,    
+			   {:class1, :class2},    
+			   "Class #1 is not a subclass of #2")
+$

@@ -1,0 +1,18 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=restricted,topic=MUnit)
+def_slotted_exemplar(:warning_test_case,{},:test_case)
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method warning_test_case.run_test()
+	## Fail with message.
+
+	_self.fail( .name )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+warning_test_case.define_shared_constant( :infrastructure? , _true , _false )
+$

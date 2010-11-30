@@ -1,0 +1,110 @@
+#% text_encoding = iso8859_15
+_package sw
+
+_pragma(classify_level=restricted,topic=MUnit)
+def_slotted_exemplar(:munit_xml_exception,
+{
+	{:message, "", :writable, :public},
+	{:type, "", :writable, :public},
+	{:text, "", :writable, :public}
+})
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+## text written out as a label for number of exceptions happend
+munit_xml_exception.define_shared_constant(:counter_text, "exceptions", :public)
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+munit_xml_exception.define_shared_constant(
+	:charmap,
+	{"‰ˆ¸ƒ÷‹ﬂ&","aouAOUs+"},
+	:private)
+$
+					   
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method munit_xml_exception.init(message, type, text)
+	## initialises a new exception item
+	## 
+	.message << message
+	.type << type
+	.text << text
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method munit_xml_exception.new(message, type, text)
+	## creates a new exception item
+	## 
+	>> _clone.init(message, type, text)
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method munit_xml_exception.code_string(str)
+	## replaces the special characters
+	## &      &amp;
+	## '      &apos;
+	## <      &lt;
+	## >      &gt;
+	## "      &quot;
+	_local codetab << property_list.new_with(
+				  %',"&apos;",
+				  %<,"&lt;",
+				  %>,"&gt;",
+				  %","&quot;")
+	_local amp << {%&,"&amp;"}
+	
+	_local newstr << char16_string.new_from(str)
+	_local i << 0
+	
+	# first replace all ampersands
+	_loop
+		_if (i << newstr.index_of(amp[1],i+1)) _is _unset
+		_then
+			_leave
+		_endif
+		newstr.replace_subseq(i,1,amp[2],1,amp[2].size)
+	_endloop
+	
+	# then the rest
+	_for c _over codetab.fast_keys()
+	_loop 
+		i << 0
+		_loop
+			_if (i << newstr.index_of(c,i+1)) _is _unset
+			_then
+				_leave
+			_endif
+			newstr.replace_subseq(i,1,codetab[c],1,codetab[c].size)
+		_endloop
+	_endloop
+	
+	>> newstr.as_charvec()
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method munit_xml_exception.coded_message()
+	## 
+	##
+	>> _self.code_string(.message)
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method munit_xml_exception.coded_text()
+	## 
+	##
+	>> _self.code_string(.text)
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method munit_xml_exception.coded_type()
+	## 
+	##
+	>> _self.code_string(.type)
+_endmethod
+$

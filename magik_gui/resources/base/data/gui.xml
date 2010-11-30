@@ -1,0 +1,37 @@
+<gui>
+
+    <toolbar name="modules">
+	<action name="load"/>
+	<action name="refresh"/>
+    </toolbar>
+    <toolbar name="tests">
+	<action name="run_test"/>
+	<action name="interrupt"/>
+	<action name="stop"/>
+	<action name="reset"/>
+	<action name="edit_method"/>
+	<action name="view_traceback"/>
+    </toolbar>
+    <toolbar name="results">
+	<action name="clear"/>
+    </toolbar>
+
+    <dock name="top">
+	<toolbar name="modules"/>
+	<toolbar name="tests"/>
+	<toolbar name="results"/>
+    </dock>
+
+    <work_area>
+	<self/>
+    </work_area>
+
+    <statusbar name="default">
+	<progress_bar id="progress" style="innie" width = "200"/>
+	<pane id="status_info" style="innie" width="200" springy="true"/>
+	<pane id="tests_info" style="innie" width="80"/>
+	<pane id="error_info" style="innie" width="80"/>
+	<pane id="failure_info" style="innie" width="80"/>
+    </statusbar>
+
+</gui>

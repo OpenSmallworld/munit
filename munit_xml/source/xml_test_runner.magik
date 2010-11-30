@@ -1,0 +1,183 @@
+#% text_encoding = iso8859_15
+_package sw
+
+remex(:xml_test_runner)
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+## XML test runner holds all info about testcases and suites
+## and triggers the actual testexecution
+## testcases - is a collection of all testcases done (indexed by
+## the testcase object
+## testfailures - is a collection of all failures happend (also
+## indexed by the testcase object)
+## testsuite - is a anchorpoint for a tree or testsuites with
+## testcases as leaves
+## current_testsuite - is the one under execution
+
+def_slotted_exemplar(:xml_test_runner,
+{
+	{:testsuite, _unset},
+	{:testcase, _unset},
+	{:anchor, _unset}
+},
+{:base_text_runner})
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method xml_test_runner.init( a_stream , _gather keys_and_elements )
+	## Init self with output !A_STREAM! and properties
+	## KEYS_AND_ELEMENTS.
+
+	.testcase << _unset
+	.testsuite << _unset 
+	>> _super.init(a_stream, _scatter keys_and_elements)
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit)
+_method xml_test_runner.start_test(a_test)
+	## Store info about start of A_TEST
+	##
+	
+	.testcase <<
+		munit_xml_testcase.new(
+			a_test.class_name,
+			a_test.get_name(),
+			.testsuite)
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit)
+_method xml_test_runner.end_test(a_test)
+	## Store info about end of A_TEST
+	##
+	
+	_super.end_test(a_test)
+	.testcase.end()
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method xml_test_runner.add_error( a_test_failure )
+	## Add error to testcase
+	##
+	
+	_local a_test << a_test_failure.failed_test()
+	.testcase.add_exception(
+		munit_xml_error.new(
+			a_test_failure.raised_condition()[:message],
+			a_test_failure.raised_condition().write_string, #.name, 
+			a_test_failure.full_traceback_text()))
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit)
+_method xml_test_runner.add_failure( a_test_failure )
+	## Add failure to testcase
+	##
+
+	_local a_test << a_test_failure.failed_test()
+	.testcase.add_exception(
+		munit_xml_failure.new(
+			a_test_failure.raised_condition()[:message].write_string,
+			a_test_failure.raised_condition().name, 
+			a_test_failure.full_traceback_text()))
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method xml_test_runner.add_info( info_string )
+	## Add info to testcase
+	##
+
+	.testcase.add_exception(
+		munit_xml_info.new(info_string))
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=munit)
+_method xml_test_runner.start_suite( a_test_suite )
+	## A_TEST_SUITE started below the current suite
+	##
+	
+	_local a_name << a_test_suite.get_name().default( a_test_suite.class_name )
+	.testsuite << munit_xml_testsuite.new(a_name, .testsuite)
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=munit)
+_method xml_test_runner.end_suite( a_test_suite )
+	## A_TEST_SUITE ended; switch to testsuite's parent
+	##
+	.anchor << .testsuite ^<< .testsuite.end()
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=munit)
+_method xml_test_runner.report_assert( _gather args )
+	# Do nothing
+	#fixme
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=munit)
+_method xml_test_runner.not_run_slow_test( a_test )
+	## Do nothing.
+	#fixme
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit)
+_method xml_test_runner.print()
+	## Prints XML representation to stream
+	##
+	
+	.anchor.write_on(.stream)
+
+	# fixme
+	# some more things to report?
+	# .test_result.error_count() -- testsuite.counter??
+	# .test_result.failure_count() ) -- testsuite.counter??
+	# .test_result.assert_count() --
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method xml_test_runner.int!run( a_test )
+
+	# If exemplar run suite.
+	_if a_test.exemplar _is a_test _andif
+	    ( a_test.is_kind_of?( munit_test_suite ) _orif
+	      a_test.is_kind_of?( test_case ) _orif
+	      a_test.is_kind_of?( munit_test_setup ) _orif
+	      a_test.is_kind_of?( munit_test_decorator ) )
+	_then 
+		a_test << a_test.suite()
+	_endif
+
+	run_time << _self.run_bare( a_test )
+
+	.stream.write("<?xml version=",%","1.0",%"," encoding=",%","ISO-8859-15",%"," ?>")
+	.stream.newline()
+
+	# print results 
+	_self.print()
+
+	# emulate_magik_prompt?
+#	.stream.write( newline_char )
+#	_if .stream _is !terminal! _then .stream.write((magik_rep.prompt_generator)(_unset)) _endif 
+#	.stream.flush()
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method xml_test_runner.run( a_test )
+	## Run test.
+	##
+	
+	_self.int!run( a_test )
+	
+_endmethod
+$
+

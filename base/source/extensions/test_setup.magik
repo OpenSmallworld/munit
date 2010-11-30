@@ -1,0 +1,57 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit)
+## A Decorator to set up and tear down additional fixture state.
+## Subclass test_setup and insert it into your tests when you want
+## to set up additional state once before the tests are run. 
+def_slotted_exemplar(:test_setup,
+{},
+{:test_decorator})
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method test_setup.run(_optional a_test_result)
+	## Runs a test and collects its result in a test_result instance.
+	
+	a_test_result << a_test_result.default( mtest_result.new() )
+	.test_result << a_test_result
+	a_test_result.run_protected( _self , :run_bare|()| )
+
+	>> a_test_result
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method test_setup.run_bare( a_test_result )
+	## Runs the bare setup sequence.
+
+	_self.set_up()
+	_self.basic_run( a_test_result )
+	_self.tear_down()
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_setup.set_up()
+	## Sets up the fixture.
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_setup.tear_down()
+	## Tears down the fixture.
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_setup.infrastructure?
+	## Implement interface method.
+	>> _self _is sw:test_setup
+_endmethod
+$
+
+
+
+
+

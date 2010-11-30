@@ -1,0 +1,11 @@
+munit_magik_gui 3
+
+description
+	MUnit GUI
+end
+
+requires
+	munit_base
+end
+
+language en_gb

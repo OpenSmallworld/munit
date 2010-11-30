@@ -1,0 +1,75 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+##  A listener for test progress.
+def_mixin(:test_listener_interface)
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_listener_interface.start_test( a_test )
+		  ## A_TEST started.
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_listener_interface.end_test( a_test )
+		  ## A_TEST ended.
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_listener_interface.add_error( a_test_failure )
+		  ## An error occurred.
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_listener_interface.add_failure( a_test_failure )
+		  ## A failure occurred. 
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_listener_interface.start_suite( a_test_suite )
+		  ## A_TEST_SUITE started.
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_listener_interface.end_suite( a_test_suite )
+		  ## A_TEST_SUITE ended.
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_listener_interface.report_assert( a_type ,
+							 left_operand , an_operator , right_operand ,
+							 a_message , result? )
+		  ## Report that assertion was executed
+		  ## A_TYPE - is type of assertion
+		  ## LEFT_OPERAND  - first operand ( usually actual value )
+		  ## AN_OPERATOR   - assertion operator ( example :is )
+		  ## RIGHT_OPERAND - second operand or aditional args ( usually
+		  ## expected value )
+		  ## A_MESSAGE - optional assertion text message
+		  ## RESULT?   - true if assertion successed or false if
+		  ## assertion failed
+		  ## For more details see assert.assert() method. 
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_listener_interface.not_run_slow_test( a_test )
+		  ## Notify listener that slow A_TEST was not executed.
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_listener_interface.add_info( info_string )
+		  ## Notify listener with INFO_STRING message.
+
+_endmethod
+$
+
+

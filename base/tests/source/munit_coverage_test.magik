@@ -1,0 +1,8 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_block
+	_global munit_coverage_test
+	munit_coverage_test << coverage_test.new( all_munit_tests , {:munit_base , :munit_tests})
+_endblock
+$

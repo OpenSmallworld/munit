@@ -1,0 +1,189 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=advanced,topic=munit_gui)
+def_slotted_exemplar(:tree_failures_lister,
+{
+	{ :test_result        , _unset },
+	{ :top_test_suite     , _unset },
+	{ :failed_tests       , _unset },
+	{ :current_test       , _unset },
+	{ :failed_suite_trees , _unset}
+},
+{})
+$
+
+_pragma(classify_level=advanced,topic=munit_gui)
+_method tree_failures_lister.new( _optional a_test_result , a_top_test_suite , failed_tests , current_test )
+
+	>> _clone.init( a_test_result , a_top_test_suite , failed_tests , current_test )
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=munit_gui)
+_method tree_failures_lister.init( a_test_result , a_top_test_suite , failed_tests , current_test )
+
+	.test_result << a_test_result
+	.top_test_suite  << a_top_test_suite
+	.failed_tests << failed_tests
+	.current_test << current_test
+	.failed_suite_trees << equality_set.new()
+
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=munit_gui)
+_method tree_failures_lister.get_display_list()
+
+	a_hierarchy_list << _self.tree_list(.top_test_suite)
+	
+	_for a_tree _over .failed_suite_trees.fast_elements()
+	_loop
+		a_tree.styled_string << { :image , {"error_hierarchy" , _self.module_name } , a_tree.key }
+	_endloop 
+
+	>> a_hierarchy_list
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_method tree_failures_lister.tree_list( a_test )
+
+	a_list << rope.new_for( smallworld_product.products.size )
+
+	_for a_product _over smallworld_product.products.fast_elements()
+	_loop
+		test_modules? << _false 
+
+		product_display_tree << display_tree.new( a_product , _unset )
+		product_display_tree.styled_string << {:image, { "product" , _self.module_name } , a_product.name.write_string }
+
+		_for a_module _over a_product.defined_modules.elements()
+		_loop
+			_if a_module.test_module?
+			_then
+				add_module? << _true 
+
+				_for t _over a_module.tests( :framework , :munit )
+				_loop
+					_if add_module?
+					_then
+						module_display_tree << display_tree.new( a_module , _unset , product_display_tree)
+						module_display_tree.styled_string << {:image, { "module" , _self.module_name } , a_module.name.write_string }
+						add_module? << _false 
+					_endif 	
+					
+					test_display_tree << display_tree.new( t , _unset , module_display_tree)
+					test_display_tree.styled_string << {:image, { "hierarchy" , _self.module_name } , t.name.write_string }
+
+					_for elem  _over t.args.split_by( %space ).elements()
+					_loop 
+						_if ( rt << !current_package![elem.as_symbol()] ) _isnt _unset
+						_then
+							_self.suite_tree_list( rt, test_display_tree )
+						_endif
+					_endloop 
+
+					test_modules? << _true 
+				_endloop
+			_endif 
+		_endloop
+		
+		_if test_modules?
+		_then 
+			a_list.add( product_display_tree )
+		_endif 
+	_endloop 
+
+	>> a_list
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_private _method tree_failures_lister.suite_tree_list( a_suite , _optional a_display_tree)
+
+	a_list << rope.new_for( a_suite.count_test_cases() )
+
+	suite_display_tree << display_tree.new( a_suite  , _unset, a_display_tree )
+	suite_display_tree.styled_string << {:image, { "hierarchy" , _self.module_name } , a_suite }
+
+	a_list.add( suite_display_tree)
+
+	_for a_test _over a_suite.tests()
+	_loop
+		_if a_test.is_kind_of?( test_suite )
+		_then
+			_self.suite_tree_list( a_test , suite_display_tree )
+		_else
+			a_display_tree << display_tree.new( a_test  , _unset, suite_display_tree )
+			a_icon_name << _self.icon_name_for_test( a_test , a_display_tree )
+			a_display_tree.styled_string << { :image, { a_icon_name , _self.module_name } , a_test }
+		_endif 
+	_endloop
+
+	>> a_list
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_private _method tree_failures_lister.icon_name_for_test( a_test , a_display_tree )
+
+	_if .test_result _isnt _unset _andif 
+	    ( _self.all_parents_suite_for( a_display_tree ).includes?(.current_test) _orif
+	    (  a_display_tree.key = .current_test _andif .current_test.is_kind_of?(test_case) ))
+	_then
+		_if (a_failure << .failed_tests[ a_test ]) _isnt _unset 
+		_then
+			_if a_failure.is_failure?()
+			_then
+				a_icon_name << "failure"
+			_else 
+				a_icon_name << "error"
+			_endif
+			
+			_self.define_parent_suites_to_red( a_display_tree  )
+		_else
+			a_icon_name << "ok"
+		_endif 
+	_else
+		a_icon_name << "test"
+	_endif	
+
+	>> a_icon_name
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_private _method tree_failures_lister.all_parents_suite_for( a_display_tree )
+
+	result << set.new()
+	a_suite_tree << a_display_tree.parent
+
+	_loop
+		result.add( a_suite_tree.key )
+		a_suite_tree << a_suite_tree.parent
+		_if a_suite_tree _is _unset _then _leave _endif
+	_endloop
+	
+	>> result
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_private _method tree_failures_lister.define_parent_suites_to_red( a_display_tree )
+
+	_if .current_test.is_kind_of?(test_suite)
+	_then
+		a_suite_tree << a_display_tree.parent
+		
+		_loop
+			.failed_suite_trees.add( a_suite_tree )
+			_if a_suite_tree.key _is .current_test _then _leave _endif 
+			
+			a_suite_tree << a_suite_tree.parent
+			_if a_suite_tree _is _unset _then _leave _endif
+		_endloop
+	_endif 
+_endmethod
+$

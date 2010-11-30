@@ -1,0 +1,100 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=advanced,topic=MUnit)
+def_slotted_exemplar(:coverage_test,
+{
+	{:module_names , _unset },
+	{:report_level , _unset }
+},
+{:test_setup})
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method coverage_test.new( a_test, module_names _optional report_level)
+	## 
+
+	>> _clone.init( a_test , module_names, report_level )
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method coverage_test.init( a_test , module_names, report_level )
+	##
+
+	_super.init( a_test )
+	.module_names << module_names
+	.report_level << report_level.default( :as_tests )
+
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method coverage_test.set_up()
+	##
+
+	_global coverage_analyser
+	.test_result.add_info( "Setting coverage analyser")
+	coverage_analyser.setup_module_analyser(_scatter .module_names)
+_endmethod 
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method coverage_test.tear_down()
+	## 
+
+	_global coverage_analyser
+	_global coverage_test_report
+
+	_if .report_level _is :as_tests
+	_then 
+		coverage_test_report.run( .test_result )
+	_else 
+		coverage_analyser.report( .report_level )
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method coverage_test.infrastructure? 
+	## Return false for all runnable children tests of test case.
+
+	>> _self _is sw:coverage_test
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+def_slotted_exemplar(:coverage_test_report,{},:test_case)
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+coverage_test_report.define_shared_constant(:infrastructure? , _true , _false )
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method coverage_test_report.run_test()
+	## 
+
+	_global coverage_analyser
+	
+	_for flag, package_name, class_name, method_name, module_name _over coverage_analyser.coverage()
+	_loop
+		_self.assert( flag , :|=| , _true ,
+			      class_name + %. + method_name + " no coverage" ,
+			      :assert_coverage )
+	_endloop 
+_endmethod
+$
+
+
+
+_block
+	_if !current_package!.global_at(:coverage_analyser).value _is _unset
+	_then
+		_try sw_module_manager.load_module("coverage_analyser")
+		_when sw_module_no_such_module
+		_endtry 
+	_endif 
+_endblock
+$

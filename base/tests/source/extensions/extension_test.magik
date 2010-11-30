@@ -1,0 +1,165 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug,topic=MUnit)
+##  A test case testing the extensions to the testing framework.
+def_slotted_exemplar(:extension_test,
+{
+	{ :wrapper , _unset }
+},
+{:test_case})
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method extension_test.test_running_error_in_test_setup() 
+
+	_local warning_test_case
+	warning_test_case << def_local_exemplar(:warning_test_case,{},{test_case})
+	warning_test_case.define_method( :run_test|()| ,
+					 _proc()
+						 _self.fail( _self.get_name() )
+					 _endproc , _true )
+	
+	a_failure << warning_test_case.new("failure")
+
+	wrapper << test_setup.new( a_failure )
+	a_test_result << mtest_result.new()
+	wrapper.run( a_test_result )
+
+	_self.assert( a_test_result.was_successful?() , :is , _false , "was successful?" )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method extension_test.test_running_errors_in_test_setup()
+
+	_local warning_test_case
+	warning_test_case << def_local_exemplar(:warning_test_case,{},{test_case})
+	warning_test_case.define_method( :run_test|()| ,
+					 _proc()
+						 _self.fail( _self.get_name() )
+					 _endproc , _true )
+
+	a_failure << warning_test_case.new("failure")
+	
+	_local error_test_case
+	error_test_case << def_local_exemplar( :error_test_case , {} , {test_case} )
+	error_test_case.define_method( :run_test|()| ,
+				       _proc()
+					       condition.raise(:error)
+				       _endproc,
+				       _true )
+	
+	a_error << error_test_case.new("error")
+
+	a_suite << test_suite.new()
+
+	a_suite.add_test( a_failure )
+	a_suite.add_test( a_error )
+
+	wrapper << test_setup.new( a_suite )
+	a_test_result << mtest_result.new()
+
+	wrapper.run( a_test_result )
+
+	_self.assert( 1 , :|=| , a_test_result.failure_count() , "failures" )
+	_self.assert( 1 , :|=| , a_test_result.error_count() , "errors" )	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method extension_test.test_setup_error_dont_tear_down()
+
+	_local was_run
+	was_run << def_local_exemplar( :was_run ,
+					       {
+						       { :was_run? , _false }
+					       },
+					       {test_case})
+	
+	was_run.define_method( :run_test|()| ,
+			       _proc()
+				       _self.was_run? << _true 
+			       _endproc , _true )
+
+	a_test << was_run.new( "" )
+
+	_local setup_error 
+	setup_error << def_local_exemplar(:setup_error,
+						  {
+							  { :torn_down? , _false }
+						  },
+						  {test_setup})
+	
+	setup_error.define_method( :set_up|()|,
+				   _proc()
+					   condition.raise (:error )
+				   _endproc , _true )
+
+	setup_error.define_method( :tear_down|()|,
+				   _proc()
+					   _self.torn_down? << _true
+				   _endproc , _true )
+	
+	wrapper << setup_error.new( a_test )
+
+	# run wrapper
+	a_test_result << mtest_result.new()
+	wrapper.run( a_test_result )
+
+	_self.assert( wrapper.torn_down? , :is , _false , "torn down?" )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method extension_test.test_setup_error_in_test_setup()
+
+	_local was_run
+	was_run << def_local_exemplar( :was_run ,
+					       {
+						       { :was_run? , _false }
+					       },
+					       {test_case})
+	
+	was_run.define_method( :run_test|()| ,
+			       _proc()
+				       _self.was_run? << _true 
+			       _endproc , _true )
+
+	a_test << was_run.new( "" )
+
+	_local setup_error
+	setup_error << def_local_exemplar(:setup_error,
+						  {
+							  { :torn_down? , _false }
+						  },
+						  {test_setup})
+	
+	setup_error.define_method( :set_up|()|,
+				   _proc()
+					   condition.raise (:error )
+				   _endproc , _true )
+	
+	setup_error.define_method( :tear_down|()|,
+				   _proc()
+					   _self.torn_down? << _true
+				   _endproc , _true )
+	
+	wrapper << setup_error.new( a_test )
+	
+	# run wrapper
+	a_test_result << mtest_result.new()
+	wrapper.run( a_test_result )
+	
+	_self.assert( a_test.was_run? , :is , _false , "was run?" )
+	_self.assert( a_test_result.was_successful?() , :is , _false , "was successful?" )
+_endmethod
+$
+
+
+
+
+
+
+
+

@@ -1,0 +1,105 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=advanced,topic=MUnit)
+## A test_suite for active tests. It runs each
+## test in a separate thread and waits until all
+## threads have terminated.
+def_slotted_exemplar(:active_test_suite,
+{
+	{ :active_test_death_count , 0 }
+},
+{:test_suite})
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+## Role name for test threads.
+active_test_suite.define_shared_constant(:role_for_active_test,
+					 :active_test,
+					 :public)
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method active_test_suite.run( _optional a_test_result )
+	## Runs a test and collects its result in A_TEST_RESULT instance. 
+
+	a_test_result << a_test_result.default( mtest_result.new() )
+
+	.active_test_death_count << 0
+	_super.run( a_test_result ) 
+	_self.wait_until_finished()
+			
+	>> a_test_result
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_private _method active_test_suite.run_test( a_test , a_test_result )
+	## Runs A_TEST in new thread
+	## and collects its result in A_TEST_RESULT instance.
+
+	a_role_name << _self.role_for_active_test
+	
+	_proc(  me , a_test , a_test_result )
+	
+		a_test.run( a_test_result )
+		me.run_finished( a_test )
+		
+	_endproc.fork_at(  _thisthread.vm_priority-1 , _self , a_test, a_test_result ).role << a_role_name
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method active_test_suite.wait_until_finished()
+
+	_lock _self 
+	      _loop
+		      _if .active_test_death_count < _self.test_count()
+		      _then
+			      _self.wait()
+		      _else
+			      _leave 
+		      _endif
+	      _endloop
+	_endlock 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method active_test_suite.run_finished( a_test )
+
+	_lock _self 
+	      .active_test_death_count + << 1
+	      _self.notify( _true )
+	_endlock 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method active_test_suite.kill_all_active_tests()
+	## Kill all active tests/threads create by any active_test_suite.
+	## Can be called on exemplar.
+
+	a_role_name << _self.role_for_active_test
+	
+	_for  a_thread _over system.known_threads()
+	_loop
+		_if a_thread.role _is  a_role_name
+		_then
+			a_thread.resume()
+			a_thread.kill()
+		_endif 
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method active_test_suite.infrastructure?
+	## Return false for children of active test suite.
+
+	>> _self _is active_test_suite
+_endmethod
+$
+
+
+

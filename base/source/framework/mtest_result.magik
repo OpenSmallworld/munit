@@ -1,0 +1,295 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit)
+## A mtest_result collects the results of executing a test case.
+## It is an instance of the Collecting Parameter pattern.
+## The test framework distinguishes between failures and errors.
+## A failure is anticipated and checked for with assertions.
+## Errors are unanticipated problems like "Index out of bounds".
+def_slotted_exemplar(:mtest_result,
+{
+	{ :errors              , _unset } ,
+	{ :failures            , _unset } ,
+	{ :listeners           , _unset } ,
+	{ :run_tests           , _unset } ,
+	{ :stop?               , _unset } ,
+	{ :exclude_slow_tests? , _unset } ,
+	{ :assert_count        , _unset }
+},{})
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.new( _optional exclude_slow_tests? )
+	## Constructs new mtest_result
+
+	>> _clone.init( exclude_slow_tests? )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method mtest_result.init( exclude_slow_tests? )
+	## Initialise and return _self.
+
+	.errors          << rope.new()
+	.failures        << rope.new()
+	.listeners       << rope.new()
+	.run_tests       << 0
+	.assert_count    << 0 
+	.stop?           << _false
+	.exclude_slow_tests? << exclude_slow_tests?.default( _false )
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.add_listener( a_test_listener )
+	## Registers a A_TEST_LISTENER 
+
+	.listeners.add( a_test_listener )
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.remove_listener( a_test_listener )
+	## Unregisters A_TEST_LISTENER
+
+	.listeners.remove( a_test_listener )				  
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method mtest_result.notify_listeners( a_message , _gather args )
+	## Informs listeners with A_MESSAGE with aditional ARGS.
+
+	_for a_listener _over .listeners.elements()
+	_loop
+		a_listener.perform( a_message + :|()| , _scatter args )
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.add_error( a_test , a_condition )
+	## Adds an error to the list of errors.
+	## The passed in A_CONDITION caused the error. 
+
+	a_test_failure << test_failure.new( a_test , a_condition )
+	.errors.add( a_test_failure )
+	_self.notify_listeners( :add_error , a_test_failure )
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.add_failure( a_test , a_condition )
+	## Adds a failure to the list of failures.
+	## The passed in A_CONDITION caused the failure.
+
+	a_test_failure << test_failure.new( a_test , a_condition )
+	.failures.add( a_test_failure )
+	_self.notify_listeners( :add_failure , a_test_failure )
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method mtest_result.add_info( info_string )
+	## Send INFO_STRING to listeners.
+
+	_self.notify_listeners( :add_info , info_string )
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.run( a_test )
+	## Runs A_TEST.
+
+	_if .exclude_slow_tests? _andif 
+	    a_test.get_name().matches?( "*slow*" ) 
+	_then
+		_self.notify_listeners( :not_run_slow_test ,  a_test )
+	_else
+		_self.start_test( a_test )
+		_self.run_protected( a_test , :run_bare|()|)
+		_self.end_test( a_test )
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method mtest_result.start_test( a_test )
+	## Informs the result that A_TEST will be started. 
+
+	.run_tests + << a_test.count_test_cases()
+	_self.notify_listeners( :start_test , a_test )
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method mtest_result.run_protected( a_test , a_protectable )
+	## Performs A_PROTECTABLE on A_TEST with errors handling.
+
+	_local me << _self
+	_local tag << "run".copy()
+
+	_catch tag
+	       
+	       _handling assertion_failed_warning
+	       _with _proc( a_condition )
+			     _import a_test, me
+			     me.add_failure( a_test, a_condition )
+	       _endproc
+
+	       _handling error
+	       _with _proc( a_condition )
+			     _import tag, a_test, me
+			     me.add_error( a_test, a_condition )
+			     _throw tag
+	       _endproc
+		    
+	       a_test.perform( a_protectable , _self )
+	_endcatch
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method mtest_result.end_test( a_test )
+	## Informs the result that A_TEST was completed.
+
+	_self.notify_listeners( :end_test ,  a_test )
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method mtest_result.report_assert( _gather args )
+	## Informs the result that assertation was executed.
+
+	.assert_count + << 1
+	_self.notify_listeners( :report_assert , _scatter args )
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.assert_count()
+	## Gets the number of executed assertations.
+ 
+	>> .assert_count
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.error_count()
+	## Gets the number of detected errors.
+ 
+	>> .errors.size
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_iter _method mtest_result.errors()
+	## Yields errors.
+
+	_for a_error _over .errors.elements()
+	_loop
+		_loopbody( a_error )
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.failure_count()
+	## Gets the number of detected failures.
+ 
+	>> .failures.size
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_iter _method mtest_result.failures()
+	## Yields failures.
+
+	_for a_failure _over .failures.elements()
+	_loop
+		_loopbody( a_failure )
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.run_count()
+	## Gets the number of run tests.
+ 
+	>> .run_tests
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.was_successful?()
+	## Returns whether the entire test
+	## was successful or not.
+
+	>> .errors.empty? _andif .failures.empty?
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.should_stop?()
+	## Checks whether the test run should stop.
+
+	>> .stop?
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method mtest_result.stop()
+	## Marks that the test run should stop.
+
+	.stop? << _true 
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method mtest_result.failures_for_test( a_test )
+	## Returns failures or/and error for A_TEST.
+
+	result << rope.new()
+
+	_for e _over _self.errors()
+	_loop
+		_if e.failed_test() = a_test
+		_then
+			result.add( e )
+		_endif 
+	_endloop
+	
+	_for f _over _self.failures()
+	_loop
+		_if f.failed_test() = a_test
+		_then
+			result.add( f )
+		_endif 
+	_endloop 
+
+	 >> result
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method mtest_result.debug_print_on( a_stream )
+	## 
+
+	_self.print_attributes_on( a_stream )
+
+	_if _not _self.was_successful?()
+	_then
+		all_failures << set.new_from( .errors )
+		all_failures.add_all( .failures )
+		
+		_for f _over all_failures.elements()
+		_loop
+			a_stream.write( f.full_traceback_text() )
+		_endloop 
+	_endif 
+_endmethod
+$
+

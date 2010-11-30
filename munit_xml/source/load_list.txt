@@ -1,0 +1,10 @@
+munit_xml_exception
+munit_xml_error
+munit_xml_failure
+munit_xml_info
+
+munit_xml_testcontainer
+munit_xml_testcase
+munit_xml_testsuite
+
+xml_test_runner

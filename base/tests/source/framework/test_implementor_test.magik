@@ -1,0 +1,65 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug,topic=MUnit)
+##  Test an implementor of test other than test_case or test_suite.
+def_slotted_exemplar(:test_implementor_test,
+{},
+{:test_case})
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method test_implementor_test.test_successful_run()
+
+	# Simple success test
+	_local success_test_case
+	success_test_case << def_local_exemplar( :success_test_case , {} , { test_case } )
+	success_test_case.define_method( :run_test|()| , _proc() _endproc , _true ) 
+
+	# Double success test
+	_local double_test_case
+	double_test_case << def_local_exemplar( :double_test_case ,
+						{
+							{ :test_case , _unset }
+						} ,
+						{ test_interface } )
+	double_test_case.define_method( :new|()| ,
+					_proc ( a_test_case )
+						>> _clone.init( a_test_case )
+					_endproc , _false )
+	
+	double_test_case.define_method( :init|()| ,
+					_proc ( a_test_case )
+						_self.test_case << a_test_case
+						>> _self
+					_endproc , _false )
+	
+	double_test_case.define_method( :count_test_cases|()| ,
+					_proc ()
+						>> 2
+					_endproc , _false )
+	
+	double_test_case.define_method( :run|()| ,
+					_proc ( a_result )
+						a_result.start_test( _self )
+						a_result.run_protected( _self , :run_bare|()| )
+						a_result.end_test( _self )
+					_endproc , _false )
+	
+	double_test_case.define_method( :run_bare|()| ,
+					_proc ()
+					  	_self.test_case.run_bare()
+						_self.test_case.run_bare()
+					_endproc , _false )
+	
+	# Define test instance		
+	a_test << double_test_case.new( success_test_case.new( "success" ))
+
+	a_result << mtest_result.new()
+	a_test.run( a_result )
+
+	_self.assert( a_test.count_test_cases() , :|=| , a_result.run_count() , "run count" )
+	_self.assert( 0 , :|=| , a_result.error_count() , "errors" )
+	_self.assert( 0 , :|=| , a_result.failure_count() , "failures" )
+_endmethod
+$

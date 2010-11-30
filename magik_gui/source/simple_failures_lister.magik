@@ -1,0 +1,75 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=restricted,topic=munit_gui)
+def_slotted_exemplar(:simple_failures_lister,
+{
+	{ :test_result , _unset }
+},
+{})
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_method simple_failures_lister.new( _optional a_test_result )
+
+	>> _clone.init( a_test_result )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_method simple_failures_lister.init( a_test_result )
+
+	.test_result << a_test_result
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_method simple_failures_lister.get_display_list()
+
+	_if _self.list_failures().size = 0
+	_then
+		a_hierarchy_list << {display_tree.new( "No failures" , _unset, _unset  )}
+	_else 
+		a_hierarchy_list << rope.new()
+		
+		_for a_failure _over _self.list_failures().elements()
+		_loop 
+			a_hierarchy_list.add(display_tree.new( a_failure , _unset, _unset  ))
+		_endloop 
+	_endif 
+
+	>> a_hierarchy_list
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=munit_gui)
+_method simple_failures_lister.list_failures()
+	
+	failures << rope.new()
+
+	_if .test_result _isnt _unset
+	_then
+		_for e _over .test_result.errors()
+		_loop
+			failures.add(e)
+		_endloop
+
+		_for f _over .test_result.failures()
+		_loop
+			failures.add(f)
+		_endloop 
+	_endif
+	
+	>> failures
+_endmethod
+$
+
+
+
+
+
+
+
+
+

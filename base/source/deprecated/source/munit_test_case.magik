@@ -1,0 +1,156 @@
+#% text_encoding = iso8859_1
+_package sw
+	 
+_pragma(classify_level=deprecated,topic=MUnit)
+def_slotted_exemplar(:munit_test_case,
+{
+	{:args,{}}
+},
+{:test_case,:munit_assert})
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_case.new( name _gather args )
+	##
+	
+	>> _clone.init( name , args )	
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_case.init( name _optional args )
+	##
+
+	.name << name
+	.args << args 
+
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_case.assert( _gather args )
+	## 
+
+	>> _super( munit_assert ).assert( _scatter args )
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_case.write_on( _gather args )
+	## 
+
+	>> _super( test_case ).write_on( _scatter args )
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_private _method munit_test_case.run_test()
+
+	_if .name _is _unset
+	_then
+		_self.fail( "Test method isn't defined." )
+	_endif 
+
+	a_method_name << .name.as_symbol() 
+	
+	_if _not _self.responds_to?( a_method_name )
+	_then
+		_self.fail( "Method " + .name + "() not found.")
+	_else
+		_self.perform( a_method_name , _scatter .args)
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_case.suite( _optional a_name )
+	## 
+
+	>> munit_test_suite.new( _self , a_name )
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_case.run( _optional a_test_result )
+
+	a_test_result << a_test_result.default( munit_test_result.new() )
+	.test_result << a_test_result
+
+	_dynamic !test_result!
+	!test_result! << a_test_result
+
+	_if _self.get_name() _is _unset 
+	_then 
+		_self.suite().run( a_test_result )
+	_else 
+		a_test_result.run( _self )
+	_endif 	
+
+	>> a_test_result
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_case.get_method_name()
+	## 
+
+	>> .name 
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_case.infrastructure?
+	## Return false for children of test case.
+
+	>> _self _is munit_test_case
+_endmethod
+$
+
+_pragma(classify_level=deprecated, topic=MUnit)
+_method munit_test_case.trace_print(level, a_string, _gather args)
+	## 
+	## Output a string but only if it is marked at a trace level
+	## equal to or greater than _self.trace level.
+	##
+	## Receives
+	##  LEVEL    The trace level for this output
+	##
+	##  A_STRING The string in message_handler.format_text_with format
+	##
+	##  ARGS     The list of arguments format_text_with will
+	##           substitute for in A_STRING
+	##
+	## This method may be placed in test code along with your own
+	## tracing levels. However, it is recommended that user defined
+	## trace output be given level 3 or higher.
+	##
+	## See also magik_unit.trace 
+	## 
+	## Returns
+	##  _true if trace output was given, _false otherwise
+	##
+
+	_self.write_info( message_handler.format_text_with( a_string, {_scatter args}) )
+_endmethod
+$
+
+_pragma(classify_level=deprecated, topic=MUnit)
+_method munit_test_case.minor_name
+	## 
+
+	>> _self.get_name()
+_endmethod
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method munit_test_case.infrastructure?
+
+	>> _self _is sw:munit_test_case
+_endmethod
+$
+
+
+
+
+
