@@ -17,7 +17,7 @@
 build_munit_gui:
 	title		= Add munit gui to %SW_MUNIT_IMAGE%
 	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
-	args		= %SW_MUNIT_IMAGE%
+	args		= swaf
 	product		= gis
 	SW_MAGIK_IMAGE_NAME = munit_gui
 #
