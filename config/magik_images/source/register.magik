@@ -56,7 +56,7 @@ _block
 
 		:image_file_name, "munit_gui",	
 		
-		:load_modules, {:munit_magik_gui, 4}
+		:load_modules, :munit_magik_gui
 		)
 
 	
