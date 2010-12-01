@@ -54,9 +54,9 @@ _block
 	magik_image.register_new(
 		"munit_gui",
 
-		:image_file_name, {"munit_gui", 4},	
+		:image_file_name, "munit_gui",	
 		
-		:load_modules, :munit_magik_gui
+		:load_modules, {:munit_magik_gui, 4}
 		)
 
 	
