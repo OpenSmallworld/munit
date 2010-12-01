@@ -55,6 +55,8 @@ _block
 		"munit_gui",
 
 		:image_file_name, "munit_gui",	
+
+		:add_products, :munit,
 		
 		:load_modules, :munit_magik_gui
 		)
