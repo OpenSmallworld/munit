@@ -13,9 +13,9 @@
 #	script		= %SMALLWORLD_GIS%/bin/share/RUN_GIS_TARGETS
 #	product		= gis
 ##
-swaf_test:
+munit_gui:
 	title		= Run Smallworld Application Framework
-	image		= swaf.msf
+	image		= munit_gui.msf
 	args		= -Mextdir %TEMP%
 	product		= gis
 #
