@@ -13,11 +13,16 @@
 #	script		= %SMALLWORLD_GIS%/bin/share/RUN_GIS_TARGETS
 #	product		= gis
 ##
-
+swaf_test:
+	title		= Run Smallworld Application Framework
+	image		= swaf.msf
+	args		= -Mextdir %TEMP%
+	product		= gis
+#
 build_munit_gui:
 	title		= Add munit gui to %SW_MUNIT_IMAGE%
 	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
-	args		= swaf
+	args		= swaf_test
 	product		= gis
 	SW_MAGIK_IMAGE_NAME = munit_gui
 #

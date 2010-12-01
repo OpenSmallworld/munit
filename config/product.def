@@ -1,10 +1,10 @@
-sw_core_config layered_product
+munit_config layered_product
 
 title
-	Core configuration product
+	MUnit configuration product
 end
 
 description
-	Core configuration product
+	Munit configuration product
 end
 
