@@ -1,0 +1,77 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+!global_auto_declare?! << _true
+$
+
+_block
+
+	_local run_munit_xml_test <<
+		_proc@run_munit_xml_test()
+			xml_output_dir << system.getenv("SW_MUNIT_XML_OUTPUT_DIR")
+			
+			sep_char << ";"
+			
+			test_modules << system.getenv("SW_MUNIT_MODULES").split_by(sep_char)
+			
+			test_classes << system.getenv("SW_MUNIT_CLASSES").split_by(sep_char)
+			
+			
+			_for a_test_module _over test_modules.fast_elements()
+			_loop
+				sw_module_manager.load_module( a_test_module )
+			_endloop
+			
+			
+			write("xml_output_dir - ", xml_output_dir)
+			_for a_test_class _over test_classes.fast_elements()
+			_loop
+				tr_path << system.pathname_down(xml_output_dir)
+				
+				output_path << system.name_new_file(system.pathname_down(tr_path, "module_name-"+a_test_class+".xml"))
+				
+				_protect
+					xml_output << external_text_output_stream.new(output_path)
+					
+					xml_runner << xml_test_runner.new( xml_output )
+					
+					write("### Running Test ", a_test_class)
+					xml_runner.run( a_test_class.evaluate() )
+					
+					
+				_protection 
+					xml_output.flush()
+					xml_output.close()
+				_endprotect
+				
+			_endloop 
+
+			    
+			    
+		_endproc
+
+	magik_image.register_new(
+		"munit_gui",
+
+		:image_file_name, "munit_gui",	
+		
+		:load_modules, :munit_magik_gui
+		)
+
+	
+	magik_image.register_new(
+		"run_munit_xml",
+		
+		:load_modules,
+		{
+			:munit_xml
+		},
+
+		:save_image_proc, run_munit_xml_test
+		
+		)
+
+_endblock
+$
+

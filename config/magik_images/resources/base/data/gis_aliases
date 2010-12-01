@@ -1,0 +1,31 @@
+# To get gis to add another path to SW_MSF_PATH automatically, we can do:
+# 1. In this file append a path to SW_GIS_ALIAS_FILES
+# or
+# 2. In environment and environment.bat files, append a path to SW_MSF_PATH
+#    c.f. Customer and development usage of SW_PRODUCT_PATHS
+#	SW_GIS_ALIAS_FILES = %SW_GIS_ALIAS_FILES%:%SMALLWORLD_GIS%/../unshipped/config/gis_aliases.image_build
+#	PARENT_IMAGES_DIR = %SMALLWORLD_GIS%/../unshipped/images
+#
+#
+
+#RUN_GIS_TARGETS:
+#	title		= Build all the gis_aliases targets given on gis command line
+#	script		= %SMALLWORLD_GIS%/bin/share/RUN_GIS_TARGETS
+#	product		= gis
+##
+
+build_munit_gui:
+	title		= Add munit gui to %SW_MUNIT_IMAGE%
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= %SW_MUNIT_IMAGE%
+	product		= gis
+	SW_MAGIK_IMAGE_NAME = munit_gui
+#
+
+test_munit_xml:
+	title		= run tests against a swaf image
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= %SW_MUNIT_IMAGE%
+	product		= gis
+	SW_MAGIK_IMAGE_NAME = run_munit_xml
+#

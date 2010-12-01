@@ -1,0 +1,10 @@
+sw_core_config layered_product
+
+title
+	Core configuration product
+end
+
+description
+	Core configuration product
+end
+
