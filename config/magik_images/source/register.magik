@@ -56,7 +56,7 @@ _block
 
 		:image_file_name, "munit_gui",	
 
-		:add_products, :munit,
+		:add_products, system.pathname_up(smallworld_product.product(:munit_config).directory),
 		
 		:load_modules, :munit_magik_gui
 		)
