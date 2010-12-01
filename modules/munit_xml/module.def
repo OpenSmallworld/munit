@@ -1,11 +1,11 @@
-munit_xml 1
+munit_xml 4
 
 description
 	MUnit XML Support
 end
 
 requires
-	munit_base 
+	munit_base 4
 end
 
 language en_gb
