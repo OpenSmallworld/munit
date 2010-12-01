@@ -21,7 +21,7 @@ munit_gui:
 
 base_test:
 	title		= Run Smallworld Application Framework
-	image		= base_test.msf
+	image		= base.msf
 	args		= -Mextdir %TEMP%
 	product		= gis
 
