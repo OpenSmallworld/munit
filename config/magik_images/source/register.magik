@@ -9,46 +9,28 @@ _block
 
 	_local run_munit_xml_test <<
 		_proc@run_munit_xml_test()
-			xml_output_dir << system.getenv("SW_MUNIT_XML_OUTPUT_DIR")
-			
-			sep_char << ";"
-			
-			test_modules << system.getenv("SW_MUNIT_MODULES").split_by(sep_char)
-			
-			test_classes << system.getenv("SW_MUNIT_CLASSES").split_by(sep_char)
-			
-			
-			_for a_test_module _over test_modules.fast_elements()
-			_loop
-				sw_module_manager.load_module( a_test_module )
-			_endloop
-			
-			
-			write("xml_output_dir - ", xml_output_dir)
-			_for a_test_class _over test_classes.fast_elements()
-			_loop
-				tr_path << system.pathname_down(xml_output_dir)
-				
-				output_path << system.name_new_file(system.pathname_down(tr_path, "module_name-"+a_test_class+".xml"))
-				
-				_protect
-					xml_output << external_text_output_stream.new(output_path)
-					
-					xml_runner << xml_test_runner.new( xml_output )
-					
-					write("### Running Test ", a_test_class)
-					xml_runner.run( a_test_class.evaluate() )
-					
-					
-				_protection 
-					xml_output.flush()
-					xml_output.close()
-				_endprotect
-				
-			_endloop 
+			#If a database was previously opened with this image start it
+			# up 
+			_if gis_program_manager.has_open_ace?
+			_then
+				startup()
+			_endif
 
-			    
-			    
+			_if _not sw_module_manager.module(:munit_xml).loaded?
+			_then
+				sw_module_manager.load_module(:munit_xml)
+			_endif
+			
+			#remove the manual key as we don't want to run tests than need
+			# special environments or don't clean up after themselves.
+			smallworld_product.remove_test_aspect(:manual)
+			sw_module_manager.load_test_modules( _true )
+		
+			properties << property_list.new_with(:test_runner_class, xml_test_runner.new(),
+							    :test_runner_method, :|run_in_new_stream()|)
+							    
+			smallworld_product.run_test_cases(properties)
+			
 		_endproc
 
 	magik_image.register_new(
