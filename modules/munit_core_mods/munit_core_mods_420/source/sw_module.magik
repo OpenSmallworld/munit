@@ -27,8 +27,26 @@ _method sw_module.test_module?
 
 	>> .properties[:tests_modules] _isnt _unset _andif
 		_not .properties[:tests_modules].empty?
-#	>> .test_data _isnt _unset _andif
-#		_not .test_data.empty?
-	
+
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method sw_module.run_test_cases( _optional properties )
+	##
+	## Run the tests in this module
+	##
+
+	run_properties << properties.default( property_list.new() )
+	run_class      << run_properties[:test_runner_class].default( test_runner )
+	run_method     << run_properties[:test_runner_method].default( :|run_in_foreground()| )
+	run_args       << run_properties[:test_runner_args].default( {} )
+
+	_for a_test _over _self.test_cases()
+	_loop
+		run_class.perform( run_method, a_test, _scatter run_args )
+	_endloop 
+			
 _endmethod
 $
