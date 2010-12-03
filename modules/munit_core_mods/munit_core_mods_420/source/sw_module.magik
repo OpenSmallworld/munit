@@ -85,3 +85,19 @@ _iter _method sw_module.test_cases()
 	
 _endmethod
 $
+
+
+_pragma(classify_level=restricted)
+_iter _method sw_module.loaded_tests()
+	##
+	## Yield all the tests for this module.
+	##
+
+	tf << test_suite_finder.new()
+	_for a_test _over tf.find_classes_for_module( .name ).fast_elements()
+	_loop
+		_loopbody( a_test )
+	_endloop
+	
+_endmethod
+$
