@@ -58,6 +58,21 @@ def_slotted_exemplar(:test_case,
 )
 $
 
+_pragma(classify_level=advanced)
+## A property_list of test aspects
+## Holds the aspects that the image must provide for this
+## test_case to run
+test_case.define_shared_constant( :test_aspects, property_list.new(), :public )
+$
+
+_pragma(classify_level=restricted, usage={subclassable})
+## The highest test number that will be looked for if the
+## suite_by_numbers() method is being used to find test suites.
+##
+## The default of 1024 should be enough for most test suites.
+test_case.define_shared_constant(:suite_by_numbers_limit, 1024, :private)
+$
+
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_case.new( a_name )
 	## Constructs a test case with the given A_NAME.
@@ -149,10 +164,12 @@ _private _method test_case.run_test()
 	_if .name _is _unset
 	_then
 		_self.fail( "Test method isnt defined" )
-
 	_elif _not _self.responds_to?( .name )
 	_then
 		_self.fail( "Method " + .name + " not found.")
+	_elif _not _self.runnable?()
+	_then 
+		# Test is not runnable - ignore the test.
 	_else
 		_self.perform( .name )
 	_endif 
@@ -167,14 +184,17 @@ _endmethod
 $
 
 _pragma(classify_level=advanced,topic=MUnit,usage=subclassable)
-_method test_case.suite( _optional a_name )
-	## Default implementation of suite for test case. Can be override.
-	## Constructs a test_suite with all own not private methods
-	## following name pattern "test*()" with given A_NAME.
+_method test_case.suite( _optional a_name, _gather suite_args)
+	
+	## Default implementation of suite for test case. Can be
+	## overriden.  Constructs a test_suite called A_NAME with the
+	## non-private methods matching the pattern "test*()".
+	##
+	## SUITE_ARGS are passed to the test_suite.new() method. 
 
 	a_name << a_name.default( _self.class_name )
 
-	>> test_suite.new( _self , a_name )
+	>> test_suite.new( _self , a_name, _scatter suite_args )
 _endmethod
 $
 
@@ -250,7 +270,7 @@ _iter _method test_case.tests()
 	_endif 
 _endmethod
 $
-_pragma(classify_level=restricted)
+_pragma(classify_level=restricted,topic=MUnit)
 _method test_case.reset_result()
 	##
 	## Reset the test_result slot
@@ -261,7 +281,7 @@ _method test_case.reset_result()
 _endmethod
 $
 
-_pragma(classify_level=restricted)
+_pragma(classify_level=restricted,topic=MUnit)
 _method test_case.value_for_display_tree( key )
 	##
 	## Returns the value to be used when the test is displayed as
@@ -309,7 +329,7 @@ _method test_case.value_for_display_tree( key )
 _endmethod
 $
 
-_pragma(classify_level=restricted)
+_pragma(classify_level=restricted,topic=MUnit)
 _method test_case.send_to_emacs()
 	##
 	## Send the method I refer to to emacs
@@ -323,3 +343,100 @@ _method test_case.send_to_emacs()
 _endmethod
 $
 
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.suite_by_numbers(_optional a_name, start, end)
+
+        ## Returns a test_suite called A_NAME which contains a series
+        ## tests which have names of the pattern "test_<n>()" and which
+        ## are run in order from START to END.
+	##
+	## To use this style of naming tests change your <subclass>.suite()
+	## method so it gathers its arguments then does:
+	##
+	## >> _self.suite_by_numbers(_scatter args)
+	## 
+        ## If START is given then it indicates which test to start
+        ## with, END gives the last test to run.  Both are inclusive.
+	##
+	## If neither START nor END are given then it will run all
+	## tests matching the pattern from test_1() sequentially until
+	## the _self.suite_by_numbers_limit value is passed (1024 by
+	## default).
+	##
+	## Examples:
+	##
+	## test_runner.run(datamodel_engine_test.suite(_unset, 5))
+	## test_runner.run(datamodel_engine_test.suite(_unset, 1, 6))
+	##
+	## If you use this method then you could also use
+	## write_test_banner() to output information about each test
+	## as it runs.  See that method for details.
+
+	suite_name << a_name.default( _self.class_name )
+	
+        result << test_suite.new(_unset, suite_name)
+	last   << end.default(start)
+
+	_for i _over start.default(1).upto(last.default(_self.suite_by_numbers_limit))
+        _loop
+		test_method_name << write_string("test_", i, "()").as_symbol()
+
+		_if _self.responds_to?(test_method_name)
+		_then
+			result.add_test(_self.new(test_method_name))
+		_endif
+        _endloop
+
+        >> result
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.write_test_banner(test_name_or_num, _optional comment)
+
+	## Print out a banner for a test to help mark where the test
+	## is starting in the CLI output.
+	##
+	## TEST_NUM_NAME_OR_NUM if the number or name of the test that
+	## is running.  Numbers will be displayed as "test_<m>()" and
+	## names will be output as they are given.
+	##
+	## COMMENT is a string to output explaining what the test does.
+
+	_if (name << test_name_or_num).is_class_of?(integer)
+	_then 
+		name << write_string("test_", test_name_or_num, "()").space_pad(9)
+	_endif 
+
+	write()
+	write("##################################################")
+	write("# Running method ", _self.class_name, %., name)
+	_if comment _isnt _unset
+	_then 
+		write("#")
+		write("# Comment: ", comment)
+	_endif 
+	write("##################################################",newline_char)
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit, usage={subclassable})
+_method test_case.runnable?( _optional test_name )
+	##
+	## Returns true if the test is runnable
+	## TEST_NAME is the name of a specific test.
+	## By default, a test is runnable if the image's test_aspects
+	## (as defined by smallworld_product.test_aspects) include all
+	## of my test_aspects.
+	##
+
+	# For now, tests without any aspects are not runnable
+	>> _if _self.test_aspects.empty?
+	   _then
+		   >> _true 
+	   _else 
+		   >> smallworld_product.test_aspect_keys().includes_all?( _self.test_aspects.keys )
+	   _endif
+	
+_endmethod
+$

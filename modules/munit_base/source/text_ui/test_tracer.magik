@@ -3,10 +3,10 @@ _package sw
 
 _pragma(classify_level=basic,topic=MUnit)
 def_slotted_exemplar(:test_tracer,
-{
-	{:level,0}
-},
-{:base_text_runner})
+	{
+		{ :level, 0 }
+	},
+	 :base_test_runner )
 $
 
 _pragma(classify_level=restricted,topic=MUnit)

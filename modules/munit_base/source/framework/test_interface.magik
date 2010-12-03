@@ -23,6 +23,18 @@ _abstract _method test_interface.run( _optional a_test_result )
 _endmethod
 $
 
+_pragma(classify_level=restricted,topic=MUnit, usage={subclassable})
+_abstract _method test_interface.runnable?( _optional test_name )
+	##
+	## Returns true if the test is runnable
+	## TEST_NAME is the name of a specific test.
+	## By default, a test is runnable if the image's test_aspects
+	## (as defined by smallworld_product.test_aspects) include all
+	## of my test_aspects.
+	##
+_endmethod
+$
+
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _abstract _iter _method test_interface.tests()
 	## Returns all runnable tests of self.

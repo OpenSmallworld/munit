@@ -63,3 +63,27 @@ _private _method test_suite_finder.find_all_suitable_suites()
 	>> .test_suites
 _endmethod
 $
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_suite_finder.find_classes_for_module( module_name )
+	##
+	## Return a rope containing all the test_suite owners in the
+	## module MODULE_NAME
+	##
+
+	result << rope.new()
+		
+	_for a_test_suite_owner_name _over .test_suites.keys()
+	_loop
+		a_class << get_global_value( a_test_suite_owner_name )
+		_if a_class _isnt _unset _andif
+		    a_class.module_name _is module_name
+		_then 
+			result.add( a_class )
+		_endif 
+	_endloop 
+
+	>> result
+	
+_endmethod
+$
+

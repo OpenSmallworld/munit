@@ -129,36 +129,52 @@ $
 _pragma(classify_level=advanced,topic=MUnit)
 _private _method assert.assert_raised_condition( condition_name , an_object , method_name ,
 						 _optional args , a_message )
+
 	## Expects that error, warning or information with
-	## CONDITION_NAME will be raised by invocation of
-	## method METHOD_NAME on AN_OBJECT. ARGS for method
-	## are optional and should be defined as simple vector.
-	## If method doesn't fail then condition ASSERTION_FAILED_WARNING
-	## is raised with the given A_MESSAGE.
-	## If other condition is raised than it continues with handling of
-	## that condition by testing framework.
-	## If WARNING or INFORMATION is expected then returns all
-	## results of tested method.
+	## CONDITION_NAME will be raised by invocation of method
+	## METHOD_NAME on AN_OBJECT.
+	##
+	## If method doesn't fail then condition
+	## ASSERTION_FAILED_WARNING is raised with the given
+	## A_MESSAGE.  If other condition is raised than it continues
+	## with handling of that condition by testing framework.
+	##
+	## If WARNING or INFORMATION is expected then it returns all
+	## results of the tested method.
+	##
+	## ARGS for method are optional and should be defined as simple
+	## vector.
 
 	args << args.default( {} )
 
-	_local tag << "tag".copy()
-	_local result? << _maybe
-	_local results << {}
+	_local tag         << "tag".copy()
+	_local cond_seen?  << _false
+	_local actual_cond << _unset
 	
 	_protect 
-		actual_cond << _catch tag 
+		_catch tag 
 		       _handling error , warning , information _with 
 		       _proc( a_condition )
-			       
-			       _import condition_name , tag , result?
-			       
-			       _if _not ( result? << a_condition.taxonomy.includes?( condition_name ) )
+
+			       _import condition_name, tag,  actual_cond, cond_seen?
+
+			       _if a_condition.taxonomy.includes?( condition_name )
 			       _then
-				       a_condition.continue_handling()
+				       # We have the searched for condition, take note of it
+				       actual_cond    << a_condition.name
+				       cond_seen?     << _true
+
+				       _if actual_cond _is :assertion_failed_warning
+				       _then _return # You get false positives if this continues handling
+				       _elif _not a_condition.continuable?
+				       _then _throw tag   
+				       _endif 
+			       _else
+				       # Take note of the condition name if it's the first one we have
+				       # seen. This is to make the report clearer.
+				       actual_cond  << actual_cond.default(a_condition.name)
 			       _endif
-			       
-			       _if _not a_condition.continuable? _then _throw tag _with a_condition.name _endif 
+			       a_condition.continue_handling()
 		       _endproc
 
 		       results << _allresults an_object.sys!perform( method_name , _scatter args )
@@ -167,18 +183,17 @@ _private _method assert.assert_raised_condition( condition_name , an_object , me
 		default_message << write_string( "Condition '", condition_name, "' = '", actual_cond, "'")
 		a_message << _self.format_message(a_message, default_message)
 
-		_if result? _is _maybe
+		_if _not cond_seen?
 		_then
-			result? << _false 
 			_self.fail( a_message )
 		_endif
 	_protection
 		_self.int!report_assert( :assert_raised_condition ,
 				     condition_name , _unset , _unset ,
-				     a_message , result? )
+				     a_message , cond_seen? )
 	_endprotect 
 	
-	_return _scatter results
+	>> _scatter results.default({})
 _endmethod
 $
 _pragma(classify_level=advanced,topic=MUnit)
@@ -283,6 +298,92 @@ _method assert.assert_not_unset( expected, _optional a_string )
 	## Assert that EXPECTED is not unset
 
 	>> _self.assert( expected, :isnt, _unset, a_string, :assert_not_unset )
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_private _method assert.assert_raised_all_conditions(
+			 condition_names , an_object , method_name ,
+			 _optional args , a_message )
+	## Expects that errors, warnings or information with
+	## CONDITION_NAMES will all be raised by invocation of
+	## method METHOD_NAME on AN_OBJECT. ARGS for method
+	## are optional and should be defined as simple vector.
+	## If method doesn't fail then condition ASSERTION_FAILED_WARNING
+	## is raised with the given A_MESSAGE.
+	## If other condition is raised than it continues with handling of
+	## that condition by testing framework.
+	## If WARNING or INFORMATION is expected then returns all
+	## results of tested method.
+
+	args << args.default( {} )
+
+	_local tag << "tag".copy()
+	_local results << {}
+	condition_names << set.new_with( _scatter condition_names )
+	_local conditions_to_raise << set.new_with( _scatter condition_names )
+	_local conditions_raised << set.new()
+	
+	_protect 
+		actual_cond <<
+			_catch tag 
+			       _handling error , warning , information _with 
+			       _proc( a_condition )
+				       
+				       _import condition_names
+				       _import conditions_to_raise
+				       _import conditions_raised, tag
+				       
+				       _if _not a_condition.taxonomy.includes_any?( condition_names )
+				       _then
+					       conditions_raised.add(condition.name)
+					       a_condition.continue_handling()
+				       _else
+					       _for cond_name _over a_condition.taxonomy.fast_elements()
+					       _loop					       
+						       _if (conditions_to_raise.remove(cond_name))
+						       _then
+							      conditions_raised.add(cond_name)
+							      _leave
+						       _endif
+					       _endloop
+				       _endif
+				       
+				       _if _not a_condition.continuable?
+				       _then
+					       _throw tag _with a_condition.name
+				       _endif 
+			       _endproc
+
+			       results << _allresults an_object.sys!perform( method_name , _scatter args )
+			_endcatch 
+
+		default_message << write_string(
+					   "Conditions {",
+					   condition_names.as_simple_vector().join_as_strings(","),
+					   "} != {",
+					   conditions_raised.as_simple_vector().join_as_strings(","), "}")
+		a_message << _self.format_message(a_message, default_message)
+
+		_if _not conditions_raised.difference( condition_names ).empty? _orif
+		    _not condition_names.difference( conditions_raised ).empty?
+		_then
+			result? << _false 
+			_self.fail( a_message )
+		_endif
+	_protection
+		_self.int!report_assert( :assert_raised_all_conditions ,
+					 condition_names , _unset , _unset ,
+					 a_message , result? )
+	_endprotect 
+
+	_if _not results.empty?
+	_then 
+		_return _scatter results
+	_else
+		_return _unset
+	_endif
+	
 _endmethod
 $
 

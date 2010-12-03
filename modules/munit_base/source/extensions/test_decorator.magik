@@ -56,6 +56,16 @@ _private _method test_decorator.basic_run( _optional a_test_result )
 _endmethod
 $
 
+_pragma(classify_level=restricted,topic=MUnit, usage={subclassable})
+_method test_decorator.runnable?( _optional test_name )
+	##
+	## Returns true if the test is runnable
+	## decorators are runnable as the check is performed for each test
+	##
+	>> _true 
+_endmethod
+$
+
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_decorator.run( _optional a_test_result )
 	## Runs a test and collects its result in A_TEST_RESULT instance.

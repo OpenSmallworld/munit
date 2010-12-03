@@ -20,10 +20,10 @@ _pragma(classify_level=basic,topic=MUnit)
 ##
 ## Can be used as singleton.
 def_slotted_exemplar(:test_runner,
-{
-	{ :column, 0 }
-},
-{ :base_text_runner })
+	{
+		{ :column, 0 }
+	},
+	:base_test_runner )
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
@@ -37,11 +37,13 @@ _endmethod
 $
 
 _pragma(classify_level=basic,topic=MUnit)
-_method test_runner.run( a_test )
-	## Runs the given A_TEST.
+_method test_runner.run( a_test, _gather suite_args )
 
+	## Runs the given A_TEST.  See base_text_runner.run() for more
+	## information.
+	
 	.column << 0
-	_super.run( a_test )
+	_super.run( a_test, _scatter suite_args)
 _endmethod
 $
 

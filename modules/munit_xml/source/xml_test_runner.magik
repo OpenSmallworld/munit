@@ -21,7 +21,7 @@ def_slotted_exemplar(:xml_test_runner,
 	{:testcase, _unset},
 	{:anchor, _unset}
 },
-{:base_text_runner})
+{:base_test_runner})
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
@@ -144,30 +144,13 @@ _endmethod
 $
 
 _pragma(classify_level=basic,topic=MUnit)
-_method xml_test_runner.int!run( a_test )
-
-	# If exemplar run suite.
-	_if a_test.exemplar _is a_test _andif
-	    ( a_test.is_kind_of?( munit_test_suite ) _orif
-	      a_test.is_kind_of?( test_case ) _orif
-	      a_test.is_kind_of?( munit_test_setup ) _orif
-	      a_test.is_kind_of?( munit_test_decorator ) )
-	_then 
-		a_test << a_test.suite()
-	_endif
-
-	run_time << _self.run_bare( a_test )
-
+_method xml_test_runner.output_run_time( run_time )
+	## 
+	## 
 	.stream.write("<?xml version=",%","1.0",%"," encoding=",%","ISO-8859-15",%"," ?>")
 	.stream.newline()
-
-	# print results 
+	
 	_self.print()
-
-	# emulate_magik_prompt?
-#	.stream.write( newline_char )
-#	_if .stream _is !terminal! _then .stream.write((magik_rep.prompt_generator)(_unset)) _endif 
-#	.stream.flush()
 _endmethod
 $
 

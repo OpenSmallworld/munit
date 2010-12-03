@@ -27,25 +27,38 @@ def_slotted_exemplar(:test_suite,
 $
 
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
-_method test_suite.new( _optional a_test_case , a_name )
-	## Constructs an empty test_suite with given A_NAME.
-	## Given A_TEST_CASE creates a suite with all not private methods
-	## following name pattern "test*()".
+_method test_suite.new( _optional a_test_case , a_name, method_names)
 
-	>> _clone.init( a_test_case , a_name )
+	## Constructs a new test_suite called A_NAME.
+	##
+	## By default the suite will search A_TEST_CASE for non-private
+	## methods following the pattern "test*()", it will register
+	## those methods as being part of the suite.
+	##
+	## If METHOD_NAMES are given then the suite will only contain
+	## those methods.
+
+	>> _clone.init( a_test_case, a_name, method_names )
 _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
-_private _method test_suite.init(_optional a_test_case , a_name )
-	## Initialise and return _self.
+_private _method test_suite.init(_optional a_test_case , a_name, method_names)
+
+	## Initialise and return _self. See the new() method for
+	## details.
+
+	_if (meth_names << method_names).is_class_of?(:symbol)
+	_then
+		meth_names << {meth_names}
+	_endif 
 
 	.tests << rope.new()
 
 	_if a_test_case _isnt _unset
 	_then
 		.name << a_name.default( a_test_case.class_name )
-		_self.init_from_test_case( a_test_case )
+		_self.init_from_test_case( a_test_case, meth_names)
 	_else
 		.name << a_name
 	_endif
@@ -82,6 +95,17 @@ _method test_suite.count_test_cases()
 	_endloop
 
 	>> count
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit, usage={subclassable})
+_method test_suite.runnable?( _optional test_name )
+	##
+	## Returns true if the suite is runnable
+	## suites are runnable as the check is performed for each test
+	## in the suite
+	##
+	>> _true 
 _endmethod
 $
 
@@ -165,9 +189,14 @@ _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method test_suite.init_from_test_case( a_test_case )
-	## Init tests from A_TEST_CASE.
+_private _method test_suite.init_from_test_case( a_test_case, _optional method_names)
 
+	## Init tests from A_TEST_CASE.
+	##
+	## If METHOD_NAMES is given then only those methods will be
+	## part of the suite.  Note that their names still have to
+	## follow the pattern "test_*()" otherwise they will be ignored.
+	
 	_if _not a_test_case.is_kind_of?( test_case )
 	_then
 		a_message << a_test_case.class_name + " is not subclass of test_case."
@@ -179,6 +208,15 @@ _private _method test_suite.init_from_test_case( a_test_case )
 			     " has no public constructor a_test_case.new( a_name )."
 
 		_self.add_test( _self.warning( a_message ) )
+	_elif _not method_names.default({}).empty?
+	_then
+		_for meth_name _over method_names.fast_elements()
+		_loop
+			_if (meth << a_test_case.method(meth_name)) _isnt _unset
+			_then 
+				_self.add_test_method( meth, a_test_case )
+			_endif 
+		_endloop 
 	_else 
 		_for a_method _over a_test_case.define_method_target.elements()
 		_loop
@@ -219,7 +257,8 @@ _private _method test_suite.is_test_method?( a_method )
 	
 	>> a_method.name.is_class_of?( symbol ) _andif 
 		a_method.name.matches?( "test*" ) _andif
-		a_method.name _isnt :|tests()|
+		a_method.name _isnt :|tests()| _andif
+		a_method.name _isnt :|test_aspects|
 		
 _endmethod
 $

@@ -5,4 +5,3 @@ munit_test_suite
 munit_test_result
 munit_test_setup
 munit_test_decorator
-magik_unit
