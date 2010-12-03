@@ -48,10 +48,28 @@ build_munit_base:
 	SW_MAGIK_IMAGE_NAME = munit_gui
 #
 
-run_munit_tests:
+run_munit_product_tests:
 	title		= run tests against a swaf image
 	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
 	args		= munit_gui
 	product		= gis
-	SW_MAGIK_IMAGE_NAME = run_munit_xml
+	SW_MAGIK_IMAGE_NAME = run_munit_product_tests
 #
+
+add_munit_and_run_unit_tests:
+	title		= run tests against a swaf image
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= %SW_MUNIT_IMAGE%
+	product		= gis
+	SW_MAGIK_IMAGE_NAME = run_munit_and_run_unit_tests:
+#
+add_munit_and_run_system_tests:
+	title		= run tests against a swaf image
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= %SW_MUNIT_IMAGE%
+	product		= gis
+	SW_MAGIK_IMAGE_NAME = run_munit_and_run_system_tests:
+#
+
+
+

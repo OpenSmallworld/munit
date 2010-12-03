@@ -7,8 +7,8 @@ $
 
 _block
 
-	_local run_munit_xml_test <<
-		_proc@run_munit_xml_test()
+	_local run_munit_product_tests <<
+		_proc@run_munit_product_tests()
 			#If a database was previously opened with this image start it
 			# up 
 			_if gis_program_manager.has_open_ace?
@@ -35,6 +35,52 @@ _block
 			
 		_endproc
 
+	_local run_unit_tests <<
+		_proc@run_unit_tests()
+			#If a database was previously opened with this image start it
+			# up 
+			_if gis_program_manager.has_open_ace?
+			_then
+				startup()
+			_endif 
+			
+			#remove the manual key as we don't want to run tests than need
+			# special environments or don't clean up after themselves.
+			smallworld_product.remove_test_aspect(:manual)
+			smallworld_product.remove_test_aspect(:system_test)
+
+			sw_module_manager.load_test_modules( _true )
+		
+			properties << property_list.new_with(:test_runner_class, xml_test_runner.new(),
+							    :test_runner_method, :|run_in_new_stream()|)
+
+			smallworld_product.products[:munit].run_test_cases(properties)
+			
+		_endproc
+
+	_local run_system_tests <<
+		_proc@run_system_tests()
+			#If a database was previously opened with this image start it
+			# up 
+			_if gis_program_manager.has_open_ace?
+			_then
+				startup()
+			_endif 
+			
+			#remove the manual key as we don't want to run tests than need
+			# special environments or don't clean up after themselves.
+			smallworld_product.remove_test_aspect(:manual)
+			smallworld_product.add_test_aspect(:system_test)
+
+			sw_module_manager.load_test_modules( _true )
+		
+			properties << property_list.new_with(:test_runner_class, xml_test_runner.new(),
+							    :test_runner_method, :|run_in_new_stream()|)
+
+			smallworld_product.products[:munit].run_test_cases(properties)
+			
+		_endproc
+
 	magik_image.register_new(
 		"munit_gui",
 
@@ -47,16 +93,44 @@ _block
 
 	
 	magik_image.register_new(
-		"run_munit_xml",
+		"run_munit_product_tests",
 		
 		:load_modules,
 		{
 			:munit_xml
 		},
 
-		:save_image_proc, run_munit_xml_test
+		:save_image_proc, run_munit_product_tests
 		
-		)
+		    )
+
+	magik_image.register_new(
+		"add_munit_and_run_unit_tests",
+		
+		:add_products, system.pathname_up(smallworld_product.product(:munit_config).directory),
+
+		:load_modules,
+		{
+			:munit_xml
+		},
+		
+		:save_image_proc, run_unit_tests
+		
+		    )
+
+	magik_image.register_new(
+		"add_munit_and_run_system_tests",
+		
+		:add_products, system.pathname_up(smallworld_product.product(:munit_config).directory),
+
+		:load_modules,
+		{
+			:munit_xml
+		},
+		
+		:save_image_proc, run_system_tests
+		
+		    )
 
 _endblock
 $
