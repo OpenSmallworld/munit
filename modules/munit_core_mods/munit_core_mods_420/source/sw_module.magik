@@ -18,3 +18,17 @@ _method sw_module.tested_modules_loaded?
 		
 _endmethod
 $
+
+_pragma(classify_level=restricted)
+_method sw_module.test_module?
+	##
+	## Returns true if the module contains test data
+	##
+
+	>> .properties[:tests_modules] _isnt _unset _andif
+		_not .properties[:tests_modules].empty?
+#	>> .test_data _isnt _unset _andif
+#		_not .test_data.empty?
+	
+_endmethod
+$
