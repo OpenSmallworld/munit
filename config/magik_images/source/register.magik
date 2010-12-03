@@ -107,7 +107,7 @@ _block
 	magik_image.register_new(
 		"add_munit_and_run_unit_tests",
 		
-		:add_products, system.pathname_up(smallworld_product.product(:munit_config).directory),
+		:add_products, system.pathname_up(!hack_file!, 4),
 
 		:load_modules,
 		{
@@ -121,7 +121,7 @@ _block
 	magik_image.register_new(
 		"add_munit_and_run_system_tests",
 		
-		:add_products, system.pathname_up(smallworld_product.product(:munit_config).directory),
+		:add_products, system.pathname_up(!hack_file!, 4),
 
 		:load_modules,
 		{
