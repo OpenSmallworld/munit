@@ -1,0 +1,13 @@
+munit_image_420 1
+
+description
+	latest munit
+end
+
+requires
+	munit_gui 4	
+	munit_xml 4
+	munit_core_mods 420
+end
+
+language en_gb

@@ -1,0 +1,64 @@
+_package sw
+$
+
+_pragma(classify_level=advanced)
+## A property_list of test aspects
+## Subclasses of test_case can use this to check whether the
+## image is suitable for running itself.
+smallworld_product.define_shared_constant( :test_aspects, property_list.new(), :private )
+$
+
+_pragma(classify_level=restricted)
+_method smallworld_product.run_test_cases( _optional properties )
+	##
+	## Run the test cases in all products in the image.
+	##
+	## PROPERTIES is a property_list to control how tests are run
+	## valid keys are:
+	## :test_runner_class (default test_runner)
+	## :test_runner_method ( default run_in_foreground() )
+	## :test_runner_args ( no default )
+	##
+
+	_for a_product _over smallworld_product.products.fast_elements()
+	_loop
+		a_product.run_test_cases( properties )
+	_endloop
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method smallworld_product.add_test_aspect( key _optional data )
+	## 
+	## Add a test_aspect KEY
+	## If required additional data can be supplied in DATA
+	##
+
+	_self.test_aspects[key] << data
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method smallworld_product.remove_test_aspect( key _optional data )
+	## 
+	## Remove the test_aspect KEY
+	##
+
+	_self.test_aspects.remove_key( key )
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method smallworld_product.test_aspect_keys()
+	## 
+	## Return my test aspect keys
+	##
+
+	>> _self.test_aspects.keys
+	
+_endmethod
+$
+
