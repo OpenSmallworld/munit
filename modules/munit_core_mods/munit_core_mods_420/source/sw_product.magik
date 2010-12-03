@@ -1,0 +1,20 @@
+_package sw
+$
+
+_pragma(classify_level=restricted)
+_method sw_product.run_test_cases( _optional properties )
+	##
+	## Run the test cases in this product
+	##
+
+	_for module _over _self.defined_modules.fast_elements()
+	_loop
+		_if module.loaded? _andif module.test_module?
+		_then
+			
+			module.run_test_cases( properties )
+		_endif
+	_endloop
+	
+_endmethod
+$
