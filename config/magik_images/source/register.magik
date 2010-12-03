@@ -25,6 +25,7 @@ _block
 			# special environments or don't clean up after themselves.
 			smallworld_product.remove_test_aspect(:manual)
 			smallworld_product.remove_test_aspect(:system_test)
+			smallworld_product.add_test_aspect( :always )
 
 			sw_module_manager.load_test_modules( _true )
 		
