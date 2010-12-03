@@ -54,7 +54,7 @@ _block
 			properties << property_list.new_with(:test_runner_class, xml_test_runner.new(),
 							    :test_runner_method, :|run_in_new_stream()|)
 
-			smallworld_product.products[:munit].run_test_cases(properties)
+			smallworld_product.run_test_cases(properties)
 			
 		_endproc
 
@@ -77,7 +77,7 @@ _block
 			properties << property_list.new_with(:test_runner_class, xml_test_runner.new(),
 							    :test_runner_method, :|run_in_new_stream()|)
 
-			smallworld_product.products[:munit].run_test_cases(properties)
+			smallworld_product.run_test_cases(properties)
 			
 		_endproc
 
