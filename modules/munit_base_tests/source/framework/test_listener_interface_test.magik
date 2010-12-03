@@ -1,0 +1,90 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug,topic=m_test_unit)
+def_slotted_exemplar(:test_listener_interface_test,
+{
+	{:test,_unset}
+},
+{:test_case})
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.set_up()
+
+	.test << def_local_exemplar( :test , {} , {test_listener_interface})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.tear_down()
+
+	.test << _unset 
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.test_start_test()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|start_test()| )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.test_end_test()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|end_test()| )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.test_add_error()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|add_error()| )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.test_add_failure()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|add_failure()| )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.test_start_suite()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|start_suite()| )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.test_end_suite()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|end_suite()| )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.test_report_assert()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|report_assert()| )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.test_not_run_slow_test()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|not_run_slow_test()| )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=m_test_unit)
+_method test_listener_interface_test.test_add_info()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|add_info()| )
+_endmethod
+$
+
+
+
