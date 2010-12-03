@@ -24,6 +24,7 @@ _block
 			#remove the manual key as we don't want to run tests than need
 			# special environments or don't clean up after themselves.
 			smallworld_product.remove_test_aspect(:manual)
+			smallworld_product.remove_test_aspect(:system_test)
 
 			sw_module_manager.load_test_modules( _true )
 		

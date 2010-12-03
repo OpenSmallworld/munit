@@ -8,6 +8,9 @@ def_slotted_exemplar(:assert_test,
 {:test_case})
 $
 
+assert_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
+$
+
 _pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_assert_equals_nan_fails()
 

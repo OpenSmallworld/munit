@@ -1,11 +1,11 @@
-munit_base_tests 4
+munit_tests 3
 
 description
 	MUnit Tests
 end
 
 requires
-	munit_base 4
+	munit_base 3
 end
 
 tests_modules

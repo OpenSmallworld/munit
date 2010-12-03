@@ -7,7 +7,9 @@ def_slotted_exemplar(:assert_raised_condition_test,
 {:test_case})
 $
 
-_pragma(classify_level=debug,topic=MUnit)
+assert_raised_condition_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
+$
+
 _method assert_raised_condition_test.test_raised_error()
 	## 
 
@@ -95,34 +97,8 @@ _method assert_raised_condition_test.test_raised_wrong_error()
 _endmethod
 $
 
-_pragma(classify_level=debug,topic=MUnit)
-_method assert_raised_condition_test.test_raised_wrong_warning()
-	##
-
-	_self.assert_raised_condition( :datamodel_warning ,
-				       _self , :assert_raised_condition|()| ,
-				       {
-					       :sw_module_warning ,
-					       condition ,
-					       :raise|()| ,
-					       { :datamodel_warning }
-				       })
-_endmethod
 $
 
-_pragma(classify_level=debug,topic=MUnit)
-_method assert_raised_condition_test.test_raised_warning_not_error()
-	##
-
-	_self.assert_raised_condition( :datamodel_warning ,
-				       _self , :assert_raised_condition|()| ,
-				       {
-					       :index_out_of_bounds ,
-					       condition ,
-					       :raise|()| ,
-					       { :datamodel_warning }
-				       })
-_endmethod
 $
 
 _pragma(classify_level=debug,topic=MUnit)

@@ -9,6 +9,10 @@ def_slotted_exemplar(:test_interface_test,
 {:test_case})
 $
 
+test_interface_test.define_shared_constant(:test_aspects,
+	property_list.new_with(:never, "NEVER"), :public )
+$
+
 _pragma(classify_level=debug,topic=MUnit)
 _method test_interface_test.set_up()
 

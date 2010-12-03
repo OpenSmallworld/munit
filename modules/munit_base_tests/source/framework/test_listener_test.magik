@@ -16,6 +16,9 @@ def_slotted_exemplar(:test_listener_test,
 {:test_listener_interface,:test_case})
 $
 
+test_listener_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
+$
+
 _pragma(classify_level=debug,topic=MUnit)
 _method test_listener_test.add_error( a_test_failure )
 

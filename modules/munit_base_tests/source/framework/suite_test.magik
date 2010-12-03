@@ -10,30 +10,13 @@ def_slotted_exemplar(:suite_test,
 {:test_case})
 $
 
+suite_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
+$
+
 _pragma(classify_level=debug,topic=MUnit)
 _method suite_test.set_up()
 
 	.result << mtest_result.new()
-_endmethod
-$
-
-_pragma(classify_level=debug,topic=MUnit)
-_method suite_test.suite()
-		
-	a_suite << test_suite.new( _unset, "Suite Tests" )
-
-	# Build the suite manually.
-
-	a_suite.add_test( suite_test.new( :test_no_test_case_class|()| ))
-	a_suite.add_test( suite_test.new( :test_no_test_cases|()| ))
-	a_suite.add_test( suite_test.new( :test_one_test_case|()| ))
-	a_suite.add_test( suite_test.new( :test_not_public_test_case|()| ))
-	a_suite.add_test( suite_test.new( :test_not_existing_test_case|()| ))
-	a_suite.add_test( suite_test.new( :test_inherited_tests|()| ))
-	a_suite.add_test( suite_test.new( :test_shadowed_tests|()| ))
-	a_suite.add_test( suite_test.new( :test_add_test_suite|()| ))
-
-	>> a_suite
 _endmethod
 $
 

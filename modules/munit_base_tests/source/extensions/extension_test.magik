@@ -10,6 +10,9 @@ def_slotted_exemplar(:extension_test,
 {:test_case})
 $
 
+extension_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
+$
+
 _pragma(classify_level=debug,topic=MUnit)
 _method extension_test.test_running_error_in_test_setup() 
 

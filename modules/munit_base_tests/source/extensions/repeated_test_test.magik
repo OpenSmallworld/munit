@@ -10,6 +10,9 @@ def_slotted_exemplar(:repeated_test_test,
 {:test_case})
 $
 
+repeated_test_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
+$
+
 _pragma(classify_level=debug,topic=MUnit)
 _method repeated_test_test.set_up()
 
