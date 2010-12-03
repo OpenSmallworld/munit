@@ -61,14 +61,14 @@ add_munit_and_run_unit_tests:
 	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
 	args		= %SW_MUNIT_IMAGE%
 	product		= gis
-	SW_MAGIK_IMAGE_NAME = add_munit_and_run_unit_tests:
+	SW_MAGIK_IMAGE_NAME = add_munit_and_run_unit_tests
 #
 add_munit_and_run_system_tests:
 	title		= run tests against a swaf image
 	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
 	args		= %SW_MUNIT_IMAGE%
 	product		= gis
-	SW_MAGIK_IMAGE_NAME = add_munit_and_run_system_tests:
+	SW_MAGIK_IMAGE_NAME = add_munit_and_run_system_tests
 #
 
 
