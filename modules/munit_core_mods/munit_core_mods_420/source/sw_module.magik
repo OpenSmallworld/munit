@@ -1,0 +1,20 @@
+_package sw
+$
+
+_pragma(classify_level=restricted)
+_method sw_module.tested_modules_loaded?
+	## Returns true if all tested_modules are loaded.
+	## 
+
+	result << _false 
+	
+	_for a_mod _over _self.tested_modules.fast_elements()
+	_loop
+		result << a_mod.loaded?
+		_if result _is _false _then _leave _endif
+	_endloop
+	
+	_return result 
+		
+_endmethod
+$
