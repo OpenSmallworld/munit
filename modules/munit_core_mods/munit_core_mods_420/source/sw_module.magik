@@ -50,3 +50,38 @@ _method sw_module.run_test_cases( _optional properties )
 			
 _endmethod
 $
+
+
+_pragma(classify_level=restricted)
+_iter _method sw_module.test_cases()
+	##
+	## Yield all test_cases for the test modules associated with
+	## this module.  Only tests belonging to test modules that are
+	## loaded will be returned.
+	##
+
+	test_modules << set.new()
+	_if _self.test_module?
+	_then
+		# This is a test module in its own right
+		test_modules.add( _self )
+	_else 
+		_for mod_info _over _self.test_modules.elements()
+		_loop
+			test_modules.add( sw_module_manager.module( _scatter mod_info ) )
+		_endloop
+	_endif 
+
+	_for a_test_module _over test_modules.elements()
+	_loop
+		_if a_test_module.loaded?
+		_then
+			_for a_test _over a_test_module.loaded_tests()
+			_loop
+				_loopbody( a_test )
+			_endloop
+		_endif 
+	_endloop
+	
+_endmethod
+$
