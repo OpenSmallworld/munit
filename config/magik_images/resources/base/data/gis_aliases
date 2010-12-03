@@ -40,14 +40,20 @@ build_munit_swaf:
 	product		= gis
 	SW_MAGIK_IMAGE_NAME = munit_gui
 #
-build_munit_base:
+build_munit_latest:
 	title		= Add munit gui to %SW_MUNIT_IMAGE%
 	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
 	args		= base
 	product		= gis
-	SW_MAGIK_IMAGE_NAME = munit_gui
+	SW_MAGIK_IMAGE_NAME = munit_image_latest
 #
-
+build_munit_420:
+	title		= Add munit gui to %SW_MUNIT_IMAGE%
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= base
+	product		= gis
+	SW_MAGIK_IMAGE_NAME = munit_image_420
+#
 run_munit_product_tests:
 	title		= run tests against a swaf image
 	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE

@@ -82,13 +82,23 @@ _block
 		_endproc
 
 	magik_image.register_new(
-		"munit_gui",
+		"munit_image_420",
 
 		:image_file_name, "munit_gui",	
 
 		:add_products, system.pathname_up(smallworld_product.product(:munit_config).directory),
 		
-		:load_modules, :munit_magik_gui
+		:load_modules, :munit_image_420
+		    )
+
+	magik_image.register_new(
+		"munit_image_latest",
+		
+		:image_file_name, "munit_gui",	
+
+		:add_products, system.pathname_up(smallworld_product.product(:munit_config).directory),
+		
+		:load_modules, :munit_image_latest
 		)
 
 	
