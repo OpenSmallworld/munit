@@ -24,12 +24,13 @@ _block
 			#remove the manual key as we don't want to run tests than need
 			# special environments or don't clean up after themselves.
 			smallworld_product.remove_test_aspect(:manual)
+
 			sw_module_manager.load_test_modules( _true )
 		
 			properties << property_list.new_with(:test_runner_class, xml_test_runner.new(),
 							    :test_runner_method, :|run_in_new_stream()|)
-							    
-			smallworld_product.run_test_cases(properties)
+
+			smallworld_product.products[:munit].run_test_cases(properties)
 			
 		_endproc
 
