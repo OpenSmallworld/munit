@@ -2,6 +2,7 @@
 _package sw
 
 
+_pragma(classify_level=restricted,topic=MUnit)
 def_slotted_exemplar(:munit_xml_error,
 {},:munit_xml_exception)
 $

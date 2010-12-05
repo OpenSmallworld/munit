@@ -10,6 +10,7 @@ def_slotted_exemplar(:db_test_case_test,
 { :test_case })
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 db_test_case_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always", :system_test, "System Test"), :public )
 $
 

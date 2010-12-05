@@ -16,6 +16,7 @@ def_slotted_exemplar(:test_listener_test,
 {:test_listener_interface,:test_case})
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 test_listener_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
 $
 

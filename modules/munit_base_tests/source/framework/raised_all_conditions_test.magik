@@ -2,12 +2,15 @@
 _package sw
 
 
+_pragma(classify_level=debug,topic=MUnit)
 def_slotted_exemplar( :raised_all_conditions_test, {}, { :test_case } )
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 raised_all_conditions_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 _method raised_all_conditions_test.test_asserting_two_conditions_and_raising_one_fails_assertion()
 	_self.assert_raised_condition(
 		:assertion_failed_warning,
@@ -21,6 +24,7 @@ _method raised_all_conditions_test.test_asserting_two_conditions_and_raising_one
 _endmethod
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 _method raised_all_conditions_test.test_asserting_one_condition_and_raising_teo_fails_assertion()
 	_self.assert_raised_condition(
 		:assertion_failed_warning,
@@ -35,6 +39,7 @@ _method raised_all_conditions_test.test_asserting_one_condition_and_raising_teo_
 _endmethod
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 _method raised_all_conditions_test.test_asserting_two_conditions_and_raising_one_twice_fails_assertion()
 	_self.assert_raised_condition(
 		:assertion_failed_warning,
@@ -49,6 +54,7 @@ _method raised_all_conditions_test.test_asserting_two_conditions_and_raising_one
 _endmethod
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 _method raised_all_conditions_test.test_asserting_no_condiitions_and_raising_none_passes()
 	_self.assert_raised_all_conditions(
 		{},
@@ -58,6 +64,7 @@ _method raised_all_conditions_test.test_asserting_no_condiitions_and_raising_non
 _endmethod
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 _method raised_all_conditions_test.test_asserting_no_condiitions_and_raising_one_fails()
 	_self.assert_raised_condition(
 		:assertion_failed_warning,
@@ -72,6 +79,7 @@ _endmethod
 $
 
 
+_pragma(classify_level=debug,topic=MUnit)
 _method raised_all_conditions_test.test_asserting_one_condition_and_raising_it_passes()
 	_self.assert_raised_all_conditions(
 		{:warning},
@@ -82,6 +90,7 @@ _method raised_all_conditions_test.test_asserting_one_condition_and_raising_it_p
 _endmethod
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 _method raised_all_conditions_test.test_asserting_two_conditions_and_raising_them_passes()
 	_self.assert_raised_all_conditions(
 		{:warning, :information},
@@ -93,6 +102,7 @@ _method raised_all_conditions_test.test_asserting_two_conditions_and_raising_the
 _endmethod
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 _method raised_all_conditions_test.test_asserting_two_conditions_and_raising_them_out_of_order_passes()
 	_self.assert_raised_all_conditions(
 		{:warning, :information},
@@ -104,6 +114,7 @@ _method raised_all_conditions_test.test_asserting_two_conditions_and_raising_the
 _endmethod
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 _method raised_all_conditions_test.test_handle_exceptions_are_not_counted_by_assertion()
 	_self.assert_raised_all_conditions(
 		{:information},

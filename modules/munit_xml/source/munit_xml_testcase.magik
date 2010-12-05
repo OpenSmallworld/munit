@@ -1,7 +1,5 @@
 #% text_encoding = iso8859_15
 _package sw
-
-remex(:munit_xml_testcase)
 $
 
 _pragma(classify_level=restricted,topic=MUnit)

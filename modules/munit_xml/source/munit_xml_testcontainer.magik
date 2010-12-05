@@ -1,10 +1,7 @@
 #% text_encoding = iso8859_15
 _package sw
 
-remex(:munit_xml_testcontainer)
-$
-
-#---------------------------------------------------------
+_pragma(classify_level=debug,topic=MUnit)
 def_slotted_exemplar(:munit_xml_testcontainer,
 {
 	{:parent, _unset, :writable, :public},

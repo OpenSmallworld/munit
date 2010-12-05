@@ -11,6 +11,7 @@ def_slotted_exemplar(:failure_test,
 {:test_case})
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 failure_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
 $
 

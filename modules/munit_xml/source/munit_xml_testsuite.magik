@@ -1,9 +1,6 @@
 #% text_encoding = iso8859_15
 _package sw
 
-remex(:munit_xml_testsuite)
-$
-
 _pragma(classify_level=restricted,topic=MUnit)
 def_slotted_exemplar(:munit_xml_testsuite,
 {

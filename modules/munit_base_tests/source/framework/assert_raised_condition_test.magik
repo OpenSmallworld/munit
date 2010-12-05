@@ -7,9 +7,11 @@ def_slotted_exemplar(:assert_raised_condition_test,
 {:test_case})
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 assert_raised_condition_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 _method assert_raised_condition_test.test_raised_error()
 	## 
 
@@ -95,10 +97,6 @@ _method assert_raised_condition_test.test_raised_wrong_error()
 				       _self , :assert_raised_condition|()| , 
 				       { :user_error ,condition , :raise|()| , { :index_out_of_bounds } })
 _endmethod
-$
-
-$
-
 $
 
 _pragma(classify_level=debug,topic=MUnit)

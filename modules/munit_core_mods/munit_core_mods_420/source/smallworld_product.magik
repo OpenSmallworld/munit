@@ -1,3 +1,4 @@
+#% text_encoding = iso8859_1
 _package sw
 $
 
@@ -60,5 +61,11 @@ _method smallworld_product.test_aspect_keys()
 	>> _self.test_aspects.keys
 	
 _endmethod
+$
+
+
+_block 
+	smallworld_product.add_test_aspect(:always)
+_endblock
 $
 

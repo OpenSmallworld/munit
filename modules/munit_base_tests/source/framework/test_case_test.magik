@@ -8,6 +8,7 @@ def_slotted_exemplar(:test_case_test,
 {:test_case})
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 test_case_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
 $
 
@@ -258,8 +259,6 @@ _method test_case_test.test_infrastructure?()
 
 	_self.assert( a_test.infrastructure? , :is , _false )
 _endmethod
-$
-
 $
 
 _pragma(classify_level=debug,topic=MUnit)

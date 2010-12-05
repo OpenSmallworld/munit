@@ -2,6 +2,7 @@
 _package sw
 $
 
+_pragma(classify_level=debug,topic=MUnit)
 !global_auto_declare?! << _true
 $
 

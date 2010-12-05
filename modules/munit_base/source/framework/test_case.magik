@@ -311,18 +311,18 @@ _method test_case.value_for_display_tree( key )
 		   >> _if .test_result _is _unset
 		      _then
 			      ## Test has not been run
-			      >> ( { :test, :munit_magik_gui }, :image )
+			      >> ( { :test, :munit_gui }, :image )
 		      _elif error_tests.includes?( _self )
 		      _then
 			      ## Test had an error
-			      >> ( { :error, :munit_magik_gui }, :image )
+			      >> ( { :error, :munit_gui }, :image )
 		      _elif failed_tests.includes?( _self )
 		      _then
 			      ## Test failed
-			      >> ( { :failure, :munit_magik_gui }, :image )
+			      >> ( { :failure, :munit_gui }, :image )
 		      _else
 			      ## Test passed
-			      >> ( { :ok, :munit_magik_gui }, :image )
+			      >> ( { :ok, :munit_gui }, :image )
 		      _endif
 	   _endif
 	

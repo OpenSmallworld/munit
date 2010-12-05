@@ -249,7 +249,6 @@ _method assert.assert_unset( expected, _optional a_string )
 
 _endmethod
 $
-$
 
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method assert.format_message(message, default_message)

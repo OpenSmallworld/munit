@@ -1,13 +1,13 @@
 munit_image_420 1
 
 description
-	latest munit
+	420 munit
 end
 
 requires
 	munit_gui 4	
 	munit_xml 4
-	munit_core_mods 420
+	munit_core_mods 3
 end
 
 language en_gb

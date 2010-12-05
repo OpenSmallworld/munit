@@ -69,6 +69,8 @@ _method tree_failures_lister.tree_list( a_test )
 				_loop
 					_if add_module?
 					_then
+						show("module", _self.module_name)
+						
 						module_display_tree << display_tree.new( a_module , _unset , product_display_tree)
 						module_display_tree.styled_string << {:image, { "module" , _self.module_name } , a_module.name.write_string }
 						add_module? << _false 
@@ -150,6 +152,7 @@ _private _method tree_failures_lister.icon_name_for_test( a_test , a_display_tre
 		a_icon_name << "test"
 	_endif	
 
+show("icon_name", a_icon_name, _self.module_name)
 	>> a_icon_name
 _endmethod
 $

@@ -46,12 +46,20 @@ build_munit_latest:
 	args		= base
 	product		= gis
 	SW_MAGIK_IMAGE_NAME = munit_image_latest
+	SW_SAVE_IMAGE_DIR := %SMALLWORLD_GIS%/images
+	SW_SAVE_IMAGE_DIR_FORMAT := spin
+	SPIN:=main
+	LOG_DIR := %SMALLWORLD_GIS%/images/logs
 #
 build_munit_420:
 	title		= Add munit gui to %SW_MUNIT_IMAGE%
 	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
-	args		= base
+	args		= swaf
 	product		= gis
+	SW_SAVE_IMAGE_DIR := %SMALLWORLD_GIS%/images
+	SW_SAVE_IMAGE_DIR_FORMAT := spin
+	SPIN:=main
+	LOG_DIR := %SMALLWORLD_GIS%/images/logs
 	SW_MAGIK_IMAGE_NAME = munit_image_420
 #
 run_munit_product_tests:
