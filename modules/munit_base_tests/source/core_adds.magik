@@ -1,0 +1,114 @@
+#% text_encoding = iso8859_1
+_package sw
+
+# experimental code. DON'T use in production code. !!!
+
+_pragma(classify_level=debug,topic={code})
+_global _constant def_local_exemplar <<
+_proc( name , slots , _optional super_exemplars )
+	## Dangerous !!!
+	## Returns a new slotted exemplar. This should be used
+	## only to define classes with limited use inside methods.
+	## No references to new exemplar should be export externaly
+	## outside defining method.
+	## Exemplar will be later garbage collected with its method table.
+	##
+	## NAME is the name of the new exemplar. There will NOT be a global
+	## constant defined with that name to be the exemplar for the
+	## new class.
+	##
+	## SLOTS is a vector with one element for each new slot, each
+	## element being {name,value}. These new slots are in addition
+	## to any inherited from the superclasses.
+	## ACCESS and ACCESS_FLAG are ignored and all slots are public
+	## and externally writable.
+	##
+	## PARENTS indicates the parent class or classes. If there is
+	## more than one, they must be listed in a simple_vector. Each
+	## class is given by its exemplar instance. For example {fred}.
+	## (Reference by its class name e.g. :fred is NOT allowed to
+	##  make possible to inherit from other local exemplars )
+	##
+	## Parent classes must be other slotted classes ( global or
+	## local ) and mixins. If none of the parents inherit from slotted_format_mixin,
+	## this class will automatically be added in as a parent.
+	##
+	## Example:
+	## _method test_case_test.test_error()
+	##
+	##     _local error_test_case
+	##     error_test_case << def_local_exemplar( :error_test_case , {} , {test_case} )
+	##     error_test_case.define_method( :run_test|()| ,
+	##				     _proc()
+	##					     condition.raise(:error)
+	##				     _endproc,
+	##				     _true )
+	##	     
+	##	a_error << error_test_case.new( "error" )
+	##	_self.verify_error( a_error )
+	## _endmethod
+	## $
+
+	int!slot_name << :int!owner
+	inherit_from_local_ex? << _false 
+
+	_if super_exemplars _is _unset
+	_then
+		supers << {}
+	_else
+		_if _not {}.is_class_of?( super_exemplars )
+		_then
+			supers << { super_exemplars }
+		_else
+			supers << super_exemplars.shallow_copy()
+		_endif 
+		
+		_for i , s _over supers.keys_and_elements()
+		_loop
+			_if _not inherit_from_local_ex? _andif
+			    s.sys!perform( :sys!slot_number|()| , int!slot_name ) _isnt _unset
+			_then
+				inherit_from_local_ex? << _true 
+			_endif
+			supers[i] << s.define_method_target
+		_endloop
+	_endif 
+
+	_if _not inherit_from_local_ex?
+	_then 
+		slots << rope.new_from( slots )
+		slots.add_last( {int!slot_name,_unset} )
+	_endif 
+	
+	( mt , ex ) << method_table.new_for_slotted( name , slots, supers )
+
+	_for sv _over slots.elements()
+	_loop
+		ex.define_slot_externally_writable( sv[1] , :public )
+	_endloop
+
+	 ex.perform( int!slot_name + :|<<| , find_parent_method() )
+	
+	>> ex
+_endproc
+$
+
+_pragma(classify_level=debug,topic={code})
+_global _constant find_parent_method <<
+_proc()
+	q << atomic_queue.new( 1 )
+	
+	_local result
+	_proc( q , t )
+		_import result
+		_protect
+			result << t.vm_stack.chain.chain.chain.method_hint
+		_protection
+			q.put( 1 )
+		_endprotect
+	_endproc.fork_at( _thisthread.vm_priority-1 , q , _thisthread ).resume()
+	q.get()
+
+	>> result 
+_endproc
+$
