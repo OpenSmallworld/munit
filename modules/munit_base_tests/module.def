@@ -1,0 +1,16 @@
+munit_base_tests 4
+
+description
+	MUnit Tests
+end
+
+requires
+	munit_base 4
+end
+
+tests_modules
+	munit_base
+end
+
+hidden
+language en_gb

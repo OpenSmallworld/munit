@@ -1,0 +1,104 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+_method sw_module.tested_modules_loaded?
+	## Returns true if all tested_modules are loaded.
+	## 
+
+	result << _false 
+	
+	_for a_mod _over _self.tested_modules.fast_elements()
+	_loop
+		result << a_mod.loaded?
+		_if result _is _false _then _leave _endif
+	_endloop
+	
+	_return result 
+		
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method sw_module.test_module?
+	##
+	## Returns true if the module contains test data
+	##
+
+	>> .properties[:tests_modules] _isnt _unset _andif
+		_not .properties[:tests_modules].empty?
+
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method sw_module.run_test_cases( _optional properties )
+	##
+	## Run the tests in this module
+	##
+
+	run_properties << properties.default( property_list.new() )
+	run_class      << run_properties[:test_runner_class].default( test_runner )
+	run_method     << run_properties[:test_runner_method].default( :|run_in_foreground()| )
+	run_args       << run_properties[:test_runner_args].default( {} )
+
+	_for a_test _over _self.test_cases()
+	_loop
+		run_class.perform( run_method, a_test, _scatter run_args )
+	_endloop 
+			
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_iter _method sw_module.test_cases()
+	##
+	## Yield all test_cases for the test modules associated with
+	## this module.  Only tests belonging to test modules that are
+	## loaded will be returned.
+	##
+
+	test_modules << set.new()
+	_if _self.test_module?
+	_then
+		# This is a test module in its own right
+		test_modules.add( _self )
+	_else 
+		_for mod_info _over _self.test_modules.elements()
+		_loop
+			test_modules.add( sw_module_manager.module( _scatter mod_info ) )
+		_endloop
+	_endif 
+
+	_for a_test_module _over test_modules.elements()
+	_loop
+		_if a_test_module.loaded?
+		_then
+			_for a_test _over a_test_module.loaded_tests()
+			_loop
+				_loopbody( a_test )
+			_endloop
+		_endif 
+	_endloop
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_iter _method sw_module.loaded_tests()
+	##
+	## Yield all the tests for this module.
+	##
+
+	tf << test_suite_finder.new()
+	_for a_test _over tf.find_classes_for_module( .name ).fast_elements()
+	_loop
+		_loopbody( a_test )
+	_endloop
+	
+_endmethod
+$

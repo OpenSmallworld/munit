@@ -1,0 +1,388 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+## A set of assert methods.
+def_slotted_exemplar(:assert,
+{
+	{ :test_result , _unset }
+})
+$
+
+_pragma(classify_level=deprecated,topic=MUnit)
+_method assert.fail( _optional a_message )
+	## -------Deprecated------
+	## Reason     : Replaces by new munit impl.
+	## Use instead: assert.fail()
+	## Action     : Restricted at next release.
+	## -----------------------
+	## Fails a test with the given A_MESSAGE.
+
+	condition.raise( :assertion_failed_warning , :message , a_message )
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_private _method assert.assert( left_operand , an_operator ,
+				_optional right_operand , a_message , a_type )
+	## Flexible assertion.
+	## AN_OPERATOR can be
+	## Basic operators
+	##    :is , :isnt
+	## or Binary operators
+	##    :|=| , :|~=| , :|<|  , :|>| , :|<=| , :|>=|
+	## or Method operators
+	##    All methods that returns _true or _false
+	##    e.g. :|is_kind_of?()| , :|is_class_of?()| , :|inherits_from?()|
+	##         :|responds_to?()|, :|includes?()|
+	##
+	## If assertion fails then condition ASSERTION_FAILED_WARNING
+	## is raised with the given A_MESSAGE.
+	##
+	## Examples :
+	## _self.assert( exp , :is  , :test )
+	## _self.assert( exp , :|=| , "test" )
+	## _self.assert( exp , :|>| , 25 )
+	## _self.assert( {3,4,5} , :|includes?()| , exp )
+	## _self.assert( act , :|your_test_that_returns_boolean?()| , exp )
+
+	result? << _false
+	
+	_protect
+		_if an_operator _is :is
+		_then
+			result? << left_operand _is right_operand
+			
+		_elif  an_operator _is :isnt
+		_then
+			result? << left_operand _isnt right_operand
+			
+		_elif _self.supported_binary_operators.includes?( an_operator )
+		_then
+			result? << binary_operator[ an_operator ]( left_operand , right_operand )
+		_else 
+			result? << left_operand.perform( an_operator , right_operand )
+		_endif 
+		
+		default_message << write_string( left_operand, " ", an_operator, " ",right_operand)
+		a_message << _self.format_message(a_message, default_message)
+		
+		_if result? _isnt _true 
+		_then
+			_self.fail( a_message )
+		_endif
+	_protection
+		a_type << a_type.default( :assert )
+		_self.int!report_assert( a_type ,
+				     left_operand , an_operator , right_operand ,
+				     a_message , result? )
+	_endprotect
+
+	>> result?
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+## Supported binary operators by assert method.
+## ( :|=| , :|~=| , :|<|  , :|>| , :|<=| , :|>=| )
+assert.define_shared_constant(:supported_binary_operators,
+			      { :|=| , :|~=| , :|<|  , :|>| , :|<=| , :|>=| },
+			      :private )
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.assert_equals( expected , actual , _optional a_message , delta , relative? , a_type )
+	## Assert that EXPECTED and ACTUAL are equal.
+	## For numbers assert that EXPECTED and ACTUAL
+	## are equal concerning a DELTA.
+	## DELTA can be absolute value or if RELATIVE? is true than 
+	## DELTA is relative value. ( E.g relative delta 0.2 means
+	## that ACTUAL value have to equals EXPECTED value +- 20 %.)
+	## Absolute value of DELTA from relative value is calculated by
+	## ABS_DELTA = REL_DELTA * EXPECTED
+
+	a_type << a_type.default( :assert_equals )
+
+	_if ( _not expected.is_kind_of?( simple_number_mixin )) _orif
+	    ( _not actual.is_kind_of?( simple_number_mixin )) _orif
+	    ( _not expected.finite? _orif _not actual.finite? ) _orif 
+	    delta _is _unset _orif delta = 0 
+	_then
+		result? << _self.assert( actual , :|=| , expected , a_message , a_type )
+	_else
+		relative? << relative?.default( _false )
+		
+		_if relative? _then delta_type << " Rel." _else delta_type << " Abs." _endif 
+		
+		default_message << write_string("Exp:", expected, " Act:", actual, 
+						delta_type, "Delta:", delta)
+		a_message << _self.format_message(a_message,  default_message)
+		
+		_if relative? _then delta << expected * delta _endif
+		result? << _self.assert( (expected - actual).abs , :|<| , delta , a_message , a_type )
+	_endif
+
+	>> result? 
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_private _method assert.assert_raised_condition( condition_name , an_object , method_name ,
+						 _optional args , a_message )
+
+	## Expects that error, warning or information with
+	## CONDITION_NAME will be raised by invocation of method
+	## METHOD_NAME on AN_OBJECT.
+	##
+	## If method doesn't fail then condition
+	## ASSERTION_FAILED_WARNING is raised with the given
+	## A_MESSAGE.  If other condition is raised than it continues
+	## with handling of that condition by testing framework.
+	##
+	## If WARNING or INFORMATION is expected then it returns all
+	## results of the tested method.
+	##
+	## ARGS for method are optional and should be defined as simple
+	## vector.
+
+	args << args.default( {} )
+
+	_local tag         << "tag".copy()
+	_local cond_seen?  << _false
+	_local actual_cond << _unset
+	
+	_protect 
+		_catch tag 
+		       _handling error , warning , information _with 
+		       _proc( a_condition )
+
+			       _import condition_name, tag,  actual_cond, cond_seen?
+
+			       _if a_condition.taxonomy.includes?( condition_name )
+			       _then
+				       # We have the searched for condition, take note of it
+				       actual_cond    << a_condition.name
+				       cond_seen?     << _true
+
+				       _if actual_cond _is :assertion_failed_warning
+				       _then _return # You get false positives if this continues handling
+				       _elif _not a_condition.continuable?
+				       _then _throw tag   
+				       _endif 
+			       _else
+				       # Take note of the condition name if it's the first one we have
+				       # seen. This is to make the report clearer.
+				       actual_cond  << actual_cond.default(a_condition.name)
+			       _endif
+			       a_condition.continue_handling()
+		       _endproc
+
+		       results << _allresults an_object.sys!perform( method_name , _scatter args )
+		_endcatch 
+
+		default_message << write_string( "Condition '", condition_name, "' = '", actual_cond, "'")
+		a_message << _self.format_message(a_message, default_message)
+
+		_if _not cond_seen?
+		_then
+			_self.fail( a_message )
+		_endif
+	_protection
+		_self.int!report_assert( :assert_raised_condition ,
+				     condition_name , _unset , _unset ,
+				     a_message , cond_seen? )
+	_endprotect 
+	
+	>> _scatter results.default({})
+_endmethod
+$
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.assert_is( expected , actual, _optional a_string)
+	## Assert that EXPECTED and ACTUAL are identical
+
+	>> _self.assert( actual, :is, expected, a_string, :assert_is )
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.assert_is_not( expected , actual, _optional a_string)
+	
+	## Assert that EXPECTED and ACTUAL are not identical
+
+	>> _self.assert( actual, :isnt, expected, a_string, :assert_is_not )
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.assert_not_equals( expected , actual, _optional a_string)
+	
+	## Assert that EXPECTED and ACTUAL are not equal
+
+	>> _self.assert( actual, :|~=|, expected, a_string, :assert_not_equals )
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.assert_false( expected, _optional a_string )
+	## Assert that EXPECTED is false
+
+	>> _self.assert( expected, :is, _false, a_string, :assert_false )
+
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.assert_true( expected, _optional a_string )
+	## Assert that EXPECTED is true
+
+	>> _self.assert( expected, :is, _true, a_string, :assert_true )
+
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.assert_unset( expected, _optional a_string )
+	## Assert that EXPECTED is unset
+
+	>> _self.assert( expected, :is, _unset, a_string, :assert_unset )
+
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.format_message(message, default_message)
+
+	## Format an assertion message for output by combining the
+	## message which was passed in with the default generated
+	## message.
+	##
+	## If MESSAGE is unset then then DEFAULT_MESSAGE will be
+	## output.
+	## 
+	## If MESSAGE contains the string "#1" then that string will be
+	## substituted with the DEFAULT_MESSAGE to allow information to
+	## be added to it.
+
+	_if message _is _unset
+	_then
+		result << default_message
+	_elif message.index_of_seq("#1") _isnt _unset
+	_then
+		result << message.substitute_string("#1", default_message)
+	_else
+		result << message
+	_endif 
+		
+	>> result 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.int!report_assert(_gather args)
+
+	## Report the assertion to the test result object if it is
+	## present, otherwise just ignore it.
+	
+	_if (test_result << .test_result) _isnt _unset
+	_then
+		test_result.report_assert(_scatter args)
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.assert_not_unset( expected, _optional a_string )
+	
+	## Assert that EXPECTED is not unset
+
+	>> _self.assert( expected, :isnt, _unset, a_string, :assert_not_unset )
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_private _method assert.assert_raised_all_conditions(
+			 condition_names , an_object , method_name ,
+			 _optional args , a_message )
+	## Expects that errors, warnings or information with
+	## CONDITION_NAMES will all be raised by invocation of
+	## method METHOD_NAME on AN_OBJECT. ARGS for method
+	## are optional and should be defined as simple vector.
+	## If method doesn't fail then condition ASSERTION_FAILED_WARNING
+	## is raised with the given A_MESSAGE.
+	## If other condition is raised than it continues with handling of
+	## that condition by testing framework.
+	## If WARNING or INFORMATION is expected then returns all
+	## results of tested method.
+
+	args << args.default( {} )
+
+	_local tag << "tag".copy()
+	_local results << {}
+	condition_names << set.new_with( _scatter condition_names )
+	_local conditions_to_raise << set.new_with( _scatter condition_names )
+	_local conditions_raised << set.new()
+	
+	_protect 
+		actual_cond <<
+			_catch tag 
+			       _handling error , warning , information _with 
+			       _proc( a_condition )
+				       
+				       _import condition_names
+				       _import conditions_to_raise
+				       _import conditions_raised, tag
+				       
+				       _if _not a_condition.taxonomy.includes_any?( condition_names )
+				       _then
+					       conditions_raised.add(condition.name)
+					       a_condition.continue_handling()
+				       _else
+					       _for cond_name _over a_condition.taxonomy.fast_elements()
+					       _loop					       
+						       _if (conditions_to_raise.remove(cond_name))
+						       _then
+							      conditions_raised.add(cond_name)
+							      _leave
+						       _endif
+					       _endloop
+				       _endif
+				       
+				       _if _not a_condition.continuable?
+				       _then
+					       _throw tag _with a_condition.name
+				       _endif 
+			       _endproc
+
+			       results << _allresults an_object.sys!perform( method_name , _scatter args )
+			_endcatch 
+
+		default_message << write_string(
+					   "Conditions {",
+					   condition_names.as_simple_vector().join_as_strings(","),
+					   "} != {",
+					   conditions_raised.as_simple_vector().join_as_strings(","), "}")
+		a_message << _self.format_message(a_message, default_message)
+
+		_if _not conditions_raised.difference( condition_names ).empty? _orif
+		    _not condition_names.difference( conditions_raised ).empty?
+		_then
+			result? << _false 
+			_self.fail( a_message )
+		_endif
+	_protection
+		_self.int!report_assert( :assert_raised_all_conditions ,
+					 condition_names , _unset , _unset ,
+					 a_message , result? )
+	_endprotect 
+
+	_if _not results.empty?
+	_then 
+		_return _scatter results
+	_else
+		_return _unset
+	_endif
+	
+_endmethod
+$
+

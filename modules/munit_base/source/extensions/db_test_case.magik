@@ -1,0 +1,401 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=advanced,topic=MUnit)
+def_slotted_exemplar(:db_test_case,
+{
+	{ :ds_views , _unset }
+},
+{:test_case})
+$
+
+_pragma(classify_level=advanced, usage={subclassable})
+## Set this to true if you want all the CASE tool views opened
+## up as well as the normal collection of views
+db_test_case.define_shared_variable(:open_case_views?, _false, :private)
+$
+
+_pragma(classify_level=restricted, usage={subclassable})
+## The parameters for creating the database, this is done if
+## there are no writable views when the test starts i.e. it's a
+## closed image.
+##
+## Each dataset has it's own vector of parameters, the first
+## value of each vector is the sub_directory under _self.db_dir
+## that it will be created and the remaining values will be
+## passed to datasset_creator.new()
+##
+## The default is a :geometric dataset called :gis which will
+## end up in the memory::/ds/ds_gis directory.
+db_test_case.define_shared_constant(:default_create_dataset_args, {{:type, :geometric, :name, :gis}}, :private)
+$
+
+_pragma(classify_level=advanced, usage={subclassable})
+## Set this to true if you want to check that the database is
+## running in-memory or fail otherwise.
+db_test_case.define_shared_constant(:in_memory_only?, _false, :private)
+$
+
+_pragma(classify_level=advanced, usage={subclassable})
+## Where the database will be created.  This should normally be
+## an in-memory database because that uses no public disk space
+## and is always creatable.
+db_test_case.define_shared_constant(:db_dir, "memory::/ds", :private)
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_method db_test_case.ds_views
+
+	## Return a property list of available views which the tests
+	## can access.
+
+	# Cache a collection to hold the views we find
+	_if (views << .ds_views) _is _unset _then views << .ds_views << property_list.new() _endif
+
+	# Not got started yet
+	_if ds_environment.views.empty? _then _return views _endif
+
+	_for name, a_view _over gis_program_manager.databases.fast_keys_and_elements()
+	_loop
+		views[name] << a_view
+	_endloop 
+
+	# Set up the various oddball view so they are visible to the harness
+	views[:auth]      << gis_program_manager.authorisation_view
+	views[:ace]       << gis_program_manager.ace_top_view
+	views[:style]     << gis_program_manager.style_view
+	views[:scratch]   << gis_program_manager.scratch_view
+	views[:scrapbook] << gis_program_manager.scrapbook().scrapbook_view
+
+	# Check that the database is an in memory one the tests ask for it
+	_if _self.in_memory_only? _andif 
+	    (v << views.an_element()) _isnt _unset _andif
+	    v.searchpath[1].index_of_seq("memory::") _isnt 1
+	_then
+		condition.raise(:error, :string, "The database is not an in-memory one created by the test suite.  Don't run these tests in an open image, they won't work.")
+	_endif
+	
+	>> views
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_method db_test_case.main_testing_alternative_name
+
+	## Return the name of the current user to use as the
+	## alternative name
+	
+	>> system.user_name.as_symbol()
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+db_test_case.define_shared_constant( :checkpoint_name , :after_one_time_setup , :private )
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_private _method db_test_case.one_time_setup_database()
+	## Default do nothing.
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method db_test_case.run_bare()
+	## Runs the bare test sequence
+
+	_self.setup_db()
+	_self.set_up()
+	
+	_protect
+		_self.run_test()
+	_protection
+		_self.tear_down()
+		_self.teardown_db()
+	_endprotect
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method db_test_case.setup_db()
+
+	## Set up the database ready for the test, possibly creating it
+	## from scratch.
+
+	_if _self.ds_views.empty?
+	_then
+		_self.create_and_open_database()
+	_endif 
+	
+	_self.goto_test_alternatives()
+	_self.clear_alternatives_and_checkpoints()
+
+	_if _self.one_time_setup_failed?()
+	_then
+		_self.align_datasets()
+		_self.one_time_setup_database()
+		_self.create_test_checkpoints()
+	_else 
+		_self.goto_test_checkpoints()
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method db_test_case.goto_test_alternatives()
+	## 
+
+	_for a_ds_view _over _self.ds_views.fast_elements()
+	_loop
+		a_ds_view.rollback()
+		
+		_if ( a_path << a_ds_view.alternative_path ).empty? _orif 
+		    a_path.last ~= _self.class_name.write_string
+		_then
+			a_ds_view.goto_top_alternative()
+			
+			_if _not a_ds_view.has_alternative?( _self.main_testing_alternative_name )
+			_then
+				a_ds_view.spawn( _self.main_testing_alternative_name )
+			_endif
+			
+			a_ds_view.go_to_alternative( _self.main_testing_alternative_name , :write )
+			
+			_if _not a_ds_view.has_alternative?( _self.class_name )
+			_then
+				a_ds_view.spawn( _self.class_name )
+			_endif
+			
+			a_ds_view.go_to_alternative( _self.class_name , :write )
+		_endif 
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method db_test_case.one_time_setup_failed?()
+	## 
+
+	>> _not _self.ds_views.an_element().has_checkpoint?( _self.checkpoint_name ) 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method db_test_case.align_datasets()
+
+	## Discard any changes in the views and reset them so they are
+	## identical to their parent alternatives
+
+	_for a_ds_view _over _self.ds_views.fast_elements()
+	_loop
+		a_ds_view.switch(:write)
+		a_ds_view.rollback()
+		a_ds_view.align()
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method db_test_case.create_test_checkpoints()
+	## 
+
+	_for a_ds_view _over _self.ds_views.fast_elements()
+	_loop
+		a_ds_view.checkpoint( _self.checkpoint_name )
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method db_test_case.goto_test_checkpoints()
+	## 
+
+	_for a_ds_view _over _self.ds_views.fast_elements()
+	_loop
+		a_ds_view.go_to_checkpoint( _self.checkpoint_name , :write )
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit, usage={subclassable})
+_method db_test_case.teardown_db()
+	
+	## Stub method called after a test is run.
+	##
+	## This does not clear the database because it is useful to
+	## leave it in the test state for debugging purposes.  Subclass
+	## it if you do want to do something to the database at the end
+	## of the test.
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method db_test_case.infrastructure?
+	## Return true for children of test case.
+
+	>> _self _is db_test_case
+_endmethod
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method db_test_case.clear_alternatives_and_checkpoints()
+
+	## Tear down databasase alternative.
+
+	test_check << _self.checkpoint_name
+	
+	_for a_ds_view _over _self.ds_views.fast_elements()
+	_loop
+		_for an_alternative _over a_ds_view.alternatives.fast_elements()
+		_loop
+			a_ds_view.remove_alternative( an_alternative.alternative_name, _true )
+		_endloop
+		
+		_for a_checkpoint _over a_ds_view.checkpoints.fast_elements()
+		_loop
+			name << a_checkpoint.checkpoint_name
+			_if name <> test_check
+			_then 
+				a_ds_view.remove_checkpoint(name)
+			_endif 
+		_endloop
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method db_test_case.default_directories
+
+	## Return the default top level database directory and the ace
+	## directory beneath it i.e. "ds_admin"
+	
+	# Work out which directories things are to go into
+	db_dir  << system.canonical_path_string(_self.db_dir)
+	ace_dir << system.pathname_down(db_dir, "ds_admin")
+
+	>> db_dir, ace_dir
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method db_test_case.create_database(_optional create_dataset_args, create_database_args)
+
+	## Create a database but don't open it.  The arguments are the
+	## same as create_and_open_database() so see that method for
+	## details. 
+
+	_if (dataset_args << create_dataset_args) _is _unset _andif 
+	    _not create_database_args.default({}).includes?(:dataset_creators)
+	_then
+		dataset_args << _self.default_create_dataset_args
+	_endif 
+
+	# Work out where the database is to be created
+	(top_db_dir, ace_loc) << _self.default_directories
+
+	# Note that the :directory paths have to be given as in-memory
+	# database can't find dirs with .. in their searchpaths.
+	creators << rope.new()
+	_for args _over dataset_args.default({}).fast_elements()
+	_loop
+		creator << dataset_creator.new(_scatter args)
+		creators.add_last(creator)
+
+		# This shenanigans is needed because the defaults end up with
+		# ".." in the ACE searchpath, which the in-memory database
+		# can't cope with!
+		_if creator.type _is :geometric _orif
+		    creator.type _is :case
+		_then 
+			_if creator.property(:ace_location) _is _unset
+			_then creator.set_property(:ace_location, ace_loc) _endif 
+			_if creator.property(:directory) _is _unset
+			_then creator.set_property(:directory, creator.directory()) _endif
+		_endif 
+	_endloop 
+
+	# Build the creation arguments
+	create_props << property_list.new_with(_scatter create_database_args.default({}))
+	_if _not create_props.includes_key?(:ace_location) _then create_props[:ace_location] << ace_loc _endif
+	_if _not creators.empty? _then create_props[:dataset_creators] << creators _endif 
+	
+	# Make the engine and run it to create the database
+	cde << create_database_engine.new(_scatter create_props)
+	results << _allresults cde.create_database()
+	
+	>> cde.ace_location, _scatter results
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method db_test_case.open_database(ace_loc, _optional open_case_views?)
+
+	## Actually open up the new database at the ACE_LOC
+	## directory. If OPEN_CASE_VIEWS? is true then all the CASE
+	## views are opened as well.
+	
+	# Open up the new database
+	smallworld_product.set_startup_option(:interactive?, _false)
+	smallworld_product.set_startup_option(:authorisation, :singleuser)
+	open_database(ace_loc)
+	smallworld_product.set_startup_option(:interactive?, _true)
+	gis_program_manager.authorisation_view.login("root", "")
+
+	# Open up the CASE datasets
+	_if  open_case_views?
+	_then 
+		pred << predicate.eq(:type, "sw_case_manager")
+		case_ds_recs << gis_program_manager.ace_top_view.collections[:sw_gis!dataset].select(pred)
+		_for case_ds_rec _over case_ds_recs.fast_elements()
+		_loop 
+			case_name << case_ds_rec.partition.as_symbol()
+			gis_program_manager.open_datasets(case_name)
+			cv << gis_program_manager.cached_dataset(case_name)
+			cv.checkpoint(_self.checkpoint_name)
+		_endloop 
+	_endif
+
+	>> _self.ds_views
+_endmethod
+$
+
+_pragma(classify_level=restricted, usage={subclassable})
+_method db_test_case.create_and_open_database(_optional create_dataset_args, create_database_args)
+
+	## Create a new database to run the tests in, this will only be
+	## run if the image is closed.
+	##
+	## The shared constant _self.db_dir gives the location of the
+	## top level of the database.  This defaults to an in-memory
+	## database, which guarentees that it can be created.
+	##
+	## CREATE_DATASET_ARGS is a vector of vectors, one per
+	## dataset e.g.
+	##
+	## { {:type, :geometric, :name, :gis },
+	##   {:type, :geometric, :name, :gis2 } }
+	##
+	## This is used as arguments to dataset_creator.new() so see
+	## that method for details. If CREATE_DATASET_ARGS are not
+	## given and there are no :dataset_creators in the
+	## CREATE_DATABASE_ARGS then the dataset data will come from:
+	##
+	## _self.default_create_dataset_args 
+	##
+	## CREATE_DATABASE_ARGS are scattered to the
+	## create_database_engine.new() method, see that method for
+	## details.
+	##
+	## The directory containing the ACE is returned
+
+	ace_dir << _self.create_database(create_dataset_args, create_database_args)
+
+	_if ace_dir _isnt _unset
+	_then 
+		_self.open_database(ace_dir, _self.open_case_views?)
+	_endif 
+
+	>> _self.ds_views
+_endmethod
+$
+

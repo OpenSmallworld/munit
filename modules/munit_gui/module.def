@@ -1,0 +1,14 @@
+munit_gui 4
+
+description
+	MUnit GUI
+end
+
+requires
+	munit_base 4
+	tree_item
+	magik_tools
+
+end
+
+language en_gb

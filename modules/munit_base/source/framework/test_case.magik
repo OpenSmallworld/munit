@@ -1,0 +1,442 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+## A test case defines the fixture to run multiple tests.
+## To define a test case
+## 
+## 1) implement a subclass of test_case
+## 2) define slots that store the state of the fixture
+## 3) initialize the fixture state by overriding set_up()
+## 4) clean-up after a test by overriding tear_down().
+## 
+## Each test runs in its own fixture so there can be no side
+## effects among test runs. Here is an example: 
+##
+## def_slotted_exemplar(:math_test,
+## {
+##	 { :value1 , _unset },
+##	 { :value2 , _unset }
+## },
+## {:test_case})
+##
+## _method math_test.set_up()
+##       .value1 << 2.0
+##       .value2 << 3.0
+## _endmethod
+##
+## For each test implement a method which interacts with the fixture.
+## Verify the expected results with assertions specified by calling assert with a boolean.
+##
+## _method math_test.test_add()
+##       result << .value1 + .value2
+##       _self.assert( result, :|=|, 5.0 )
+## _endmethod
+##
+## Once the methods are defined you can run them.
+## The framework uses reflection to implement run_test() method.
+## It dynamically finds and invokes a method.
+## In this case the name of the test case has to correspond to the
+## test method to be run.
+##
+## a_test << math_test.new( :test_add|()| )
+## a_test.run()
+##
+## The tests to be run can be collected into a test_suite.
+## MagikUnit provides different test runners which can run a test suite
+## and collect the results. A test runner either expects a method suite() as
+## the entry point to get a test to run or it will extract the suite automatically. 
+##
+## a_suite << test_suite.new()
+## a_suite.add_test( math_test.new( :test_add|()| ))
+## a_suite.add_test( math_test.new( :test_divide_by_zero|()| ))
+def_slotted_exemplar(:test_case,
+{
+	{ :name , _unset }
+},
+{:test_interface,:assert}
+)
+$
+
+_pragma(classify_level=advanced)
+## A property_list of test aspects
+## Holds the aspects that the image must provide for this
+## test_case to run
+test_case.define_shared_constant( :test_aspects, property_list.new(), :public )
+$
+
+_pragma(classify_level=restricted, usage={subclassable})
+## The highest test number that will be looked for if the
+## suite_by_numbers() method is being used to find test suites.
+##
+## The default of 1024 should be enough for most test suites.
+test_case.define_shared_constant(:suite_by_numbers_limit, 1024, :private)
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_case.new( a_name )
+	## Constructs a test case with the given A_NAME.
+	## e.g simple_test.new( "test_add" )
+	 
+	>> _clone.init( a_name )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_private _method test_case.init( a_name )
+	## Initialise and return _self.
+
+	_self.set_name( a_name )
+	
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method test_case.set_name( a_name )
+	## Sets A_NAME of a test.
+
+	.name << a_name
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method test_case.get_name()
+	## Gets the name of a test.
+
+	>> .name
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_case.count_test_cases()
+	## Counts the number of test cases that will be run by this test.
+
+	>> 1
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_case.run( _optional a_test_result )
+	## A convenience method to run this test, collecting
+	## the results with A_TEST_RESULT object.
+
+	a_test_result << a_test_result.default( mtest_result.new() )
+	.test_result << a_test_result
+
+	_if _self.get_name() _is _unset 
+	_then 
+		_self.suite().run( a_test_result )
+	_else 
+		a_test_result.run( _self )
+	_endif 	
+
+	>> a_test_result
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method test_case.run_bare()
+	## Runs the bare test sequence.
+
+	_protect
+		_self.set_up()
+		_self.run_test()
+	_protection
+		_self.tear_down()
+	_endprotect
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_case.set_up()
+	## Sets up the fixture, for example, open a CORBA connection
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_private _method test_case.run_test()
+	## Override to run the test and assert its state.
+	## Default implementation uses reflection to invoke a method
+	## defined by name of test_case.
+
+	_if .name _is _unset
+	_then
+		_self.fail( "Test method isnt defined" )
+	_elif _not _self.responds_to?( .name )
+	_then
+		_self.fail( "Method " + .name + " not found.")
+	_elif _not _self.runnable?()
+	_then 
+		# Test is not runnable - ignore the test.
+	_else
+		_self.perform( .name )
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_case.tear_down()
+	## Tears down the fixture, for example, close a CORBA connection.
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit,usage=subclassable)
+_method test_case.suite( _optional a_name, _gather suite_args)
+	
+	## Default implementation of suite for test case. Can be
+	## overriden.  Constructs a test_suite called A_NAME with the
+	## non-private methods matching the pattern "test*()".
+	##
+	## SUITE_ARGS are passed to the test_suite.new() method. 
+
+	a_name << a_name.default( _self.class_name )
+
+	>> test_suite.new( _self , a_name, _scatter suite_args )
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method test_case.write_on( a_stream )
+	## Writes a description of self to A_STREAM.
+
+	_if _self _is _self.exemplar
+	_then
+		_super.write_on( a_stream )
+	_else 
+		.name.write_on( a_stream )
+
+		" [".write_on( a_stream )
+		
+		_if ( ex_global << _self.method_table.meta_at(:exemplar_global) ) _isnt _unset
+		_then 
+			ex_global.package.name.write_on( a_stream )
+			":".write_on( a_stream )
+		_endif
+		
+		_self.class_name.write_on( a_stream )
+		"]".write_on( a_stream )
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.write_info( _gather info )
+	## Notify test result with INFO strings.
+
+	.test_result.add_info( info)
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method test_case.infrastructure?
+	## Return false for all runnable children tests of test case.
+
+	>> _self _is sw:test_case
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_iter _method test_case.all_runnable_children_tests()
+	## An iterative method to loop over all inherited
+	## test cases that are runnable.
+	
+	_for a_child_mt _over _self.define_method_target.children( _true )
+	_loop
+		_if ( an_exemplar << a_child_mt.meta_at(:exemplar) ) _isnt _unset _andif
+		    _not an_exemplar.infrastructure? _andif
+		    !current_package!.includes_key?(an_exemplar.class_name) # ignore local exemplars
+		_then
+			_loopbody( an_exemplar )
+		_endif 
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_iter _method test_case.tests()
+	## Loop over all runnable tests.
+
+	_if .name _is _unset
+	_then
+		_for t _over _self.suite().tests()
+		_loop
+			_loopbody(t)
+		_endloop 
+	_else
+		_loopbody( _self )
+	_endif 
+_endmethod
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.reset_result()
+	##
+	## Reset the test_result slot
+	##
+
+	.test_result << _unset
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.value_for_display_tree( key )
+	##
+	## Returns the value to be used when the test is displayed as
+	## a display_tree
+	##
+	## KEY - SYMBOL - Value index following the :value keyword in the styled string
+	##
+
+	>> _if key _is :name
+	   _then
+		   >> _self
+	   _elif key _is :icon
+	   _then
+		   error_tests << rope.new()
+		   failed_tests << rope.new()
+		   _if .test_result _isnt _unset
+		   _then 
+			   _for an_error _over .test_result.errors()
+			   _loop
+				   error_tests.add( an_error.failed_test() )
+			   _endloop
+			   _for a_failure _over .test_result.failures()
+			   _loop
+				   failed_tests.add( a_failure.failed_test() )
+			   _endloop
+		   _endif 
+		   >> _if .test_result _is _unset
+		      _then
+			      ## Test has not been run
+			      >> ( { :test, :munit_gui }, :image )
+		      _elif error_tests.includes?( _self )
+		      _then
+			      ## Test had an error
+			      >> ( { :error, :munit_gui }, :image )
+		      _elif failed_tests.includes?( _self )
+		      _then
+			      ## Test failed
+			      >> ( { :failure, :munit_gui }, :image )
+		      _else
+			      ## Test passed
+			      >> ( { :ok, :munit_gui }, :image )
+		      _endif
+	   _endif
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.send_to_emacs()
+	##
+	## Send the method I refer to to emacs
+	##
+
+	_if .name _isnt _unset
+	_then 
+		_self.method( .name ).send_to_emacs()
+	_endif 
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.suite_by_numbers(_optional a_name, start, end)
+
+        ## Returns a test_suite called A_NAME which contains a series
+        ## tests which have names of the pattern "test_<n>()" and which
+        ## are run in order from START to END.
+	##
+	## To use this style of naming tests change your <subclass>.suite()
+	## method so it gathers its arguments then does:
+	##
+	## >> _self.suite_by_numbers(_scatter args)
+	## 
+        ## If START is given then it indicates which test to start
+        ## with, END gives the last test to run.  Both are inclusive.
+	##
+	## If neither START nor END are given then it will run all
+	## tests matching the pattern from test_1() sequentially until
+	## the _self.suite_by_numbers_limit value is passed (1024 by
+	## default).
+	##
+	## Examples:
+	##
+	## test_runner.run(datamodel_engine_test.suite(_unset, 5))
+	## test_runner.run(datamodel_engine_test.suite(_unset, 1, 6))
+	##
+	## If you use this method then you could also use
+	## write_test_banner() to output information about each test
+	## as it runs.  See that method for details.
+
+	suite_name << a_name.default( _self.class_name )
+	
+        result << test_suite.new(_unset, suite_name)
+	last   << end.default(start)
+
+	_for i _over start.default(1).upto(last.default(_self.suite_by_numbers_limit))
+        _loop
+		test_method_name << write_string("test_", i, "()").as_symbol()
+
+		_if _self.responds_to?(test_method_name)
+		_then
+			result.add_test(_self.new(test_method_name))
+		_endif
+        _endloop
+
+        >> result
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.write_test_banner(test_name_or_num, _optional comment)
+
+	## Print out a banner for a test to help mark where the test
+	## is starting in the CLI output.
+	##
+	## TEST_NUM_NAME_OR_NUM if the number or name of the test that
+	## is running.  Numbers will be displayed as "test_<m>()" and
+	## names will be output as they are given.
+	##
+	## COMMENT is a string to output explaining what the test does.
+
+	_if (name << test_name_or_num).is_class_of?(integer)
+	_then 
+		name << write_string("test_", test_name_or_num, "()").space_pad(9)
+	_endif 
+
+	write()
+	write("##################################################")
+	write("# Running method ", _self.class_name, %., name)
+	_if comment _isnt _unset
+	_then 
+		write("#")
+		write("# Comment: ", comment)
+	_endif 
+	write("##################################################",newline_char)
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit, usage={subclassable})
+_method test_case.runnable?( _optional test_name )
+	##
+	## Returns true if the test is runnable
+	## TEST_NAME is the name of a specific test.
+	## By default, a test is runnable if the image's test_aspects
+	## (as defined by smallworld_product.test_aspects) include all
+	## of my test_aspects.
+	##
+
+	# For now, tests without any aspects are not runnable
+	>> _if _self.test_aspects.empty?
+	   _then
+		   >> _true 
+	   _else 
+		   >> smallworld_product.test_aspect_keys().includes_all?( _self.test_aspects.keys )
+	   _endif
+	
+_endmethod
+$

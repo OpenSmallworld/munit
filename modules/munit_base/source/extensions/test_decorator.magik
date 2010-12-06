@@ -1,0 +1,101 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+## A Decorator for Tests.
+## Use test_decorator as the base class for defining new test decorators.
+## Test decorator subclasses can be introduced
+## to add behaviour before or after a test is run. 
+def_slotted_exemplar(:test_decorator,
+{
+	{ :test,_unset },
+	{ :test_result, _unset }
+},
+{:test_interface}
+)
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_decorator.new( a_test )
+	## Constructs a test decorator for A_TEST.
+
+	>> _clone.init( a_test )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_private _method test_decorator.init( a_test )
+	## Initialise and return _self.
+
+	.test << a_test
+	>> _self  
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method test_decorator.get_test()
+	## Returns test.
+
+	>> .test
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_decorator.count_test_cases()
+	## Counts the number of test cases that will be run by this test.
+
+	>> .test.count_test_cases()
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method test_decorator.basic_run( _optional a_test_result )
+	## The basic run behaviour.
+
+	>> .test.run( a_test_result )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit, usage={subclassable})
+_method test_decorator.runnable?( _optional test_name )
+	##
+	## Returns true if the test is runnable
+	## decorators are runnable as the check is performed for each test
+	##
+	>> _true 
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_decorator.run( _optional a_test_result )
+	## Runs a test and collects its result in A_TEST_RESULT instance.
+
+	a_result << a_test_result.default( mtest_result.new() )
+	.test_result << a_result
+	>> _self.basic_run( a_result )
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_decorator.write_on( a_stream )
+	## Writes a description of test to A_STREAM.
+
+	>> .test.write_on( a_stream )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_iter _method test_decorator.tests()
+	## Implementation of interface method.
+
+	_loopbody( _self.get_test() )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_decorator.infrastructure?
+	## Implementation of interface method.
+
+	>> _self _is sw:test_decorator
+_endmethod
+$

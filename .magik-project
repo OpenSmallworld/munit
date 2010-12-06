@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription version="1.1">
+<gisVersion>pl.com.astec.mdt.sc400</gisVersion>
+<session>04_11_10_09_16_38_3</session>
+<paths/>
+<dependencies>
+<dependency kind="module" location="D:/Smallworld/product/modules/sw_dev_tools/magik_tools"/>
+<dependency kind="product" location="d:/smallworld/product/modules/sw_common"/>
+</dependencies>
+</projectDescription>

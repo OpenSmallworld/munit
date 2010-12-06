@@ -1,0 +1,89 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=restricted,topic=MUnit)
+def_slotted_exemplar(:test_suite_finder,
+{
+	{ :test_suites , _unset }
+})
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_suite_finder.new()
+
+	>> _clone.init()
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_suite_finder.init()
+	
+	_self.find_all_suitable_suites()
+
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_suite_finder.get_test_suite_owner_names()
+
+	owner_names << rope.new()
+		
+	_for a_test_suite_owner_name _over .test_suites.keys()
+	_loop
+		owner_names.add( a_test_suite_owner_name )
+	_endloop 
+
+	>> owner_names.as_sorted_collection()
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_suite_finder.suite_for( a_test_name )
+
+	>> .test_suites[ a_test_name ]
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method test_suite_finder.find_all_suitable_suites()
+
+	.test_suites << hash_table.new()
+
+	_for i _over test_interface.define_method_target.children(_true )
+	_loop 
+		_if ( glo << i.meta_at(:exemplar_global) ) _isnt _unset _andif
+		    _not (a_suite << glo.value).infrastructure? 
+		_then
+			a_class_name << a_suite.class_name
+			.test_suites[ a_class_name ] << a_suite
+		_endif 
+	_endloop 
+
+	>> .test_suites
+_endmethod
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_suite_finder.find_classes_for_module( module_name )
+	##
+	## Return a rope containing all the test_suite owners in the
+	## module MODULE_NAME
+	##
+
+	result << rope.new()
+		
+	_for a_test_suite_owner_name _over .test_suites.keys()
+	_loop
+		a_class << get_global_value( a_test_suite_owner_name )
+		_if a_class _isnt _unset _andif
+		    a_class.module_name _is module_name
+		_then 
+			result.add( a_class )
+		_endif 
+	_endloop 
+
+	>> result
+	
+_endmethod
+$
+

@@ -1,0 +1,89 @@
+# To get gis to add another path to SW_MSF_PATH automatically, we can do:
+# 1. In this file append a path to SW_GIS_ALIAS_FILES
+# or
+# 2. In environment and environment.bat files, append a path to SW_MSF_PATH
+#    c.f. Customer and development usage of SW_PRODUCT_PATHS
+#	SW_GIS_ALIAS_FILES = %SW_GIS_ALIAS_FILES%:%SMALLWORLD_GIS%/../unshipped/config/gis_aliases.image_build
+#	PARENT_IMAGES_DIR = %SMALLWORLD_GIS%/../unshipped/images
+#
+#
+
+#RUN_GIS_TARGETS:
+#	title		= Build all the gis_aliases targets given on gis command line
+#	script		= %SMALLWORLD_GIS%/bin/share/RUN_GIS_TARGETS
+#	product		= gis
+##
+munit_gui:
+	title		= Run Smallworld Application Framework
+	image		= munit_gui.msf
+	args		= -Mextdir %TEMP%
+	product		= gis
+
+base:
+	title		= Run Smallworld Application Framework
+	image		= base.msf
+	args		= -Mextdir %TEMP%
+	product		= gis
+
+#
+swaf:
+	title		= Run Smallworld Application Framework
+	image		= swaf.msf
+	args		= -Mextdir %TEMP%
+	product		= gis
+
+#
+build_munit_swaf:
+	title		= Add munit gui to %SW_MUNIT_IMAGE%
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= swaf
+	product		= gis
+	SW_MAGIK_IMAGE_NAME = munit_gui
+#
+build_munit_latest:
+	title		= Add munit gui to %SW_MUNIT_IMAGE%
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= base
+	product		= gis
+	SW_MAGIK_IMAGE_NAME = munit_image_latest
+	SW_SAVE_IMAGE_DIR := %SMALLWORLD_GIS%/images
+	SW_SAVE_IMAGE_DIR_FORMAT := spin
+	SPIN:=main
+	LOG_DIR := %SMALLWORLD_GIS%/images/logs
+#
+build_munit_420:
+	title		= Add munit gui to %SW_MUNIT_IMAGE%
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= base
+	product		= gis
+	SW_SAVE_IMAGE_DIR := %SMALLWORLD_GIS%/images
+	SW_SAVE_IMAGE_DIR_FORMAT := spin
+	SPIN:=main
+	LOG_DIR := %SMALLWORLD_GIS%/images/logs
+	SW_MAGIK_IMAGE_NAME = munit_image_420
+#
+run_munit_product_tests:
+	title		= run tests against a swaf image
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= munit_gui
+	product		= gis
+	SW_MAGIK_IMAGE_NAME = run_munit_product_tests
+#
+
+add_munit_and_run_unit_tests:
+	title		= run tests against a swaf image
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= %SW_MUNIT_IMAGE%
+	product		= gis
+	SW_MAGIK_IMAGE_NAME = add_munit_and_run_unit_tests
+#
+add_munit_and_run_system_tests:
+	title		= run tests against a swaf image
+	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
+	args		= %SW_MUNIT_IMAGE%
+	product		= gis
+	SW_MAGIK_IMAGE_NAME = add_munit_and_run_system_tests
+#
+
+
+

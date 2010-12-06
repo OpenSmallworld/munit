@@ -1,6 +1,0 @@
-#% text_encoding = iso8859_1
-_package sw
-
-# Raised when an assertion failed.
-condition.define_condition( :assertion_failed_warning , :warning , {:message} , "#1" )
-$

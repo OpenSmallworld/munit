@@ -1,0 +1,66 @@
+#% text_encoding = iso8859_15
+_package sw
+
+_pragma(classify_level=debug,topic=MUnit)
+def_slotted_exemplar(:munit_xml_testcontainer,
+{
+	{:parent, _unset, :writable, :public},
+	{:children, _unset, :writable, :public},
+
+	{:name, "", :writable, :public},
+	{:starttime, 0},
+	{:time, 0}
+})
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method munit_xml_testcontainer.current_time()
+	## delivers the current system time in milliseconds
+	_local sec, ms
+	(sec, ms) << system.time_now()
+	>> sec*1000+ms
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method munit_xml_testcontainer.init(name, _optional parent)
+	## initialises the xml testcontainer
+	##
+	_if parent _isnt _unset 
+	_then
+		parent.children.add_last(_self)
+		.parent << parent
+	_endif
+	.children << rope.new()
+	.name << name
+	.starttime << _self.current_time()
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method munit_xml_testcontainer.new(_gather args)
+	## creates a new xml testcontainer
+	## 
+	>> _clone.init(_scatter args)
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method munit_xml_testcontainer.end()
+	## closes a xml testcontainer
+	## 
+	.time << _self.current_time()-.starttime
+	>> .parent
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method munit_xml_testcontainer.time
+	## gets the run time of this testcontainer
+	## 
+	_dynamic !print_float_precision! << 8
+	>> (.time/1000.0).write_string
+	
+_endmethod
+$

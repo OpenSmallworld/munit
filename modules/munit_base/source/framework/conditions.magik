@@ -1,0 +1,7 @@
+#% text_encoding = iso8859_1
+_package sw
+
+# Raised when an assertion failed.
+_pragma(classify_level=debug,topic=MUnit)
+condition.define_condition( :assertion_failed_warning , :warning , {:message} , "#1" )
+$

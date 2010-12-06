@@ -1,0 +1,43 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug,topic=MUnit)
+def_slotted_exemplar(:test_interface_test,
+{
+	{:test,_unset}
+},
+{:test_case})
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+test_interface_test.define_shared_constant(:test_aspects,
+	property_list.new_with(:never, "NEVER"), :public )
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method test_interface_test.set_up()
+
+	.test << def_local_exemplar( :test , {} , {test_interface})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method test_interface_test.tear_down()
+
+	.test << _unset 
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method test_interface_test.test_run()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|run()| )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method test_interface_test.test_count_test_cases()
+
+	_self.assert_raised_condition( :subclass_should_implement, .test , :|count_test_cases()| )
+_endmethod
+$

@@ -1,0 +1,12 @@
+munit_image_latest 1
+
+description
+	latest munit so no need for core mods
+end
+
+requires
+	munit_xml 4
+	munit_gui 4
+end 
+
+language en_gb

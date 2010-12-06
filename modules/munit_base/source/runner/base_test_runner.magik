@@ -1,0 +1,288 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit)
+def_slotted_exemplar( :base_test_runner,
+	{
+		{ :test_result,  _unset },
+		{ :stream,       !terminal! },
+		{ :properties,   property_list.new_with(
+					 :exclude_slow_tests?,_false,
+					 :max_tests,          float.infinity,
+					 :max_failures,       float.infinity,
+					 :max_errors,         float.infinity,
+					 :max_assertions,     float.infinity ) }
+	},
+	{ :engine_model , :test_listener_interface } )
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+base_test_runner.define_slot_access( :test_result, :readable )
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+base_test_runner.define_slot_access( :properties, :readable )
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+base_test_runner.define_slot_access( :stream, :writable )
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method base_test_runner.new( _optional a_stream , _gather keys_and_elements )
+	## Creates a test_runner using the given A_STREAM for all the output.
+	## The following KEYS are recognised:
+	##
+	##   :EXCLUDE_SLOW_TESTS?   Test methods names that includes string "slow"
+	##                          are not added to the suite if set to _true.
+	## 
+	##   :MAX_ERRORS            If number of errors encountered exceeds
+	##                          this setting, then the test run is stoped.
+	##
+	##   :MAX_FAILURES          If number of failures encountered exceeds
+	##                          this setting, then the test run is stoped.
+	##
+	##   :MAX_TESTS             If number of test encountered  exceeds
+	##                          this settings, then the test run is stoped.
+	##
+	##   :MAX_ASSERTIONS        If number of assertions encountered  exceeds
+	##                          this settings, then the test run is stoped.
+	##    Example :
+	##    test_runner.new( !terminal! , :exclude_slow_tests? , _true , :max_tests , 10 , :max_errors , 5 )
+
+	>> _clone.init( a_stream , _scatter keys_and_elements )
+
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method base_test_runner.init( a_stream , _gather keys_and_elements )
+	## Init self with output !A_STREAM! and properties
+	## KEYS_AND_ELEMENTS.
+
+	.stream  << a_stream.default( !terminal! )
+	_self.init_properties( _scatter keys_and_elements )
+	
+	>> _self
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method base_test_runner.init_properties( _gather keys_and_elements )
+	## Init properties of runner from KEYS_AND_ELEMENTS.
+	
+	.properties << property_list.new_from_gathered( keys_and_elements )
+	
+	.properties[:exclude_slow_tests?] << .properties[:exclude_slow_tests?].default( _false )
+	.properties[:max_tests ]          << .properties[:max_tests].default( float.infinity )
+	.properties[:max_failures]        << .properties[:max_failures].default( float.infinity )
+	.properties[:max_errors]          << .properties[:max_errors].default( float.infinity )
+	.properties[:max_assertions]      << .properties[:max_assertions].default( float.infinity )
+	.properties[:output_dir]     << .properties[:output_dir].default(
+						system.getenv("TEST_RUNNER_OUTPUT_DIR")).default(
+								system.temp_directory_name )
+	.properties[:output_format]  << .properties[:output_format].default( :xml )
+_endmethod
+$
+	
+_pragma(classify_level=basic,topic=MUnit)
+_method base_test_runner.run_in_foreground( a_test, _gather suite_args )
+
+	## Runs the given A_TEST in the foreground
+	##
+	## SUITE_ARGS are passed to the suite() method on if A_TEST if
+	## it isn't already a test suite.  If A_TEST is a test_case
+	## object then the first argument is the name of the suite and
+	## the second is the collection of method names to run.
+	
+	_self.int!run( a_test, suite_args )
+	
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method base_test_runner.run( a_test, _gather suite_args )
+
+	## Runs the given A_TEST in a background thread.
+	##
+	## SUITE_ARGS are passed to the suite() method on if A_TEST if
+	## it isn't already a test suite.  If A_TEST is a test_case
+	## object then the first argument is the name of the suite and
+	## the second is the collection of method names to run.
+	
+	_self.kill_test_thread()
+	_self.run_engine( _thisthread.high_background_priority , :int!run|()| , a_test, suite_args )
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+_method base_test_runner.int!run( a_test, _optional suite_args )
+
+	## Run A_TEST.
+	##
+	## See the run() method for more information.
+	
+	_if a_test.runnable?()
+	_then 
+		# If exemplar run suite.
+		_if a_test.exemplar _is a_test _andif
+		    ( a_test.is_kind_of?( munit_test_suite ) _orif
+		      a_test.is_kind_of?( test_case ) _orif
+		      a_test.is_kind_of?( munit_test_setup ) _orif
+		      a_test.is_kind_of?( munit_test_decorator ) )
+		_then 
+			a_test << a_test.suite(_unset, _scatter suite_args.default({}))
+		_endif
+
+		#.stream.write( newline_char )
+		run_time << _self.run_bare( a_test )
+
+		_self.output_run_time( run_time )
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method base_test_runner.run_in_new_stream( a_test, _gather suite_args )
+	##
+	## Runs A_TEST in a new test runner created with a new
+	## external_text_output stream based on the properties set on
+	## the current test runner and A_TEST.
+	## 
+
+	_if a_test.runnable?()
+	_then
+		a_stream << _self.new_stream( a_test )
+		_protect
+			new_runner << _self.new( a_stream, _scatter .properties.for_scatter() )
+			new_runner.int!run( a_test, _scatter suite_args )
+			a_stream.flush()
+		_protection
+			a_stream.close()
+		_endprotect
+	_endif 
+		
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method base_test_runner.new_stream( a_test )
+	##returns a new stream to output xml results
+
+	_if a_test.module_name _is _unset _then
+		class_name << a_test.name
+		module_name << "unknown"
+		product_name << "unknown"
+	_else
+		class_name << a_test.class_name
+		module_name << a_test.module_name
+		a_mod << sw_module_manager.module(module_name)
+		product_name << a_mod.product.name
+	_endif 
+
+	fname << "".concatenation(product_name, "__", module_name, "__", class_name, ".", .properties[:output_format])
+	
+	a_file << system.name_new_file(
+			  system.pathname_from_components( fname, .properties[:output_dir] ))
+
+	show(a_file)
+	
+	_return external_text_output_stream.new( a_file )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method base_test_runner.output_run_time( run_time )
+
+	## Output timings in RUN_TIME
+
+	# write time
+	.stream.write( newline_char )
+	time << time_interval.new( 0 , (run_time*1000).floor )
+	.stream.write( newline_char )
+	.stream.write( "Time: ") 
+	time.write_on( .stream , 5 )
+	.stream.write( newline_char ) 
+	
+	# print results 
+	_self.print()
+	
+	# emulate_magik_prompt
+	.stream.write( newline_char )
+	_if .stream _is !terminal!
+	_then
+		.stream.write((magik_rep.prompt_generator)(_unset))
+	_endif 
+	.stream.flush()	
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method base_test_runner.run_bare( a_test )
+	## 
+
+	exclude_slow_tests? << .properties[:exclude_slow_tests?]
+	
+	.test_result << mtest_result.new( exclude_slow_tests? )
+	.test_result.add_listener( _self )
+
+	start_time << system.elapsed_seconds()
+	a_test.run( .test_result )
+	end_time << system.elapsed_seconds()
+	run_time << end_time - start_time
+
+	>> run_time
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method base_test_runner.stop()
+	## Preferable way how to stop runnner.
+	## This will stop execution of tests
+	## after current running test is finished.
+	## Another option is heavy gun KILL_TEST_THREAD().
+	
+	_if .test_result _isnt _unset
+	_then
+		.test_result.stop()
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method base_test_runner.end_test( a_test )
+	## Implementation of abstract method from test_listener_interface. 
+
+	max_tests      << .properties[ :max_tests ]
+	max_failures   << .properties[:max_failures]
+	max_errors     << .properties[:max_errors]
+	max_assertions << .properties[:max_assertions]
+
+	_if ( .test_result.run_count()     >= max_tests   ) _orif 
+	    ( .test_result.failure_count() >= max_failures) _orif
+	    ( .test_result.error_count()   >= max_errors  )  _orif
+	    ( .test_result.assert_count()  >= max_assertions  )  
+	_then
+		.test_result.stop()
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method base_test_runner.kill_test_thread()
+	## Kill main test thread and all children threads created
+	## in active test suites.
+	
+	_if ( result? << _self.interrupt_engine() )
+	_then
+		_if active_test_suite _isnt _unset
+		_then 
+			active_test_suite.kill_all_active_tests()
+		_endif 
+	_endif
+	
+	>> result?
+_endmethod
+$

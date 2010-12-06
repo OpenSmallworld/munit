@@ -1,0 +1,197 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug,topic=MUnit)
+def_slotted_exemplar(:assert_raised_condition_test,
+{},
+{:test_case})
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+assert_raised_condition_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_error()
+	## 
+
+	_self.assert_raised_condition( :error , condition , :raise|()| , {:error} )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_warning()
+	## 
+
+	_self.assert_raised_condition( :warning , condition , :raise|()| , {:warning} )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_information()
+	## 
+
+	_self.assert_raised_condition( :information , condition , :raise|()| , {:information} )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_error_subclass()
+	## 
+
+	_self.assert_raised_condition( :error , _unset  , {:lalala} )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_warning_subclass()
+	## 
+
+	_self.assert_raised_condition( :warning , condition , :raise|()| , {:global_changing_nature} )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_information_subclass()
+	## 
+
+	_self.assert_raised_condition( :information , condition , :raise|()| , {:external_database_committed } )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_no_error()
+	## 
+
+	_self.assert_raised_condition( :assertion_failed_warning ,
+				       _self , :assert_raised_condition|()| , 
+				       {:error , object , :yourself } )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_no_raised_no_warning()
+	## 
+	
+	_self.assert_raised_condition( :assertion_failed_warning ,
+				       _self , :assert_raised_condition|()| , 
+				       {:warning , object , :yourself } )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_no_information()
+	## 
+	
+	_self.assert_raised_condition( :assertion_failed_warning ,
+				       _self , :assert_raised_condition|()| , 
+				       {:information , object , :yourself } )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_wrong_error()
+	## 
+	
+	_self.assert_raised_condition( :index_out_of_bounds ,
+				       _self , :assert_raised_condition|()| , 
+				       { :user_error ,condition , :raise|()| , { :index_out_of_bounds } })
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_error_not_warning()
+	##
+
+	_self.assert_raised_condition( :index_out_of_bounds ,
+				       _self , :assert_raised_condition|()| ,
+				       {
+					       :sw_module_warning ,
+					       condition ,
+					       :raise|()| ,
+					       { :index_out_of_bounds }
+				       })
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_error_failure()
+	## 
+
+	_self.assert_raised_condition( :error ,
+				       _self , :assert_raised_condition|()| ,
+				       { :user_error , condition , :raise|()| , { :error } } )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_warning_failure()
+	## 
+	
+	_self.assert_raised_condition( :warning ,
+				       _self , :assert_raised_condition|()| ,
+				       { :datamodel_warning , condition , :raise|()| , { :warning } } )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_error_return_value()
+	## 
+
+	_local example_exampler
+	example_exemplar << def_local_exemplar(:example_exemplar,{},{})
+
+	example_exemplar.define_method( :error_method|()| ,
+					_proc()
+						condition.raise( :error )
+						_return _true 
+					_endproc , _false )
+	
+	result << _self.assert_raised_condition( :error , example_exemplar , :error_method|()| )
+
+	_self.assert( result , :is , _unset , "no return value" )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_warning_return_value()
+	## 
+	
+	_local example_exampler
+	example_exemplar << def_local_exemplar(:example_exemplar,{},{})
+	
+	example_exemplar.define_method( :warning_method|()| ,
+					_proc()
+						condition.raise( :warning )
+						_return _true 
+					_endproc , _false )
+	
+	result << _self.assert_raised_condition( :warning , 
+						 example_exemplar , :warning_method|()| )
+	
+	_self.assert( result , :is , _true , "return value" )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_raised_condition_test.test_raised_assertion_failed_warning_return_value()
+	## 
+	
+	_local example_exampler
+	example_exemplar << def_local_exemplar(:example_exemplar,{},{})
+	
+	example_exemplar.define_method( :success_method|()| ,
+					_proc()
+						_return _true 
+					_endproc , _false )
+	
+	result << _self.assert_raised_condition(  :assertion_failed_warning ,
+						  _self , :assert_raised_condition|()| ,
+						  { :warning , example_exemplar , :success_method|()| })
+	
+	_self.assert( result , :is , _true , "return value" )
+_endmethod
+$
+
+
+

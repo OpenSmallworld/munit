@@ -1,0 +1,48 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+## A test can be run and collect its result.
+def_mixin(:test_interface)
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_interface.count_test_cases()
+	## Counts the number of test cases that will be run by test.
+	## Subclasses must provide an implementation of this method.
+	## Should return integer.
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_interface.run( _optional a_test_result )
+	## A convenience method to run test, collecting
+	## the results with A_TEST_RESULT object.
+	## Subclasses must provide an implementation of this method.
+	## Should return test_result instance.
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit, usage={subclassable})
+_abstract _method test_interface.runnable?( _optional test_name )
+	##
+	## Returns true if the test is runnable
+	## TEST_NAME is the name of a specific test.
+	## By default, a test is runnable if the image's test_aspects
+	## (as defined by smallworld_product.test_aspects) include all
+	## of my test_aspects.
+	##
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _iter _method test_interface.tests()
+	## Returns all runnable tests of self.
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_abstract _method test_interface.infrastructure?
+	## Returns _true if exemplar itself is not runnable as test.
+_endmethod
+$

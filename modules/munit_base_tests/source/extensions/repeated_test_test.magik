@@ -1,0 +1,100 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug,topic=MUnit)
+##  Testing the repeated_test support.
+def_slotted_exemplar(:repeated_test_test,
+{
+	{ :suite , _unset }
+},
+{:test_case})
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+repeated_test_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method repeated_test_test.set_up()
+
+	_local success_test_case
+	success_test_case << def_local_exemplar( :success_test_case , {} , {test_case} )
+	success_test_case.define_method( :run_test|()| , _proc() _endproc , _true ) 
+
+	.suite << test_suite.new( _unset , "success suite" )
+	.suite.add_test( success_test_case.new( "success" ))
+	.suite.add_test( success_test_case.new( "success" ))
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method repeated_test_test.test_repeated_once()
+
+	a_test << repeated_test.new( .suite , 1 )
+	_self.assert( 2 , :|=| , a_test.count_test_cases() , "test count" )
+	_self.assert( a_test.get_test() , :is , .suite )
+
+	a_result << mtest_result.new()
+	a_test.run( a_result )
+	
+	_self.assert( 2 , :|=| , a_result.run_count() , "run count" )
+_endmethod 
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method repeated_test_test.test_repeated_more_than_once()
+
+	a_test << repeated_test.new( .suite , 3 )
+	_self.assert( 6 , :|=| , a_test.count_test_cases() , "test count" )
+
+	a_result << mtest_result.new()
+	a_test.run( a_result )
+	
+	_self.assert( 6 , :|=| , a_result.run_count() , "run count" )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method repeated_test_test.test_repeated_zero()
+
+	a_test << repeated_test.new( .suite , 0 )
+	_self.assert( 0 , :|=| , a_test.count_test_cases() , "test count" )
+
+	a_result << mtest_result.new()
+	a_test.run( a_result )
+	
+	_self.assert( 0 , :|=| , a_result.run_count() ,"run count" )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method repeated_test_test.test_repeated_negative()
+
+	a_test << repeated_test.new( .suite , -1 )
+	_self.assert( -2 , :|=| , a_test.count_test_cases() , "test count" )
+
+	a_result << mtest_result.new()
+	a_test.run( a_result )
+	
+	_self.assert( 0 , :|=| , a_result.run_count() ,"run count" )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method repeated_test_test.test_infrastructure?()
+	##
+
+	_global repeated_test
+	_self.assert( repeated_test.infrastructure? , :is , _true )
+	
+	rep_test << a_test << repeated_test.new( .suite , 5 )
+	_self.assert( rep_test.infrastructure? , :is , _false )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method repeated_test_test.test_write()
+
+	rep_test << a_test << repeated_test.new( .suite , 5 )
+	_self.assert("success suite [sw:test_suite](repeated)" , :|=| , rep_test.write_string )
+_endmethod

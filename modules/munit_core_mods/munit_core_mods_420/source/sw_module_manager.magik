@@ -1,0 +1,34 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+_pragma(classify_level=advanced)
+_method sw_module_manager.load_test_modules( _optional limit_to_loaded_targets?)
+	## Loads test modules defined under product
+	## If limit_to_loaded_targets? is true then only test modules
+	## where the target module is already loaded will be loaded.
+
+	limit_to_loaded_targets? << limit_to_loaded_targets?.default( _true )
+
+	_self.fixup_test_modules()
+	
+	_for a_mod _over _self.defined_modules.fast_elements()
+	_loop
+		_try 
+			_if a_mod.test_module?
+			_then
+				_if a_mod.tested_modules_loaded?
+				_then
+					_self.load_module( a_mod.name, _unset, :update_image?, _false  )
+				_elif limit_to_loaded_targets? _isnt _true
+				_then
+					_self.load_module( a_mod.name, _unset, :update_image?, _false  )
+				_endif 
+			_endif
+		_when error
+		_endtry 
+	_endloop
+
+	_self.update_image()
+	
+_endmethod
+$
