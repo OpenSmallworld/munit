@@ -2,4 +2,3 @@ smallworld_product
 sw_module
 sw_module_manager
 sw_product
-method
