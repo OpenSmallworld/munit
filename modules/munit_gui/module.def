@@ -6,8 +6,9 @@ end
 
 requires
 	munit_base 4
-	magik_tools
 	tree_item
+	magik_tools
+
 end
 
 language en_gb
