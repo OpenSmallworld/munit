@@ -54,7 +54,7 @@ build_munit_latest:
 build_munit_420:
 	title		= Add munit gui to %SW_MUNIT_IMAGE%
 	script		= %SMALLWORLD_GIS%/bin/share/BUILD_IMAGE
-	args		= swaf
+	args		= base
 	product		= gis
 	SW_SAVE_IMAGE_DIR := %SMALLWORLD_GIS%/images
 	SW_SAVE_IMAGE_DIR_FORMAT := spin
