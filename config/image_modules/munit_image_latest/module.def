@@ -6,7 +6,7 @@ end
 
 requires
 	munit_xml 4
-	munit_gui 4
+	munit_magik_gui 4
 end 
 
 language en_gb
