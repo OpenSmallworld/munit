@@ -1,4 +1,4 @@
-munit_config layered_product
+munit_config config_product
 
 title
 	MUnit configuration product
