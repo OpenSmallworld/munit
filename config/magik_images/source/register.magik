@@ -98,7 +98,7 @@ _block
 		
 		:image_file_name, "munit_gui",	
 
-		:add_products, system.pathname_up(smallworld_product.config_product[:munit_config].directory),
+		:add_products, system.pathname_up(smallworld_product.config_products[:munit_config].directory),
 		
 		:load_modules, :munit_image_latest
 		)
