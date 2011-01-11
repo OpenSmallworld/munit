@@ -1,1 +1,5 @@
-test_runner_dialog_test
+munit_gui_test
+failure_selector/
+model/
+test_aspect/
+test_selector/

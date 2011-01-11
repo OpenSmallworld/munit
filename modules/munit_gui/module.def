@@ -5,9 +5,11 @@ description
 end
 
 requires
-	munit_base 4
-	tree_item
-	magik_tools
+	new_munit_gui	4
+#	munit_base 4
+#	tree_item
+#	magik_tools
+#	what_got_run_viewer
 
 end
 
