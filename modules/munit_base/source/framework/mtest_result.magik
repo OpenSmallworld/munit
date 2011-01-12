@@ -273,6 +273,7 @@ _method mtest_result.failures_for_test( a_test )
 	 >> result
 _endmethod
 $
+_pragma(classify_level=debug, topic={MUnit})
 _method mtest_result.test_errored?( a_test )
 	result << _false 
 	_for e _over _self.errors()
@@ -287,6 +288,7 @@ _method mtest_result.test_errored?( a_test )
 	_return result 
 _endmethod
 $
+_pragma(classify_level=debug, topic={MUnit})
 _method mtest_result.test_failed?( a_test )
 	result << _false 
 	_for f _over _self.failures()

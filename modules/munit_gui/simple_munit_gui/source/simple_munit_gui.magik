@@ -1,0 +1,281 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+#remex(:simple_munit_gui)
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:simple_munit_gui, 
+	{
+		{:model, _unset}
+	},
+	{:gui_framework })#, :test_listener_interface})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+simple_munit_gui.define_slot_access(:model, :read, :public)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.init(name, an_owning_framework, _optional properties)
+	_super.init( name, an_owning_framework, properties )
+	.model << test_runner_model.new( _self )
+	>> _self 
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_private _method simple_munit_gui.title
+	>> _self.message(:title)
+_endmethod
+$
+
+#refactor to use databus?
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.select_test( a_test )
+	.model.select_test( a_test )
+	.model.set_tests( _self.plugin(:test_selector).selected_tests() )
+	_self.manage_actions(:select)
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.manage_actions( aspect )
+	_if aspect _is :select
+	_then 
+		_self.action( :run_test ).enabled? << .model.selected_test _isnt _unset
+	_endif  
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.test_result
+	_return .model.test_result
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method simple_munit_gui.init_actions()
+	
+	_self.add_action( sw_action.new( :run_test,
+					 :engine, _self,
+					 :image, {:run, :ui_resources},
+					 :enabled?, _false,
+					 :action_message, :run_test|()|
+				    ) )
+			  
+	_self.add_action( sw_action.new( :interrupt,
+					 :engine, _self,
+					 :image, {:stop, :ui_resources},
+					 :enabled?, _true,
+					 :action_message, :interrupt|()|
+				    ) )
+		    
+	_self.add_action( sw_action.new( :add_target_modules,
+					 :engine, _self,
+					 :image, {:detail_view, :ui_resources},
+					 :enabled?, _true,
+					 :action_message, :add_target_modules|()|
+				    ) )
+				    
+	_self.add_action( sw_action.new( :toggle_autorun,
+					 :engine, _self,
+					 :image, {:hidden_actions, :ui_resources},
+					 :toolbar_control, :image_toggle_item,
+					 :enabled?, _true,
+					 :value_change_message, :|toggle_run_on_compile()| #:enable_run_on_compile|()|
+				    ) )
+				    
+				   				
+	_self.add_action( sw_action.new( :load_test_modules,
+					 :engine, _self,
+					 :image, {:load, :ui_resources},
+					 :enabled?, _true,
+					 :action_message, :load_test_modules|()|
+				    ) )
+				   				
+	
+	_self.add_action( sw_action.new( :reset,
+					 :engine, _self,
+					 :image, {:clear, :ui_resources},
+					 :enabled?, _true,
+					 :action_message, :reset|()|
+				    ) )
+				    
+	_self.add_action( sw_action.new( :refresh,
+					 :engine, _self,
+					 :image, {:refresh, :ui_resources},
+					 :enabled?, _true,
+					 :action_message, :refresh|()|
+				    ) )
+			 
+_endmethod
+$
+
+#===
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.run_test(_optional run_method)
+
+	run_method << run_method.default(:|run_test_in_background()|)
+	_if .model.tests _isnt _unset _andif 
+		.model.tests.size > 0 
+	_then 
+		_self.interrupt()
+		_self.refresh_test_selector()
+		_self.setup_progress_indicator( .model.tests.size )
+		_self.reset_failure_list()
+		.model.perform( run_method )
+	_endif 	
+	
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.run_test_in_foreground( )
+	_self.run_test( :|run_test()| )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.start_test( a_test )
+	_self.update_status_info_text(:running, a_test.write_string)
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.end_test( a_test )
+	_self.update_test_selector( a_test )
+	_self.update_status_info()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.add_failure( a_failure )
+	_self.update_test_selector( a_failure.failed_test() )
+	_self.update_status_info()
+	_self.plugin(:failure_lister).add_failure( a_failure )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.add_error( a_failure )
+	_self.update_status_info()
+	_self.plugin(:failure_lister).add_error( a_failure )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.update_test_selector ( a_test )
+		_self.plugin(:test_selector).changed( :hierarchy_tree, :redraw_keys, { a_test } )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.refresh_test_selector()
+	_self.plugin(:test_selector).refresh()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.selected_modules
+	>> _self.plugin(:test_selector).selected_modules()
+_endmethod
+$
+
+#===
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.setup_progress_indicator( max_count )
+	
+		_self.install_progress_indicator(_self.message( :progress ),
+					_self,
+					:indicator,         bar_progress_indicator,
+					:max_count,         max_count,
+					:interrupt_message, :interrupt|()|,
+					:progress_aspect,   :work_progress,
+					:stop_aspect,       :work_completed )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.update_status_info_text( aspect , _gather strings )
+	_self.changed( :status_info, :text, _self.message( aspect, _scatter strings  ) )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.update_status_info( )
+
+	run_count << _self.test_result.run_count()
+
+	_self.changed( :work_progress, run_count )
+	
+	_self.changed( :tests_info, :text, _self.message( :runs_counter, run_count.write_string  ) )
+	_self.changed( :failure_info, :text, _self.message( :failures_counter, _self.test_result.failure_count().write_string ) )
+	_self.changed( :error_info, :text, _self.message( :errors_counter, _self.test_result.error_count().write_string ) )
+
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.interrupt()
+	.model.interrupt()	
+	_self.changed( :status_info, :text, _self.message( :interrupted ))
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.reset()
+	_for a_plugin _over _self.plugins()
+	_loop 
+		a_plugin.reset()
+	_endloop 
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.refresh()
+	_for a_plugin _over _self.plugins()
+	_loop 
+		a_plugin.refresh()
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.reset_failure_list()
+	_self.plugin(:failure_lister).reset()
+	
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.toggle_run_on_compile(val)
+	_if val _is _true _then 
+		_self.enable_run_on_compile()
+	_else
+		_self.disable_run_on_compile()
+	_endif 
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.enable_run_on_compile()
+	.model.set_old_load_file_proc()
+	.model.set_new_load_file_proc()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.disable_run_on_compile()
+	.model.reset_new_load_file_proc()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.close(_gather args)
+	#_self.disable_run_on_compile()
+	_super.close(_scatter args)
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.failure_selected( a_failure )
+	_self.plugin(:traceback_viewer).failure_selected( a_failure )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.test_aspect_selected( an_aspect )
+	_self.plugin(:test_selector).refresh()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.load_test_modules()
+	.model.load_test_modules()
+_endmethod
+$

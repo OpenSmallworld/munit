@@ -1,0 +1,218 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+#remex(:traceback_viewer_plugin)
+#$
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:traceback_viewer_plugin, 
+	{
+		{ :traceback_viewer, _unset }
+	},
+	{:plugin})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+traceback_viewer_plugin.define_slot_externally_readable( :traceback_viewer )
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method traceback_viewer_plugin.traceback_viewer
+	_if .traceback_viewer _is _unset 
+	_then 
+		.traceback_viewer << simple_traceback_viewer.new( {} ) #traceback_viewer.new( {} )
+	_endif
+	
+	_return .traceback_viewer 	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method traceback_viewer_plugin.failure_selected( a_failure )
+	
+	_if a_failure.responds_to?( :|traceback| )
+	_then 
+		#.traceback_viewer.show_traceback( a_failure.traceback )
+		_self.show_traceback( a_failure.traceback )
+		
+	_else 
+		_self.reset_traceback_viewer()
+	_endif 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method traceback_viewer_plugin.show_traceback( a_traceback )
+	_self.traceback_viewer.show_traceback( a_traceback )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method traceback_viewer_plugin.build_gui(parent, _optional xml_element)
+		>> _self.traceback_viewer.build_gui( parent )	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method traceback_viewer_plugin.reset_traceback_viewer()
+	_self.traceback_viewer.show_traceback( rope.new() ) 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method traceback_viewer_plugin.refresh()
+	
+_endmethod
+$
+
+#===
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:simple_traceback_viewer, {}, :clickable_dialog)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer.build_gui( parent )
+	
+	rc << rowcol.new( parent, _unset, 1, :pixel,
+		:resize_x?, _true,
+		:resize_y?, _true,
+		:row_resize_values, {100} )
+	pw << paned_window.new( rc, :col_alignment, :fill,
+		:row_alignment, :fill)
+	
+	my_tree_item << tree_item.new( pw,
+					:model,                    _self,
+					:hypertext_click_notifier, _self.hyperlink_click_handler,
+					:aspect,                   :line_list,
+					:mode,                     :none,
+					:style_holder,             _self.my_styles_holder )
+
+	rc << rowcol.new( rc, 1, _unset, :pixel,
+				:style, :button_box,
+				:col_alignment, :right,
+				:top_spacing, 2 )
+						  
+	.items[:method_toggle] << _self.add_method_radio_group(rc)
+				  
+	>> my_tree_item
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer.hyperlink_click_handler
+	>> handler.new(_self,:|hyperlink_clicked()|)
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_private _method simple_traceback_viewer.my_styles_holder
+	my_styles_holder << string_styles_holder.new_with()
+	my_styles_holder.add_text_style(:object_colour,_self.colour_mapping[:object_colour],_true,_self.code_font,_true)
+	my_styles_holder.add_text_style(:method_colour,_self.colour_mapping[:method_colour],_true,_self.code_font,_true)
+	my_styles_holder.add_text_style(:mixin_colour,_self.colour_mapping[:mixin_colour],_true,_self.code_font,_true)
+	my_styles_holder.add_text_style(:string_colour,_self.colour_mapping[:string_colour],_false,_self.code_font,_false)
+	
+	_return my_styles_holder 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer.show_traceback( a_traceback )
+	
+	.my_data << _self.clickable_traceback( a_traceback )
+	_self.changed( :line_list, :refresh )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method simple_traceback_viewer.clickable_traceback( a_traceback )
+
+	_if a_traceback _isnt _unset _andif
+	    a_traceback.size > 0
+	_then 
+		mystack << _self.stack_vector( a_traceback )
+	_else
+		mystack << {}
+	_endif
+
+	>> mystack
+		
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method simple_traceback_viewer.indent_vector( a_traceback )
+	
+		ts_size << a_traceback.size
+		indents << simple_vector.new(ts_size)
+		indent << 0
+		_for i _over ts_size.downto(1)
+		_loop
+			_if a_traceback[i].is_iter?
+			_then
+				indent +<< 3
+			_else indent << 0
+			_endif
+			indents[i] << indent
+		_endloop
+		
+		_return indents
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method simple_traceback_viewer.stack_vector( a_traceback )
+	
+	ts_size << a_traceback.size
+	indents << _self.indent_vector( a_traceback )
+	
+	mystack << simple_vector.new(ts_size)
+	_for i _over range(1,ts_size)
+	_loop
+		
+		
+		mystack[i] << _self.process_line( i, a_traceback[i], indents[i] )
+	_endloop
+		
+	_return mystack 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method simple_traceback_viewer.process_line( line_number, snap, indent  )
+		r << rope.new()
+		lineno << "[" + line_number.write_string + "]"
+		r.add_last(lineno.space_pad(5 + indent ))
+		r.add_last(snap.receiver)
+		r.add_last(".")
+		r.add_last(snap.receiver.method(snap.message))
+		r.add_all_last( _self.process_args( snap.arguments ) )
+		
+		_return r
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method simple_traceback_viewer.process_args( args )
+		
+	r << rope.new()
+		
+	_if ~args.empty? _then
+	
+		r.add_last(" ARGS{")
+		_for j,arg _over args.fast_keys_and_elements()
+		_loop
+			r.add_last(arg)
+			_if j = args.size
+			_then
+				r.add_last("}")
+			_else
+				r.add_last(",")
+			_endif
+		_endloop
+	_endif
+	
+	_return r
+_endmethod
+$

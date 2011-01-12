@@ -1,0 +1,73 @@
+#% text_encoding = iso8859_1
+
+#remex(:munit_failure_list_plugin_test)
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_failure_list_plugin_test, 
+	{
+		{:fl,     _unset},
+		{:result, _unset}
+	},
+	:test_case)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+munit_failure_list_plugin_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:always, "Always"),
+			:public)
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin_test.set_up()
+		.fl << munit_failure_list_plugin.new()
+		.fl.sys!slot(:framework) << _self 
+		.fl.build_gui( frame.new("munit_failure_list_plugin_test"))
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin_test.test_creation_of_a_new_munit_failure_lister
+	_self.assert_not_unset( .fl )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin_test.test_failed_test_added_to_list
+	.fl.add_failure( test_failure.new( test_case.new(:test_fail), condition ) )
+	.fl.failures.includes?( test_case.new( :test_fail ) )
+	
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin_test.test_errored_test_added_to_list
+	.fl.add_error( test_failure.new( test_case.new(:test_fail), condition ) )
+	.fl.failures.includes?( test_case.new( :test_fail ) )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin_test.test_framework_notified_when_failure_is_selected()
+	.fl.sys!slot(:framework) << _self 
+	_self.assert_unset( .result )
+	.fl.failure_selected( {_self} )
+	_self.assert_true( .result )
+_endmethod
+$
+
+#Mock Methods
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin_test.key
+	_return _true
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin_test.failure_selected( a_failure )
+	.result << a_failure _is _true 
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin_test.test_plugin_can_build_without_failure
+	.fl.build_gui( frame.new("test") )
+_endmethod
+$

@@ -1,0 +1,2 @@
+munit_failure_list_plugin_test
+simple_traceback_viewer_plugin_test

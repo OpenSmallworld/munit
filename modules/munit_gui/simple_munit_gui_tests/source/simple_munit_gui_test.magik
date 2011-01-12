@@ -1,0 +1,210 @@
+#% text_encoding = iso8859_1
+
+#remex(:simple_munit_gui_test)
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:simple_munit_gui_test, 
+	{
+		{:original_aspects, _unset },
+		{:trc, _unset}
+	},
+	:test_case)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+simple_munit_gui_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:system_test, "System Tests",
+									:manual, "Manual"),
+			:public)
+$
+
+_pragma(classify_level=debug, usage={subclassable}, topic={MUnit})
+_method simple_munit_gui_test.set_up()
+
+	.original_aspects <<  smallworld_product.test_aspect_keys()
+	_self.reset_aspects( {:always, :never, :system_test, :manual} )
+	.trc << simple_munit_gui.new()
+	.trc.activate()
+_endmethod
+$
+
+_pragma(classify_level=debug, usage={subclassable}, topic={MUnit})
+_method simple_munit_gui_test.reset_aspects( values )
+	## 
+	## 
+	_for i _over smallworld_product.test_aspect_keys().fast_elements()
+	_loop
+		smallworld_product.remove_test_aspect( i )
+	_endloop
+
+	_for i _over values.fast_elements()
+	_loop
+		smallworld_product.add_test_aspect( i, i)
+	_endloop 
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui_test.tear_down()
+
+	_self.reset_aspects( .original_aspects )
+	.trc.close()
+
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, usage={subclassable}, topic={MUnit})
+_method simple_munit_gui_test.test_creation_of_new_controller()
+	_self.assert_not_unset( .trc )
+
+_endmethod
+$
+_pragma(classify_level=debug, usage={subclassable}, topic={MUnit})
+_method simple_munit_gui_test.test_all_plugins_have_been_initialised()
+	## 
+	##
+
+	_for i _over {:test_selector, 
+				:failure_lister, 
+				:traceback_viewer, 
+				:aspect_selector}.fast_elements()
+	_loop 
+		_self.assert_not_unset( .trc.plugin(i), "#1 " + i )
+	_endloop 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, usage={subclassable}, topic={MUnit})
+_method simple_munit_gui_test.test_tests_can_be_loaded_displayed_and_selected()
+	## 
+	## 
+
+	.trc.load_test_modules()
+
+	a_prod << smallworld_product.products[:munit]
+	a_mod << sw_module_manager.module(:munit_base_tests)
+	
+	ts << .trc.plugin(:test_selector)
+	a_tree << .trc.plugin(:test_selector).sys!slot(:tree)
+	a_prod_tree << a_tree.tree_manager.child_with_key( a_prod)
+	a_mod_tree << a_prod_tree.child_with_key( a_mod )
+	
+	
+	_self.assert_not_unset( a_mod_tree )
+	a_mod_tree.selection << _true 
+	
+	selected_modules << .trc.selected_modules
+	#a_tree.tree_manager.selection << target_selection	
+	
+	_self.assert_equals( selected_modules.an_element(), a_mod )
+
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, usage={subclassable}, topic={MUnit})
+_method simple_munit_gui_test.test_failing_tests_are_captured_by_failure_lister()
+	## 
+	## 
+
+	a_prod << smallworld_product.products[:munit]
+	a_mod << sw_module_manager.module(:munit_base_tests)
+	ts << .trc.plugin(:test_selector)
+	
+	a_tree << .trc.plugin(:test_selector).sys!slot(:tree)
+	a_prod_tree << a_tree.tree_manager.child_with_key( a_prod)
+	a_mod_tree << a_prod_tree.child_with_key( sw_module_manager.module(:simple_munit_gui_tests ) )
+	a_test_tree << a_mod_tree.child_with_key( forced_failing_test )
+
+	a_test_tree.selection << _true 
+	
+	_self.assert( ts.selected_tests().size, :|>|, 0 )
+	
+	.trc.run_test_in_foreground()
+	
+	tbl << .trc.plugin(:failure_lister)
+	
+	_self.assert_equals(tbl.failures.size, 1)
+	_self.assert_equals(tbl.errors.size, 1 )
+	
+
+_endmethod
+$
+
+_pragma(classify_level=debug, usage={subclassable}, topic={MUnit})
+_method simple_munit_gui_test.test_reset_call_is_acknowledged_by_all_components()
+	## 
+	## 
+
+	.trc.reset()
+	#failure will result in a traceback
+_endmethod
+$
+
+
+
+#_method simple_munit_gui_test.test_basics_work()
+#	_global smt 
+#	#start
+#	#	.trc.activate()
+#	1
+#
+#	
+
+#	
+##=======
+#	
+#	smallworld_product.add_test_aspect(:never, "Never")
+#	.trc.refresh()
+##	.trc.plugin(:aspect_selector).manage_actions()
+#	
+#	a_tree << .trc.plugin(:test_selector).sys!slot(:tree)
+#	a_prod_tree << a_tree.tree_manager.child_with_key( a_prod)
+#	a_mod_tree << a_prod_tree.child_with_key( sw_module_manager.module(:simple_munit_gui_tests ) )
+#	a_test_tree << a_mod_tree.child_with_key( forced_failing_test )
+#	
+##	print(a_test_tree)
+#	
+#	a_test_tree.selection << _true 
+#	
+#	_self.assert( ts.selected_tests().size, :|>|, 0 )
+#	
+#	.trc.run_test_in_foreground()
+#	
+#	
+#	tbl << .trc.plugin(:failure_lister)
+#	
+#	_self.assert_equals(tbl.failures.size, 1)
+#	_self.assert_equals(tbl.errors.size, 1 )
+#	
+#
+###=======
+##
+##	ts << .trc.plugin(:test_selector)
+##	a_tree << .trc.plugin(:test_selector).sys!slot(:tree)
+##	a_prod_tree << a_tree.tree_manager.child_with_key( a_prod)
+##	a_mod_tree << a_prod_tree.child_with_key( a_mod )
+##	
+##	
+##	_self.assert_not_unset( a_mod_tree )
+##	a_mod_tree.selection << _true 
+##		
+##	.trc.add_target_modules()
+##	
+##	wgrp << .trc.plugin(:coverage_viewer)
+##	h << wgrp.harness
+##	
+##	_self.assert_not_unset( h.sys!slot(:products)[:munit][:munit_base] )
+#	
+#	#===
+#	.trc.reset()
+#	#end
+#	.trc.close()
+#	
+#_endmethod
+#$
+

@@ -1,0 +1,101 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_module_display_tree,
+{
+},
+{:display_tree})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree.display_text
+	>> _self.key.name.write_string.capitalise
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree.styled_string
+	>> styled_string.new_from( {:image, { :module, _self.module_name }, 
+								_self.colour, 	
+								_self.display_text } )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree.colour
+	_if .key.loaded?
+	_then 
+		_return :blue
+	_else 
+		_return :black 
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree.add_suites()
+	_if .key.loaded?
+	_then
+		_self.add_suites_for_loaded_module( .key )
+	_else 
+		_self.add_suites_for_unloaded_modules( .key )
+	_endif 
+_endmethod
+$		
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method munit_module_display_tree.add_suites_for_loaded_module( a_module )
+	tf           << test_suite_finder.new()
+	
+	_for a_suite _over tf.find_classes_for_module( a_module.name ).fast_elements()
+	_loop
+			suite_display_tree << munit_suite_display_tree.new ( a_suite )
+			suite_display_tree.add_test_cases
+			
+			
+			_if suite_display_tree.children?
+			_then
+				_self.add_child( suite_display_tree )
+			_endif 	
+	_endloop 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method munit_module_display_tree.add_suites_for_unloaded_modules( a_module )
+
+	# For modules not yet loaded, use information in the module.def file
+#	_for t _over a_module.tests( :framework, :munit )
+#	_loop
+#		test_display_tree << display_tree.new( t, _unset, module_display_tree )
+#		test_display_tree.styled_string << {:image, { :hierarchy, _self.module_name }, t.name.write_string }
+#		
+#		_for elem  _over t.args.split_by( %space ).elements()
+#		_loop
+#			_if ( rt << get_global_value(elem.as_symbol() ) ) _isnt _unset
+#			_then
+#				_self.suite_tree_list( rt, test_display_tree )
+#			_endif
+#		_endloop
+#		.my_display_trees.add( t )
+#	_endloop
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree.tests()
+	result << rope.new()
+	_for a_child _over _self.children.fast_elements()
+	_loop 
+		result.add_all_last( a_child.tests() )
+	_endloop
+	_return result 
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree.modules()
+	_return {.key}  
+_endmethod
+$

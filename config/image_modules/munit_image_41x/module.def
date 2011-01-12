@@ -1,0 +1,13 @@
+munit_image_41x 1
+
+description
+	Load Modules Compatible with 4.1x versions of CST
+end
+
+requires
+	munit_core_mods 3
+	simple_munit_gui 4	
+	munit_xml 4
+end
+
+language en_gb

@@ -1,0 +1,53 @@
+<gui>
+
+    <toolbar name="tests">
+		<action name="run_test"/>
+		<action name="interrupt"/>
+	</toolbar>
+	
+	<toolbar name="coverage">
+		<action name="add_target_modules"/>
+	</toolbar>
+	
+	<toolbar name="autorun">
+		<action name="start_autorun"/>
+		<action name="stop_autorun"/>
+	</toolbar>
+	
+	<toolbar name="munit_gui">
+		<action name="refresh"/>
+		<action name="reset"/>
+	</toolbar>
+
+    <dock name="top">
+		<toolbar name="tests"/>
+		<toolbar name="coverage"/>
+		<toolbar name="autorun"/>
+		<toolbar name="munit_gui"/>
+    </dock>
+    
+    <work_area>
+    	<paned_window side_by_side="false">
+	    	<paned_window side_by_side="false">
+	    		<plugin plugin_name="aspect_selector"/>
+	    		<paned_window side_by_side="true">
+	    			<plugin plugin_name="test_selector"/>
+	    			<paned_window side_by_side="false">
+	    				<plugin plugin_name="failure_lister"/>
+	    				<plugin plugin_name="traceback_viewer"/>
+	    			</paned_window>
+	    		</paned_window>
+	    	</paned_window>
+	    	<plugin plugin_name="coverage_viewer"/>
+	    </paned_window>
+    </work_area>
+
+    <statusbar name="default">
+		<progress_bar id = "progress" style="innie" width = "200"/>
+			<pane        id = "status_info"  style="innie" width = "200" springy="true"/>
+			<pane        id = "tests_info"   style="innie" width = "80"/>
+			<pane        id = "error_info"   style="innie" width = "80"/>
+			<pane        id = "failure_info" style="innie" width = "80"/>
+    </statusbar>
+
+</gui>

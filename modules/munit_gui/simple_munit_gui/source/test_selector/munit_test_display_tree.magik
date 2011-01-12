@@ -1,0 +1,74 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+#Create Display trees for displaying tests
+_pragma(classify_level=debug, topic={Munit})
+def_slotted_exemplar(:munit_test_display_tree,
+{
+},
+{:display_tree})
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method munit_test_display_tree.display_text
+	>> _self.key.write_string
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method munit_test_display_tree.styled_string
+	>> _if .key _is _unset _then
+			>> _self.test_styled_string	       
+		_elif _not .key.has_run? #.key.test_result _is _unset 
+		_then 
+			>> _self.test_styled_string
+		_elif .key.failed? 
+		_then 
+			>> _self.failed_styled_string
+		_elif .key.errored?
+		_then 
+			>> _self.error_styled_string
+		_else
+			>> _self.successful_styled_string
+		_endif 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_private _method munit_test_display_tree.failed_styled_string
+		>> styled_string.new_from( {:image, { :failure, _self.module_name }, 
+								:orange, 	
+								_self.display_text } )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_private _method munit_test_display_tree.test_styled_string
+	>> styled_string.new_from( {:image, { :test, _self.module_name }, 
+								:black, 	
+								_self.display_text } )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_private _method munit_test_display_tree.successful_styled_string
+	>> styled_string.new_from( {:image, { :ok, _self.module_name }, 
+								:green, 	
+								_self.display_text } )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_private _method munit_test_display_tree.error_styled_string
+	>> styled_string.new_from( {:image, { :error, _self.module_name }, 
+								:red, 	
+								_self.display_text } )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree.tests()
+	_return rope.new_with(.key)
+_endmethod
+$

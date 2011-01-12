@@ -1,0 +1,78 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_product_display_tree,
+{
+	{:modules, _unset}
+},
+{:display_tree})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_product_display_tree.display_text
+	>> _self.key.name.write_string.capitalise
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_product_display_tree.styled_string
+	>> styled_string.new_from( {:image, { :product, _self.module_name }, 
+		_self.display_text } )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_product_display_tree.add_modules()
+		_for a_module _over .key.defined_modules.elements()
+		_loop
+			_self.add_module( a_module )
+		_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_product_display_tree.add_module( a_module )
+	
+	_if a_module.test_module?
+	_then
+		module_name << a_module.name
+		module_display_tree << munit_module_display_tree.new( a_module )
+
+		module_display_tree.add_suites()
+		
+		# Only include the module if it had any tests
+		_if module_display_tree.children?
+		_then
+			_self.add_child( module_display_tree )
+		_endif 
+	_endif
+	
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_product_display_tree.tests()
+	result << rope.new()
+	_for a_child _over _self.children.fast_elements()
+	_loop 
+		result.add_all_last( a_child.tests() )
+	_endloop
+	_return result 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_product_display_tree.modules()
+	result << set.new()
+	_for a_child _over _self.children.fast_elements()
+	_loop 
+		result.add_all( a_child.modules() )
+	_endloop
+	
+	_return result  
+_endmethod
+$
+

@@ -1,0 +1,185 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+#_pragma(classify_level=debug, topic={MUnit})
+#remex(:test_runner_model)
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:test_runner_model, 
+	{
+		{:controller,    _unset},
+		{:selected_test, _unset},
+		{:tests,         _unset},
+		{:test_result,   _unset},
+		{:test_prioritiser, _unset}
+	}, { :engine_model })
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+test_runner_model.define_slot_externally_readable( :tests )
+$
+_pragma(classify_level=debug, topic={MUnit})
+test_runner_model.define_slot_externally_readable( :test_result )
+$
+_pragma(classify_level=debug, topic={MUnit})
+test_runner_model.define_slot_externally_readable( :test_prioritiser )
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.new( controller )
+	_return _clone.init( controller )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.init( controller )
+	.controller << controller 
+	.test_prioritiser << test_prioritiser.new()
+	>> _super.init()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.select_test( a_test )
+	.selected_test << a_test
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.selected_test
+	_return .selected_test
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.run_test_in_background()
+		_self.run_engine( _thisthread.high_background_priority, :run_test|()| )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.run_test()
+	_self.run_tests()
+	.controller.changed( :work_completed )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.load_test_modules()
+	_self.run_engine( _thisthread.high_background_priority, :|int!load_test_modules()| )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.int!load_test_modules()
+	sw_module_manager.load_test_modules()
+	.controller.refresh()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_private _method test_runner_model.create_new_test_result
+	.test_result << mtest_result.new()
+	.test_result.add_listener( _self )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.run_tests()
+	
+	_self.create_new_test_result 
+	
+	ordered_tests << .test_prioritiser.prioritised_list_for(.tests)
+		
+	_for a_test _over ordered_tests.fast_elements()
+	_loop
+		a_test.run( .test_result )
+	_endloop
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.start_test( a_test )
+	#callback from mtest_result
+	.controller.start_test( a_test )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_runner_model.add_error( a_test_failure )
+	.controller.add_error( a_test_failure )
+	.test_prioritiser.add_error( a_test_failure )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_runner_model.add_failure( a_test_failure )
+	.controller.add_failure( a_test_failure )
+	.test_prioritiser.add_failure( a_test_failure )
+_endmethod 
+$
+
+_pragma(classify_level=restricted)
+_method test_runner_model.end_test( a_test )
+	.controller.end_test( a_test )
+	.test_prioritiser.end_test( a_test )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.report_assert( type, _gather args )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.set_tests( tests )
+	.tests << tests
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.interrupt()
+	_self.interrupt_engine()
+_endmethod
+$
+
+#redefine global load file as its currently is a constant so cant be
+#redefined in within the methods below.
+_pragma(classify_level=debug, topic={MUnit})
+_global load_file << load_file.copy()
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.set_old_load_file_proc()
+	_global old_load_file
+	
+	_if old_load_file _is _unset _then 
+		old_load_file << load_file.copy()
+	_endif 
+
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.set_new_load_file_proc()
+	_local trc << .controller 
+	_global load_file 
+	load_file << _proc( _optional name, max_errors, source_file_name )
+			_import trc
+			(_gather results ) << old_load_file( name, max_errors, source_file_name )
+				trc.run_test()
+			_return _scatter results 
+		_endproc 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_runner_model.reset_new_load_file_proc()
+	_global load_file
+	_global old_load_file
+	_if old_load_file _isnt _unset _then 
+		load_file << old_load_file
+	_endif 	
+_endmethod
+$
+

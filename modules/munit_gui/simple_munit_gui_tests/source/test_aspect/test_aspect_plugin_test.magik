@@ -1,0 +1,91 @@
+#% text_encoding = iso8859_1
+
+#remex(:test_aspects_plugin_test)
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:test_aspects_plugin_test, 
+	{
+		{:gf, _unset},
+		{:ap, _unset}
+	},
+	:test_case)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+test_aspects_plugin_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:always, "Always"),
+			:public)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin_test.set_up()
+		
+		.ap << test_aspects_plugin.new()
+		.ap.sys!slot(:framework) << _self 
+		
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin_test.tear_down()
+
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin_test.test_creation_of_a_new_plugin
+	_self.assert_not_unset( .ap )
+
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin_test.test_creation_of_switches
+	.ap.build_gui( frame.new(:test) )
+	_self.assert_true(.ap.has_action?( :always ))
+	#_self.assert_true(.ap.action(:always).value )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin_test.test_smallworld_product_aspect_updated_when_action_toggled()
+	an_aspect << :test_test_aspect
+	
+	_self.assert_false(smallworld_product.test_aspect_keys().includes?(an_aspect))
+	 
+	.ap.toggle_aspect(an_aspect, _true)
+	_self.assert_true(smallworld_product.test_aspect_keys().includes?(an_aspect))
+	
+	.ap.toggle_aspect(an_aspect, _false)
+	_self.assert_false( smallworld_product.test_aspect_keys().includes?(an_aspect))
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin_test.test_toggles_are_selected_when_aspect_is_already_set_on_product
+	
+	an_aspect << :test_test_one
+	smallworld_product.add_test_aspect(an_aspect, an_aspect)
+	
+	.ap.build_gui( frame.new( an_aspect ) )
+	
+	_self.assert_true(.ap.action(an_aspect).value)
+	smallworld_product.remove_test_aspect( an_aspect )
+	
+_endmethod
+$
+
+
+# MOCK
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin_test.test_aspect_selected()
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin_test.busy?<< a_val
+	
+_endmethod
+$

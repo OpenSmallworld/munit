@@ -1,0 +1,95 @@
+#% text_encoding = iso8859_1
+#remex( :munit_module_display_tree_test)
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_module_display_tree_test, 
+	{
+		{:module, _unset },
+		{:loaded?, _unset}
+	},
+	:test_case)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+munit_module_display_tree_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:always, "Always"),
+			:public)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree_test.set_up()
+		
+		.module << sw_module_manager.module(:simple_munit_gui_tests)
+		
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree_test.test_styled_string_colour_for_loaded_module()
+	.loaded? << _true 
+	_self.assert_styled_string( "Simple_munit_gui_tests", :blue )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree_test.test_styled_string_colour_for_unloaded_module()
+	.loaded? << _false 
+	_self.assert_styled_string( "Simple_munit_gui_tests", :black )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree_test.test_suites_are_added_for_loaded_modules()
+	.loaded? << _true 
+	
+	dt << munit_module_display_tree.new( _self )
+	dt.add_suites()
+	
+	_self.assert( dt.children.size, :|>|, 0 )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree_test.test_suites_are_not_added_for_unloaded_modules()
+	.loaded? << _false 
+	
+	dt << munit_module_display_tree.new( _self )
+	dt.add_suites()
+	
+	_self.assert_equals( dt.children.size,  0 )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree_test.assert_styled_string( text, colour)
+	dt << munit_module_display_tree.new( _self )
+	s << dt.styled_string.styled_string
+	_self.assert_equals( s[5], colour )
+	_self.assert_equals( s[6], text )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree_test.test_vector_of_modules_is_returned_when_asked_for_modules()
+	dt << munit_module_display_tree.new( .module )
+	mods << dt.modules()
+	_self.assert_equals( mods.size, 1 )
+	_self.assert_equals(mods.an_element(), .module )
+_endmethod
+$
+# Mock Methods
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree_test.loaded?
+	_return .loaded? _is _true 
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_module_display_tree_test.name
+	_return.module.name
+_endmethod
+$
+
+#test_runner.run( munit_module_display_tree_test )
+#$

@@ -1,0 +1,61 @@
+#% text_encoding = iso8859_1
+
+#remex(:simple_traceback_viewer_plugin_test)
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:simple_traceback_viewer_plugin_test, 
+	{
+		{:tbv, _unset}
+	},
+	:test_case)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+simple_traceback_viewer_plugin_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:always, "Always"),
+			:public)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer_plugin_test.set_up()
+		.tbv << simple_traceback_viewer_plugin.new()
+		.tbv.traceback_viewer
+		.tbv.build_gui( frame.new("simple_traceback_viewer_plugin_test") )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer_plugin_test.test_creation_of_a_new_tb_viewer_plugin()
+	_self.assert_not_unset( .tbv )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer_plugin_test.test_failure_selected()
+	a_failure << test_failure.new( test_case.new(:traceback_viewer_test), condition )
+
+	
+	.tbv.failure_selected( a_failure )
+
+	_self.assert(.tbv.traceback_viewer.value, :|=|, a_failure.full_traceback_text() )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer_plugin_test.test_plugin_responds_without_failure_to_refresh()
+	## 
+	## 
+	.tbv.refresh()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer_plugin_test.test_plugin_resets_when_selected_failure_is_not_a_failure()
+	## 
+	## 
+
+	.tbv.failure_selected( _unset )
+	_self.assert(.tbv.traceback_viewer.value, :|=|, "" )
+_endmethod
+$

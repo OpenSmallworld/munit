@@ -1,0 +1,17 @@
+simple_munit_gui_tests 4
+
+description
+	Test module for testing munit gui
+end
+
+tests_modules
+	simple_munit_gui
+end
+
+requires
+	munit_base
+end	
+
+language en_gb
+
+hidden

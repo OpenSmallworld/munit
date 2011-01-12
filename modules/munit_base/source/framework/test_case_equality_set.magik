@@ -1,0 +1,40 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+#remex( :test_case_equality_set )
+#$
+
+_pragma(classify_level=advanced, topic={collections})
+
+       ## A hash_table keyed on records, where record equality is
+       ## determined by key-field equality only. Used by things like
+       ## conflict resolution, where the same record in different
+       ## views may have different field values but is only of
+       ## interest by its identity (expressed by its key fields)
+
+def_slotted_exemplar(:test_case_equality_set, {},
+{:equality_set })
+$
+
+_pragma(classify_level=restricted, usage=internal)
+_method test_case_equality_set.match?(key,item) 
+	>> key.is_class_of?(item) _andif
+	#	key.responds_to?( :|get_name()| ) _andif 
+		key.get_name() _is item.get_name()
+_endmethod
+$
+
+_pragma(classify_level=basic)
+_method test_case_equality_set.hash_for(a_record)
+	##
+	## Returns the appropriate hash for this sort of table, which
+	## in this case is A_RECORD.equality_hash.
+	##
+	>> a_record.equality_hash
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+test_case_equality_set.hash!use_lookup(:|custom_lookup()|)
+$
+

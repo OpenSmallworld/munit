@@ -1,0 +1,120 @@
+#% text_encoding = iso8859_1
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:test_prioritiser, 
+	{
+		{:current_run, _unset },
+		{:failures, _unset },
+		{:run_tests, _unset },
+		{:tests, _unset}
+	})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+test_prioritiser.define_slot_externally_readable(:failures)
+$
+_pragma(classify_level=debug, topic={MUnit})
+test_prioritiser.define_slot_externally_readable(:run_tests)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser.new()
+	>> _clone.init()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser.init()
+	.failures << test_case_equality_set.new()
+	.current_run << 0
+	.run_tests << test_case_equality_set.new()
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser.add_failure( a_failure )
+	.failures.add( a_failure.failed_test() )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser.add_error( a_failure )
+	_self.add_failure( a_failure )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser.prioritised_list_for ( tests )
+	result << rope.new()
+	.tests << test_case_equality_set.new_from( tests )
+
+	new_tests << _self.new_tests
+	failed_tests << _self.failed_tests
+		
+	all_tests << test_case_equality_set.new()
+	all_tests.add_all( new_tests )
+	all_tests.add_all( failed_tests )
+	
+	remaining_tests << _self.tests_excluding( all_tests )
+	
+	result.add_all_last( new_tests )
+	result.add_all_last( failed_tests )
+	result.add_all_last( remaining_tests )
+	
+	_return result
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser.tests_excluding( excluded_tests )
+	>> .tests.difference( excluded_tests )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser.new_tests
+	
+	>> .tests.difference(.run_tests)
+	
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser.failed_tests
+
+	results << rope.new()
+	
+	_for i _over .tests.fast_elements()
+	_loop 
+		_if .failures.includes?( i )
+		_then 
+			results.add( i )
+		_endif
+	_endloop 
+	>> results 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser.end_test( a_test )
+	.run_tests.add( a_test )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser.reset()
+	.failures << test_case_equality_set.new()
+	.run_tests << test_case_equality_set.new()
+	.tests << test_case_equality_set.new()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_case.equality_hash
+	
+	a_key << _self.class_name + _self.get_name().default(:||)
+	
+	>> a_key.equality_hash
+	
+_endmethod
+$
+
+#test_runner.run( test_prioritiser_test )

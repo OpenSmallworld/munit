@@ -441,6 +441,7 @@ _method test_case.runnable?( _optional test_name )
 _endmethod
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 _method test_case.failed?
 	
 	_if .test_result _is _unset _then _return _unset _endif 
@@ -449,12 +450,14 @@ _method test_case.failed?
 _endmethod
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 _method test_case.errored?
 	_if .test_result _is _unset _then _return _unset _endif 
 	_return .test_result.test_errored?( _self )
 _endmethod
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 _method test_case.has_run?
 	>> .test_result _isnt _unset 
 _endmethod

@@ -1,0 +1,112 @@
+#% text_encoding = iso8859_1
+
+#remex(:munit_gui_test)
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_gui_test, 
+	{
+	},
+	:simple_munit_gui_test)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_gui_test.set_up()
+	## 
+	## 
+	.original_aspects <<  smallworld_product.test_aspect_keys()
+	_self.reset_aspects( {:always, :never, :system_test, :manual} )
+	.trc << munit_gui.new()
+	.trc.activate()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_gui_test.test_modules_can_be_added_to_coverage()
+	## 
+	##
+
+	a_prod << smallworld_product.products[:munit]
+	a_mod << sw_module_manager.module(:munit_base_tests)
+	
+	ts << .trc.plugin(:test_selector)
+	a_tree << .trc.plugin(:test_selector).sys!slot(:tree)
+	a_prod_tree << a_tree.tree_manager.child_with_key( a_prod)
+	a_mod_tree << a_prod_tree.child_with_key( a_mod )
+	
+	
+	_self.assert_not_unset( a_mod_tree )
+	a_mod_tree.selection << _true 
+		
+	.trc.add_target_modules()
+	
+	wgrp << .trc.plugin(:coverage_viewer)
+	h << wgrp.harness
+	
+	_self.assert_not_unset( h.sys!slot(:products)[:munit][:munit_base] )
+	
+_endmethod
+$
+
+
+#_method munit_gui_test.test_basics_work()
+#	_global smt 
+#	#start
+#	#	.trc.activate()
+#	1
+#
+#	
+
+#	
+##=======
+#	
+#	smallworld_product.add_test_aspect(:never, "Never")
+#	.trc.refresh()
+##	.trc.plugin(:aspect_selector).manage_actions()
+#	
+#	a_tree << .trc.plugin(:test_selector).sys!slot(:tree)
+#	a_prod_tree << a_tree.tree_manager.child_with_key( a_prod)
+#	a_mod_tree << a_prod_tree.child_with_key( sw_module_manager.module(:munit_gui_tests ) )
+#	a_test_tree << a_mod_tree.child_with_key( forced_failing_test )
+#	
+##	print(a_test_tree)
+#	
+#	a_test_tree.selection << _true 
+#	
+#	_self.assert( ts.selected_tests().size, :|>|, 0 )
+#	
+#	.trc.run_test_in_foreground()
+#	
+#	
+#	tbl << .trc.plugin(:failure_lister)
+#	
+#	_self.assert_equals(tbl.failures.size, 1)
+#	_self.assert_equals(tbl.errors.size, 1 )
+#	
+#
+###=======
+##
+##	ts << .trc.plugin(:test_selector)
+##	a_tree << .trc.plugin(:test_selector).sys!slot(:tree)
+##	a_prod_tree << a_tree.tree_manager.child_with_key( a_prod)
+##	a_mod_tree << a_prod_tree.child_with_key( a_mod )
+##	
+##	
+##	_self.assert_not_unset( a_mod_tree )
+##	a_mod_tree.selection << _true 
+##		
+##	.trc.add_target_modules()
+##	
+##	wgrp << .trc.plugin(:coverage_viewer)
+##	h << wgrp.harness
+##	
+##	_self.assert_not_unset( h.sys!slot(:products)[:munit][:munit_base] )
+#	
+#	#===
+#	.trc.reset()
+#	#end
+#	.trc.close()
+#	
+#_endmethod
+#$
+
