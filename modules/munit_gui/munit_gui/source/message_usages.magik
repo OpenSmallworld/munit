@@ -4,5 +4,6 @@ _package sw
 _block
         message_handler(:simple_traceback_viewer).set_uses_list({:clickable_dialog})
         message_handler(:munit_gui).set_uses_list({:simple_munit_gui})
+        message_handler(:simple_what_got_run).set_uses_list({:what_got_run})
 _endblock
 $

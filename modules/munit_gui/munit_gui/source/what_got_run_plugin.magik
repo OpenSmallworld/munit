@@ -84,7 +84,16 @@ _pragma(classify_level=debug, topic={MUnit})
 _method simple_what_got_run.build_gui( parent )
 	
 	rc << rowcol.new( parent,_unset,1,_unset,:resize_x?,_true,:resize_y?,_true )
+	
+	#_self.make_header_controls( rc )
 	_self.make_simple_header( rc )
+	#_self.total_summary_display( rc )
+	>> _self.make_body( rc )
+	
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_what_got_run.make_body( rc )
 	my_styles_holder << string_styles_holder.new_with()
 	my_styles_holder.add_text_style( :black,	:black,	_false, _self.code_font, _false )
 	my_styles_holder.add_text_style( :grey,	:gray_text,	_false, _self.code_font, _false )
@@ -117,18 +126,16 @@ _method simple_what_got_run.build_gui( parent )
 	hh << ti.tree_manager.headings_holder
 	hh.column_sort_selector( 9 ) << {:display_tree_with_record, :modified, _false, _false }
 	_self.extend_tree_item_popup( ti )
-
-	>> ti
-	
 _endmethod
 $
-
 _pragma(classify_level=debug, topic={MUnit})
 _method simple_what_got_run.make_simple_header( parent )
+	min_button_width << 75
 	
 	header_rc << rowcol.new(parent,1,_unset,_unset,:style,:button_box,:row_spacing,5,:col_spacing,5)
-
 	_self.total_summary_display( header_rc )
+	
+	.items[:browse_source] << button_item.new(header_rc,"Add File...",_self,:|add_file()|,:min_width, min_button_width)
 
 	label_item.new(header_rc,"Gauges:")
 	.items[:gauge_type] << rg << radio_group.new(header_rc,:model,_self,:change_selector,:|gauge_type_toggled()|)
@@ -139,6 +146,21 @@ _method simple_what_got_run.make_simple_header( parent )
 	rg.manage_child(ri2,:proportional)
 	rg.value << :fixed
 	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method what_got_run.file_selected(file_name)
+	#
+	_handling warning _with _proc(c) c.report_on(!terminal!) _endproc
+	modname << _self.module_of(file_name)
+	mod << sw_module_manager.module(modname)
+	.harness.compile_module_file(mod,file_name,_self)
+	(f,d) << system.pathname_components(file_name)
+	.recent_folder << d
+	#
+	_self.changed(:items_list,:refresh)
+
 _endmethod
 $
 
