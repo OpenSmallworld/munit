@@ -1,0 +1,65 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_orphans_display_tree,
+{
+	{:modules, _unset}
+},
+{:display_tree})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_orphans_display_tree.display_text
+	>> "Undeclared Tests"
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_orphans_display_tree.styled_string
+	>> styled_string.new_from( {:image, { :hierarchy, _self.module_name }, 
+		_self.display_text } )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_orphans_display_tree.tests()
+	result << rope.new()
+	_for a_child _over _self.children.fast_elements()
+	_loop 
+		result.add_all_last( a_child.tests() )
+	_endloop
+	_return result
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_orphans_display_tree.modules()
+	_return {}
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_orphans_display_tree.add_orphan_suites()
+	
+	tf << test_suite_finder.new()
+	
+	_for suite_name _over tf.get_test_suite_owner_names().fast_elements()
+	_loop
+		_if ( suite << get_global_value(suite_name) ) _isnt _unset _andif 
+			suite.module_name _is _unset 
+		_then 
+			suite_display_tree << munit_suite_display_tree.new( suite )
+			suite_display_tree.add_test_cases
+			
+			_if suite_display_tree.children?
+			_then
+				_self.add_child( suite_display_tree )
+			_endif 
+			
+		_endif 
+	_endloop 
+	 
+_endmethod
+$		

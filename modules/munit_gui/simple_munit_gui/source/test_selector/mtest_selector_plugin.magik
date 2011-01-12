@@ -128,8 +128,7 @@ _method mtest_selector_plugin.hierarchy_tree()
 	result       << rope.new_for( smallworld_product.products.size )
 	
 	_self.add_products( result )
-
-#	_self.add_orphan_tree( result )
+	_self.add_orphan_tree( result )
 
 	>> result
 	
@@ -139,21 +138,9 @@ $
 _pragma(classify_level=debug, topic={MUnit})
 _private _method mtest_selector_plugin.add_orphan_tree( result )
 	
-	tf << test_suite_finder.new()
+	orphan_tree << munit_orphans_display_tree.new( _unset )
+	orphan_tree.add_orphan_suites()
 	
-	# Create a final orphan tree to display any tests in the image
-	# that do not belong in any modules
-	orphan_tree << display_tree.new( :undeclared )
-	orphan_tree.styled_string << {:image, { :hierarchy, _self.module_name }, _self.message( :undeclared_tests ) }
-
-	_for suite_name _over tf.get_test_suite_owner_names().fast_elements()
-	_loop
-		_if ( suite << get_global_value(suite_name) ) _isnt _unset
-		_then 
-			_self.suite_tree_list( suite, orphan_tree )
-		_endif 
-	_endloop 
-
 	_if orphan_tree.children?
 	_then 
 		result.add( orphan_tree )
