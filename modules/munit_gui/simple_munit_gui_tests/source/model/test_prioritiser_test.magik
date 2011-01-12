@@ -1,0 +1,139 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+#remex( :test_prioritiser_test )
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:test_prioritiser_test, 
+	{
+		{:tp, _unset }
+	},
+	:test_case)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+test_prioritiser_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:always, "Always"),
+			:public)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.set_up()
+	.tp << test_prioritiser.new()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.test_creation_of_new_prioritiser
+	
+	_self.assert_not_unset( .tp )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.test_addition_of_new_error
+	.tp.add_error( test_failure.new( test_case.new(:one), condition ))
+	
+	_self.assert_true( .tp.failures.includes?( test_case.new(:one) ) )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.test_addition_of_test
+	_self.end_test(:one) 
+	_self.end_test(:two) 
+	_self.end_test(:three) 
+	_self.assert_true( .tp.run_tests.includes_all?( {test_case.new(:one),test_case.new(:two),test_case.new(:three)} ) )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.test_new_tests_are_returned_first()
+	_self.end_test(:one)
+	_self.end_test(:two)
+	_self.end_test(:three)
+	_self.end_test(:four)
+	
+	result << .tp.prioritised_list_for( {test_case.new(:one),test_case.new(:two),test_case.new(:three),test_case.new(:four),test_case.new(:five)} )
+	_self.assert_equals( result.an_element().get_name(), :five)
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.test_failures_are_returned_second()
+	_self.end_test(:one)
+	_self.end_test(:two)
+	_self.end_test(:three)
+	.tp.add_failure(test_failure.new(test_case.new(:four), condition))
+	_self.end_test(:four)
+	_self.end_test(:six)
+	
+	result << .tp.prioritised_list_for( {test_case.new(:one),test_case.new(:two),test_case.new(:three),test_case.new(:four),test_case.new(:five)} )
+	_self.assert_equals( result[1].get_name(), :five )
+	_self.assert_equals( result[2].get_name(), :four )
+_endmethod 
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.test_all_tests_returned_with_no_duplication()
+	_self.end_test(:one)
+	_self.end_test(:two)
+	_self.end_test(:three)
+	.tp.add_failure(test_failure.new( test_case.new(:four), condition))
+	_self.end_test(:four)
+	_self.end_test(:six)
+	
+	result << .tp.prioritised_list_for( {test_case.new(:one),test_case.new(:two),test_case.new(:three),test_case.new(:four),test_case.new(:five)} )
+	_self.assert_equals( result[1].get_name(), :five )
+	_self.assert_equals( result[2].get_name(), :four )
+	_self.assert_equals( result.size, 5 )
+	#_self.assert_true( result.includes_all?( {test_case.new(:one),test_case.new(:two),test_case.new(:three),test_case.new(:four),test_case.new(:five)} ) )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.test_ordered_by_run_time()
+	#This has not been implemented yet
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.test_reset_empties_the_tests_previously_run()
+	_self.end_test(:one)
+	_self.end_test(:two)
+	_self.end_test(:three)
+	.tp.add_failure(test_failure.new( test_case.new(:four), condition))
+	_self.end_test(:four)
+	_self.end_test(:six)
+	#Now we have collected data lets test we can reset.
+	.tp.reset()
+	_self.assert_equals(.tp.run_tests.size, 0)
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.test_reset_empties_previously_failed_tests()
+	_self.end_test(:one)
+	_self.end_test(:two)
+	_self.end_test(:three)
+	.tp.add_failure(test_failure.new( test_case.new(:four), condition))
+	_self.end_test(:four)
+	_self.end_test(:six)
+	#Now we have collected data lets test we can reset.
+	.tp.reset()
+	_self.assert_equals(.tp.failures.size, 0 )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_prioritiser_test.end_test( name, _optional elapsed_time )
+	tc << test_case.new( name )
+	tr << test_case.sys!slot(:test_result)
+	.tp.end_test( tc )
+	
+_endmethod
+$

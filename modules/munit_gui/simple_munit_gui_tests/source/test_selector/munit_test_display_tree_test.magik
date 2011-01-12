@@ -1,0 +1,134 @@
+#% text_encoding = iso8859_1
+
+#remex( :munit_test_display_tree_test )
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_test_display_tree_test, 
+	{
+		
+		{ :a_test,    _unset },
+		{ :errored?,  _unset },
+		{ :failed?,   _unset },
+		{ :has_run?,  _unset },
+		{ :test_name, _unset }
+	},
+	:test_case)
+$
+_pragma(classify_level=debug, topic={MUnit})
+munit_test_display_tree_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:always, "Always"),
+			:public)
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.set_up()
+	.test_name << :test_display_string
+	.a_test    << test_case.new(.test_name)
+	.a_test.sys!slot(:test_result) << _self 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.test_styled_string_for_error_test()
+		_self.has_run(_true).
+		failed(_false).
+			error(_true).
+				assert_styled_string( :red, :error )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.test_styled_string_for_failure_test()
+	_self.has_run(_true).
+		failed(_true).
+			error(_false).
+				assert_styled_string( :orange, :failure )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.test_styled_string_for_success_test()
+	_self.has_run(_true).
+		failed(_false).
+			error(_false).
+				assert_styled_string( :green, :ok )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.test_styled_string_for_no_test_result()
+	_self.has_run(_false).
+		failed(_false).
+			error(_false).
+				assert_styled_string( :black, :test )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.new_styled_string()
+	dt << munit_test_display_tree.new( .a_test )
+	_return dt.styled_string.styled_string
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.assert_styled_string( a_colour, an_image )
+	
+	s << _self.new_styled_string()
+	
+	_self.assert_equals( s[5], a_colour )
+	_self.assert_equals( s[2][1], an_image )
+	_self.assert_equals( s[6], .test_name + " [sw:test_case]" )
+		
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.failed( val )
+	.failed? << val
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.error( val )
+	.errored? << val 
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.has_run( val )
+	.has_run? << val 
+	_if val _is _false  
+	_then 
+		.a_test.sys!slot(:test_result) << _unset   
+	_endif 
+	 
+	_return _self 
+_endmethod
+$
+
+
+# MOCK Methods for test_result
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.test_errored?()
+	_return .errored? _is _true 
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.test_failed?()
+	_return .failed? _is _true 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_test_display_tree_test.has_run?()
+	_return .has_run? _is _true 
+_endmethod
+$

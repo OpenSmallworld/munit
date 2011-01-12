@@ -1,3 +1,0 @@
-simple_progress_counter.magik
-colour_progress_bar_item.magik
-test_runner_dialog.magik

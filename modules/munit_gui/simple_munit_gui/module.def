@@ -1,0 +1,14 @@
+simple_munit_gui 4
+
+description
+	This is a simple implementation of Munit GUI that can be used with old versions of CST
+end
+
+requires
+	munit_base 4
+	tree_item
+	#magik_tools
+	#what_got_run_viewer
+end
+
+language en_gb

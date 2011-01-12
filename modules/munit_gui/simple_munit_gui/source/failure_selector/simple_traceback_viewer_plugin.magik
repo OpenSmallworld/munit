@@ -1,0 +1,55 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+#remex(:simple_traceback_viewer_plugin)
+#$
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:simple_traceback_viewer_plugin, 
+	{
+		{ :traceback_viewer, _unset }
+	},
+	{:plugin})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+simple_traceback_viewer_plugin.define_slot_externally_readable( :traceback_viewer )
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer_plugin.build_gui(parent, _optional xml_element)
+	.traceback_viewer << text_window.new( parent )
+	.traceback_viewer.resize? << _true 
+	
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer_plugin.failure_selected( a_failure )
+	
+	_if a_failure.responds_to?( :|full_traceback_text()| )
+	_then 
+		_self.show_traceback( a_failure.full_traceback_text() )
+	_else 
+		_self.reset_traceback_viewer()
+	_endif 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer_plugin.show_traceback( traceback_text )
+	.traceback_viewer.value << traceback_text
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer_plugin.reset_traceback_viewer()
+	.traceback_viewer.value << "" 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_traceback_viewer_plugin.refresh()
+	
+_endmethod
+$

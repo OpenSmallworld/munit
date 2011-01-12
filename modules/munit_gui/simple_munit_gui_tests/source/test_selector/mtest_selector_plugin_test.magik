@@ -1,0 +1,32 @@
+#% text_encoding = iso8859_1
+
+#remex(:mtest_selector_plugin_test)
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:mtest_selector_plugin_test, 
+	{
+		{:holder, _unset},
+		{:mti, _unset},
+		{:action, _unset}
+	},
+	:test_case)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+mtest_selector_plugin_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:always, "Always"),
+			:public)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin_test.set_up()
+		.mti << mtest_selector_plugin.new()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin_test.test_creation_of_a_new_test_selector
+	_self.assert_not_unset( .mti )
+
+_endmethod
+$

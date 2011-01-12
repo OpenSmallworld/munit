@@ -11,7 +11,7 @@ $
 
 _pragma(classify_level=debug,topic=MUnit)
 test_interface_test.define_shared_constant(:test_aspects,
-	property_list.new_with(:never, "NEVER"), :public )
+	property_list.new_with(:always, "Always"), :public )
 $
 
 _pragma(classify_level=debug,topic=MUnit)

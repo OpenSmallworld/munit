@@ -1,0 +1,139 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+#remex(:munit_failure_list_plugin)
+#$
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_failure_list_plugin, 
+	{
+		{ :tree, _unset },
+		{ :failures, _unset },
+		{ :errors, _unset }
+	},
+	{:plugin})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+munit_failure_list_plugin.define_slot_externally_readable( :tree )
+$
+_pragma(classify_level=debug, topic={MUnit})
+munit_failure_list_plugin.define_slot_externally_readable( :failures )
+$
+_pragma(classify_level=debug, topic={MUnit})
+munit_failure_list_plugin.define_slot_externally_readable( :errors )
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin.init( _gather args )
+	
+	.failures << rope.new()
+	.errors << rope.new()
+	
+	>> _super.init( _scatter args )
+	
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin.build_gui( parent, _optional xml_element )
+
+	.tree << tree_item.new( parent,
+			  :width, 500, :height, 150,
+		      :resize?, _true,
+		      :model, _self,
+		      :mode, :many,
+		      :data_selector, :|failures_display_tree()|,
+		      :select_notifier, :|failure_selected()|,
+		      :aspect, :failures_display_tree )
+
+	_return .tree
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin.add_failure( a_failure )
+	.failures.add_last( a_failure )
+	_self.refresh_tree()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin.add_error( a_failure )
+	.errors.add_last( a_failure )
+	_self.refresh_tree()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin.failures_display_tree()
+	failures << rope.new()
+
+	failures.add_all_last( .errors )
+	failures.add_all_last( .failures )	
+
+	result << rope.new()
+	_if failures.size = 0
+	_then
+		result.add( display_tree.new( _self.message( :no_failures ) ) )
+	_else 
+		_for a_failure _over failures.elements()
+		_loop
+			dt << display_tree.new( a_failure )
+			
+			a_colour << _self.colour_for_failure( a_failure )
+			dt.styled_string << styled_string.new( a_colour, a_failure )
+			result.add( dt )
+		_endloop 
+	_endif 
+
+	>> result
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method munit_failure_list_plugin.colour_for_failure( a_failure )
+	a_colour << 	_if a_failure.is_failure?()
+			 		_then
+					    >> :black
+				    _else
+					    >> :red
+				    _endif
+	_return a_colour
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin.refresh_tree()
+	_self.changed( :failures_display_tree, :refresh )
+	_if .tree.selection.an_element() _is _unset 
+	_then 
+		.tree.tree_manager.children.an_element().selection << 1
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin.refresh()
+	
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin.reset()
+	.errors << rope.new()
+	.failures << rope.new()
+	_self.refresh_tree()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_failure_list_plugin.failure_selected( a_sel )
+	
+	_if (a_sel << a_sel.an_element()) _isnt _unset 
+	_then 
+		a_sel << a_sel.key
+	_endif  
+	
+	_self.framework.failure_selected( a_sel )
+		
+_endmethod
+$

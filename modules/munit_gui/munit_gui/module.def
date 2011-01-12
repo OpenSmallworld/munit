@@ -1,0 +1,13 @@
+munit_gui 4
+
+description
+	MUnit GUI
+end
+
+requires
+	simple_munit_gui 4
+	what_got_run_viewer
+	magik_tools
+end
+
+language en_gb

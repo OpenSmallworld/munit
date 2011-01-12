@@ -1,0 +1,171 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+#remex(:what_got_run_plugin)
+#$
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:what_got_run_plugin, 
+	{
+		{ :model,   _unset },
+		{ :harness, _unset }
+	},
+	{:plugin})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+what_got_run_plugin.define_slot_externally_readable( :model )
+$
+_pragma(classify_level=debug, topic={MUnit})
+what_got_run_plugin.define_slot_externally_readable( :harness )
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method what_got_run_plugin.init(_gather args)
+	.harness << what_got_run_harness.new()
+	#_self.model
+	
+	>> _super.init( _scatter args )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method what_got_run_plugin.model
+	_if .model _is _unset 
+	_then 
+		.model << simple_what_got_run.new( .harness ) #traceback_viewer.new( {} )
+	_endif
+	
+	_return .model 	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method what_got_run_plugin.build_gui(parent, _optional xml_element)
+		>> _self.model.build_gui( parent )	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method what_got_run_plugin.add_targets_of_tree_selection()
+	
+	_handling warning _with _proc(c) c.report_on(!terminal!) _endproc
+	
+	mods << _self.framework.selected_modules
+	target_mods << set.new()
+	_for a_module _over mods.fast_elements()
+	_loop 
+		target_mods.add_all( a_module.tested_modules )
+	_endloop 	
+	
+	print( mods )
+	print( target_mods )
+	
+	_for t_module _over target_mods.fast_elements()
+	_loop 
+		.harness.add_module( t_module.name )
+	_endloop 
+	
+	_self.refresh()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method what_got_run_plugin.refresh()
+	.model.refresh()
+_endmethod
+$
+#===
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:simple_what_got_run, {}, :what_got_run)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_what_got_run.build_gui( parent )
+	
+	rc << rowcol.new( parent,_unset,1,_unset,:resize_x?,_true,:resize_y?,_true )
+	
+	#_self.make_header_controls( rc )
+	_self.make_simple_header( rc )
+	#_self.total_summary_display( rc )
+	>> _self.make_body( rc )
+	
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_what_got_run.make_body( rc )
+	my_styles_holder << string_styles_holder.new_with()
+	my_styles_holder.add_text_style( :black,	:black,	_false, _self.code_font, _false )
+	my_styles_holder.add_text_style( :grey,	:gray_text,	_false, _self.code_font, _false )
+	my_styles_holder.add_text_style( :hypertext, :blue, _true,_self.code_font, _true )	
+	
+	
+	column_headings << {"filename","module","product","Gauges (% run)","total lines","n lines","lines run","size(KB)","modified"}
+	ti << tree_item.new( rc,
+			     :col_alignment,           :fill,
+			     :row_alignment,           :fill,
+			     :mode,                    :many,
+			     :resize_y?,               _true,
+			     :column_headings,         column_headings,
+			     :select_notifier,         :|selection_changed()|,
+			     :column_selectabilities,  {_true,_true,_true,_true,_true,_true,_true,_true,_true},
+			     :column_widths,		 {200,100,100,150,50,50,50,60,180},
+			     :column_allow_groupby?,   _true,
+			     :grid_lines?,             _true,
+			     :col_resize_values,       {1,1,1,1,1,1,1,1},
+			     :model,                   _self,
+			     :style_holder,            my_styles_holder,
+			     :hypertext_click_notifier,handler.new(_self,:|hyperlink_clicked()|),
+			     :allow_filtering?,		 _true,
+			     :aspect,			 :items_list )
+	.items[:treeitem] << ti
+	
+	ti.allow_refresh? << _true
+	ti.add_dependent(_self)
+	ti.tree_manager.add_dependent(_self)
+	hh << ti.tree_manager.headings_holder
+	hh.column_sort_selector( 9 ) << {:display_tree_with_record, :modified, _false, _false }
+	_self.extend_tree_item_popup( ti )
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_what_got_run.make_simple_header( parent )
+	min_button_width << 75
+	
+	header_rc << rowcol.new(parent,1,_unset,_unset,:style,:button_box,:row_spacing,5,:col_spacing,5)
+	_self.total_summary_display( header_rc )
+	
+	.items[:browse_source] << button_item.new(header_rc,"Add File...",_self,:|add_file()|,:min_width, min_button_width)
+
+	label_item.new(header_rc,"Gauges:")
+	.items[:gauge_type] << rg << radio_group.new(header_rc,:model,_self,:change_selector,:|gauge_type_toggled()|)
+	
+	ri1 << radio_item.new(header_rc,"Fixed Width")
+	rg.manage_child(ri1,:fixed)
+	ri2 << radio_item.new(header_rc,"Show Filesize")
+	rg.manage_child(ri2,:proportional)
+	rg.value << :fixed
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method what_got_run.file_selected(file_name)
+	#
+	_handling warning _with _proc(c) c.report_on(!terminal!) _endproc
+	modname << _self.module_of(file_name)
+	mod << sw_module_manager.module(modname)
+	.harness.compile_module_file(mod,file_name,_self)
+	(f,d) << system.pathname_components(file_name)
+	.recent_folder << d
+	#
+	_self.changed(:items_list,:refresh)
+
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_what_got_run.refresh()
+	_self.changed(:items_list,:refresh)
+_endmethod
+$

@@ -1,0 +1,215 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+#remex(:mtest_selector_plugin)
+#$
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:mtest_selector_plugin, 
+	{
+		{:tree, _unset },
+		{:controller, _unset},
+		{:my_display_trees, _unset},
+		
+		{:selection, _unset},
+		{:selected_tests, _unset}
+	},
+	{:plugin})
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+mtest_selector_plugin.define_slot_externally_readable(:selection)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.init_actions()
+	
+	_self.add_action( sw_action.new( :load,
+					 :engine, _self,
+					 :image, {:load, :ui_resources},
+					 :enabled?, _false,
+					 :action_message, :load|()|
+				     ) )
+
+	_self.add_action( sw_action.new( :refresh,
+					 :engine, _self,
+					 :image, {:refresh, :ui_resources},
+					 :action_message, :refresh|()|
+				     ) )
+
+	_self.add_action( sw_action.new( :run_test,
+					 :engine, _self,
+					 :image, {:run, :ui_resources},
+					 :enabled?, _false,
+					 :action_message, :run_test|()|
+				    ) )
+	 
+	_self.add_action( sw_action.new( :edit_method,
+					 :engine, _self,
+					 :image, {:edit, :ui_resources},
+					 :enabled?, _false,
+					 :action_message, :edit_method|()|
+				    ) )	
+_endmethod
+$
+	
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.manage_actions()
+	_self.action(:load).enabled?           << _self.module_selected?
+	_self.action(:edit_method).enabled?    << _self.test_selected?
+	_self.action(:run_test).enabled?       << .selection _isnt _unset 
+	_self.action(:refresh).enabled?        << _true 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.build_gui( parent, _optional xml_element )
+	
+	tree_properties << property_list.new_with(
+		:width, 375, :height, 500,
+   		:model, _self,
+    	:mode, :one,
+       	:resize?, _true,
+       	:data_selector, :|hierarchy_tree()|,
+       	:select_notifier, :|select()|,
+       	:aspect, :hierarchy_tree )
+  						       
+	.tree << tree_item.new( parent, _scatter tree_properties )
+	_self.init_actions()
+	.tree.popup_menu << _self.popup_menu()
+	
+	_return .tree 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method mtest_selector_plugin.popup_menu()
+	
+	popup << popup_menu.new( .tree )
+
+	_self.action(:load).place_control_on( popup, :menu )
+	_self.action(:refresh).place_control_on( popup, :menu )
+	_self.action(:edit_method).place_control_on( popup, :menu )
+	separator_item.new( popup )
+	_self.action(:run_test).place_control_on( popup, :menu )
+	
+    >> popup
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method mtest_selector_plugin.add_products( result )
+	_for a_product _over smallworld_product.products.fast_elements()
+	_loop
+			_self.add_product( a_product, result )
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method mtest_selector_plugin.add_product( a_product, result )
+		product_display_tree << munit_product_display_tree.new( a_product )
+		product_display_tree.add_modules()
+
+		_if product_display_tree.children?
+		_then 
+			result.add( product_display_tree )
+		_endif 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.hierarchy_tree()
+
+	.my_display_trees   << rope.new()
+	result       << rope.new_for( smallworld_product.products.size )
+	
+	_self.add_products( result )
+	_self.add_orphan_tree( result )
+
+	>> result
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method mtest_selector_plugin.add_orphan_tree( result )
+	
+	orphan_tree << munit_orphans_display_tree.new( _unset )
+	orphan_tree.add_orphan_suites()
+	
+	_if orphan_tree.children?
+	_then 
+		result.add( orphan_tree )
+	_endif 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.module_selected?
+	>>  .selection _isnt _unset _andif 
+			.selection.is_kind_of?( sw_module )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.test_selected?
+	>> .selection _isnt _unset _andif 
+			.selection.is_kind_of?( test_case )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.selected_tests()
+	_return .tree.selection.an_element().tests()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.selected_modules()
+	_return .tree.selection.an_element().modules()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.load()
+	a_module << .selection
+	_self.changed( :status_info,  :text, _self.message( :loading_module, a_module.name ) )
+	sw_module_manager.load_module( a_module.name, a_module.version, :force_reload?, _true )
+	_self.changed( :status_info, :text, _self.message( :loading_module_complete, a_module.name ) )
+	_self.refresh()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.refresh()
+	_self.changed( :hierarchy_tree, :refresh )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.edit_method()
+	.selection.send_to_emacs()
+_endmethod
+$
+
+# Controller must handle public api for RUN_TEST()
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.run_test()
+	.framework.run_test()
+_endmethod
+$
+
+# Controller must have public api for SELECT_TEST( A_TEST )
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.select( a_sel )
+	_if a_sel.an_element() _isnt _unset 
+	_then 
+		.selection << a_sel.an_element().key
+		.framework.select_test( .selection )
+	_endif 
+	_self.manage_actions()
+_endmethod
+$

@@ -1,0 +1,63 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_product_display_tree_test, 
+	{
+		{:product, _unset },
+		{:pdt, _unset }
+	},
+	:test_case)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+munit_product_display_tree_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:always, "Always"),
+			:public)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_product_display_tree_test.set_up()
+		
+		.product << smallworld_product.products[:munit]
+		.pdt << munit_product_display_tree.new( .product )
+		
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_product_display_tree_test.test_styled_string_returns_expected_string
+	
+	s << .pdt.styled_string.styled_string
+	
+	_self.assert_equals( s[6], "Munit" )
+		
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_product_display_tree_test.test_modules_of_children_can_be_returned()
+	_self.remove_method(:test_module_is_added_to_tree)
+	a_module << sw_module_manager.module(:simple_munit_gui_tests)
+	.pdt.add_module( a_module )
+	_self.assert_true(.pdt.modules().includes?( a_module ) )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_product_display_tree_test.test_tests_of_children_can_be_returned()
+	a_module << sw_module_manager.module(:simple_munit_gui_tests)
+	.pdt.add_module( a_module )
+	result << _false 
+	_for i _over .pdt.tests().fast_elements()
+	_loop 
+		_if i.get_name() _is :|test_tests_of_children_can_be_returned()|
+		_then 
+			result << _true 
+			_leave 
+		_endif 
+	_endloop 
+			
+	_self.assert_true( result )
+_endmethod
+$

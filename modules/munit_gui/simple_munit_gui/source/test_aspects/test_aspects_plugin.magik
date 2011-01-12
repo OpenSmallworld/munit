@@ -1,0 +1,164 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+#remex(:test_aspects_plugin)
+#$
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:test_aspects_plugin, 
+	{
+		{ :aspect_container, _unset},
+		{ :model,   _unset }
+	},
+	{:plugin})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+test_aspects_plugin.define_slot_externally_readable( :model )
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.build_gui(parent, _optional xml_element)
+		
+		.aspect_container << rowcol.new( parent )
+
+		_self.add_new_test_aspects()
+
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.add_new_test_aspects()
+	_for a_test_aspect _over _self.potential_test_aspects.fast_elements()
+	_loop 
+		_self.add_test_aspect( a_test_aspect )
+	_endloop
+	_self.manage_actions() 	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.add_test_aspect( a_test_aspect )
+	_if _self.add_action_for_test_aspect( a_test_aspect )
+	_then 
+		_self.action( a_test_aspect ).place_control_on( .aspect_container, :|toolbar| )
+	_endif 	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.init_actions()
+	
+	#_super.init_actions()
+#	_self.add_actions_for_test_aspects()
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.add_action_for_test_aspect( an_aspect )
+	_if _not _self.has_action?( an_aspect )
+	_then 
+		_self.add_action( sw_action.new( an_aspect, 
+							:engine, _self,
+							:caption, an_aspect.write_string,
+							:toolbar_control, :text_toggle_item,
+							:value_change_message, {:|toggle_aspect()|, an_aspect}))
+							
+		_return _true 
+	_endif
+	
+	_return _false 
+_endmethod
+$
+
+#_method test_aspects_plugin.add_actions_for_test_aspects()
+#_for a_test_aspect _over _self.potential_test_aspects.fast_elements()
+#	_loop 
+#		_if _not _self.has_action?( a_test_aspect )
+#		_then 
+#			_self.add_action_for_aspect( a_test_aspect )				
+#		_endif
+#	_endloop 	
+#	
+#	
+#_endmethod
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.potential_test_aspects
+	
+	s << set.new()
+
+	_for a_module _over sw_module_manager.loaded_modules.fast_elements()
+	_loop
+		_if a_module.test_module?
+		_then
+			_for a_test _over  a_module.test_cases()
+			_loop
+
+				s.add_all(a_test.test_aspects.keys)
+
+			_endloop 
+		_endif
+	_endloop
+	_return s
+
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.toggle_aspect( an_aspect, value )
+	
+	_if value _is _true _then 
+		_self.turn_on_aspect( an_aspect )
+	_else 
+		_self.turn_off_aspect( an_aspect )
+	_endif 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.manage_actions()
+	_for an_aspect _over smallworld_product.test_aspect_keys().fast_elements()
+	_loop 
+		_if _self.has_action?( an_aspect )
+		_then 
+			_self.action( an_aspect ).value << _true
+		_else 
+			_self.add_test_aspect( an_aspect )
+			_self.action( an_aspect ).value << _true 
+		_endif 	 
+	_endloop 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.turn_on_aspect( an_aspect )
+	smallworld_product.add_test_aspect(an_aspect, an_aspect)
+	_self.notify_aspect_selected(an_aspect)
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.turn_off_aspect( an_aspect )
+	smallworld_product.remove_test_aspect( an_aspect )
+	_self.notify_aspect_selected(an_aspect)
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.notify_aspect_selected( an_aspect )
+	_self.framework.test_aspect_selected( an_aspect )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_aspects_plugin.refresh()
+	
+	_self.add_new_test_aspects()
+
+_endmethod
+$

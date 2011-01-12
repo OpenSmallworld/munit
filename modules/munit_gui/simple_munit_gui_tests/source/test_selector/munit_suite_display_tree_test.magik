@@ -1,0 +1,94 @@
+#% text_encoding = iso8859_1
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_suite_display_tree_test, 
+	{
+		{ :a_suite,      _unset }
+	},
+	:test_case)
+$
+_pragma(classify_level=debug, topic={MUnit})
+munit_suite_display_tree_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:always, "Always"),
+			:public)
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_suite_display_tree_test.set_up()
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_suite_display_tree_test.test_styled_string_for_test_suite
+	expected_text << "Munit_suite_display_tree_test"
+	
+	_self.for_suite( _self.suite() ).
+		assert_styled_string( expected_text )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_suite_display_tree_test.test_styled_string_for_test_case
+	expected_text << "Munit_suite_display_tree_test"
+	
+	_self.for_suite( munit_suite_display_tree_test ).
+		assert_styled_string( expected_text )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_suite_display_tree_test.test_tests_can_be_added_as_children
+	_self.for_suite( _self.suite() ).
+		assert_has_children() 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_suite_display_tree_test.test_a_suite_can_be_added_as_child_of_suite()
+	
+	a << _self.suite()
+	.a_suite << a
+	a.add_test( a ) 
+	
+	dt << _self.assert_has_children()
+	_self.assert_true( dt.includes_key?(a) )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_suite_display_tree_test.assert_has_children()
+	
+	
+	dt << munit_suite_display_tree.new( .a_suite )
+	_self.assert_equals( dt.children.size, 0 )
+	dt.add_test_cases
+	_self.assert( dt.children.size, :|>|, 0)
+	
+	_return dt
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_suite_display_tree_test.new_display_string
+	_return munit_suite_display_tree.new( .a_suite ).styled_string.styled_string
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_suite_display_tree_test.assert_styled_string(expected_text)
+	s << _self.new_display_string 
+	_self.assert_equals( s[6], expected_text)
+	_self.assert_equals( s[5], :black )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_suite_display_tree_test.for_suite( a_suite )
+	.a_suite << a_suite 
+	_return _self 
+_endmethod
+$
+
+

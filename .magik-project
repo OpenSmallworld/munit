@@ -6,5 +6,6 @@
 <dependencies>
 <dependency kind="module" location="D:/Smallworld/product/modules/sw_dev_tools/magik_tools"/>
 <dependency kind="product" location="d:/smallworld/product/modules/sw_common"/>
+<dependency kind="product" location="d:/smallworld/product"/>
 </dependencies>
 </projectDescription>

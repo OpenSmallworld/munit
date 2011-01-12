@@ -1,0 +1,66 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+#remex(:munit_gui)
+#$
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_gui, 
+	{
+	},
+	{:simple_munit_gui })
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_gui.init(name, an_owning_framework, _optional properties)
+	_super.init( name, an_owning_framework, properties )
+	.model << test_runner_model.new( _self )
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method munit_gui.init_actions()
+	
+	_super.init_actions()
+		    
+	_self.add_action( sw_action.new( :add_target_modules,
+					 :engine, _self,
+					 :image, {:detail_view, :ui_resources},
+					 :enabled?, _true,
+					 :action_message, :add_target_modules|()|
+				    ) )
+_endmethod
+$
+
+#===
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_gui.add_target_modules()
+	_self.plugin(:coverage_viewer).add_targets_of_tree_selection()
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_gui.update_status_info( )
+
+	_super.update_status_info()
+	_self.set_progress_indicator_colour( colour.called( _self.status_colour ) )
+
+_endmethod
+$
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_gui.status_colour
+	error_count << _self.test_result.error_count() + _self.test_result.failure_count()
+	fg_colour << _if error_count = 0
+		     _then
+			     >> :green
+		     _elif error_count = run_count
+		     _then
+			     >> :red
+		     _else
+			     >> :orange
+		     _endif
+	_return fg_colour 
+_endmethod
+$

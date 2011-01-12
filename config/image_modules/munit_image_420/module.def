@@ -6,7 +6,8 @@ end
 
 requires
 	munit_core_mods 3
-	munit_magik_gui 4	
+	munit_magik_gui 4
+	munit_gui 4	
 	munit_xml 4
 end
 
