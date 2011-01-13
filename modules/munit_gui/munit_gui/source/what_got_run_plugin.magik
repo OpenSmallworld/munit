@@ -74,6 +74,7 @@ _method what_got_run_plugin.refresh()
 	.model.refresh()
 _endmethod
 $
+
 #===
 
 _pragma(classify_level=debug, topic={MUnit})
@@ -154,7 +155,8 @@ _method what_got_run.file_selected(file_name)
 	#
 	_handling warning _with _proc(c) c.report_on(!terminal!) _endproc
 	modname << _self.module_of(file_name)
-	mod << sw_module_manager.module(modname)
+	mod << _unset 
+	_if modname _isnt _unset _then mod << sw_module_manager.module(modname) _endif 
 	.harness.compile_module_file(mod,file_name,_self)
 	(f,d) << system.pathname_components(file_name)
 	.recent_folder << d
