@@ -4,4 +4,8 @@ description
 	MUnit (Magik Unit Testing Framework)
 end
 
+requires
+	magik_mock
+end
+
 language en_gb

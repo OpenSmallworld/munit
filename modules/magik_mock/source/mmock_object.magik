@@ -1,0 +1,233 @@
+#% text_encoding = iso8859_1
+_package sw 
+$
+
+
+## Magik Mock - a mock/stub framework for Magik.
+##
+## The syntax and 'philosophy' is inspired by (but not
+## identical to) Mockito (mockito.org). The biggest difference
+## is that there is no verify support at the moment, so it's
+## geared towards state-based rather than behaviour-based
+## verification. See the excellent "Mocks Aren't Stubs"
+## essay[*] by Martin Fowler for details of the distinction. In
+## fact, according to that essay, this should actually be
+## called 'Fake Magik' or 'Stub Magik' but that doesn't
+## alliterate so nicely. 
+##
+## [*] http://martinfowler.com/articles/mocksArentStubs.html
+## 
+## Examples
+## ========
+## See also the tests in the magik_mock_test module.
+##
+## m << mock(:blah)
+##   m is now an 'empty' object (actually has all the
+##   slotted_format_mixin methods as usual) 
+##
+## stub(m).my_stub_method
+##   m now responds to my_stub_method, returning unset
+##   Other messages cause does_not_understand in the usual way
+##
+## stub(m).another_stub_method().then_return(133)
+##   m now responds to another_stub_method(), returning 133
+##
+## stub(m).more_methods(:abc).then_return(blah)
+##   m.more_methods(:abc) will return blah
+##   m.more_methods(<anything else>) will raise mmock!no_behaviour_defined
+##
+## stub(m).more_methods(:def).then_return(blee)
+##   m.more_methods() will now return blah if passed :abc, blee
+##   if passed :def, and will raise mmock!no_behaviour_defined
+##   otherwise 
+##
+## Parameters are tested by equality, in order, so that the
+## first matching behaviour is used. So for example:
+##
+##   stub(m).yet_another(:abc).then_return(:alpha)
+##   stub(m).yet_another(:abc).then_return(:beta)
+##   m.yet_another(:abc) # => returns :alpha
+##
+## Of course, you can also have multi-parameter methods:
+##
+##   stub(m).multi_param(1, 2).then_return(rope.new())
+##   m.multi_param(1, 2) # => returns the new rope
+## 
+## You can use then_raise(<condition name>, <condition
+## keys_and_values args>) to raise a condition rather than
+## return a value.
+##
+## You can also subclass an existing class and add/stub methods on
+## that:
+##   m << mock(:stubbed_rope, rope).new(100) # note call to new()
+##   stub(m).new_method().then_return(:xyz)  # new method
+##   stub(m).size.then_return(173)           # stub existing method
+##   m.new_method()                          # => :xyz
+##   m.size                                  # => 173
+##
+##
+## Bugs/missing features
+## =====================
+## - you can't stub methods defined on object/slotted_format_mixin:
+##   stub(m).write_string.then_return("abcdef") # => fails
+## - no wild-card parameter matching - you have to have an
+##   exact parameter match, which can be verbose
+## - no mechanism for stubbing out references to globals. For
+##   example, suppose the method under test had the following code:
+##     ace << gis_program_manager.ace(ace_name)
+##   You can't intercept the gis_program_manager global
+##   reference to return something which doesn't go to the
+##   database when it has .ace() called on it
+## - you get conflict method errors when stubbing an existing class
+## - the code creates a new method table for each call to
+##   mock(). Because the method table inheritance tree has
+##   links from parents to children as well as vice-versa, I'm
+##   not sure that old mock objects will get cleaned up
+##   properly. In other words, there's a memory leak.
+
+
+remex(:mmock_object)
+$
+
+def_slotted_exemplar(:mmock_object,
+		     {},
+		     {})
+$
+
+_method mmock_object.mmock!new_mock_object(name, _optional super_class)
+
+	super_method_tables <<
+		_if super_class _is _unset
+		_then
+			>> {mmock_object.method_table}
+		_else
+			>> {mmock_object.method_table, super_class.method_table}
+		_endif 
+	
+	(method_tbl, new_mock_object) << method_table.new_for_slotted(name, {}, super_method_tables, {})
+
+	# Deliberately pseudo-slots to avoid adding real slots
+	_block
+		_handling pseudo_slot_added _with _proc()
+							  # ignore
+		                                  _endproc
+		
+		new_mock_object.define_pseudo_slot(:mmock!messages_received, _unset, :writable, :private)
+	        new_mock_object.define_pseudo_slot(:mmock!behaviours, hash_table.new(), :readable, :private)
+	_endblock 
+
+	_if super_class _isnt _unset
+	_then
+		p << super_class.method_table[:|show_on()|]
+		new_mock_object.define_method(:|show_on()|, p, _false)
+		p << super_class.method_table[:|shallow_copy()|]
+		new_mock_object.define_method(:|shallow_copy()|, p, _false)		
+	_endif
+	
+	_return new_mock_object
+_endmethod
+$
+
+_method mmock_object.mmock!add_behaviour(selector, behaviour)
+
+	
+	_local selector_bs << _self.mmock!behaviours.at_or_new_if_absent(selector, rope)
+
+	#write("Added behaviour for ", selector, " ", _if behaviour[1].size > 0 _then >> behaviour[1][1] _else >> "{}" _endif )
+
+	selector_bs.add(behaviour)
+	
+	_for bs _over selector_bs.elements()
+	_loop
+		#write(_scatter bs[1])
+	_endloop
+	
+	
+_endmethod
+$
+
+_method mmock_object.mmock!ensure_has_method(msg)
+
+	_if _self.method_table.local_method?(msg.selector)
+	_then
+		_return
+	_endif
+
+	_local selector << msg.selector
+	
+	#DEBUG write("Defining method ", msg.selector)	
+
+	_self.define_method(
+		selector,
+		_proc(_gather args)
+			_import selector
+
+			#DEBUG write("Calling method ", selector)
+			_return _scatter _allresults _self.mmock!find_and_run_behaviour(selector, args)
+		_endproc,
+		_false)
+		 
+_endmethod
+$
+
+
+_method mmock_object.mmock!find_and_run_behaviour(selector, caller_args)
+
+	behaviours << _self.mmock!behaviours[selector]
+	
+	#FIXME unset?
+	
+	_for behaviour _over behaviours.elements()
+	_loop
+		(behaviour_args, type, return_value) << (_scatter behaviour)
+
+		_if mmock_object.mmock!arguments_match?(behaviour_args, caller_args)
+		_then
+			_if type _is :value
+			_then 
+				_return return_value
+			_elif type _is :raise
+			_then
+
+				(condition_type, keys_and_values) << (_scatter return_value)
+				condition.raise(condition_type, _scatter keys_and_values)
+			_endif	
+		_endif
+	_endloop 
+
+	condition.raise(:mmock!no_behaviour_defined,
+			:string, "MMock: no behaviour defined on " + _self.write_string + " for args " + caller_args.write_string)
+	
+_endmethod
+$
+
+
+_method mmock_object.mmock!arguments_match?(behaviour_args, caller_args)
+
+	cant_match << caller_args.size < behaviour_args.size
+	_if cant_match
+	_then
+		_return _false
+	_endif
+	
+	#write("Matching ...")
+	#print(caller_args)
+	
+	#write("against..")
+	#print(behaviour_args)
+
+	_for i _over range(1, behaviour_args.size)
+	_loop
+		behaviour_value << behaviour_args[i]
+		caller_value << caller_args[i]
+		_if behaviour_value <> caller_value
+		_then
+			_return _false
+		_endif
+	_endloop
+
+	_return _true
+_endmethod
+$
+
+

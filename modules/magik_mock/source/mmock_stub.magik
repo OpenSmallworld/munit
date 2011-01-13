@@ -1,0 +1,79 @@
+#% text_encoding = iso8859_1
+_package sw 
+$
+
+remex(:mmock_stub)
+$
+
+def_slotted_exemplar(:mmock_stub,
+	{{:object,            _unset},
+	 {:current_behaviour, _unset}
+	},
+	{})
+$
+
+_method mmock_stub.new(obj)
+	>> _clone.init(obj)
+_endmethod
+$
+
+_method mmock_stub.init(obj)
+	.object << obj
+	>> _self 
+_endmethod
+$
+
+_method mmock_stub.does_not_understand(msg, private?)
+	
+	_if _self _is mmock_stub # Avoid cockups with the exemplar
+	_then
+		condition.raise(:does_not_understand,
+			:object, _self,
+			:selector, msg.selector,
+			:arguments, msg.args,
+			:iterator?, _false,
+			:private?, private?)
+	_endif
+
+	_if .current_behaviour _isnt _unset
+	_then
+		msg << write_string("API is stub(obj).method_to_stub.then_return(). You seem to have called stub(obj).method_to_stub.", msg.selector)
+		condition.raise(:mmock!stub_error, :string, msg)
+	_endif
+	
+
+	default_type         << :value
+	default_return_value << _unset
+	.current_behaviour << {msg.args, default_type, default_return_value}
+
+	.object.mmock!add_behaviour(msg.selector, .current_behaviour)
+
+	.object.mmock!ensure_has_method(msg)
+	
+	_return _self
+_endmethod
+$
+
+_method mmock_stub.then_return(value)
+	_if .current_behaviour _is _unset
+	_then
+		condition.raise(:mmock!stub_error,
+				:string, "API is stub(obj).method_to_stub.then_return(). You seem to have called stub(obj).then_return()")
+	_endif
+
+	.current_behaviour[2] << :value
+	.current_behaviour[3] << value
+_endmethod
+$
+
+_method mmock_stub.then_raise(condition, _gather keys_and_values)
+	_if .current_behaviour _is _unset
+	_then
+		condition.raise(:mmock!stub_error,
+				:string, "API is stub(obj).method_to_stub.then_raise(). You seem to have called stub(obj).then_raise()")
+	_endif
+
+	.current_behaviour[2] << :raise
+	.current_behaviour[3] << {condition, keys_and_values}
+_endmethod
+$

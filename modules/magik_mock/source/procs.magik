@@ -1,0 +1,17 @@
+#% text_encoding = iso8859_1
+_package sw 
+$
+
+
+_global mock <<
+_proc @mock (name, _optional super_class)
+	_return mmock_object.mmock!new_mock_object(name, super_class)
+_endproc
+$
+
+
+_global stub <<
+_proc @stub (obj) 
+	_return mmock_stub.new(obj)
+_endproc
+$

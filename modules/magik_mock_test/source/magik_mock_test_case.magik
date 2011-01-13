@@ -1,0 +1,318 @@
+#% text_encoding = iso8859_1
+_package sw 
+$
+
+
+remex(:magik_mock_test_case)
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+def_slotted_exemplar( :magik_mock_test_case,
+		      {},
+		      :test_case )
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_no_then_return_returns_unset()
+
+	m << mock(:dummy)
+
+	stub(m).gotcha()
+
+	_self.assert_unset(m.gotcha())
+
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_doesnt_understand_undeclared_messages()
+
+	m << mock(:dummy)
+
+	_self.assert_raised_condition(:does_not_understand, m, :|gotcha()|)
+
+_endmethod
+$
+
+
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_no_args_accepts_any_args()
+
+	m << mock(:dummy)
+
+	stub(m).gotcha()
+
+	_try _with cond
+		m.gotcha(:extra_arg)
+	_when error
+		_self.fail("Like any Magik method, a mock method should ignore extra arguments")
+	_endtry
+		
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_call_gotcha_as_often_as_necessary()
+
+	m << mock(:dummy)
+
+	stub(m).gotcha()
+
+	_try _with cond	
+		m.gotcha()
+		m.gotcha()
+		m.gotcha()	
+	_when error
+		_self.fail("Should be able to call a stub method as often as necessary.")
+	_endtry		
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_two_behaviours()
+
+	m << mock(:dummy)
+
+	stub(m).gotcha()
+	stub(m).wotcha()
+
+	_self.assert_unset(m.gotcha())
+	_self.assert_unset(m.wotcha())
+		
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_two_behaviours_any_order_allowed()
+
+	m << mock(:dummy)
+
+	stub(m).gotcha()
+	stub(m).wotcha() # declared after gotcha ..
+
+	_self.assert_unset(m.wotcha())	# .. but called before gotcha
+	_self.assert_unset(m.gotcha())
+
+		
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_return_value()
+
+	m << mock(:dummy)
+
+	value << rope.new()
+	
+	stub(m).gotcha().then_return(value)
+
+	_self.assert_is(value, m.gotcha())
+		
+_endmethod
+$
+
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_return_values_dont_get_mixed_up()
+
+	m << mock(:dummy)
+
+	avalue << "aaa"
+	zvalue << "zzz"
+	
+	stub(m).aaa().then_return(avalue)
+	stub(m).zzz().then_return(zvalue)
+
+	_self.assert_is(zvalue, m.zzz()) # called in different order to declared
+	_self.assert_is(avalue, m.aaa())
+		
+_endmethod
+$
+
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_one_parameter_behaviour_match()
+
+	m << mock(:dummy)
+
+	stub(m).doit(:parameter_value).then_return(:return_value)
+
+	_self.assert_is(:return_value, m.doit(:parameter_value))
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_one_parameter_behaviour_no_match()
+
+	m << mock(:dummy)
+
+	stub(m).doit(:parameter_value_AAA).then_return(:return_value)
+
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {:parameter_value_ZZZ})
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_one_parameter_multiple_behaviours()
+
+	m << mock(:dummy)
+
+	stub(m).doit(:|parameter_value_AAA|).then_return(:|return_value_AAA|)
+	stub(m).doit(:|parameter_value_ZZZ|).then_return(:|return_value_ZZZ|)	
+
+	_self.assert_is(:|return_value_ZZZ|, m.doit(:|parameter_value_ZZZ|))		
+	_self.assert_is(:|return_value_AAA|, m.doit(:|parameter_value_AAA|))
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_one_parameter_string_behaviours()
+
+	m << mock(:dummy)
+
+	stub(m).doit("AAA").then_return(:|return_value_AAA|)
+	stub(m).doit("ZZZ").then_return(:|return_value_ZZZ|)	
+
+	_self.assert_is(:|return_value_ZZZ|, m.doit("ZZZ"))
+	_self.assert_is(:|return_value_AAA|, m.doit("AAA"))
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_one_parameter_float_behaviours()
+
+	m << mock(:dummy)
+
+	stub(m).doit(1.0).then_return(:|return_value_AAA|)
+	stub(m).doit(2.0).then_return(:|return_value_ZZZ|)	
+
+	_self.assert_is(:|return_value_ZZZ|, m.doit(2.0))
+	_self.assert_is(:|return_value_AAA|, m.doit(1.0))
+	
+_endmethod
+$
+
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_two_parameter_string_behaviours()
+
+	m << mock(:dummy)
+
+	stub(m).doit("AAA", "BBB").then_return(:|AAA_BBB|)
+	stub(m).doit("ZZZ").then_return(:|ZZZ|)	
+
+	_self.assert_is(:|AAA_BBB|, m.doit("AAA", "BBB"))
+	_self.assert_is(:|ZZZ|, m.doit("ZZZ"))
+
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"AAA", "CCC"})
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"CCC", "BBB"})
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"AAA"})	
+_endmethod
+$
+
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_no_stub_method_provided()
+
+	m << mock(:test)
+
+	_try _with cond
+		stub(m).then_return(:xyz)
+		_self.fail("Should have raised a condition")
+	_when error
+		_self.assert_equals(:mmock!stub_error, cond.name)
+		_self.assert_equals("API is stub(obj).method_to_stub.then_return(). You seem to have called stub(obj).then_return()", cond[:string])
+	_endtry
+
+
+_endmethod
+$
+
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_two_stub_methods_provided()
+
+	m << mock(:test)
+
+	_try _with cond
+		stub(m).ok().doh()
+		_self.fail("Should have raised a condition")
+	_when error
+		_self.assert_equals(:mmock!stub_error, cond.name)
+		_self.assert_equals("API is stub(obj).method_to_stub.then_return(). You seem to have called stub(obj).method_to_stub.doh()", cond[:string])
+	_endtry
+
+
+_endmethod
+$
+
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_can_stub_an_existing_class()
+
+	# FIXME there's no nice way of creating a new one of these 
+	
+	m << mock(:test, rope)
+
+	_self.assert_is(1, m.size)   # Yes, really. The rope exemplar has size = 1
+
+	stub(m).size.then_return(73)
+
+	_self.assert_is(73, m.size)
+
+_endmethod
+$
+
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_show_on_works_correctly()
+
+	m << mock(:test, rope)
+	stream << internal_text_output_stream.new()
+	m.show_on(stream)
+	_self.assert_equals("test:[1-1]", stream.string)  # Ahem. Should really be sw:rope:, not test:
+
+_endmethod
+$
+
+
+
+#_pragma(classify_level=advanced, topic={service, test})
+#_method magik_mock_test_case.test_stub_can_stub_write_string()
+#
+#	# FIXME Can't currently stub methods that exist on object
+#	
+#	m << mock(:test, rope)
+#
+#	_self.assert_equals("test:[1-1]", m.write_string)   # Yes, really. The rope exemplar has size = 1
+#
+#	stub(m).write_string.then_return("blah")
+#
+#	_self.assert_equals("blah", m.size)
+#
+#_endmethod
+#$
+
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_then_raise()
+
+	m << mock(:test)
+	stub(m).should_raise().then_raise(:error, :string, "blerk")
+
+	_try _with cond
+		m.should_raise()
+		_self.fail("Should have raised a condition")
+	_when error
+		_self.assert_equals(:error, cond.name)
+		_self.assert_equals("blerk", cond[:string])
+	_endtry
+
+_endmethod
+$

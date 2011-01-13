@@ -1,0 +1,14 @@
+#% text_encoding = iso8859_1
+_package sw 
+$
+
+
+
+condition.define_condition(:mmock!error, :error, {:string})
+$
+
+condition.define_condition(:mmock!no_behaviour_defined, :mmock!error, {:string})
+$
+
+condition.define_condition(:mmock!stub_error, :mmock!error, {:string})
+$

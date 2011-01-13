@@ -1,0 +1,23 @@
+magik_mock_test	1
+
+description
+	Tests magik_mock mocking framework
+end
+
+tests_modules
+	magik_mock
+end
+
+requires
+	munit_base
+end
+
+test
+	name		magik_mock_test
+	topics		magik_mock
+	framework	munit
+	args		magik_mock_test_case
+end
+
+hidden
+language en_gb
