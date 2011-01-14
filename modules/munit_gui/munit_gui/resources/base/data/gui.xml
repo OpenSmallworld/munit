@@ -16,12 +16,18 @@
 		<action name="reset"/>
 	</toolbar>
 
+	<toolbar name="links">
+		<action name="view_open_issues"/>
+		<action name="view_help"/>
+	</toolbar>
+	
     <dock name="top">
 		<toolbar name="tests"/>
-		<toolbar name="coverage"/>
 		<toolbar name="munit_gui"/>
+		<toolbar name="coverage"/>
+		<toolbar name="links"/>
     </dock>
-    
+        
     <work_area>
     	<paned_window side_by_side="false">
 	    	<paned_window side_by_side="false">

@@ -45,3 +45,5 @@
 :run_test_tooltip     Run the Selected Tests
 :view_traceback_tooltip  View the Selected Traceback
 :view_traceback          View Traceback
+:view_open_issues		View Open Issues and raise new issues
+:view_help				View MUnit Wiki

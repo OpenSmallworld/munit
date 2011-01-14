@@ -108,12 +108,35 @@ _private _method simple_munit_gui.init_actions()
 					 :enabled?, _true,
 					 :action_message, :refresh|()|
 				    ) )
+				    
+	_self.add_action( sw_action.new( :view_open_issues,
+					:image, {:open_issues, :simple_munit_gui},
+					:engine, _self,
+					:enabled?, _true,
+					:action_message, :view_open_issues|()|
+					))
+					
+	_self.add_action( sw_action.new( :view_help,
+					:engine, _self,
+					:image, {:help, :ui_resources },
+					:enabled?, _true,
+					:action_message, :view_help|()|
+					))
 			 
 _endmethod
 $
 
 #===
 
+_method simple_munit_gui.view_open_issues()
+	system.do_command( "start " + smallworld_product.get_resource_file("open_issues.URL", :data, :simple_munit_gui) )  
+_endmethod
+$
+
+_method simple_munit_gui.view_help()
+	system.do_command(  "start " + smallworld_product.get_resource_file("help.URL", :data, :simple_munit_gui) ) 
+_endmethod
+$
 
 _pragma(classify_level=debug, topic={MUnit})
 _method simple_munit_gui.run_test(_optional run_method)
