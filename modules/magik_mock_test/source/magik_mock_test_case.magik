@@ -316,3 +316,48 @@ _method magik_mock_test_case.test_stub_then_raise()
 
 _endmethod
 $
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_match_any_object_really_does_match_any_object()
+
+	m << mock(:test)
+	stub(m).match_wildcard(match.any_object).then_return(:ok)
+	_self.assert_equals(:ok, m.match_wildcard(1))
+	_self.assert_equals(:ok, m.match_wildcard(2))
+	_self.assert_equals(:ok, m.match_wildcard("abc"))
+	_self.assert_equals(:ok, m.match_wildcard(1.0))
+	_self.assert_equals(:ok, m.match_wildcard(:abc))
+	_self.assert_equals(:ok, m.match_wildcard({:abc}))
+	_self.assert_equals(:ok, m.match_wildcard(property_list.new()))
+	_self.assert_equals(:ok, m.match_wildcard(_unset))		
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_match_any_object_only_matches_its_argument()
+
+	m << mock(:test)
+	stub(m).stubbed_method(1, match.any_object).then_return(:one)
+	stub(m).stubbed_method(match.any_object, 2).then_return(:two)
+
+	_self.assert_equals(:one,  m.stubbed_method( 1,                      :arbitray_value ))
+	_self.assert_equals(:two,  m.stubbed_method( {{{:arbitrary_value}}}, 2               ))
+	
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|stubbed_method()|, {999, :arbitrary_value})
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_match_any_object_and_multiple_behaviour_ordering()
+
+	m << mock(:test)
+	stub(m).stubbed_method(1, match.any_object).then_return(:one)
+	stub(m).stubbed_method(match.any_object, 2).then_return(:two)
+	stub(m).stubbed_method(match.any_object, match.any_object).then_return(:backstop)	
+
+	_self.assert_equals(:one,  m.stubbed_method( 1,                      :arbitrary_value  ))
+	_self.assert_equals(:two,  m.stubbed_method( {{{:arbitrary_value}}}, 2                 ))
+	_self.assert_equals(:backstop, m.stubbed_method( :arbitrary_value1,  :arbitrary_value2 ))	
+_endmethod
+$

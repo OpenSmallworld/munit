@@ -52,7 +52,17 @@ $
 ##
 ##   stub(m).multi_param(1, 2).then_return(rope.new())
 ##   m.multi_param(1, 2) # => returns the new rope
-## 
+##
+## If you don't care about the exact parameter value, or need
+## to handle tricky cases (like vectors or other containers,
+## for which equality comparisons don't really do anything
+## useful), then you can ask for any object to be matched:
+##
+## 	stub(m).match_wildcard(match.any_object).then_return(:ok)
+##	m.match_wildcard(1) # => returns ok
+##      m.match_wildcard(2) # => returns ok
+##      m.match_wildcard("anything") # => returns ok	
+##
 ## You can use then_raise(<condition name>, <condition
 ## keys_and_values args>) to raise a condition rather than
 ## return a value.
@@ -65,13 +75,12 @@ $
 ##   m.new_method()                          # => :xyz
 ##   m.size                                  # => 173
 ##
-##
+## 
 ## Bugs/missing features
 ## =====================
 ## - you can't stub methods defined on object/slotted_format_mixin:
 ##   stub(m).write_string.then_return("abcdef") # => fails
-## - no wild-card parameter matching - you have to have an
-##   exact parameter match, which can be verbose
+## - limited wild-card parameter matching, but can be added on demand
 ## - no mechanism for stubbing out references to globals. For
 ##   example, suppose the method under test had the following code:
 ##     ace << gis_program_manager.ace(ace_name)
@@ -220,7 +229,12 @@ _method mmock_object.mmock!arguments_match?(behaviour_args, caller_args)
 	_loop
 		behaviour_value << behaviour_args[i]
 		caller_value << caller_args[i]
-		_if behaviour_value <> caller_value
+		# FIXME next test is the simplest that could possibly work, but is ugly
+		_if behaviour_value.is_kind_of?(match)
+		_then
+
+			_continue
+		_elif behaviour_value <> caller_value
 		_then
 			_return _false
 		_endif

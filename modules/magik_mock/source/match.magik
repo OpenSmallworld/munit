@@ -1,0 +1,12 @@
+_package sw
+$
+
+def_slotted_exemplar(:match,
+		    {})
+$
+
+
+_method match.any_object
+	_return _self
+_endmethod
+$
