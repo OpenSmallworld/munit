@@ -72,38 +72,20 @@ _method test_aspects_plugin.add_action_for_test_aspect( an_aspect )
 _endmethod
 $
 
-#_method test_aspects_plugin.add_actions_for_test_aspects()
-#_for a_test_aspect _over _self.potential_test_aspects.fast_elements()
-#	_loop 
-#		_if _not _self.has_action?( a_test_aspect )
-#		_then 
-#			_self.add_action_for_aspect( a_test_aspect )				
-#		_endif
-#	_endloop 	
-#	
-#	
-#_endmethod
-#$
-
 _pragma(classify_level=debug, topic={MUnit})
 _method test_aspects_plugin.potential_test_aspects
-	
+
 	s << set.new()
-
-	_for a_module _over sw_module_manager.loaded_modules.fast_elements()
+	tf << test_suite_finder.new()
+	_for suite_name _over tf.get_test_suite_owner_names().fast_elements()
 	_loop
-		_if a_module.test_module?
+		_if ( suite << get_global_value(suite_name) ) _isnt _unset 
 		_then
-			_for a_test _over  a_module.test_cases()
-			_loop
-
-				s.add_all(a_test.test_aspects.keys)
-
-			_endloop 
-		_endif
+			s.add_all( suite.test_aspects.keys)			
+		_endif 
 	_endloop
-	_return s
 
+	>> s
 _endmethod
 $
 
