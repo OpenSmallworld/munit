@@ -58,7 +58,7 @@ _pragma(classify_level=debug, topic={MUnit})
 _method mtest_selector_plugin.manage_actions()
 	_self.action(:load).enabled?           << _self.module_selected?
 	_self.action(:edit_method).enabled?    << _self.test_selected?
-	_self.action(:run_test).enabled?       << .selection _isnt _unset 
+	_self.action(:run_test).enabled?       << _self.selected_tests().size > 0  
 	_self.action(:refresh).enabled?        << _true 
 _endmethod
 $

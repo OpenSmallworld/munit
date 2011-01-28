@@ -43,7 +43,7 @@ _pragma(classify_level=debug, topic={MUnit})
 _method simple_munit_gui.manage_actions( aspect )
 	_if aspect _is :select
 	_then 
-		_self.action( :run_test ).enabled? << .model.selected_test _isnt _unset
+		_self.action( :run_test ).enabled? <<  _self.plugin(:test_selector).selected_tests().size > 0
 	_endif  
 _endmethod
 $

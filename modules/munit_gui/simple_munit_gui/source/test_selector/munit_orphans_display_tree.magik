@@ -43,6 +43,26 @@ $
 _pragma(classify_level=debug, topic={MUnit})
 _method munit_orphans_display_tree.add_orphan_suites()
 	
+	_for a_suite _over _self.orphan_suites.fast_elements()
+	_loop 
+			_self.add_suite( a_suite )
+	_endloop 
+	 
+_endmethod
+$		
+
+_method munit_orphans_display_tree.add_suite( a_suite )
+	suite_display_tree << munit_suite_display_tree.new( a_suite )
+	suite_display_tree.add_test_cases
+			
+	_if suite_display_tree.children?
+	_then
+		_self.add_child( suite_display_tree )
+	_endif  
+_endmethod
+$
+_method munit_orphans_display_tree.orphan_suites
+	results << rope.new()
 	tf << test_suite_finder.new()
 	
 	_for suite_name _over tf.get_test_suite_owner_names().fast_elements()
@@ -50,16 +70,11 @@ _method munit_orphans_display_tree.add_orphan_suites()
 		_if ( suite << get_global_value(suite_name) ) _isnt _unset _andif 
 			suite.module_name _is _unset 
 		_then 
-			suite_display_tree << munit_suite_display_tree.new( suite )
-			suite_display_tree.add_test_cases
-			
-			_if suite_display_tree.children?
-			_then
-				_self.add_child( suite_display_tree )
-			_endif 
-			
+		
+			results.add( suite )
 		_endif 
 	_endloop 
-	 
+	
+	_return results
 _endmethod
-$		
+$

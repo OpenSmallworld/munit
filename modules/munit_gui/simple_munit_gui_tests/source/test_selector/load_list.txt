@@ -3,3 +3,4 @@ munit_module_display_tree_test
 munit_product_display_tree_test
 munit_suite_display_tree_test
 munit_test_display_tree_test
+munit_orphans_display_tree_test
