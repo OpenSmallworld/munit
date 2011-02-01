@@ -1,0 +1,10 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar( :simple_collection_descriptor,
+	{},
+	{ :uds_table_descriptor } )
+$
+

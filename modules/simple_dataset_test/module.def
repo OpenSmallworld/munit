@@ -1,0 +1,14 @@
+simple_dataset_test	1
+
+description
+	Tests for a very simple dataset which uses vectors to hold its data
+end
+
+requires
+	simple_dataset
+	munit_base	
+end
+
+tests
+	simple_dataset
+end
