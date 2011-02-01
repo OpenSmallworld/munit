@@ -1,0 +1,168 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+#remex( :simple_collection )
+#$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar( :simple_collection,
+	{
+		{ :data,        _unset },
+		{ :index_hash,  _unset },
+		{ :vector_size, _unset }
+	},
+	{ :uds_collection } )
+$
+
+simple_collection.define_shared_constant( :default_record_exemplar, simple_record_exemplar, :public )
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_collection.init( dataset, name, descriptor )
+	## 
+	## 
+	_super.init( dataset, name, descriptor )
+
+	.data << rope.new()
+	.index_hash << vector_key_equality_hash_table.new()
+
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_method simple_collection.size
+	##
+	##
+	>> .data.size
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_method simple_collection.int!read_stream()
+	## 
+	## 
+	>> small_iter_stream.new( .data, :fast_elements|()| )
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_private _method simple_collection.record_from( values )
+	## 
+	## 
+	>> _self.record_exemplar.new_from( values )
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_private _method simple_collection.key_field_vector( raw_data )
+	## 
+	##
+	_local values << simple_vector.new( _self.key_field_numbers.size )
+	_for i, n _over _self.key_field_numbers.fast_keys_and_elements()
+	_loop
+		values[ i ] << raw_data[ n ]
+	_endloop
+
+	>> values
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_private _method simple_collection.hash_key_and_index( values )
+	## 
+	## 
+	_local vec << _self.key_field_vector( values )
+	>> ( vec, .index_hash[ vec ] )	  
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_method simple_collection.int!get( values )
+	## 
+	##
+	_local ( k, i ) << _self.hash_key_and_index( values )
+	>> _if i _isnt _unset 
+	   _then
+		   >> _self.record_from( .data[ i ] )
+	   _else
+		   >> _unset 
+	   _endif
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_private _method simple_collection.int!value_vector( raw_values )
+	## 
+	## 
+	# We need to make sure that the value vector is big enough, as
+	# you can insert less than a full vector
+	_if .vector_size _is _unset 
+	_then
+		.vector_size << _self.physical_fields.size + _self.geometry_fields.size
+	_endif
+	>> _if raw_values.size < .vector_size
+	   _then
+		   new_values << simple_vector.new( .vector_size )
+		   _for i, v _over raw_values.fast_keys_and_elements()
+		   _loop
+			   new_values[ i ] << raw_values[ i ]
+		   _endloop
+
+		   >> new_values
+	   _else
+		   >> raw_values.copy()
+	   _endif
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_method simple_collection.int!insert( values )
+	## 
+	##
+	_local ( k, i ) << _self.hash_key_and_index( values )
+
+	>> _if i _isnt _unset 
+	   _then
+		   >> _unset 
+	   _else
+		   .data.add_last( _self.int!value_vector( values ) )
+		   .index_hash[ k ] << .data.size
+		   
+		   >> _self.record_from( .data.last )
+	   _endif
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_method simple_collection.int!remove( values )
+	## 
+	##
+	_local ( k, i ) << _self.hash_key_and_index( values )
+
+	_if i _isnt _unset 
+	_then
+		.data.remove_nth( i )
+		.index_hash.remove_key( k )
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_method simple_collection.int!update( values )
+	## 
+	## 
+	_local ( k, i ) << _self.hash_key_and_index( values )
+
+	>> _if i _isnt _unset 
+	   _then
+		   .data[ i ] << _self.int!value_vector( values )
+		   >> _self.record_from( .data[ i ] )
+	   _else
+		   >> _unset 
+	   _endif
+_endmethod
+$
+
+

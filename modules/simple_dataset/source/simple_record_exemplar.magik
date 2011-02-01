@@ -1,0 +1,16 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+def_slotted_exemplar( :simple_record_exemplar,
+	{},
+	{ :uds_rwo_record } )
+$
+
+_pragma(classify_level=restricted)
+_method simple_record_exemplar.is_rwo?
+	## 
+	## 
+	>> _true 
+_endmethod
+$
