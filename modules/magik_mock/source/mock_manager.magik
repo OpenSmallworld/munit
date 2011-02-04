@@ -1,0 +1,141 @@
+_package sw
+$
+
+def_slotted_exemplar( :mocking_manager,
+	{ } )
+$
+
+mocking_manager.define_shared_variable( :mock_data, dual_key_a_table.new(), :private )
+$
+
+_method mocking_manager.run_with_mocks( mocks )
+	_local mock_args << mocks
+	_local this << _self
+	_return _proc( code_to_run )
+			_import this, mock_args
+			_protect
+				this.install_mocks( mock_args )
+				_return code_to_run()
+			_protection
+				this.uninstall_mocks( mock_args )
+			_endprotect
+		_endproc
+_endmethod
+$
+
+_method mocking_manager.install_mocks( mock_specs )
+	_for i _over 1.upto(mock_specs.size)
+	_loop
+		(an_object, a_method, _gather mock_spec) << (_scatter mock_specs[i])
+		_self.install_mock( an_object, a_method, mock_spec )
+	_endloop
+_endmethod
+$
+
+_method mocking_manager.uninstall_mocks( mock_specs )	
+	_for i _over mock_specs.size.downto(1)
+	_loop
+		(an_object, a_method, _gather mock_spec) << (_scatter mock_specs[i])
+		_self.uninstall_mock( an_object, a_method, mock_spec )
+	_endloop
+_endmethod
+$
+
+_method mocking_manager.install_mock( an_object, a_method, mock_spec )
+	_local mock_data << _self.get_mocking_data( an_object, a_method )
+	an_object.define_method(
+		a_method,
+		_self.mocking_proc( mock_data ),
+				 mock_data[ :private? ] )
+	_if mock_spec[1] _is :returns _then mock_data[:returns] << mock_spec[2] _endif
+_endmethod
+$
+
+_method mocking_manager.mocking_proc( mock_data )
+	_local this << _self
+	_local a_proc <<
+		_proc @mocking_proc (_gather args)
+			_import this
+			_import mock_data
+			_if mock_data.includes_key?(:returns)
+			_then
+				_return mock_data[:returns]
+			_else 
+				# Intercept if need otherwise...
+				_return _scatter _allresults
+				_self.sys!perform( mock_data[:stored_name], _scatter args )
+			_endif
+		_endproc
+	_return a_proc
+_endmethod
+$
+			
+_method mocking_manager.get_mocking_data( an_object, a_method )
+	_local mocking_data << _self.mock_data[an_object.define_method_class_name, a_method] 
+	_if mocking_data _is _unset
+	_then 
+		# Install our new mocking stuff in place of the old method and
+		# store that old method.
+		_self.mock_data[an_object.define_method_class_name, a_method] <<
+			mocking_data << hash_table.new()
+		( mocking_data[:stored_name],
+		  mocking_data[:private?],
+		  mocking_data[:abstract?] ) <<
+			   _self.store_old_behaviour( an_object, a_method )
+		mocking_data[ :parent? ] << _self.method_on_parent?( an_object, a_method )
+	_endif
+	_return mocking_data
+_endmethod
+$
+
+_method mocking_manager.store_old_behaviour( an_object, a_method )
+	_local old_method_name << a_method
+	_loop
+		_if an_object.method(old_method_name) _is _unset _then _leave _endif
+		old_method_name << :mm! + old_method_name
+	_endloop
+	# Put the old method in with that name and return the old
+	# method name.
+	>> _if a_method _isnt old_method_name
+	   _then
+		   old_method << an_object.method( a_method )
+		   old_method_proc << _if old_method.value.is_kind_of?( _proc() _endproc )
+				      _then
+					      >> old_method.value
+				      _else
+					      _local old_method_value << old_method.value 
+					      >> _proc() _import old_method_value; _return old_method_value _endproc
+				      _endif
+		   an_object.define_method( old_method_name, old_method_proc,
+					 old_method.private?, old_method.abstract? )
+		   >> ( old_method_name, old_method.private?, old_method.abstract? )
+	   _else
+		   >> _unset
+	   _endif
+_endmethod
+$
+
+_method mocking_manager.method_on_parent?( an_object, a_method )
+	_local object_method_table << an_object.method_table
+	_local method_method_table << an_object.method(a_method).owner
+	_return _not ( method_method_table _is object_method_table )
+_endmethod
+
+_method mocking_manager.uninstall_mock( an_object, a_method, mock_spec )
+	_local mock_data << _self.get_mocking_data( an_object, a_method )
+	_self.restore_old_behaviour( an_object, a_method, mock_data )
+	mock_data.remove_key(:returns)
+_endmethod
+$
+
+_method mocking_manager.restore_old_behaviour( an_object, a_method, mock_data )
+	an_object.remove_method( a_method )
+	_if mock_data[ :parent? ] _is _false
+	_then 
+		old_method << an_object.method( mock_data[:stored_name] )
+		an_object.define_method( a_method, old_method.value,
+					 old_method.private?, old_method.abstract? )
+	_endif
+	an_object.remove_method( mock_data[:stored_name] )
+_endmethod
+$
