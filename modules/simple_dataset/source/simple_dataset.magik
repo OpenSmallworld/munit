@@ -1,0 +1,145 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar( :simple_dataset,
+	{
+		{ :world, _unset }
+	},
+	{ :universal_dataset } )
+$
+
+_pragma(classify_level=restricted)
+## This is used by universal_dataset.add_new_collection_for_descriptor
+simple_dataset.define_shared_constant( :default_collection_exemplar, simple_collection, :public )
+$
+
+
+_pragma(classify_level=restricted)
+_method simple_dataset.connect( connect_spec )
+	## 
+	## 
+	.world << uds_world.new( 0, 0, _self , _unset )
+
+	_for name, a_table_def _over connect_spec.fast_keys_and_elements()
+	_loop
+		_local ( field_descriptors, key_field_indexes ) << _self.field_descriptors_for( a_table_def )
+		_local desc << simple_collection_descriptor.new( _self, name,
+								 field_descriptors,
+								 key_field_indexes, _false )
+		_self.add_new_collection_for_descriptor( desc )
+	_endloop
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset.world_for_geometry( a_geom )
+	## 
+	## 
+	>> .world
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_dataset.field_descriptors_for( table_def )
+	## 
+	##
+	_local descriptors << rope.new()
+	_local key_field_indices << rope.new()
+	_for a_field_def _over table_def.fast_elements()
+	_loop
+		_local ( desc, key? ) << _self.field_descriptor_for( a_field_def )
+
+		descriptors.add_last( desc )
+		_if key?
+		_then
+			key_field_indices.add_last( descriptors.size )
+		_endif
+	_endloop
+
+	>> descriptors, key_field_indices
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_dataset.field_descriptor_for( a_field_def )
+	##
+	## Returns a field, and whether it is key
+	>> _if _self.physical_field_def?( a_field_def )
+	   _then
+		   >> _self.phys_field_descriptor_for( a_field_def )
+	   _elif _self.geometry_field_def?( a_field_def )
+	   _then
+		   >> _self.geom_field_descriptor_for( a_field_def )
+	   _else
+		   >> _unset, _false
+	   _endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_dataset.physical_field_def?( a_field_def )
+	## 
+	## 
+	>> _self.get_field_type( a_field_def[ :type ] ) _isnt _unset 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_dataset.geometry_field_def?( a_field_def ) 
+	## 
+	## 
+	>> _self.geometry_exemplar( a_field_def[ :type ] ) _isnt _unset 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_dataset.phys_field_descriptor_for( a_field_def )
+	## 
+	## 
+	>> ( uds_phys_field.new( a_field_def[ :name ],
+				 _self.get_field_type( a_field_def[ :type ],
+						       a_field_def[ :size ] ) ),
+	     ( a_field_def[ :key? ] _is _true ) )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_dataset.geom_field_descriptor_for( a_field_def )
+	## 
+	## 
+	>> ( uds_geom_field.new( a_field_def[ :name ], _self.geometry_exemplar( a_field_def[ :type ] ) ),
+	     _false  )
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={universal_rwo})
+_private _method simple_dataset.init_base_types()
+	##
+	## Subclassed to add :ds_string to use :extdb_string (gives
+	## some naming consistency)
+	##
+
+	_super.init_base_types()
+	
+	# Add :ds_string to use the :extdb_string class
+	base_type << database_view.defined_types[:extdb_string]
+	derived_type << uds_field_type.new_derived(_self, :ds_string, base_type.class,
+						   base_type.element_class, base_type.size,
+						   base_type.enumerator, base_type.phys_type)
+	_self.field_types.add(derived_type)
+_endmethod
+$
+
+_method simple_dataset.world
+	_return .world
+_endmethod
+$
+
+_method simple_dataset.world( type, world_id)
+	_return _self.world
+_endmethod
+$
+
