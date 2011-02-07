@@ -1,9 +1,0 @@
-<config>
-    <plugins>
-       <plugin name="test_selector"    class_name="munit_tree_item"/>
-       <plugin name="failure_lister"   class_name="munit_failure_list_plugin"/>
-       <plugin name="traceback_viewer" class_name="traceback_viewer_plugin"/>
-       <plugin name="coverage_viewer"  class_name="what_got_run_plugin"/>
-       <plugin name="aspect_selector"  class_name="test_aspects_plugin"/>
-    </plugins>
-</config>
