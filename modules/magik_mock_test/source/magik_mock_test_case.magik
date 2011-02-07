@@ -210,9 +210,9 @@ _method magik_mock_test_case.test_stub_two_parameter_string_behaviours()
 	_self.assert_is(:|AAA_BBB|, m.doit("AAA", "BBB"))
 	_self.assert_is(:|ZZZ|, m.doit("ZZZ"))
 
-	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"AAA", "CCC"})
-	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"CCC", "BBB"})
-	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"AAA"})	
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"AAA", "CCC"}, "AAA_CCC behaviour wrong!")
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"CCC", "BBB"}, "CCC_BBB behaviour wrong!")
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"AAA"}, "AAA behaviour wrong!")	
 _endmethod
 $
 

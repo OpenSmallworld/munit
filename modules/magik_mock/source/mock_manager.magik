@@ -27,7 +27,7 @@ _method mocking_manager.install_mocks( mock_specs )
 	_for i _over 1.upto(mock_specs.size)
 	_loop
 		(an_object, a_method, _gather mock_spec) << (_scatter mock_specs[i])
-		_self.install_mock( an_object, a_method, mock_spec )
+		_self.install_mock( an_object, a_method, _scatter mock_spec )
 	_endloop
 _endmethod
 $
@@ -36,18 +36,57 @@ _method mocking_manager.uninstall_mocks( mock_specs )
 	_for i _over mock_specs.size.downto(1)
 	_loop
 		(an_object, a_method, _gather mock_spec) << (_scatter mock_specs[i])
-		_self.uninstall_mock( an_object, a_method, mock_spec )
+		_self.uninstall_mock( an_object, a_method, _scatter mock_spec )
 	_endloop
 _endmethod
 $
 
-_method mocking_manager.install_mock( an_object, a_method, mock_spec )
-	_local mock_data << _self.get_mocking_data( an_object, a_method )
+_method mocking_manager.install_mock( an_object, a_method, _gather mock_spec )
+	_local mock_data << _self.ensure_mock_handler_installed( an_object, a_method )
+	_local (mock_part, _gather mock_rest) << (_scatter mock_spec )
+	_self.perform( :mock_method_ + mock_part + :|()|, mock_data, _scatter mock_rest )
+_endmethod
+$
+
+_method mocking_manager.mock_method_returns( mock_data, ret_vals, _gather mock_rest )
+	mock_data[:returns] << ret_vals
+_endmethod
+$
+
+_method mocking_manager.mock_method_raises( mock_data, cond_name, _gather cond_args )
+	mock_data[:raises] << {cond_name, _scatter cond_args}
+_endmethod
+$
+
+_method mocking_manager.mock_method_with_arguments( mock_data, arguments, mock_part, _gather mock_rest )
+	_if _not mock_data.includes_key?(:with_args)
+	_then
+		mock_data[:with_args] << vector_key_equality_hash_table.new()
+	_endif
+	_local args_mock_data << mock_data[:with_args]
+	args_mock_data[arguments] << hash_table.new()
+	_self.perform( :mock_method_ + mock_part + :|()|, args_mock_data[arguments], _scatter mock_rest )
+_endmethod
+$
+
+_method mocking_manager.ensure_mock_handler_installed( an_object, a_method )
+	_local mock_data << _self.get_or_create_mocking_data( an_object, a_method )
 	an_object.define_method(
 		a_method,
 		_self.mocking_proc( mock_data ),
 				 mock_data[ :private? ] )
-	_if mock_spec[1] _is :returns _then mock_data[:returns] << mock_spec[2] _endif
+	_return mock_data
+_endmethod
+$
+
+_method mocking_manager.mocking_data_for_args( mock_data, args )
+	>> _if mock_data.includes_key?(:with_args) _andif
+	       mock_data[:with_args][args] _isnt _unset
+	   _then
+		   >> mock_data[:with_args][args]
+	   _else
+		   >> mock_data
+	   _endif
 _endmethod
 $
 
@@ -57,10 +96,27 @@ _method mocking_manager.mocking_proc( mock_data )
 		_proc @mocking_proc (_gather args)
 			_import this
 			_import mock_data
-			_if mock_data.includes_key?(:returns)
+			_local call_data << this.mocking_data_for_args( mock_data, args )
+			_if call_data.includes_key?(:raises)
 			_then
-				_return mock_data[:returns]
-			_else 
+				_if call_data[:raises].size = 1
+				_then 
+					condition.raise(call_data[:raises][1])
+				_else
+					condition.raise(
+						call_data[:raises][1],
+						_scatter call_data[:raises][2])
+				_endif
+			_elif call_data.includes_key?(:returns)
+			_then
+				_return call_data[:returns]
+			_elif mock_data[:stored_name] _is _unset
+			_then
+				condition.raise( :mmock!no_behaviour_defined, :string,
+						 "MMock: no behaviour defined on " + _self.write_string + " for args (" +
+							 args.join_as_strings(",")+")")
+			_else
+				write("We're calling the stored version ", mock_data[:stored_name], "!")
 				# Intercept if need otherwise...
 				_return _scatter _allresults
 				_self.sys!perform( mock_data[:stored_name], _scatter args )
@@ -69,20 +125,25 @@ _method mocking_manager.mocking_proc( mock_data )
 	_return a_proc
 _endmethod
 $
-			
+
 _method mocking_manager.get_mocking_data( an_object, a_method )
-	_local mocking_data << _self.mock_data[an_object.define_method_class_name, a_method] 
+	>> _self.mock_data[an_object.method_table, a_method]
+_endmethod
+$
+
+_method mocking_manager.get_or_create_mocking_data( an_object, a_method )
+	_local mocking_data << _self.get_mocking_data( an_object, a_method )
 	_if mocking_data _is _unset
 	_then 
 		# Install our new mocking stuff in place of the old method and
 		# store that old method.
-		_self.mock_data[an_object.define_method_class_name, a_method] <<
+		_self.mock_data[an_object.method_table, a_method] <<
 			mocking_data << hash_table.new()
 		( mocking_data[:stored_name],
 		  mocking_data[:private?],
 		  mocking_data[:abstract?] ) <<
 			   _self.store_old_behaviour( an_object, a_method )
-		mocking_data[ :parent? ] << _self.method_on_parent?( an_object, a_method )
+		mocking_data[ :pre_existing? ] << _self.pre_existing_on_self?( an_object, a_method )
 	_endif
 	_return mocking_data
 _endmethod
@@ -110,29 +171,75 @@ _method mocking_manager.store_old_behaviour( an_object, a_method )
 					 old_method.private?, old_method.abstract? )
 		   >> ( old_method_name, old_method.private?, old_method.abstract? )
 	   _else
-		   >> _unset
+		   >> (_unset, _false, _false)
 	   _endif
 _endmethod
 $
 
-_method mocking_manager.method_on_parent?( an_object, a_method )
+_method mocking_manager.pre_existing_on_self?( an_object, a_method )
 	_local object_method_table << an_object.method_table
-	_local method_method_table << an_object.method(a_method).owner
-	_return _not ( method_method_table _is object_method_table )
+	_local method_entry << an_object.method(a_method)
+	_local method_method_table << _if method_entry _isnt _unset
+				      _then >> method_entry.owner
+				      _else >> _unset _endif
+	_return method_method_table _is object_method_table
 _endmethod
 
-_method mocking_manager.uninstall_mock( an_object, a_method, mock_spec )
+_method mocking_manager.uninstall_mock( an_object, a_method, _gather mock_spec )
 	_local mock_data << _self.get_mocking_data( an_object, a_method )
-	_self.restore_old_behaviour( an_object, a_method, mock_data )
-	mock_data.remove_key(:returns)
+	_if mock_data _isnt _unset
+	_then
+		_self.restore_old_behaviour( an_object, a_method, mock_data, mock_spec  )
+	_endif
 _endmethod
 $
 
-_method mocking_manager.restore_old_behaviour( an_object, a_method, mock_data )
+_method mocking_manager.mocks_left?( mock_data )
+	_return  mock_data.includes_key?( :returns ) _orif
+		mock_data.includes_key?( :raises ) _orif
+		mock_data.includes_key?( :with_args )
+_endmethod
+$
+
+_method mocking_manager.remove_mocking_behaviour( an_object, a_method, mock_data, mock_spec )
+	_local (mock_part, _gather mock_rest) << (_scatter mock_spec )
+	_self.perform( :unmock_method_ + mock_part + :|()|, mock_data, _scatter mock_rest )
+_endmethod
+$
+
+_method mocking_manager.unmock_method_returns( mock_data, ret_vals, _gather mock_rest )
+	mock_data.remove_key( :returns )
+_endmethod
+$
+
+_method mocking_manager.unmock_method_raises(mock_data, cond_name, _gather mock_rest)
+	mock_data.remove_key( :raises )
+_endmethod
+$
+
+_method mocking_manager.unmock_method_with_arguments( mock_data, arguments, mock_part, _gather mock_rest )
+	mock_data[:with_args].remove_key( arguments )
+	_if mock_data[:with_args].empty?
+	_then
+		mock_data.remove_key(:with_args)
+	_endif
+_endmethod
+$
+
+_method mocking_manager.restore_old_behaviour( an_object, a_method, mock_data, mock_spec )
+	_self.remove_mocking_behaviour( an_object, a_method, mock_data, mock_spec )
+	_if _not _self.mocks_left?( mock_data )
+	_then
+		_self.restore_old_method( an_object, a_method, mock_data )
+	_endif
+_endmethod
+$
+
+_method mocking_manager.restore_old_method( an_object, a_method, mock_data )
 	an_object.remove_method( a_method )
-	_if mock_data[ :parent? ] _is _false
+	old_method << an_object.method( mock_data[:stored_name] )
+	_if mock_data[ :pre_existing? ] _is _true
 	_then 
-		old_method << an_object.method( mock_data[:stored_name] )
 		an_object.define_method( a_method, old_method.value,
 					 old_method.private?, old_method.abstract? )
 	_endif
