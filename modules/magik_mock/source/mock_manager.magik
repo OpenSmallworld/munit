@@ -5,7 +5,7 @@ def_slotted_exemplar( :mocking_manager,
 	{ } )
 $
 
-mocking_manager.define_shared_variable( :mock_data, dual_key_a_table.new(), :private )
+mocking_manager.define_shared_variable( :mock_data, weak_hash_table.new(), :private )
 $
 
 _method mocking_manager.run_with_mocks( mocks )
@@ -116,7 +116,6 @@ _method mocking_manager.mocking_proc( mock_data )
 						 "MMock: no behaviour defined on " + _self.write_string + " for args (" +
 							 args.join_as_strings(",")+")")
 			_else
-				write("We're calling the stored version ", mock_data[:stored_name], "!")
 				# Intercept if need otherwise...
 				_return _scatter _allresults
 				_self.sys!perform( mock_data[:stored_name], _scatter args )
@@ -127,7 +126,11 @@ _endmethod
 $
 
 _method mocking_manager.get_mocking_data( an_object, a_method )
-	>> _self.mock_data[an_object.method_table, a_method]
+	_local method_table_mocks << _self.mock_data[an_object.method_table]
+	_if method_table_mocks _isnt _unset
+	_then
+		_return method_table_mocks[a_method]
+	_endif
 _endmethod
 $
 
@@ -137,8 +140,13 @@ _method mocking_manager.get_or_create_mocking_data( an_object, a_method )
 	_then 
 		# Install our new mocking stuff in place of the old method and
 		# store that old method.
-		_self.mock_data[an_object.method_table, a_method] <<
-			mocking_data << hash_table.new()
+		_local method_table_mocks << _self.mock_data[an_object.method_table]
+		_if method_table_mocks _is _unset
+		_then
+			method_table_mocks <<
+				_self.mock_data[an_object.method_table] << hash_table.new()
+		_endif
+		method_table_mocks[a_method] << mocking_data << hash_table.new()
 		( mocking_data[:stored_name],
 		  mocking_data[:private?],
 		  mocking_data[:abstract?] ) <<
@@ -244,5 +252,10 @@ _method mocking_manager.restore_old_method( an_object, a_method, mock_data )
 					 old_method.private?, old_method.abstract? )
 	_endif
 	an_object.remove_method( mock_data[:stored_name] )
+_endmethod
+$
+
+_method mocking_manager.remove_all_mocks_for( an_object )
+	_self.mock_data[an_object.method_table] << _unset
 _endmethod
 $

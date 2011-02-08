@@ -166,11 +166,10 @@ $
 
 _method mock_manager_test.run_test_clearing_mocking_manager( test_method, exemplar_name )
 	_protect
-		mocking_manager.sys!perform(:mock_data|<<|, dual_key_a_table.new() )
 		_self.perform(test_method, exemplar_name )
 	_protection
+		mocking_manager.remove_all_mocks_for( !current_package!.global_at( exemplar_name ).value )
 		remex(exemplar_name)
-		mocking_manager.sys!perform(:mock_data|<<|, dual_key_a_table.new())
 	_endprotect
 _endmethod
 $
