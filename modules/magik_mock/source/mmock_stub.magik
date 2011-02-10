@@ -43,7 +43,7 @@ _method mmock_stub.does_not_understand(msg, private?)
 	
 
 	default_type         << :value
-	default_return_value << _unset
+	default_return_value << {}
 	.current_behaviour << {msg.args, default_type, default_return_value}
 
 	.object.mmock!add_behaviour(msg.selector, .current_behaviour)
@@ -54,7 +54,7 @@ _method mmock_stub.does_not_understand(msg, private?)
 _endmethod
 $
 
-_method mmock_stub.then_return(value)
+_method mmock_stub.then_return(_gather values)
 	_if .current_behaviour _is _unset
 	_then
 		condition.raise(:mmock!stub_error,
@@ -62,7 +62,7 @@ _method mmock_stub.then_return(value)
 	_endif
 
 	.current_behaviour[2] << :value
-	.current_behaviour[3] << value
+	.current_behaviour[3] << values
 _endmethod
 $
 

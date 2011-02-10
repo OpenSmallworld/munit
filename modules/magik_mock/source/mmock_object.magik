@@ -53,6 +53,11 @@ $
 ##   stub(m).multi_param(1, 2).then_return(rope.new())
 ##   m.multi_param(1, 2) # => returns the new rope
 ##
+## And multiple return results:
+##
+##   stub(m).a_method().then_return(:value1, "value2")
+##   (v1, v2) << m.a_method() # => v1 = :value1, v2 = "value2"
+##
 ## If you don't care about the exact parameter value, or need
 ## to handle tricky cases (like vectors or other containers,
 ## for which equality comparisons don't really do anything
@@ -194,7 +199,7 @@ _method mmock_object.mmock!find_and_run_behaviour(selector, caller_args)
 		_then
 			_if type _is :value
 			_then 
-				_return return_value
+				_return _scatter return_value
 			_elif type _is :raise
 			_then
 

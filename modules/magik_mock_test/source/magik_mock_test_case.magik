@@ -218,6 +218,40 @@ $
 
 
 _pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_returns_two_results()
+
+	m << mock(:dummy)
+
+	stub(m).return_two().then_return(:one, :two)
+
+	(return1, return2) << m.return_two()
+
+	_self.assert_is(:one, return1)
+	_self.assert_is(:two, return2)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_returns_three_results_one_vector()
+
+	m << mock(:dummy)
+
+	v << {:abc, :def}
+	stub(m).call().then_return(:one, v, :two)
+
+	(return1, return2, return3) << m.call()
+
+	_self.assert_is(:one, return1)
+	_self.assert_is(v,    return2)
+	_self.assert_is(:two, return3)	
+	
+_endmethod
+$
+
+
+_pragma(classify_level=advanced, topic={service, test})
 _method magik_mock_test_case.test_stub_no_stub_method_provided()
 
 	m << mock(:test)
