@@ -256,11 +256,9 @@ $
 _pragma(classify_level=advanced, topic={service, test})
 _method magik_mock_test_case.test_stub_can_stub_an_existing_class()
 
-	# FIXME there's no nice way of creating a new one of these 
-	
-	m << mock(:test, rope)
+	m << mock(:test, rope).new()
 
-	_self.assert_is(1, m.size)   # Yes, really. The rope exemplar has size = 1
+	_self.assert_is(0, m.size)
 
 	stub(m).size.then_return(73)
 
