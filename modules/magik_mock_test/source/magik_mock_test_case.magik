@@ -393,3 +393,20 @@ _method magik_mock_test_case.test_match_any_object_and_multiple_behaviour_orderi
 	_self.assert_equals(:backstop, m.stubbed_method( :arbitrary_value1,  :arbitrary_value2 ))	
 _endmethod
 $
+
+
+_method magik_mock_test_case.test_match_empty()
+
+	m << mock(:test)
+	stub(m).a_method(match.empty).then_return(:matched)
+
+	_self.assert_equals(:matched, m.a_method(simple_vector.new(0)))
+	_self.assert_equals(:matched, m.a_method(rope.new()))
+	_self.assert_equals(:matched, m.a_method(set.new()))
+	_self.assert_equals(:matched, m.a_method(property_list.new()))	
+
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|a_method()|, {{1}})
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|a_method()|, {:blah})
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|a_method()|, {1})		
+_endmethod
+$

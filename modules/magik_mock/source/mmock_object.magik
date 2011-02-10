@@ -234,10 +234,10 @@ _method mmock_object.mmock!arguments_match?(behaviour_args, caller_args)
 	_loop
 		behaviour_value << behaviour_args[i]
 		caller_value << caller_args[i]
-		# FIXME next test is the simplest that could possibly work, but is ugly
-		_if behaviour_value.is_kind_of?(match)
-		_then
 
+		_if behaviour_value.is_kind_of?(match) _andif
+		    behaviour_value.matches?(caller_value)
+		_then
 			_continue
 		_elif behaviour_value <> caller_value
 		_then

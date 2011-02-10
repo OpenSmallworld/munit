@@ -1,12 +1,54 @@
 _package sw
 $
 
+remex(:match)
+$
+
 def_slotted_exemplar(:match,
-		    {})
+		    {
+			    {:name, _unset},
+			    {:test_proc, _unset}
+		    })
 $
 
 
+match.define_slot_externally_readable(:name)
+$
+
+_method match.new(name, test_proc)
+	>> _clone.init(name, test_proc)
+_endmethod
+$
+
+_method match.init(name, test_proc)
+	.name << name
+	.test_proc << test_proc
+	>> _self
+_endmethod
+$
+
+_method match.matches?(value)
+	>> .test_proc(value)
+_endmethod
+$
+
 _method match.any_object
-	_return _self
+
+	>> _self.new("any object",
+		     _proc@true()
+			     >> _true
+		     _endproc)
+
+_endmethod
+$
+
+
+_method match.empty
+	
+	>> _self.new("empty",
+		     _proc@empty(value)
+			     >> value.responds_to?(:empty?) _andif value.empty?
+		     _endproc)
+	
 _endmethod
 $
