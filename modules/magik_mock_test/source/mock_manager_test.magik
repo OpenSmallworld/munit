@@ -5,7 +5,7 @@ def_slotted_exemplar( :mock_manager_test, {{:mock_class, _unset}}, :test_case )
 $
 
 _method mock_manager_test.test_running_through_mocker_with_no_mocks()
-	_return _self.run_test_clearing_mocking_manager(
+	_return _self.run_test_clearing_mock_manager(
 			:int!test_running_through_mocker_with_no_mocks|()|,
 			:mt!trtmwnm )			
 _endmethod
@@ -16,13 +16,13 @@ _method mock_manager_test.int!test_running_through_mocker_with_no_mocks( class_n
 	thing.define_method( :mockable_method|()|, _proc() _return :unmocked _endproc, _false  )
 	_self.assert_equals(
 		:unmocked, 
-		mocking_manager.run_with_mocks({})(
+		mock_manager.run_with_mocks({})(
 							  _proc () _import thing; _return thing.mockable_method()_endproc ) )
 _endmethod
 $
 
 _method mock_manager_test.test_running_exemplar_mock()
-	_return _self.run_test_clearing_mocking_manager(
+	_return _self.run_test_clearing_mock_manager(
 			:int!test_running_exemplar_mock|()|,
 			:mt!trem )			
 _endmethod
@@ -34,7 +34,7 @@ _method mock_manager_test.int!test_running_exemplar_mock( class_name )
 	_self.assert_equals( :unmocked, thing.mockable_method() )
 	_self.assert_equals(
 		:exemplar_mock,
-		mocking_manager.run_with_mocks(
+		mock_manager.run_with_mocks(
 			{ {thing, :mockable_method|()|, :returns, :exemplar_mock} }
 				)( _proc () _import thing; _return thing.mockable_method() _endproc ))
 	_self.assert_equals( :unmocked, thing.mockable_method() )
@@ -42,7 +42,7 @@ _endmethod
 $
 
 _method mock_manager_test.test_non_existant_method()
-	_return _self.run_test_clearing_mocking_manager(
+	_return _self.run_test_clearing_mock_manager(
 			:int!test_non_existant_method|()|,
 			:mt!tnem)			
 _endmethod
@@ -53,7 +53,7 @@ _method mock_manager_test.int!test_non_existant_method( class_name )
 	_self.assert_unset( thing.method( :mockable_method|()| ) )
 	_self.assert_equals(
 		:exemplar_mock,
-		mocking_manager.run_with_mocks(
+		mock_manager.run_with_mocks(
 			{ {thing, :mockable_method|()|, :returns, :exemplar_mock} }
 				)( _proc () _import thing; _return thing.mockable_method() _endproc ))
 	_self.assert_unset( thing.method( :mockable_method|()| ) )
@@ -61,7 +61,7 @@ _endmethod
 $
 
 _method mock_manager_test.test_running_mock_with_arguments()
-	_return _self.run_test_clearing_mocking_manager(
+	_return _self.run_test_clearing_mock_manager(
 			:int!test_running_mock_with_arguments|()|,
 			:mt!trwa )			
 _endmethod
@@ -79,7 +79,7 @@ _method mock_manager_test.int!test_running_mock_with_arguments( class_name )
 				    this.assert_is( :mock_a, thing.mockable_method( :a ) )
 				    this.assert_is( :mock_b, thing.mockable_method( :b ) )
 			    _endproc
-	mocking_manager.run_with_mocks(
+	mock_manager.run_with_mocks(
 		{ {thing, :mockable_method|()|, :with_arguments, { :a }, :returns, :mock_a },
 		  {thing, :mockable_method|()|, :with_arguments, { :b }, :returns, :mock_b } }
 			) ( test_proc )
@@ -88,7 +88,7 @@ _endmethod
 $
 
 _method mock_manager_test.test_raising_condition()
-	_return _self.run_test_clearing_mocking_manager(
+	_return _self.run_test_clearing_mock_manager(
 			:int!test_raising_condition|()|,
 			:mt!trc )			
 _endmethod
@@ -102,14 +102,14 @@ _method mock_manager_test.int!test_raising_condition( class_name )
 	_local test_proc << _proc () _import thing, this;
 				    this.sys!perform(:assert_raised_condition|()|, :error, thing, :mockable_method|()| )
 			    _endproc
-	mocking_manager.run_with_mocks(
+	mock_manager.run_with_mocks(
 		{ {thing, :mockable_method|()|, :raises, :error } } ) ( test_proc )
 	_self.assert_equals( :unmocked, thing.mockable_method())
 _endmethod
 $				     
 
 _method mock_manager_test.test_install_and_uninstall_mock()
-	_return _self.run_test_clearing_mocking_manager(
+	_return _self.run_test_clearing_mock_manager(
 			:int!test_install_and_uninstall_mock|()|,
 			:mt!tim_exemplar )
 _endmethod
@@ -120,15 +120,15 @@ _method mock_manager_test.int!test_install_and_uninstall_mock( class_name )
 				class_name,
 				:test_method|()|, :unmocked)
 	_local unmocked_proc << thing.method( :test_method|()| ).value
-	mocking_manager.install_mock( thing, :test_method|()|, :returns, :exemplar_mock )
+	mock_manager.install_mock( thing, :test_method|()|, :returns, :exemplar_mock )
 	_self.assert_is_not( thing.method( :test_method|()|).value, unmocked_proc, "Test method should have been mocked in some way." )
-	mocking_manager.uninstall_mock( thing, :test_method|()|, :returns, :exemplar_mock )
+	mock_manager.uninstall_mock( thing, :test_method|()|, :returns, :exemplar_mock )
 	_self.assert_is( thing.method( :test_method|()|).value, unmocked_proc, "Test method should have ummocked." )
 _endmethod
 $
 
 _method mock_manager_test.test_store_old_behaviour()
-	_return _self.run_test_clearing_mocking_manager(
+	_return _self.run_test_clearing_mock_manager(
 			:int!test_store_old_behaviour|()|,
 			:mt!tsom_exemplar )
 _endmethod
@@ -139,14 +139,14 @@ _method mock_manager_test.int!test_store_old_behaviour( class_name )
 				class_name, :test_method|()|, :unmocked )
 	_local unmocked_proc << thing.method( :test_method|()| ).value
 	_local stored_method_name
-	stored_method_name << mocking_manager.store_old_behaviour(
+	stored_method_name << mock_manager.store_old_behaviour(
 				      thing, :test_method|()| )
 	_self.assert_is( unmocked_proc, thing.method( stored_method_name ).value, "Test method should have been stored but wasn't.")
 _endmethod
 $
 
 _method mock_manager_test.test_getting_mock_data()
-	_return _self.run_test_clearing_mocking_manager(
+	_return _self.run_test_clearing_mock_manager(
 			:int!test_getting_mock_data|()|,
 			:mt!tgmd_exemplar )
 _endmethod
@@ -156,7 +156,7 @@ _method mock_manager_test.int!test_getting_mock_data( class_name )
 	_local thing << _self.def_exemplar_and_methods(
 				class_name, :test_method|()|, :unmocked )
 	_local unmocked_proc << thing.method( :test_method|()| ).value 
-	mock_data << mocking_manager.get_or_create_mocking_data(
+	mock_data << mock_manager.get_or_create_mocking_data(
 			     thing, :test_method|()| )
 	_self.assert_is( :mm!test_method|()|, mock_data[:stored_name] )
 	_self.assert_false( mock_data[:private?], "Expected private to be false.")
@@ -164,11 +164,39 @@ _method mock_manager_test.int!test_getting_mock_data( class_name )
 _endmethod
 $
 
-_method mock_manager_test.run_test_clearing_mocking_manager( test_method, exemplar_name )
+_method mock_manager_test.test_mocking_iterator()
+	_return _self.run_test_clearing_mock_manager(
+			:int!test_mocking_iterator|()|,
+			:mt!tmi )
+_endmethod
+$
+
+_method mock_manager_test.int!test_mocking_iterator( class_name )
+	_local thing << _self.def_exemplar_and_methods(
+				class_name )
+	_local this << _self
+	_local test_proc << _proc () _import thing, this;
+				    _local results << rope.new_with( :one, :two, :three, :four, :five )
+				    _for i _over thing.test_iterator()
+				    _loop
+					    this.assert_is( results.remove_first(), i )
+				    _endloop
+			    _endproc
+	mock_manager.run_with_mocks(
+		{ {thing, :test_iterator|()|, :iterates,
+		   {:returns, :one},
+		   {:returns, :two},
+		   {:returns, :three},
+		   {:returns, :four},
+		   {:returns, :five} } } ) ( test_proc )
+_endmethod
+$
+
+_method mock_manager_test.run_test_clearing_mock_manager( test_method, exemplar_name )
 	_protect
 		_self.perform(test_method, exemplar_name )
 	_protection
-		mocking_manager.remove_all_mocks_for( !current_package!.global_at( exemplar_name ).value )
+		mock_manager.remove_all_mocks_for( !current_package!.global_at( exemplar_name ).value )
 		remex(exemplar_name)
 	_endprotect
 _endmethod

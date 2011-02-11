@@ -43,7 +43,7 @@ _method mmock_stub.does_not_understand(msg, private?)
 	
 
 	default_type         << :returns
-	default_return_value << _unset
+	default_return_value << {_unset}
 	.current_behaviour << {msg.selector, msg.args, default_type, default_return_value}
 #
 #	.object.mmock!add_behaviour(msg.selector, .current_behaviour)
@@ -54,7 +54,7 @@ _method mmock_stub.does_not_understand(msg, private?)
 _endmethod
 $
 
-_method mmock_stub.then_return(value)
+_method mmock_stub.then_return(_gather value)
 	_if .current_behaviour _is _unset
 	_then
 		condition.raise(:mmock!stub_error,
@@ -75,26 +75,20 @@ _method mmock_stub.then_raise(condition, _gather keys_and_values)
 	_endif
 
 	.current_behaviour[3] << :raises
-	.current_behaviour[4] << {condition, keys_and_values}
+	.current_behaviour[4] << {condition, _scatter keys_and_values}
 	_self.install_mock()
 _endmethod
 $
 
 _method mmock_stub.install_mock()
-	_local last_args << 
-		_if .current_behaviour[3] _is :raises
-		_then
-			>> { :raises, _scatter .current_behaviour[4] }
-		_else
-			>> { :returns, .current_behaviour[4] }
-		_endif
+	_local last_args << { .current_behaviour[3], _scatter .current_behaviour[4] }
 	_if _not .current_behaviour[2].empty?
 	_then 
-		mocking_manager.install_mock( .object, .current_behaviour[1],
+		mock_manager.install_mock( .object, .current_behaviour[1],
 					      :with_arguments, .current_behaviour[2],
 					      _scatter last_args )
 	_else
-		mocking_manager.install_mock( .object, .current_behaviour[1],
+		mock_manager.install_mock( .object, .current_behaviour[1],
 					      _scatter last_args )
 	_endif
 _endmethod

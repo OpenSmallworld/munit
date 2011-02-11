@@ -1,14 +1,14 @@
 _package sw
 $
 
-def_slotted_exemplar( :mocking_manager,
+def_slotted_exemplar( :mock_manager,
 	{ } )
 $
 
-mocking_manager.define_shared_variable( :mock_data, weak_hash_table.new(), :private )
+mock_manager.define_shared_variable( :mock_data, weak_hash_table.new(), :private )
 $
 
-_method mocking_manager.run_with_mocks( mocks )
+_method mock_manager.run_with_mocks( mocks )
 	_local mock_args << mocks
 	_local this << _self
 	_return _proc( code_to_run )
@@ -23,7 +23,7 @@ _method mocking_manager.run_with_mocks( mocks )
 _endmethod
 $
 
-_method mocking_manager.install_mocks( mock_specs )
+_method mock_manager.install_mocks( mock_specs )
 	_for i _over 1.upto(mock_specs.size)
 	_loop
 		(an_object, a_method, _gather mock_spec) << (_scatter mock_specs[i])
@@ -32,7 +32,7 @@ _method mocking_manager.install_mocks( mock_specs )
 _endmethod
 $
 
-_method mocking_manager.uninstall_mocks( mock_specs )	
+_method mock_manager.uninstall_mocks( mock_specs )	
 	_for i _over mock_specs.size.downto(1)
 	_loop
 		(an_object, a_method, _gather mock_spec) << (_scatter mock_specs[i])
@@ -41,45 +41,73 @@ _method mocking_manager.uninstall_mocks( mock_specs )
 _endmethod
 $
 
-_method mocking_manager.install_mock( an_object, a_method, _gather mock_spec )
-	_local mock_data << _self.ensure_mock_handler_installed( an_object, a_method )
+_method mock_manager.install_mock( an_object, a_method, _gather mock_spec )
+	_local mock_data << _self.get_or_create_mocking_data( an_object, a_method )
 	_local (mock_part, _gather mock_rest) << (_scatter mock_spec )
-	_self.perform( :mock_method_ + mock_part + :|()|, mock_data, _scatter mock_rest )
+	_local mock_type << _self.mock_method(mock_part, mock_data, _scatter mock_rest )
+	_self.ensure_mock_proc_installed( an_object, a_method, mock_data, mock_type )
 _endmethod
 $
 
-_method mocking_manager.mock_method_returns( mock_data, ret_vals, _gather mock_rest )
+_method mock_manager.mock_method_returns( mock_data, _gather ret_vals )
 	mock_data[:returns] << ret_vals
+	_return :proc
 _endmethod
 $
 
-_method mocking_manager.mock_method_raises( mock_data, cond_name, _gather cond_args )
-	mock_data[:raises] << {cond_name, _scatter cond_args}
+_method mock_manager.mock_method_raises( mock_data, cond_name, _gather cond_args )
+	mock_data[:raises] << {cond_name, cond_args}
+	_return :proc
 _endmethod
 $
 
-_method mocking_manager.mock_method_with_arguments( mock_data, arguments, mock_part, _gather mock_rest )
+_method mock_manager.mock_method_iterates( mock_data, _gather iteration_values )
+	mock_data[:iter_returns] << rope.new()
+	_local iter_values << rope.new_from( iteration_values )
+	_for ret_vals _over iter_values.elements()
+	_loop
+		_if _not ret_vals.is_kind_of?( {} )
+		_then _leave _else iter_values.remove_first() _endif
+		_local iter_mock_data << hash_table.new()
+		mock_data[:iter_returns].add_last( iter_mock_data )
+		_local (iter_part, _gather iter_data) << ( _scatter ret_vals )
+		_self.mock_method(iter_part, iter_mock_data, _scatter iter_data )
+	_endloop
+	_if _not iter_values.empty?
+	_then
+		_local (mock_part, _gather mock_rest) << ( _scatter iter_values )
+		_local mock_type << _self.mock_method( mock_part, mock_data, _scatter mock_rest )	
+	_endif
+	_return :iter
+_endmethod
+$
+
+_method mock_manager.mock_method_with_arguments( mock_data, arguments, mock_part, _gather mock_rest )
 	_if _not mock_data.includes_key?(:with_args)
 	_then
 		mock_data[:with_args] << vector_key_equality_hash_table.new()
 	_endif
 	_local args_mock_data << mock_data[:with_args]
 	args_mock_data[arguments] << hash_table.new()
-	_self.perform( :mock_method_ + mock_part + :|()|, args_mock_data[arguments], _scatter mock_rest )
+	_return _self.mock_method(mock_part, args_mock_data[arguments], _scatter mock_rest )
 _endmethod
 $
 
-_method mocking_manager.ensure_mock_handler_installed( an_object, a_method )
-	_local mock_data << _self.get_or_create_mocking_data( an_object, a_method )
-	an_object.define_method(
+_method mock_manager.mock_method( mock_part, mock_data, _gather mock_rest )
+	_return _self.perform( :mock_method_ + mock_part + :|()|, mock_data, _scatter mock_rest )
+_endmethod
+$
+
+_method mock_manager.ensure_mock_proc_installed( an_object, a_method, mock_data, mock_type )
+	an_object.define_method( 
 		a_method,
-		_self.mocking_proc( mock_data ),
-				 mock_data[ :private? ] )
+		_self.perform( :mock_ + mock_type + :|()|, mock_data ),
+		mock_data[ :private? ] )
 	_return mock_data
 _endmethod
 $
 
-_method mocking_manager.mocking_data_for_args( mock_data, args )
+_method mock_manager.mocking_data_for_args( mock_data, args )
 	>> _if mock_data.includes_key?(:with_args) _andif
 	       mock_data[:with_args][args] _isnt _unset
 	   _then
@@ -90,42 +118,120 @@ _method mocking_manager.mocking_data_for_args( mock_data, args )
 _endmethod
 $
 
-_method mocking_manager.mocking_proc( mock_data )
+_method mock_manager.ok_to_continue?( call_data )
+	_if call_data.includes_key?(:raises)
+	_then
+		_if call_data[:raises].size = 1
+		_then 
+			condition.raise(call_data[:raises][1])
+		_else
+			condition.raise(
+				call_data[:raises][1],
+				_scatter call_data[:raises][2])
+		_endif
+	_endif
+	_return _true
+_endmethod
+$
+
+_method mock_manager.get_return_values( call_data )
+	_if call_data.includes_key?(:returns)
+	_then _return _true, _scatter call_data[:returns]
+	_else _return _false
+	_endif
+_endmethod
+$	
+
+_method mock_manager.return_underlying_method_result( mock_data, obj, args )
+	_if mock_data[:stored_name] _is _unset
+	_then
+		condition.raise( :mmock!no_behaviour_defined, :string,
+				 "MMock: no behaviour defined on " + _self.write_string + " for args (" +
+					 args.join_as_strings(",")+")")
+	_else
+		# Intercept if need otherwise...
+		_return _scatter _allresults
+		obj.sys!perform( mock_data[:stored_name], _scatter args )
+	_endif
+_endmethod
+$
+
+_iter _method mock_manager.return_underlying_iter_result( mock_data, obj, args )
+	_if mock_data[:stored_name] _is _unset
+	_then
+		condition.raise( :mmock!no_behaviour_defined, :string,
+				 "MMock: no behaviour defined on " + _self.write_string + " for args (" +
+					 args.join_as_strings(",")+")")
+	_else
+		_for _gather iter_vals _over
+		obj.sys!perform_iter( mock_data[:stored_name], _scatter args )
+		_loop
+			_loopbody( _scatter iter_vals )
+		_finally _with _gather ret_vals
+			 _return _scatter ret_vals
+		_endloop	
+	_endif
+_endmethod
+$
+
+_iter _method mock_manager.get_iter_vals( call_data )
+	_if call_data.includes_key?(:iter_returns)
+	_then
+		_for ret_vals _over call_data[:iter_returns].fast_elements()
+		_loop
+			_if _not _self.ok_to_continue?( ret_vals ) _then _return _endif
+			_local (return?, _gather iter_vals) <<
+				_self.get_return_values( ret_vals )
+			_if return? _then _loopbody( _scatter iter_vals ) _endif
+		_endloop
+		_local (return?, _gather ret_vals) << _self.get_return_values( call_data )
+		_return _true _scatter ret_vals
+	_else
+		_return _false
+	_endif
+_endmethod
+
+_method mock_manager.mock_proc( mock_data )
 	_local this << _self
 	_local a_proc <<
 		_proc @mocking_proc (_gather args)
 			_import this
 			_import mock_data
 			_local call_data << this.mocking_data_for_args( mock_data, args )
-			_if call_data.includes_key?(:raises)
-			_then
-				_if call_data[:raises].size = 1
-				_then 
-					condition.raise(call_data[:raises][1])
-				_else
-					condition.raise(
-						call_data[:raises][1],
-						_scatter call_data[:raises][2])
-				_endif
-			_elif call_data.includes_key?(:returns)
-			_then
-				_return call_data[:returns]
-			_elif mock_data[:stored_name] _is _unset
-			_then
-				condition.raise( :mmock!no_behaviour_defined, :string,
-						 "MMock: no behaviour defined on " + _self.write_string + " for args (" +
-							 args.join_as_strings(",")+")")
-			_else
-				# Intercept if need otherwise...
-				_return _scatter _allresults
-				_self.sys!perform( mock_data[:stored_name], _scatter args )
-			_endif
+			_if _not this.ok_to_continue?( call_data ) _then _return _endif
+			_local (return?, _gather ret_vals) << this.get_return_values( call_data )
+			_if return? _then _return _scatter ret_vals _endif
+			_return _scatter _allresults this.return_underlying_method_result( call_data, _self, args )
 		_endproc
 	_return a_proc
 _endmethod
 $
 
-_method mocking_manager.get_mocking_data( an_object, a_method )
+_method mock_manager.mock_iter( mock_data )
+	_local this << _self
+	_local a_proc <<
+		_iter _proc @mocking_iter (_gather args)
+			_import this
+			_import mock_data
+			_local call_data << this.mocking_data_for_args( mock_data, args )
+			_if _not this.ok_to_continue?( call_data ) _then _return _endif
+			_for _gather iter_vals _over this.get_iter_vals( call_data)
+			_loop
+				_loopbody( _scatter iter_vals )
+			_finally _with done?, _gather ret_vals
+				 _if done? _then _return _scatter ret_vals _endif
+			_endloop 						 
+			_for _gather ret_vals _over this.return_underlying_iter_result( call_data, _self, args)
+			_loop _loopbody( _scatter ret_vals )
+			_finally _with _gather ret_vals
+				 _return _scatter ret_vals
+			_endloop
+		_endproc
+	_return a_proc
+_endmethod
+$
+
+_method mock_manager.get_mocking_data( an_object, a_method )
 	_local method_table_mocks << _self.mock_data[an_object.method_table]
 	_if method_table_mocks _isnt _unset
 	_then
@@ -134,7 +240,7 @@ _method mocking_manager.get_mocking_data( an_object, a_method )
 _endmethod
 $
 
-_method mocking_manager.get_or_create_mocking_data( an_object, a_method )
+_method mock_manager.get_or_create_mocking_data( an_object, a_method )
 	_local mocking_data << _self.get_mocking_data( an_object, a_method )
 	_if mocking_data _is _unset
 	_then 
@@ -157,7 +263,7 @@ _method mocking_manager.get_or_create_mocking_data( an_object, a_method )
 _endmethod
 $
 
-_method mocking_manager.store_old_behaviour( an_object, a_method )
+_method mock_manager.store_old_behaviour( an_object, a_method )
 	_local old_method_name << a_method
 	_loop
 		_if an_object.method(old_method_name) _is _unset _then _leave _endif
@@ -184,7 +290,7 @@ _method mocking_manager.store_old_behaviour( an_object, a_method )
 _endmethod
 $
 
-_method mocking_manager.pre_existing_on_self?( an_object, a_method )
+_method mock_manager.pre_existing_on_self?( an_object, a_method )
 	_local object_method_table << an_object.method_table
 	_local method_entry << an_object.method(a_method)
 	_local method_method_table << _if method_entry _isnt _unset
@@ -193,7 +299,7 @@ _method mocking_manager.pre_existing_on_self?( an_object, a_method )
 	_return method_method_table _is object_method_table
 _endmethod
 
-_method mocking_manager.uninstall_mock( an_object, a_method, _gather mock_spec )
+_method mock_manager.uninstall_mock( an_object, a_method, _gather mock_spec )
 	_local mock_data << _self.get_mocking_data( an_object, a_method )
 	_if mock_data _isnt _unset
 	_then
@@ -202,30 +308,30 @@ _method mocking_manager.uninstall_mock( an_object, a_method, _gather mock_spec )
 _endmethod
 $
 
-_method mocking_manager.mocks_left?( mock_data )
+_method mock_manager.mocks_left?( mock_data )
 	_return  mock_data.includes_key?( :returns ) _orif
 		mock_data.includes_key?( :raises ) _orif
 		mock_data.includes_key?( :with_args )
 _endmethod
 $
 
-_method mocking_manager.remove_mocking_behaviour( an_object, a_method, mock_data, mock_spec )
+_method mock_manager.remove_mocking_behaviour( an_object, a_method, mock_data, mock_spec )
 	_local (mock_part, _gather mock_rest) << (_scatter mock_spec )
 	_self.perform( :unmock_method_ + mock_part + :|()|, mock_data, _scatter mock_rest )
 _endmethod
 $
 
-_method mocking_manager.unmock_method_returns( mock_data, ret_vals, _gather mock_rest )
+_method mock_manager.unmock_method_returns( mock_data, _gather ret_vals )
 	mock_data.remove_key( :returns )
 _endmethod
 $
 
-_method mocking_manager.unmock_method_raises(mock_data, cond_name, _gather mock_rest)
+_method mock_manager.unmock_method_raises(mock_data, cond_name, _gather cond_keys_and_values)
 	mock_data.remove_key( :raises )
 _endmethod
 $
 
-_method mocking_manager.unmock_method_with_arguments( mock_data, arguments, mock_part, _gather mock_rest )
+_method mock_manager.unmock_method_with_arguments( mock_data, arguments, mock_part, _gather mock_rest )
 	mock_data[:with_args].remove_key( arguments )
 	_if mock_data[:with_args].empty?
 	_then
@@ -234,7 +340,12 @@ _method mocking_manager.unmock_method_with_arguments( mock_data, arguments, mock
 _endmethod
 $
 
-_method mocking_manager.restore_old_behaviour( an_object, a_method, mock_data, mock_spec )
+_method mock_manager.unmock_method_iterates( mock_data, _gather iteration_values )
+	mock_data.remove_key( :iter_returns )
+_endmethod
+$
+
+_method mock_manager.restore_old_behaviour( an_object, a_method, mock_data, mock_spec )
 	_self.remove_mocking_behaviour( an_object, a_method, mock_data, mock_spec )
 	_if _not _self.mocks_left?( mock_data )
 	_then
@@ -243,7 +354,7 @@ _method mocking_manager.restore_old_behaviour( an_object, a_method, mock_data, m
 _endmethod
 $
 
-_method mocking_manager.restore_old_method( an_object, a_method, mock_data )
+_method mock_manager.restore_old_method( an_object, a_method, mock_data )
 	an_object.remove_method( a_method )
 	old_method << an_object.method( mock_data[:stored_name] )
 	_if mock_data[ :pre_existing? ] _is _true
@@ -255,7 +366,7 @@ _method mocking_manager.restore_old_method( an_object, a_method, mock_data )
 _endmethod
 $
 
-_method mocking_manager.remove_all_mocks_for( an_object )
+_method mock_manager.remove_all_mocks_for( an_object )
 	_self.mock_data[an_object.method_table] << _unset
 _endmethod
 $

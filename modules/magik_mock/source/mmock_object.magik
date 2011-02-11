@@ -123,7 +123,8 @@ _method mmock_object.mmock!new_mock_object(name, _optional super_class)
 		p << super_class.method_table[:|shallow_copy()|]
 		new_mock_object.define_method(:|shallow_copy()|, p, _false)		
 	_endif
-	
+
+	mock_manager
 	_return new_mock_object
 _endmethod
 $
