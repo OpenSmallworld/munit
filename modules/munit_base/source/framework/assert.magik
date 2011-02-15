@@ -386,3 +386,30 @@ _private _method assert.assert_raised_all_conditions(
 _endmethod
 $
 
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.assert_deep_equals(expected , actual , _optional a_message)
+
+	_self.compare(expected,actual)
+	
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.compare( object1, object2)
+	_if _self.assert_equals(object1.size , object2.size) 
+	_then
+		_for k, v _over object1.keys_and_elements()
+		_loop
+			_if v.is_kind_of?(simple_vector)
+			_then
+				_self.assert_deep_equals(v, object2[k])
+			_else 			
+				_self.assert_equals(v, object2[k])
+			_endif
+		_endloop
+	_endif
+_endmethod
+
+
+	
