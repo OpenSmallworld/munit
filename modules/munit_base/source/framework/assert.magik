@@ -389,26 +389,61 @@ $
 _pragma(classify_level=advanced,topic=MUnit)
 _method assert.assert_deep_equals(expected , actual , _optional a_message)
 
-	_self.compare(expected,actual)
-	
+	result << _self.compare(expected,actual)
+	_if result _isnt _true
+	_then
+		_self.fail(result)
+	_else
+		_self.assert_true(_true) # only for assertion counts
+	_endif 
 	
 _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method assert.compare( object1, object2)
-	_if _self.assert_equals(object1.size , object2.size) 
+_private _method assert.compare( object1, object2, _optional location)
+
+	location << location.default(rope.new())
+	
+	_if object1.size <> object2.size
 	_then
-		_for k, v _over object1.keys_and_elements()
-		_loop
+		_return _self.format_error_message("sizes are not equal at index /",
+				     location)
+	_endif 
+
+
+	_for k, v _over object1.keys_and_elements()
+	_loop
+		location.add(k)
+		_protect 
 			_if v.is_kind_of?(simple_vector)
-			_then
-				_self.assert_deep_equals(v, object2[k])
+			_then	
+				_return _self.compare(v, object2[k], location)
+					
 			_else 			
-				_self.assert_equals(v, object2[k])
+				_if  v <> object2[k]
+				_then
+					message << write_string(v, " <> ", object2[k], " at index /")
+					_return _self.format_error_message(message,location)
+				_endif				
+		
 			_endif
-		_endloop
-	_endif
+		_protection
+			location.remove_last()
+		_endprotect
+	_endloop
+
+	_return _true 
+
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.format_error_message(message, location)
+	str << internal_text_output_stream.new()
+	str.write_list_with_separator(location, "/")
+	
+	_return write_string(message, str.string)
 _endmethod
 
 
