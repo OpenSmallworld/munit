@@ -407,7 +407,7 @@ _private _method assert.compare( object1, object2, _optional location)
 	
 	_if object1.size <> object2.size
 	_then
-		_return _self.format_error_message("sizes are not equal at index /",
+		_return _self.format_error_message("sizes are not equal",
 				     location)
 	_endif 
 
@@ -423,7 +423,7 @@ _private _method assert.compare( object1, object2, _optional location)
 			_else 			
 				_if  v <> object2[k]
 				_then
-					message << write_string(v, " <> ", object2[k], " at index /")
+					message << write_string(v, " <> ", object2[k])
 					_return _self.format_error_message(message,location)
 				_endif				
 		
@@ -443,7 +443,7 @@ _private _method assert.format_error_message(message, location)
 	str << internal_text_output_stream.new()
 	str.write_list_with_separator(location, "/")
 	
-	_return write_string(message, str.string)
+	_return write_string(message, " at index /", str.string)
 _endmethod
 
 
