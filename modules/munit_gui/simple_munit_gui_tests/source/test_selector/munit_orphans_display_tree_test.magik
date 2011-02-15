@@ -1,0 +1,46 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+#remex(:munit_orphans_display_tree_test)
+#$
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:munit_orphans_display_tree_test, 
+	{
+		{:orphan_tree, _unset  }
+	},
+	:test_case)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+munit_orphans_display_tree_test.define_shared_constant(:test_aspects, 
+			property_list.new_with(:always, "Always"),
+			:public)
+$
+
+
+_method munit_orphans_display_tree_test.set_up()
+	
+#	def_slotted_exemplar(:munit_orphans_test_case, 
+#	{
+#		
+#	},
+#	:test_case)
+
+_endmethod
+$
+
+_method munit_orphans_display_tree_test.test_orhphan_trees_can_return_tests()
+	.orphan_tree << munit_orphans_display_tree.new(_unset)
+	.orphan_tree.add_suite( munit_orphans_display_tree_test )
+	
+	tests << .orphan_tree.tests()
+	
+	_self.assert_equals( tests.size, 2 )
+	
+_endmethod
+$
+_method munit_orphans_display_tree_test.test_modules_returns_an_empty_vector()
+	.orphan_tree << munit_orphans_display_tree.new( _unset )
+	_self.assert_equals( .orphan_tree.modules().size, 0 )
+_endmethod
+$

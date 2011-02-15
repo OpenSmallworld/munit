@@ -192,6 +192,37 @@ _method mock_manager_test.int!test_mocking_iterator( class_name )
 _endmethod
 $
 
+_method mock_manager_test.test_wildcard_and_args()
+	_return _self.run_test_clearing_mock_manager(
+			:int!test_wildcard_and_arg|()|,
+			:mt!twaa )
+_endmethod
+$
+
+_method mock_manager_test.int!test_wildcard_and_arg(class_name)
+	_local thing << _self.def_exemplar_and_methods(
+				class_name, :mockable_method|()|, :unmocked)
+	_self.assert_equals( :unmocked, thing.mockable_method() )
+	_self.assert_equals( :unmocked, thing.mockable_method(1, :thing1) )
+	_self.assert_equals( :unmocked, thing.mockable_method(:thing2, 2) )
+	_self.assert_equals( :unmocked, thing.mockable_method(:thing2, :thing1) )
+	_local this << _self
+	_local test_proc << _proc () _import thing, this;
+				    this.assert_is( :unmocked, thing.mockable_method() )
+				    this.assert_is( :one, thing.mockable_method( 1, :thing1 ) )
+				    this.assert_is( :two, thing.mockable_method( :thing2, 2 ) )
+				    this.assert_is( :backstop, thing.mockable_method( :thing2, :thing1 ) )
+			    _endproc
+	mock_manager.run_with_mocks(
+		{ {thing, :mockable_method|()|, :with_arg, 1, :with_wildcard, match.any_object, :returns, :one },
+		  {thing, :mockable_method|()|, :with_wildcard, match.any_object, :with_arg, 2, :returns, :two },
+		  {thing, :mockable_method|()|, :with_wildcard, match.any_object, :with_wildcard, match.any_object, :returns, :backstop },
+		  {thing, :mockable_method|()|, :returns, :unmocked } }
+			) ( test_proc )
+	_self.assert_equals( :unmocked, thing.mockable_method() )
+_endmethod
+$
+	
 _method mock_manager_test.run_test_clearing_mock_manager( test_method, exemplar_name )
 	_protect
 		_self.perform(test_method, exemplar_name )

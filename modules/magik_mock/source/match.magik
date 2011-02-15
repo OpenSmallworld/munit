@@ -1,0 +1,77 @@
+_package sw
+$
+
+remex(:match)
+$
+
+def_slotted_exemplar(:match,
+		    {
+			    {:name, _unset},
+			    {:test_proc, _unset}
+		    })
+$
+
+
+match.define_slot_externally_readable(:name)
+$
+
+_method match.new(name, test_proc)
+	>> _clone.init(name, test_proc)
+_endmethod
+$
+
+_method match.init(name, test_proc)
+	.name << name
+	.test_proc << test_proc
+	>> _self
+_endmethod
+$
+
+_method match.matches?(value)
+	>> .test_proc(value)
+_endmethod
+$
+
+_method match.any_object
+
+	>> _self.new("any object", _self.any_object_proc )
+
+_endmethod
+$
+
+match.define_shared_constant( :empty_proc,
+	_proc@empty(value)
+		>> value.responds_to?(:empty?) _andif value.empty?
+	_endproc, _false )
+$
+
+match.define_shared_constant( :any_object_proc,
+	_proc@true()
+			     >> _true
+	_endproc, _false )
+$
+
+_method match.empty
+	
+	>> _self.new("empty", _self.empty_proc )
+	
+_endmethod
+$
+
+_method match.equality_hash
+	print( .name.equality_hash _xor .test_proc.equality_hash )
+	_return .name.equality_hash _xor .test_proc.equality_hash
+_endmethod
+$
+
+_method match.eq?( another )
+	_return .name = another.name _andif .test_proc = another.sys!slot(:test_proc)
+_endmethod
+$
+
+define_binary_operator_case(:|=|, match, match,
+		       _proc (m1, m2)
+			       _return m1.sys!slot(:name) = m2.sys!slot(:name) _andif
+				       m1.sys!slot(:test_proc) = m2.sys!slot(:test_proc)
+		       _endproc )
+$

@@ -54,7 +54,7 @@ _method mmock_stub.does_not_understand(msg, private?)
 _endmethod
 $
 
-_method mmock_stub.then_return(_gather value)
+_method mmock_stub.then_return(_gather values)
 	_if .current_behaviour _is _unset
 	_then
 		condition.raise(:mmock!stub_error,
@@ -62,7 +62,7 @@ _method mmock_stub.then_return(_gather value)
 	_endif
 
 	.current_behaviour[3] << :returns
-	.current_behaviour[4] << value
+	.current_behaviour[4] << values
 	_self.install_mock()
 _endmethod
 $
@@ -82,14 +82,20 @@ $
 
 _method mmock_stub.install_mock()
 	_local last_args << { .current_behaviour[3], _scatter .current_behaviour[4] }
+		
+	_local mock_parts << rope.new()
 	_if _not .current_behaviour[2].empty?
-	_then 
-		mock_manager.install_mock( .object, .current_behaviour[1],
-					      :with_arguments, .current_behaviour[2],
-					      _scatter last_args )
-	_else
-		mock_manager.install_mock( .object, .current_behaviour[1],
-					      _scatter last_args )
+	_then
+		_for an_arg _over .current_behaviour[2].fast_elements()
+		_loop
+			mock_parts.add_all_last( { _if an_arg.is_kind_of?(match)
+					      _then >> :with_wildcard _else >> :with_arg _endif,
+					      an_arg } )
+		_endloop
 	_endif
+	mock_parts.add_all_last( last_args )
+	
+	mock_manager.install_mock( .object, .current_behaviour[1],
+				   _scatter mock_parts )
 _endmethod
 $

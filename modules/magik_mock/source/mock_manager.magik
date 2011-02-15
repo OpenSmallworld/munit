@@ -82,14 +82,34 @@ _method mock_manager.mock_method_iterates( mock_data, _gather iteration_values )
 _endmethod
 $
 
-_method mock_manager.mock_method_with_arguments( mock_data, arguments, mock_part, _gather mock_rest )
-	_if _not mock_data.includes_key?(:with_args)
+_method mock_manager.mock_method_with_arguments( mock_data, arguments, _gather mock_rest )
+	_local new_arg_list << rope.new()
+	_for an_arg _over arguments.fast_elements()
+	_loop new_arg_list.add_last(:with_arg); new_arg_list.add_last(an_arg); _endloop
+	new_arg_list.add_all_last( mock_rest )
+	_return _self.mock_method(new_arg_list.remove_first(), mock_data, _scatter new_arg_list)
+_endmethod
+$
+
+_method mock_manager.mock_method_with_wildcard( mock_data, wildcard, mock_part, _gather mock_rest )
+	_if _not mock_data.includes_key?(:wildcard)
 	_then
-		mock_data[:with_args] << vector_key_equality_hash_table.new()
+		mock_data[:wildcard] << equality_property_list.new()
 	_endif
-	_local args_mock_data << mock_data[:with_args]
-	args_mock_data[arguments] << hash_table.new()
-	_return _self.mock_method(mock_part, args_mock_data[arguments], _scatter mock_rest )
+	_local args_mock_data << mock_data[:wildcard]
+	args_mock_data[wildcard] << args_mock_data[wildcard].default(hash_table.new())
+	_return _self.mock_method(mock_part, args_mock_data[wildcard], _scatter mock_rest )
+_endmethod
+$
+
+_method mock_manager.mock_method_with_arg( mock_data, arg, mock_part, _gather mock_rest )
+	_if _not mock_data.includes_key?(:arg)
+	_then
+		mock_data[:arg] << equality_hash_table.new()
+	_endif
+	_local args_mock_data << mock_data[:arg]
+	args_mock_data[arg] << args_mock_data[arg].default(hash_table.new())
+	_return _self.mock_method(mock_part, args_mock_data[arg], _scatter mock_rest )
 _endmethod
 $
 
@@ -107,14 +127,54 @@ _method mock_manager.ensure_mock_proc_installed( an_object, a_method, mock_data,
 _endmethod
 $
 
-_method mock_manager.mocking_data_for_args( mock_data, args )
-	>> _if mock_data.includes_key?(:with_args) _andif
-	       mock_data[:with_args][args] _isnt _unset
-	   _then
-		   >> mock_data[:with_args][args]
-	   _else
-		   >> mock_data
+_method mock_manager.mocking_data_for_args( mock_data, args, _optional strict? )
+	_local return_data << _self.int!get_mocking_data_with_args( mock_data, args )
+
+	_if return_data _is _unset _andif strict? _isnt _true
+	_then
+		return_data <<  mock_data
+	_endif
+	
+	_return return_data
+_endmethod
+$
+
+_method mock_manager.int!get_mocking_data_with_args( mock_data, args )
+	>> _if _not args.empty?
+	   _then >> _self.get_mocking_data_arg_and_remainder( mock_data, args ).
+		 default( _self.get_mocking_data_wildcard_and_remainder( mock_data, args ) )
+	   _else >> mock_data
 	   _endif
+_endmethod
+$												  											 
+
+_method mock_manager.get_mocking_data_arg_and_remainder( mock_data, args )
+	_local (arg, _gather args_rest) << (_scatter args)
+	_if mock_data.includes_key?(:arg) _andif
+	    mock_data[:arg][arg] _isnt _unset 
+	_then
+		_return _self.mocking_data_for_args( mock_data[:arg][arg], args_rest, _true )
+	_endif
+_endmethod
+$
+
+_method mock_manager.get_mocking_data_wildcard_and_remainder( mock_data, args )
+	_local (arg, _gather args_rest) << (_scatter args)
+	_local wc_data << _unset
+	_if mock_data.includes_key?(:wildcard) _andif
+	    (wc_data << _self.get_matching_wildcard(
+				 mock_data[:wildcard], arg ) )_isnt _unset
+	_then
+		_return _self.mocking_data_for_args( wc_data, args_rest, _true )
+	_endif
+_endmethod
+$
+	
+_method mock_manager.get_matching_wildcard( wildcard_list, arg )
+	_for wc, md _over wildcard_list.fast_keys_and_elements()
+	_loop
+		_if wc.matches?( arg ) _then _return md _endif
+	_endloop
 _endmethod
 $
 
@@ -311,7 +371,9 @@ $
 _method mock_manager.mocks_left?( mock_data )
 	_return  mock_data.includes_key?( :returns ) _orif
 		mock_data.includes_key?( :raises ) _orif
-		mock_data.includes_key?( :with_args )
+		mock_data.includes_key?( :with_args ) _orif
+		mock_data.includes_key?( :arg ) _orif
+		mock_data.includes_key?( :wildcard )
 _endmethod
 $
 
@@ -323,23 +385,57 @@ $
 
 _method mock_manager.unmock_method_returns( mock_data, _gather ret_vals )
 	mock_data.remove_key( :returns )
+	_return mock_data.empty?
 _endmethod
 $
 
 _method mock_manager.unmock_method_raises(mock_data, cond_name, _gather cond_keys_and_values)
 	mock_data.remove_key( :raises )
+	_return mock_data.empty?
 _endmethod
 $
 
-_method mock_manager.unmock_method_with_arguments( mock_data, arguments, mock_part, _gather mock_rest )
-	mock_data[:with_args].remove_key( arguments )
-	_if mock_data[:with_args].empty?
+_method mock_manager.unmock_method_with_arguments( mock_data, arguments, _gather mock_rest )
+	_local new_arg_list << rope.new()
+	_for an_arg _over arguments.fast_elements()
+	_loop new_arg_list.add_last(:with_arg); new_arg_list.add_last(an_arg); _endloop
+	new_arg_list.add_all_last( mock_rest )
+	_self.perform( :unmock_method_ + new_arg_list.remove_first() + :|()|, mock_data, _scatter new_arg_list )
+_endmethod
+$
+
+_method mock_manager.unmock_method_with_arg( mock_data, an_arg, mock_part, _gather mock_rest )
+	_local arg_mock_data << mock_data[:arg][an_arg]
+	_if _self.perform( :unmock_method_ + mock_part + :|()|,
+			   arg_mock_data, _scatter mock_rest ) _is _true
 	_then
-		mock_data.remove_key(:with_args)
+		mock_data[:arg].remove_key(an_arg)
+		_if mock_data[:arg].empty?
+		_then
+			mock_data.remove_key(:arg)
+		_endif
 	_endif
+	
+	_return mock_data.empty?
 _endmethod
 $
 
+_method mock_manager.unmock_method_with_wildcard( mock_data, wildcard, mock_part, _gather mock_rest )
+	_local arg_mock_data << mock_data[:wildcard][wildcard]
+	_if _self.perform( :unmock_method_ + mock_part + :|()|,
+			   arg_mock_data, _scatter mock_rest ) _is _true
+	_then
+		mock_data[:wildcard].remove_key(wildcard)
+		_if mock_data[:wildcard].empty?
+		_then
+			mock_data.remove_key(:wildcard)
+		_endif
+	_endif
+	
+	_return mock_data.empty?
+_endmethod
+$
+	
 _method mock_manager.unmock_method_iterates( mock_data, _gather iteration_values )
 	mock_data.remove_key( :iter_returns )
 _endmethod
