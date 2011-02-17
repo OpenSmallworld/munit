@@ -398,6 +398,9 @@ _method assert.assert_deep_equals(expected , actual , _optional a_message)
 		_if expected.is_kind_of?(ro_indexed_collection_mixin)
 		_then			
 			result << _self.compare_indexed_collection(expected,actual)
+		_elif expected.is_kind_of?(externally_keyed_collection_mixin)
+		_then
+			result << _self.compare_external_keyed_collection(expected,actual)
 		_endif
 		
 		_if result _isnt _true
@@ -405,8 +408,7 @@ _method assert.assert_deep_equals(expected , actual , _optional a_message)
 			_self.fail(result)
 		_else		
 			_self.assert_true(_true) # only for assertion counts
-		_endif
-		
+		_endif 
 	_endif	
 _endmethod
 $
@@ -423,8 +425,39 @@ _private _method assert.is_same_class?(object1,object2)
 	_endif
 	_return _true 
 _endmethod
-
 $
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.compare_external_keyed_collection( object1, object2, _optional location)
+
+	location << location.default(rope.new())
+	
+	_if object1.empty? _and object2.empty?
+	_then
+		_return true
+	_endif
+
+	_for k,v _over object1.keys_and_elements()
+	_loop
+		location.add(k)
+		_protect 
+			_if object2.includes_key?(k)	
+			_then
+				_if v = object2[k]
+				_then
+					_return _true
+				_endif
+			_else
+				message << write_string(v, " <> ", object2[k], " at key /")
+				_return _self.format_error_message(message,location)
+			_endif
+		_protection
+			location.remove_key(k)
+		_endprotect	
+	_endloop	
+_endmethod 
+$
+
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method assert.compare_indexed_collection( object1, object2, _optional location)
 

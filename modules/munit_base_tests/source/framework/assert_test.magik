@@ -576,6 +576,31 @@ _method assert_test.test_is_same_class?_rope_and_simple_vector()
 _endmethod
 $
 
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_empty_property_list()
+	expected << property_list.new()
+	actual << property_list.new()
+	_self.assert_deep_equals( expected, actual)
+_endmethod
+$
 
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_single_element_property_list()
+	expected << property_list.new_with(:one,1)
+	actual << property_list.new_with(:one,1)
+	_self.assert_deep_equals(expected,actual)	
+_endmethod
+$
 
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_compare_different_key_property_list()
+	expected << property_list.new_with(:one,1)
+	actual << property_list.new_with("two",1)
+		_self.assert_deep_equals("Expected a rope ,but is a simple_vector",
+			    _self.sys!perform(:|compare_external_keyed_collection()|,
+					      expected,
+					      actual)
+			    )
+_endmethod
+$
 
