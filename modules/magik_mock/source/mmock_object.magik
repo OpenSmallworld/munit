@@ -58,20 +58,40 @@ $
 ##   stub(m).a_method().then_return(:value1, "value2")
 ##   (v1, v2) << m.a_method() # => v1 = :value1, v2 = "value2"
 ##
+## Wildcards
+## ---------
 ## If you don't care about the exact parameter value, or need
 ## to handle tricky cases (like vectors or other containers,
 ## for which equality comparisons don't really do anything
 ## useful), then you can ask for any object to be matched:
 ##
-## 	stub(m).match_wildcard(match.any_object).then_return(:ok)
-##	m.match_wildcard(1) # => returns ok
-##      m.match_wildcard(2) # => returns ok
-##      m.match_wildcard("anything") # => returns ok	
+##   stub(m).match_wildcard(match.any_object).then_return(:ok)
+##   m.match_wildcard(1) # => returns ok
+##   m.match_wildcard(2) # => returns ok
+##   m.match_wildcard("anything") # => returns ok	
 ##
+## Conditions
+## ----------
 ## You can use then_raise(<condition name>, <condition
 ## keys_and_values args>) to raise a condition rather than
 ## return a value.
 ##
+## Iterators
+## ---------
+## You can use then_iterate(<first iteration values>,
+##                          <second iteration values>,...)
+## as follows:
+##   stub(m).iter_method().then_iterate({:key1, val1}, {:key2, val2})
+##   _for key, val over m.iter_method()
+##   _loop
+##      # on first iter, key=key1, val=val1
+##      # on second iter, key=key2, val=val2
+##   endloop
+## You can't yet supply arguments to iter methods, or have
+## return values.
+##
+## Subclassing
+## -----------
 ## You can also subclass an existing class and add/stub methods on
 ## that:
 ##   m << mock(:stubbed_rope, rope).new(100) # note call to new()

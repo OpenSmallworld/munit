@@ -80,6 +80,22 @@ _method mmock_stub.then_raise(condition, _gather keys_and_values)
 _endmethod
 $
 
+_method mmock_stub.then_iterate(_gather iter_values)
+
+	(selector, args, type, return_val) << (_scatter .current_behaviour)
+	
+
+	iter_values << iter_values.map(_proc(val)
+					      >> {:returns, _scatter val}
+				      _endproc)
+	mock_manager.install_mock(.object,
+				  selector,
+				  :iterates,
+				  _scatter iter_values)
+	
+_endmethod
+$
+
 _method mmock_stub.install_mock()
 	_local last_args << { .current_behaviour[3], _scatter .current_behaviour[4] }
 		
