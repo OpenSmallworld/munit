@@ -388,26 +388,51 @@ $
 
 _pragma(classify_level=advanced,topic=MUnit)
 _method assert.assert_deep_equals(expected , actual , _optional a_message)
-
-	result << _self.compare(expected,actual)
-	_if result _isnt _true
-	_then
-		_self.fail(result)
-	_else
-		_self.assert_true(_true) # only for assertion counts
-	_endif 
 	
+	same_type << _self.is_same_class?(expected, actual)
+
+	_if same_type _isnt _true
+	_then
+		_self.fail(same_type)
+	_else
+		_if expected.is_kind_of?(ro_indexed_collection_mixin)
+		_then			
+			result << _self.compare_indexed_collection(expected,actual)
+		_endif
+		
+		_if result _isnt _true
+		_then
+			_self.fail(result)
+		_else		
+			_self.assert_true(_true) # only for assertion counts
+		_endif
+		
+	_endif	
 _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method assert.compare( object1, object2, _optional location)
+_private _method assert.is_same_class?(object1,object2)
+	object1_type << object1.class_name
+	object2_type << object2.class_name
+
+	_if object1_type <> object2_type
+	_then
+		_return write_string("Expected a ", object1_type.write_string, " ,but is a ",
+						   object2_type.write_string)
+	_endif
+	_return _true 
+_endmethod
+
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.compare_indexed_collection( object1, object2, _optional location)
 
 	location << location.default(rope.new())
 	
 	_if object1.size <> object2.size
 	_then
-		_return _self.format_error_message("sizes are not equal at index /",
+		_return _self.format_error_message("sizes are not equal at key /",
 				     location)
 	_endif 
 
@@ -416,14 +441,14 @@ _private _method assert.compare( object1, object2, _optional location)
 	_loop
 		location.add(k)
 		_protect 
-			_if v.is_kind_of?(simple_vector)
+			_if v.is_kind_of?(simple_vector) _or v.is_kind_of?(rope)
 			_then	
-				_return _self.compare(v, object2[k], location)
+				_return _self.compare_indexed_collection(v, object2[k], location)
 					
 			_else 			
 				_if  v <> object2[k]
 				_then
-					message << write_string(v, " <> ", object2[k], " at index /")
+					message << write_string(v, " <> ", object2[k], " at key /")
 					_return _self.format_error_message(message,location)
 				_endif				
 		
@@ -445,6 +470,5 @@ _private _method assert.format_error_message(message, location)
 	
 	_return write_string(message, str.string)
 _endmethod
-
-
+$
 	
