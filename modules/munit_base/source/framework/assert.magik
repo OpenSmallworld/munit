@@ -452,7 +452,7 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 				_return _self.format_error_message(message,location)
 			_endif
 		_protection
-			location.remove_key(k)
+			location.remove_last(k)
 		_endprotect	
 	_endloop	
 _endmethod 
