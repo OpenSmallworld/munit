@@ -437,6 +437,24 @@ _method magik_mock_test_case.test_iterator_noargs()
 _endmethod
 $
 
+_method magik_mock_test_case.test_iterator_args()
+
+	m << mock(:test_iterator)
+	stub(m).iter_method(1).then_iterate({:a}, {:b})
+	stub(m).iter_method(2).then_iterate({:c}, {:d}, {:e})
+
+	r1 << rope.new_from_iter(m, :|iter_method()|, 1)
+	r2 << rope.new_from_iter(m, :|iter_method()|, 2)
+	_self.assert_equals(2, r1.size)
+	_self.assert_equals(:a, r1[1])
+	_self.assert_equals(:b, r1[2])
+			    
+	_self.assert_equals(3, r2.size)
+	_self.assert_equals(:c, r2[1])
+	_self.assert_equals(:d, r2[2])
+	_self.assert_equals(:e, r2[3])
+_endmethod
+$
 
 _method magik_mock_test_case.test_iterator_multiple_iter_values_noargs()
 

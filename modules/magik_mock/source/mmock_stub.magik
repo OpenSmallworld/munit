@@ -49,7 +49,8 @@ _method mmock_stub.does_not_understand(msg, private?)
 #	.object.mmock!add_behaviour(msg.selector, .current_behaviour)
 #
 #	.object.mmock!ensure_has_method(msg)
-	_self.install_mock()
+	_self.install_mock( .object, .current_behaviour[1], .current_behaviour[2],
+	      .current_behaviour[3], _scatter .current_behaviour[4] )
 	_return _self
 _endmethod
 $
@@ -63,7 +64,8 @@ _method mmock_stub.then_return(_gather values)
 
 	.current_behaviour[3] << :returns
 	.current_behaviour[4] << values
-	_self.install_mock()
+	_self.install_mock( .object, .current_behaviour[1], .current_behaviour[2],
+	      .current_behaviour[3], _scatter .current_behaviour[4] )
 _endmethod
 $
 
@@ -76,7 +78,8 @@ _method mmock_stub.then_raise(condition, _gather keys_and_values)
 
 	.current_behaviour[3] << :raises
 	.current_behaviour[4] << {condition, _scatter keys_and_values}
-	_self.install_mock()
+	_self.install_mock( .object, .current_behaviour[1], .current_behaviour[2],
+	      .current_behaviour[3], _scatter .current_behaviour[4] )
 _endmethod
 $
 
@@ -88,30 +91,23 @@ _method mmock_stub.then_iterate(_gather iter_values)
 	iter_values << iter_values.map(_proc(val)
 					      >> {:returns, _scatter val}
 				      _endproc)
-	mock_manager.install_mock(.object,
-				  selector,
-				  :iterates,
-				  _scatter iter_values)
-	
+	_self.install_mock( .object, selector, args, :iterates _scatter iter_values )
 _endmethod
 $
 
-_method mmock_stub.install_mock()
-	_local last_args << { .current_behaviour[3], _scatter .current_behaviour[4] }
-		
+_method mmock_stub.install_mock( an_object, selector, args, _gather behaviour )
 	_local mock_parts << rope.new()
-	_if _not .current_behaviour[2].empty?
+	_if _not args.empty?
 	_then
-		_for an_arg _over .current_behaviour[2].fast_elements()
+		_for an_arg _over args.fast_elements()
 		_loop
 			mock_parts.add_all_last( { _if an_arg.is_kind_of?(match)
 					      _then >> :with_wildcard _else >> :with_arg _endif,
 					      an_arg } )
 		_endloop
 	_endif
-	mock_parts.add_all_last( last_args )
+	mock_parts.add_all_last( behaviour )
 	
-	mock_manager.install_mock( .object, .current_behaviour[1],
-				   _scatter mock_parts )
+	mock_manager.install_mock( an_object, selector, _scatter mock_parts )
 _endmethod
 $

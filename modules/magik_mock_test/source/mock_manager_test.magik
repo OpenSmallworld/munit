@@ -192,6 +192,84 @@ _method mock_manager_test.int!test_mocking_iterator( class_name )
 _endmethod
 $
 
+_method mock_manager_test.test_mocking_iterator_with_arg()
+	_return _self.run_test_clearing_mock_manager(
+			:int!test_mocking_iterator_with_arg|()|,
+			:mt!tmiwa )
+_endmethod
+$
+
+_method mock_manager_test.int!test_mocking_iterator_with_arg( class_name )
+	_local thing << _self.def_exemplar_and_methods(
+				class_name )
+	_local this << _self
+	_local test_proc << _proc () _import thing, this;
+				    _local results_a << rope.new_with( :one, :two, :three, :four, :five )
+				    _local results_b << rope.new_with( :six, :seven, :eight, :nine, :ten )
+				    _for i _over thing.test_iterator(:a)
+				    _loop
+					    this.assert_is( results_a.remove_first(), i )
+				    _endloop
+				    _for i _over thing.test_iterator(:b)
+				    _loop
+					    this.assert_is( results_b.remove_first(), i )
+				    _endloop
+			    _endproc
+	mock_manager.run_with_mocks(
+		{ {thing, :test_iterator|()|, :with_arg, :a, :iterates,
+		   {:returns, :one},
+		   {:returns, :two},
+		   {:returns, :three},
+		   {:returns, :four},
+		   {:returns, :five} },
+		  {thing, :test_iterator|()|, :with_arg, :b, :iterates,
+		   {:returns, :six},
+		   {:returns, :seven},
+		   {:returns, :eight},
+		   {:returns, :nine},
+		   {:returns, :ten} }} ) ( test_proc )
+_endmethod
+$
+
+_method mock_manager_test.test_mocking_iterator_with_args()
+	_return _self.run_test_clearing_mock_manager(
+			:int!test_mocking_iterator_with_args|()|,
+			:mt!tmiwas )
+_endmethod
+$
+
+_method mock_manager_test.int!test_mocking_iterator_with_args( class_name )
+	_local thing << _self.def_exemplar_and_methods(
+				class_name )
+	_local this << _self
+	_local test_proc << _proc () _import thing, this;
+				    _local results_a << rope.new_with( :one, :two, :three, :four, :five )
+				    _local results_b << rope.new_with( :six, :seven, :eight, :nine, :ten )
+				    _for i _over thing.test_iterator(:a, :b, :c)
+				    _loop
+					    this.assert_is( results_a.remove_first(), i )
+				    _endloop
+				    _for i _over thing.test_iterator(:d, :e, :f)
+				    _loop
+					    this.assert_is( results_b.remove_first(), i )
+				    _endloop
+			    _endproc
+	mock_manager.run_with_mocks(
+		{ {thing, :test_iterator|()|, :with_arguments, {:a, :b, :c}, :iterates,
+		   {:returns, :one},
+		   {:returns, :two},
+		   {:returns, :three},
+		   {:returns, :four},
+		   {:returns, :five} },
+		  {thing, :test_iterator|()|, :with_arguments, {:d, :e, :f}, :iterates,
+		   {:returns, :six},
+		   {:returns, :seven},
+		   {:returns, :eight},
+		   {:returns, :nine},
+		   {:returns, :ten} }} ) ( test_proc )
+_endmethod
+$
+
 _method mock_manager_test.test_wildcard_and_args()
 	_return _self.run_test_clearing_mock_manager(
 			:int!test_wildcard_and_arg|()|,
