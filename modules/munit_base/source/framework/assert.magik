@@ -403,9 +403,11 @@ _method assert.assert_deep_equals(expected , actual , _optional a_message)
 			result << _self.compare_external_keyed_collection(expected,actual)
 		_endif
 		
-		_if result _isnt _true
+		_if _not result.empty?
 		_then
-			_self.fail(result)
+			str << internal_text_output_stream.new()
+			str.write_list_with_separator(result, %newline)			
+			_self.fail(str.string)
 		_else		
 			_self.assert_true(_true) # only for assertion counts
 		_endif 
@@ -420,7 +422,7 @@ _private _method assert.is_same_class?(object1,object2)
 
 	_if object1_type <> object2_type
 	_then
-		_return write_string("Expected a ", object1_type.write_string, " ,but is a ",
+		_return write_string("Expected a ", object1_type.write_string, ", but is a ",
 						   object2_type.write_string)
 	_endif
 	_return _true 
@@ -434,7 +436,7 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 	
 	_if object1.empty? _and object2.empty?
 	_then
-		_return true
+		_return {}
 	_endif
 
 	_for k,v _over object1.keys_and_elements()
@@ -445,7 +447,7 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 		_then
 			_if v = object2[k]
 			_then
-				_return _true
+				_return {}
 			_endif
 		_else
 			message << write_string("The key '", k, "' is unique")
@@ -459,14 +461,16 @@ _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method assert.compare_indexed_collection( object1, object2, _optional location)
+_private _method assert.compare_indexed_collection( object1, object2, _optional location, errors)
 
 	location << location.default(rope.new())
+	errors << errors.default(rope.new())
 	
 	_if object1.size <> object2.size
 	_then
-		_return _self.format_error_message("sizes are not equal",
-				     location)
+		errors.add( _self.format_error_message("sizes are not equal",
+				     location))
+		_return errors
 	_endif 
 
 
@@ -476,13 +480,13 @@ _private _method assert.compare_indexed_collection( object1, object2, _optional 
 		_protect 
 			_if v.is_kind_of?(simple_vector) _or v.is_kind_of?(rope)
 			_then	
-				_return _self.compare_indexed_collection(v, object2[k], location)
+				_self.compare_indexed_collection(v, object2[k], location, errors)
 					
 			_else 			
 				_if  v <> object2[k]
 				_then
 					message << write_string(v, " <> ", object2[k])
-					_return _self.format_error_message(message,location)
+					errors.add_last(_self.format_error_message(message,location))
 				_endif				
 		
 			_endif
@@ -491,7 +495,7 @@ _private _method assert.compare_indexed_collection( object1, object2, _optional 
 		_endprotect
 	_endloop
 
-	_return _true 
+	_return errors
 
 _endmethod
 $

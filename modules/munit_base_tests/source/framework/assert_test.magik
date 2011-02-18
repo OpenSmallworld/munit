@@ -389,6 +389,17 @@ _endmethod
 $
 
 _pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_compare_different_sized_simple_vector()
+	
+	# Here we start to use assert_deep_equals to test itself.
+	# The result of the sys!perform is a rope of error messages -
+	# we use assert_deep_equals to check the contents of that rope.
+	_self.assert_deep_equals(rope.new_with("sizes are not equal at key /"),
+			    _self.sys!perform(:|compare_indexed_collection()|, {1} , {1,2} ))
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_assert_deep_equals_matching_vector_of_vectors()
 
 	_self.assert_deep_equals( { {1,2,3} }, { {1,2,3} } )
@@ -419,14 +430,7 @@ _method assert_test.test_assert_deep_equals_matching_deep_vectors()
 _endmethod
 $
 
-_pragma(classify_level=debug,topic=MUnit)
-_method assert_test.test_compare_different_sized_simple_vector()
-	
 
-	_self.assert_equals("sizes are not equal at key /",
-			    _self.sys!perform(:|compare_indexed_collection()|, {1} , {1,2} ))
-_endmethod
-$
 
 _pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_assert_deep_equals_message_different_sized_simple_vector()
@@ -450,8 +454,19 @@ _pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_compare_different_contents_simple_vector()
 	
 
-	_self.assert_equals("2 <> 3 at key /2",
-			    _self.sys!perform(:|compare_indexed_collection()|, {1,2} , {1,3} ))
+	_self.assert_deep_equals(
+		rope.new_with("2 <> 3 at key /2"),
+		_self.sys!perform(:|compare_indexed_collection()|, {1,2} , {1,3} ))
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_compare_different_contents_multiple_errors_simple_vector()
+	
+
+	_self.assert_deep_equals(
+		rope.new_with("2 <> 3 at key /2","10 <> Maybe at key /3"),
+		_self.sys!perform(:|compare_indexed_collection()|, {1,2,10} , {1,3,_maybe} ))
 _endmethod
 $
 
@@ -459,8 +474,9 @@ _pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_compare_different_sized_first_level_simple_vector()
 	
 
-	_self.assert_equals("sizes are not equal at key /2",
-			    _self.sys!perform(:|compare_indexed_collection()|, {1,{:a,:b}} , {1,{:a}} ))
+	_self.assert_deep_equals(
+		rope.new_with("sizes are not equal at key /2"),
+		_self.sys!perform(:|compare_indexed_collection()|, {1,{:a,:b}} , {1,{:a}} ))
 _endmethod
 $
 
@@ -468,10 +484,11 @@ _pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_compare_different_sized_recursive_simple_vector()
 	
 
-	_self.assert_equals("sizes are not equal at key /2/3",
-			    _self.sys!perform(:|compare_indexed_collection()|,
-					      {1,{:a,"test",{"a","b"}}},
-					      {1,{:a,"test",{"a","b",10}}}   ))
+	_self.assert_deep_equals(
+		rope.new_with("sizes are not equal at key /2/3"),
+		_self.sys!perform(:|compare_indexed_collection()|,
+				  {1,{:a,"test",{"a","b"}}},
+				  {1,{:a,"test",{"a","b",10}}}   ))
 _endmethod
 $
 
@@ -479,20 +496,23 @@ _pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_compare_different_contents_recursive_simple_vector()
 	
 
-	_self.assert_equals("True <> Maybe at key /2/1/2",
-			    _self.sys!perform(:|compare_indexed_collection()|,
-					      { 1,
-					        { {:a,_true},
-						  "test",
-						  {"a","b",10}
-						}
-					      },
-					      { 1,
-					        { {:a,_maybe},
-						  "test",
-						  {"a","b",10}
-						}
-					      }   ))
+	_self.assert_deep_equals(
+		rope.new_with("1 <> 2 at key /1",
+			      "True <> Maybe at key /2/1/2",
+			      "b <> xxx at key /2/3/2"),
+		_self.sys!perform(:|compare_indexed_collection()|,
+				  { 1,
+				    { {:a,_true},
+				      "test",
+				      {"a","b",10}
+				    }
+				  },
+				  { 2,
+				    { {:a,_maybe},
+				      "test",
+				      {"a","xxx",10}
+				    }
+				  }   ))
 _endmethod
 $
 
@@ -536,7 +556,7 @@ _method assert_test.test_compare_recursive_different_content_rope()
 			   :test,
 			   {
 				   0.43,
-				   coordinate.new(10,20),
+				   coordinate.new(10,30),
 				   {_true,"test"},
 				   5
 			   }
@@ -554,11 +574,15 @@ _method assert_test.test_compare_recursive_different_content_rope()
 			  }
 			 )	
 
-	_self.assert_equals("blah <> blh at key /3/2",
-			    _self.sys!perform(:|compare_indexed_collection()|,
-					      expected,
-					      actual)
-			    )
+	_self.assert_deep_equals(
+		rope.new_with(
+			"blah <> blh at key /3/2",
+			"coordinate:(10.00,30.00) <> coordinate:(10.00,20.00) at key /5/2"
+		     ),
+		_self.sys!perform(:|compare_indexed_collection()|,
+				  expected,
+				  actual)
+	      )
 	
 _endmethod
 $
@@ -567,7 +591,7 @@ _pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_is_same_class?_rope_and_simple_vector()
 	expected << rope.new_with(1,2)
 	actual << {1,2}
-	_self.assert_deep_equals("Expected a rope ,but is a simple_vector",
+	_self.assert_deep_equals("Expected a rope, but is a simple_vector",
 			    _self.sys!perform(:|is_same_class?()|,
 					      expected,
 					      actual)
