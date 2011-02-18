@@ -620,10 +620,54 @@ _pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_compare_different_key_property_list()
 	expected << property_list.new_with(:one,1)
 	actual << property_list.new_with("two",1)
-	_self.assert_equals("The key 'one' is unique at key /",
-			    _self.sys!perform(:|compare_external_keyed_collection()|,
-					      expected,
-					      actual)
+	_self.assert_deep_equals(
+		rope.new_with("The key 'one' is unique at key /"),
+		_self.sys!perform(:|compare_external_keyed_collection()|,
+				  expected,
+				  actual)
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_multiple_element_property_list()
+	expected << property_list.new_with(:one,1,:two,"test")
+	actual << property_list.new_with(:two,"blah",:one,1)
+	_self.assert_deep_equals(
+		rope.new_with("test <> blah at key /two"),
+		_self.sys!perform(:|compare_external_keyed_collection()|,
+				  expected,
+				  actual)
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_multiple_key_errors_property_list()
+	expected << property_list.new_with(:one,1,:check,2,:three,3)
+	actual << property_list.new_with(:two,"blah",:one,1)
+	_self.assert_deep_equals(
+		rope.new_with("The key 'check' is unique at key /",
+			      "The key 'three' is unique at key /"
+			      ),
+		_self.sys!perform(:|compare_external_keyed_collection()|,
+				  expected,
+				  actual)
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_multiple_key_value_errors_property_list()
+	expected << property_list.new_with(:one,1,:check,2,:three,3)
+	actual << property_list.new_with(:two,"blah",:one,1,:three,4)
+	_self.assert_deep_equals(
+		rope.new_with("The key 'check' is unique at key /",
+			      "3 <> 4 at key /three"
+			      ),
+		_self.sys!perform(:|compare_external_keyed_collection()|,
+				  expected,
+				  actual)
 	      )
 _endmethod
 $

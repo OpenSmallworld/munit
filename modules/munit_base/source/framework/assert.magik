@@ -439,24 +439,27 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 		_return {}
 	_endif
 
+	outer_location << location.copy()
 	_for k,v _over object1.keys_and_elements()
 	_loop
-		#location.add(k)
-		#_protect 
-		_if object2.includes_key?(k)	
-		_then
-			_if v = object2[k]
+		location.add(k)
+		_protect 
+			_if object2.includes_key?(k)	
 			_then
-				_return {}
+				_if v <> object2[k]
+				_then
+					message << write_string(v, " <> ", object2[k])
+					_return _self.format_error_message(message,location)
+				_endif
+			_else
+				message << write_string("The key '", k, "' is unique")
+				_return _self.format_error_message(message,outer_location)
 			_endif
-		_else
-			message << write_string("The key '", k, "' is unique")
-			_return _self.format_error_message(message,location)
-		_endif
-		#_protection
-		#	location.remove_last(k)
-		#_endprotect	
-	_endloop	
+		_protection
+			location.remove_last(k)
+		_endprotect	
+	_endloop
+	_return {} 
 _endmethod 
 $
 
