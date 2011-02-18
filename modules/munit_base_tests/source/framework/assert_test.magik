@@ -747,3 +747,84 @@ _method assert_test.test_assert_deep_equals_recursive_simple_property_list()
 	      )
 _endmethod
 $
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_mixed_rope_simple_vector_property_list()
+	expected << property_list.new_with(:one, rope.new_with({1},2))
+	actual << property_list.new_with(:one, rope.new_with({1},2))
+	_self.assert_deep_equals(expected,actual)
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_property_list_in_rope()
+	expected << rope.new_with(property_list.new_with(:one, {1}))
+	actual << rope.new_with(property_list.new_with(:one, {1}))
+	_self.assert_deep_equals(expected,actual)
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_property_list_in_rope_with_differences()
+	expected << rope.new_with(property_list.new_with(:one, 1))
+	actual << rope.new_with(property_list.new_with(:one, 2))
+	_self.assert_deep_equals(
+		rope.new_with("1 <> 2 at key /1/one"),
+		_self.sys!perform(:|compare_external_keyed_collection()|,
+				  expected,
+				  actual)
+	      )
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_complicated_collection_with_differences()
+	expected << rope.new_with(
+			    "blah",
+			    property_list.new_with(
+				    :one, 1,
+				    :two, rope.new_with(
+						  {1,
+						   2,
+						   _true,
+						  property_list.new_with(:one,10)
+						  }
+					       )
+					  ),
+			    "test",
+			    :test,
+			    {_true, _false,_maybe}
+			 )
+	
+	actual << rope.new_with(
+			    "blah",
+			    property_list.new_with(
+				    :one, 1,
+				    :two, rope.new_with(
+						  {1,
+						   2,
+						   _false,
+						  property_list.new_with(:one,1)
+						  }
+					       ),
+				    :three, 3
+					  ),
+			    "test",
+			    :test,
+			    {_true, "string",_maybe}
+			 )
+	
+
+	_self.assert_deep_equals(
+		rope.new_with("True <> False at key /2/two/1/3",
+			      "10 <> 1 at key /2/two/1/4/one",
+			      "The key 'three' is unique at key /2",
+			      "False <> string at key /5/2"),
+		_self.sys!perform(:|compare_external_keyed_collection()|,
+				  expected,
+				  actual)
+	      )
+_endmethod
+$
