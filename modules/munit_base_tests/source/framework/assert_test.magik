@@ -688,3 +688,62 @@ _method assert_test.test_assert_deep_equals_two_way_errors_property_list()
 	      )
 _endmethod
 $
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_recursive_simple_property_list()
+	expected << property_list.new_with(:one,1,:two,property_list.new_with(:three,3))
+	actual << property_list.new_with(:one,1,:two,property_list.new_with(:three,3))
+	_self.assert_deep_equals(expected,actual)
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_recursive_simple_property_list()
+	expected << property_list.new_with(:one,1,:two,property_list.new_with(:three,3, :four, 4))
+	actual << property_list.new_with(:one,1,:two,property_list.new_with(:three,:not3, :five, 5))
+
+
+	_self.assert_deep_equals(
+		rope.new_with("3 <> not3 at key /two/three",
+			      "The key 'four' is unique at key /two",
+			      "The key 'five' is unique at key /two"			      
+		     ),
+		_self.sys!perform(:|compare_external_keyed_collection()|,
+				  expected,
+				  actual)
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_recursive_simple_property_list()
+	expected << property_list.new_with(:one,1,
+					   :two,property_list.new_with(
+							:three,101, :fourzzz, 4),
+					   :xyz, property_list.new_with(
+							       1, property_list.new_with(
+									  :xyz, coordinate.new(10,0),
+									  :abc, "blah")),
+					   :tum, "abcddef")
+
+	actual << property_list.new_with(:one,1,
+					 :two,property_list.new_with(
+						      :three,3, :four, 4),
+					 :xyz, property_list.new_with(
+						       1, property_list.new_with(
+								  :xyz, coordinate.new(0,0),
+								  :abc, "blah")),
+					 :tum, "abcddef")
+
+	_self.assert_deep_equals(
+		rope.new_with("101 <> 3 at key /two/three",
+			      "The key 'fourzzz' is unique at key /two",
+			      "The key 'four' is unique at key /two",
+			      "coordinate:(10.00,0.000) <> coordinate:(0.000,0.000) at key /xyz/1/xyz"),
+
+		_self.sys!perform(:|compare_external_keyed_collection()|,
+				  expected,
+				  actual)
+	      )
+_endmethod
+$

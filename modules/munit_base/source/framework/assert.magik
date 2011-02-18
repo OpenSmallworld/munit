@@ -446,16 +446,20 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 		_then
 			_self.unique_key_error(k, location, errors)
 		_else
-			_if v <> object2[k]
-			_then
-				location.add(k)
-				_protect 
+			location.add(k)
+			_protect 
+
+				_if v.is_kind_of?(property_list)
+				_then
+					_self.compare_external_keyed_collection(v, object2[k],location, errors)
+				_elif  v <> object2[k]
+				_then
 					message << write_string(v, " <> ", object2[k])
 					errors.add_last( _self.format_error_message(message,location))
-				_protection
-					location.remove_last(k)
-				_endprotect
-			_endif
+				_endif
+			_protection
+				location.remove_last(k)
+			_endprotect
 		_endif		
 	_endloop
 
