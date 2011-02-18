@@ -448,7 +448,7 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 				_return _true
 			_endif
 		_else
-			message << write_string("The key '", k, "' is unique at /")
+			message << write_string("The key '", k, "' is unique")
 			_return _self.format_error_message(message,location)
 		_endif
 		#_protection
@@ -465,7 +465,7 @@ _private _method assert.compare_indexed_collection( object1, object2, _optional 
 	
 	_if object1.size <> object2.size
 	_then
-		_return _self.format_error_message("sizes are not equal at key /",
+		_return _self.format_error_message("sizes are not equal",
 				     location)
 	_endif 
 
@@ -481,7 +481,7 @@ _private _method assert.compare_indexed_collection( object1, object2, _optional 
 			_else 			
 				_if  v <> object2[k]
 				_then
-					message << write_string(v, " <> ", object2[k], " at key /")
+					message << write_string(v, " <> ", object2[k])
 					_return _self.format_error_message(message,location)
 				_endif				
 		
@@ -501,7 +501,7 @@ _private _method assert.format_error_message(message, location)
 	str << internal_text_output_stream.new()
 	str.write_list_with_separator(location, "/")
 	
-	_return write_string(message, str.string)
+	_return write_string(message, " at key /", str.string)
 _endmethod
 $
-	
+
