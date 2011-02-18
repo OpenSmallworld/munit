@@ -430,36 +430,47 @@ _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method assert.compare_external_keyed_collection( object1, object2, _optional location)
+_private _method assert.compare_external_keyed_collection( object1, object2, _optional location, errors)
 
 	location << location.default(rope.new())
+	errors << errors.default(rope.new())
 	
 	_if object1.empty? _and object2.empty?
 	_then
 		_return {}
 	_endif
 
-	outer_location << location.copy()
 	_for k,v _over object1.keys_and_elements()
-	_loop
-		location.add(k)
-		_protect 
-			_if object2.includes_key?(k)	
+	_loop	 
+		_if object2.includes_key?(k)	
+		_then
+			_if v <> object2[k]
 			_then
-				_if v <> object2[k]
-				_then
+				location.add(k)
+				_protect 
 					message << write_string(v, " <> ", object2[k])
-					_return _self.format_error_message(message,location)
-				_endif
-			_else
-				message << write_string("The key '", k, "' is unique")
-				_return _self.format_error_message(message,outer_location)
+					errors.add_last( _self.format_error_message(message,location))
+				_protection
+					location.remove_last(k)
+				_endprotect
 			_endif
-		_protection
-			location.remove_last(k)
-		_endprotect	
+		_else
+			message << write_string("The key '", k, "' is unique")
+			errors.add_last(_self.format_error_message(message,location))
+		_endif		
 	_endloop
-	_return {} 
+
+	_for k,v _over object2.keys_and_elements()
+	_loop
+		_if _not object1.includes_key?(k)	
+		_then
+			message << write_string("The key '", k, "' is unique")
+			errors.add_last(_self.format_error_message(message,location))
+		_endif
+		
+	_endloop
+	
+	_return errors 
 _endmethod 
 $
 
