@@ -596,11 +596,11 @@ _pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_compare_different_key_property_list()
 	expected << property_list.new_with(:one,1)
 	actual << property_list.new_with("two",1)
-		_self.assert_equals("The key 'one' is unique",
+	_self.assert_equals("The key 'one' is unique at /",
 			    _self.sys!perform(:|compare_external_keyed_collection()|,
 					      expected,
 					      actual)
-			    )
+	      )
 _endmethod
 $
 

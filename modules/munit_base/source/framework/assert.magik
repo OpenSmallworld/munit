@@ -439,21 +439,21 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 
 	_for k,v _over object1.keys_and_elements()
 	_loop
-		location.add(k)
-		_protect 
-			_if object2.includes_key?(k)	
+		#location.add(k)
+		#_protect 
+		_if object2.includes_key?(k)	
+		_then
+			_if v = object2[k]
 			_then
-				_if v = object2[k]
-				_then
-					_return _true
-				_endif
-			_else
-				message << write_string(v, " <> ", object2[k], " at key /")
-				_return _self.format_error_message(message,location)
+				_return _true
 			_endif
-		_protection
-			location.remove_last(k)
-		_endprotect	
+		_else
+			message << write_string("The key '", k, "' is unique at /")
+			_return _self.format_error_message(message,location)
+		_endif
+		#_protection
+		#	location.remove_last(k)
+		#_endprotect	
 	_endloop	
 _endmethod 
 $
