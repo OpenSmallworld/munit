@@ -442,8 +442,10 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 
 	_for k,v _over object1.keys_and_elements()
 	_loop	 
-		_if object2.includes_key?(k)	
+		_if _not object2.includes_key?(k)	
 		_then
+			_self.unique_key_error(k, location, errors)
+		_else
 			_if v <> object2[k]
 			_then
 				location.add(k)
@@ -454,9 +456,6 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 					location.remove_last(k)
 				_endprotect
 			_endif
-		_else
-			message << write_string("The key '", k, "' is unique")
-			errors.add_last(_self.format_error_message(message,location))
 		_endif		
 	_endloop
 
@@ -464,8 +463,7 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 	_loop
 		_if _not object1.includes_key?(k)	
 		_then
-			message << write_string("The key '", k, "' is unique")
-			errors.add_last(_self.format_error_message(message,location))
+			_self.unique_key_error(k, location, errors)			
 		_endif
 		
 	_endloop
@@ -473,6 +471,7 @@ _private _method assert.compare_external_keyed_collection( object1, object2, _op
 	_return errors 
 _endmethod 
 $
+
 
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method assert.compare_indexed_collection( object1, object2, _optional location, errors)
@@ -523,3 +522,9 @@ _private _method assert.format_error_message(message, location)
 _endmethod
 $
 
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.unique_key_error(k, location, errors)
+	message << write_string("The key '", k, "' is unique")
+	errors.add_last(_self.format_error_message(message,location))
+_endmethod
+$
