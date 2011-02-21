@@ -395,7 +395,7 @@ _method assert_test.test_compare_different_sized_simple_vector()
 	# The result of the sys!perform is a rope of error messages -
 	# we use assert_deep_equals to check the contents of that rope.
 	_self.assert_deep_equals(rope.new_with("sizes are not equal at key /"),
-			    _self.sys!perform(:|compare_indexed_collection()|, {1} , {1,2} ))
+			    _self.sys!perform(:|compare()|, {1} , {1,2}))
 _endmethod
 $
 
@@ -456,7 +456,7 @@ _method assert_test.test_compare_different_contents_simple_vector()
 
 	_self.assert_deep_equals(
 		rope.new_with("2 <> 3 at key /2"),
-		_self.sys!perform(:|compare_indexed_collection()|, {1,2} , {1,3} ))
+		_self.sys!perform(:|compare()|, {1,2} , {1,3} ))
 _endmethod
 $
 
@@ -466,7 +466,7 @@ _method assert_test.test_compare_different_contents_multiple_errors_simple_vecto
 
 	_self.assert_deep_equals(
 		rope.new_with("2 <> 3 at key /2","10 <> Maybe at key /3"),
-		_self.sys!perform(:|compare_indexed_collection()|, {1,2,10} , {1,3,_maybe} ))
+		_self.sys!perform(:|compare()|, {1,2,10} , {1,3,_maybe} ))
 _endmethod
 $
 
@@ -476,7 +476,7 @@ _method assert_test.test_compare_different_sized_first_level_simple_vector()
 
 	_self.assert_deep_equals(
 		rope.new_with("sizes are not equal at key /2"),
-		_self.sys!perform(:|compare_indexed_collection()|, {1,{:a,:b}} , {1,{:a}} ))
+		_self.sys!perform(:|compare()|, {1,{:a,:b}} , {1,{:a}} ))
 _endmethod
 $
 
@@ -486,7 +486,7 @@ _method assert_test.test_compare_different_sized_recursive_simple_vector()
 
 	_self.assert_deep_equals(
 		rope.new_with("sizes are not equal at key /2/3"),
-		_self.sys!perform(:|compare_indexed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  {1,{:a,"test",{"a","b"}}},
 				  {1,{:a,"test",{"a","b",10}}}   ))
 _endmethod
@@ -500,7 +500,7 @@ _method assert_test.test_compare_different_contents_recursive_simple_vector()
 		rope.new_with("1 <> 2 at key /1",
 			      "True <> Maybe at key /2/1/2",
 			      "b <> xxx at key /2/3/2"),
-		_self.sys!perform(:|compare_indexed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  { 1,
 				    { {:a,_true},
 				      "test",
@@ -579,7 +579,7 @@ _method assert_test.test_compare_recursive_different_content_rope()
 			"blah <> blh at key /3/2",
 			"coordinate:(10.00,30.00) <> coordinate:(10.00,20.00) at key /5/2"
 		     ),
-		_self.sys!perform(:|compare_indexed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  expected,
 				  actual)
 	      )
@@ -591,12 +591,24 @@ _pragma(classify_level=debug,topic=MUnit)
 _method assert_test.test_is_same_class?_rope_and_simple_vector()
 	expected << rope.new_with(1,2)
 	actual << {1,2}
-	_self.assert_deep_equals("Expected a rope, but is a simple_vector",
-			    _self.sys!perform(:|is_same_class?()|,
+	_self.assert_deep_equals(rope.new_with("Expected a rope, but is a simple_vector at key /"),
+			    _self.sys!perform(:|compare()|,
 					      expected,
 					      actual)
 			    )
 
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_is_same_class?_property_list_and_rope()
+	expected << property_list.new_with(1,2)
+	actual << rope.new_with(1,2)
+	_self.assert_deep_equals(rope.new_with("Expected a property_list, but is a rope at key /"),
+				 _self.sys!perform(:|compare()|,
+						   expected,
+						   actual)
+	      )
 _endmethod
 $
 
@@ -622,7 +634,7 @@ _method assert_test.test_compare_different_key_property_list()
 	actual << property_list.new_with()
 	_self.assert_deep_equals(
 		rope.new_with("The key 'one' is unique at key /"),
-		_self.sys!perform(:|compare_external_keyed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  expected,
 				  actual)
 	      )
@@ -635,7 +647,7 @@ _method assert_test.test_assert_deep_equals_multiple_element_property_list()
 	actual << property_list.new_with(:two,"blah",:one,1)
 	_self.assert_deep_equals(
 		rope.new_with("test <> blah at key /two"),
-		_self.sys!perform(:|compare_external_keyed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  expected,
 				  actual)
 	      )
@@ -650,7 +662,7 @@ _method assert_test.test_assert_deep_equals_multiple_key_errors_property_list()
 		rope.new_with("The key 'check' is unique at key /",
 			      "The key 'three' is unique at key /"
 			      ),
-		_self.sys!perform(:|compare_external_keyed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  expected,
 				  actual)
 	      )
@@ -665,7 +677,7 @@ _method assert_test.test_assert_deep_equals_multiple_key_value_errors_property_l
 		rope.new_with("The key 'check' is unique at key /",
 			      "3 <> 4 at key /three"
 			      ),
-		_self.sys!perform(:|compare_external_keyed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  expected,
 				  actual)
 	      )
@@ -682,7 +694,7 @@ _method assert_test.test_assert_deep_equals_two_way_errors_property_list()
 			      "The key 'two' is unique at key /",
 			      "The key 'five' is unique at key /"			      
 			      ),
-		_self.sys!perform(:|compare_external_keyed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  expected,
 				  actual)
 	      )
@@ -708,7 +720,7 @@ _method assert_test.test_assert_deep_equals_recursive_simple_property_list()
 			      "The key 'four' is unique at key /two",
 			      "The key 'five' is unique at key /two"			      
 		     ),
-		_self.sys!perform(:|compare_external_keyed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  expected,
 				  actual)
 	      )
@@ -741,7 +753,7 @@ _method assert_test.test_assert_deep_equals_recursive_simple_property_list()
 			      "The key 'four' is unique at key /two",
 			      "coordinate:(10.00,0.000) <> coordinate:(0.000,0.000) at key /xyz/1/xyz"),
 
-		_self.sys!perform(:|compare_external_keyed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  expected,
 				  actual)
 	      )
@@ -771,7 +783,7 @@ _method assert_test.test_assert_deep_equals_property_list_in_rope_with_differenc
 	actual << rope.new_with(property_list.new_with(:one, 2))
 	_self.assert_deep_equals(
 		rope.new_with("1 <> 2 at key /1/one"),
-		_self.sys!perform(:|compare_external_keyed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  expected,
 				  actual)
 	      )
@@ -822,9 +834,27 @@ _method assert_test.test_assert_deep_equals_complicated_collection_with_differen
 			      "10 <> 1 at key /2/two/1/4/one",
 			      "The key 'three' is unique at key /2",
 			      "False <> string at key /5/2"),
-		_self.sys!perform(:|compare_external_keyed_collection()|,
+		_self.sys!perform(:|compare()|,
 				  expected,
 				  actual)
 	      )
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_noncollection_objects()
+
+	_self.assert_deep_equals(_true, _true)
+	_self.assert_deep_equals(_false, _false)
+	_self.assert_deep_equals(_maybe, _maybe)
+	
+	_self.assert_deep_equals(
+		rope.new_with("Maybe <> False at key /"),
+		_self.sys!perform(:|compare()|,
+				  _maybe,
+				  _false)
+	      )
+	
 _endmethod
 $
