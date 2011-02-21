@@ -883,3 +883,29 @@ _method assert_test.test_assert_deep_equals_hash_tables()
 	      )
 _endmethod
 $
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_sets()
+
+	expected << property_list.new_with(:set1, set.new_with(1,2,3),
+					   :set2, set.new_with(:a, :b, :c),
+					   :set3, set.new_with("a"),
+					   :set4, equality_set.new_with(:a, :b, :c),
+					   :set5, equality_set.new_with("a", "b", "c"))
+	
+	actual << property_list.new_with(:set1, set.new_with(1,2,3),
+					 :set2, set.new_with(:a, :b, :x),
+					 :set3, set.new_with("a"),
+					 :set4, equality_set.new_with(:a, :b, :c),
+					 :set5, equality_set.new_with("a", "b", "c"))
+	_self.assert_deep_equals(
+		# same message twice, once from expected side, once from actual side
+		rope.new_with("c not in set at key /set2",
+			      "x not in set at key /set2",
+			      "a not in set at key /set3",
+			      "a not in set at key /set3"),
+		_self.sys!perform(:|compare()|, expected, actual)
+	      )
+
+_endmethod
+$

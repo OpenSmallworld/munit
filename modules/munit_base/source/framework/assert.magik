@@ -419,6 +419,7 @@ _private _method assert.same_class(object1,object2, location, errors)
 _endmethod
 $
 
+
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method assert.compare( object1, object2, _optional location, errors)
 
@@ -431,6 +432,9 @@ _private _method assert.compare( object1, object2, _optional location, errors)
 	_elif  object1.is_kind_of?(property_list) _orif object1.is_kind_of?(hash_table)
 	_then
 		_self.compare_external_keyed_collection(object1, object2,location, errors)
+	_elif  object1.is_kind_of?(set)
+	_then
+		_self.compare_sets(object1, object2,location, errors)		
 	_elif  object1 <> object2
 	_then
 		message << write_string(object1, " <> ", object2)
@@ -440,6 +444,7 @@ _private _method assert.compare( object1, object2, _optional location, errors)
 	_return errors
 _endmethod
 $
+
 
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method assert.compare_external_keyed_collection( object1, object2, location, errors)
@@ -504,6 +509,34 @@ _private _method assert.compare_indexed_collection( object1, object2, location, 
 		_endprotect
 	_endloop
 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.compare_sets( object1, object2, location, errors)
+
+
+	_if _not _self.same_class(object1, object2, location, errors)
+	_then
+		_return errors
+	_endif
+
+	# We don't recurse into sets looking for collections.
+	
+	_for el _over object1.difference(object2).elements()
+	_loop
+		msg << write_string(el, " not in ", object2.class_name)
+		errors.add(_self.format_error_message(msg, location))
+	_endloop
+
+	_for el _over object2.difference(object1).elements()
+	_loop
+		msg << write_string(el, " not in ", object1.class_name)
+		errors.add(_self.format_error_message(msg, location))
+	_endloop
+
+	_return errors
 _endmethod
 $
 
