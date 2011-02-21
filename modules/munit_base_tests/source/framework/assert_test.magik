@@ -858,3 +858,28 @@ _method assert_test.test_assert_deep_equals_noncollection_objects()
 	
 _endmethod
 $
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_hash_tables()
+	expected << hash_table.new_with(:test1, {1,2,3},
+					:test2, _true,
+					:test3, equality_hash_table.new_with(
+							"teststring1", "string keys ok here",
+							:testsym,     "and symbols"),
+					"teststring2", "no string keys here")
+	actual << hash_table.new_with(:test1, {1,2,3},
+				      :test2, _true,
+				      :test3, equality_hash_table.new_with(
+						      "teststring1", "string keys ok here",
+						      :testsym,     "and symbols"),
+				      "teststring2", "no string keys here")
+	
+	_self.assert_deep_equals(
+		# same message twice, once from expected side, once from actual side
+		rope.new_with("The key 'teststring2' is unique at key /",
+			      "The key 'teststring2' is unique at key /"),
+		_self.sys!perform(:|compare()|, expected, actual)
+	      )
+_endmethod
+$

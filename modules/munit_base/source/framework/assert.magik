@@ -428,7 +428,7 @@ _private _method assert.compare( object1, object2, _optional location, errors)
 	_if object1.is_kind_of?(simple_vector) _or object1.is_kind_of?(rope)
 	_then	
 		_self.compare_indexed_collection(object1, object2, location, errors)
-	_elif  object1.is_kind_of?(property_list)
+	_elif  object1.is_kind_of?(property_list) _orif object1.is_kind_of?(hash_table)
 	_then
 		_self.compare_external_keyed_collection(object1, object2,location, errors)
 	_elif  object1 <> object2
