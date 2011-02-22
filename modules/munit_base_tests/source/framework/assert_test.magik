@@ -383,8 +383,6 @@ _method assert_test.test_assert_deep_equals_non_matching_vector_of_vectors()
 	_self.assert_raised_condition( :assertion_failed_warning ,
 				      _self , :assert_deep_equals|()| ,
 				      { {{1,2,3}} , {{2}} })
-
-	
 _endmethod
 $
 
@@ -907,5 +905,23 @@ _method assert_test.test_assert_deep_equals_sets()
 		_self.sys!perform(:|compare()|, expected, actual)
 	      )
 
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_deep_equals_message()
+
+	_local me << _self
+	_block 
+		_handling assertion_failed_warning _with
+		_proc(cond)
+			_import me
+			expected << "My message" + %newline + "sizes are not equal at key /"
+			me.assert_equals(expected, cond[:message])
+		_endproc
+		
+	
+		_self.assert_deep_equals( {1} , {1,2}, "My message" )
+	_endblock 		
 _endmethod
 $

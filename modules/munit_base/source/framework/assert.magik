@@ -388,12 +388,63 @@ $
 
 _pragma(classify_level=advanced,topic=MUnit)
 _method assert.assert_deep_equals(expected , actual , _optional a_message)
+
+	## Assert that EXPECTED and ACTUAL are equal, taking
+	## collections into account.
+	##
+	## assert_equals() isn't very useful for comparing collections
+	## because two collections with the same elements are not
+	## judged by Magik to be equal, unless they are the same
+	## object. This method recurses into collections. If every key
+	## and every value match, the assertion passes. Any differing
+	## keys/values are reported to the user as part of the failure
+	## message.
+	##
+	## Examples
+	## --------
+	## assert_deep_equals({1,2}, {1,2}) => ok
+	##
+	## assert_deep_equals({}, rope.new())
+	##   fails (different classes)
+	##
+	## assert_deep_equals({:a, {:b}}, {:a, {:c}})
+	##   fails with message "b <> c at key /2/1" -
+	##   /2/1 identifies the 2nd element's 1st element, which is
+	##   where b and c differ 
+	##
+	## assert_deep_equals(property_list.new_with(:a, 1, :b, 2),
+	##                    property_list.new_with(:a, 1, :b, 99))
+	##   fails with message "2 <> 99 at key /b"
+	##
+	## assert_deep_equals(property_list.new_with(:a, 1, :b,    2),
+	##                    property_list.new_with(:a, 99, :bxxx, 2))
+	##   fails with messages
+	##     1 <> 99 at key /a
+	##     The key b is unique at /
+	##     The key bxxx is unique at /	
+	##
+	##
+	## Limitations/bugs
+	## ----------------
+	## - no protection against collections that contain
+	## themselves: these will cause stack overflow.
+	## - only simple_vector, rope, property_list, hash_table and
+	## set, and their subclasses are currently handled. Others can
+	## be easily added.
+	## - no support for approximate equality of floats, unlike
+	## assert_equals
+	## - reporting of unique keys doesn't say which 'side'
+	## (expected or actual) has the unique key
 	
 	result << _self.compare(expected, actual)
 	
 	_if _not result.empty?
 	_then
 		str << internal_text_output_stream.new()
+		_if a_message _isnt _unset
+		_then 
+			str.write(a_message, %newline)
+		_endif
 		str.write_list_with_separator(result, %newline)			
 		_self.fail(str.string)
 	_else		
