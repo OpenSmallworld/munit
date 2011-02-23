@@ -477,3 +477,14 @@ _method magik_mock_test_case.test_iterator_multiple_iter_values_noargs()
 			    
 _endmethod
 $
+
+_method magik_mock_test_case.test_mock_theme_geometry()
+
+	tgm << mock(:tgm, theme_geometry).new_with(:geom, "dummy name")
+
+	# tgm didn't used to have a key (or value) method, so check
+	# that it is there and returns unset
+	_self.assert_unset(tgm.key)
+
+_endmethod
+$

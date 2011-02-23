@@ -135,7 +135,7 @@ _method mmock_object.mmock!new_mock_object(name, _optional super_class)
 		_then
 			>> {mmock_object.method_table}
 		_else
-			>> {mmock_object.method_table, super_class.method_table}
+			>> {super_class.method_table, mmock_object.method_table}
 		_endif 
 	
 	(method_tbl, new_mock_object) << method_table.new_for_slotted(name, {}, super_method_tables, {})
