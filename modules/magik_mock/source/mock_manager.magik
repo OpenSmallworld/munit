@@ -1,6 +1,42 @@
 _package sw
 $
 
+## Magik Mock Manager - a framework for safely creating and
+## removing mocks.
+##
+## This is a framework designed to allow methods to be safely
+## mocked for a test and for those mocks to be removed again at
+## the end of the test, no matter what might have gone wrong
+## during that test.
+##
+## An Example
+## ==========
+## See also the mock_manager_test tests in the magik_mock_test module.
+##
+## m << mock(:blah) # Create a class that will be thrown away later.
+## mock_manager.run_with_mocks(
+##   { {m, :my_stub_method, ::returns, unset} } ) (
+##     _proc ()
+##         m.my_stub_method # Actually call the stubbed method.
+##     _endproc )
+##
+## This may look a little strange, so let's break down exactly
+## what's going on here. mock_manager.run_with_mocks() takes
+## arguments that describe the mocks we want to use, and
+## returns a procedure. We then call this procedure with an
+## argument of another procedure which contains our test code.
+##
+## Why do things this way?
+## =======================
+##
+## In the example above we are mocking behaviour o a dummy
+## object, so if our mocking behaviour were not removed there
+## wouldn't be any serious problems, but we would also like the
+## ability to mock behaviour on global objects (such as
+## gis_program_manager) that already exist, and our tests
+## should not leave them with unintended behaviour that might
+## affect others' tests.
+
 def_slotted_exemplar( :mock_manager,
 	{ } )
 $
