@@ -134,6 +134,7 @@ _method db_test_case.setup_db()
 	_then
 		_self.align_datasets()
 		_self.one_time_setup_database()
+		_self.goto_test_alternatives() # Ensure new views are at the right alternative
 		_self.create_test_checkpoints()
 	_else 
 		_self.goto_test_checkpoints()
@@ -350,8 +351,6 @@ _method db_test_case.open_database(ace_loc, _optional open_case_views?)
 		_loop 
 			case_name << case_ds_rec.partition.as_symbol()
 			gis_program_manager.open_datasets(case_name)
-			cv << gis_program_manager.cached_dataset(case_name)
-			cv.checkpoint(_self.checkpoint_name)
 		_endloop 
 	_endif
 
@@ -398,4 +397,5 @@ _method db_test_case.create_and_open_database(_optional create_dataset_args, cre
 	>> _self.ds_views
 _endmethod
 $
+
 

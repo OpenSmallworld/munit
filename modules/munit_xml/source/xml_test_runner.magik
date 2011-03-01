@@ -85,12 +85,30 @@ _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
-_method xml_test_runner.add_info( info_string )
+_method xml_test_runner.add_info( info )
 	## Add info to testcase
-	##
 
+	info_string << _self.info_as_string( info )
 	.testcase.add_exception(
-		munit_xml_info.new(info_string))
+		munit_xml_info.new( info_string))
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method xml_test_runner.info_as_string( info )
+	## returns a string from info
+	## info could be a string or a simple vector containing a
+	## string 
+
+	_if info.is_class_of?(simple_vector)
+	_then
+		info_string << info.an_element()
+	_else
+		info_string << info 
+	_endif
+
+	_return info_string
+	
 _endmethod
 $
 
