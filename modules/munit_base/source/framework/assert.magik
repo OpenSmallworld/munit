@@ -386,3 +386,224 @@ _private _method assert.assert_raised_all_conditions(
 _endmethod
 $
 
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.assert_deep_equals(expected , actual , _optional a_message)
+
+	## Assert that EXPECTED and ACTUAL are equal, taking
+	## collections into account.
+	##
+	## assert_equals() isn't very useful for comparing collections
+	## because two collections with the same elements are not
+	## judged by Magik to be equal, unless they are the same
+	## object. This method recurses into collections. If every key
+	## and every value match, the assertion passes. Any differing
+	## keys/values are reported to the user as part of the failure
+	## message.
+	##
+	## Examples
+	## --------
+	## assert_deep_equals({1,2}, {1,2}) => ok
+	##
+	## assert_deep_equals({}, rope.new())
+	##   fails (different classes)
+	##
+	## assert_deep_equals({:a, {:b}}, {:a, {:c}})
+	##   fails with message "b <> c at key /2/1" -
+	##   /2/1 identifies the 2nd element's 1st element, which is
+	##   where b and c differ 
+	##
+	## assert_deep_equals(property_list.new_with(:a, 1, :b, 2),
+	##                    property_list.new_with(:a, 1, :b, 99))
+	##   fails with message "2 <> 99 at key /b"
+	##
+	## assert_deep_equals(property_list.new_with(:a, 1, :b,    2),
+	##                    property_list.new_with(:a, 99, :bxxx, 2))
+	##   fails with messages
+	##     1 <> 99 at key /a
+	##     The key b is unique at /
+	##     The key bxxx is unique at /	
+	##
+	##
+	## Limitations/bugs
+	## ----------------
+	## - no protection against collections that contain
+	## themselves: these will cause stack overflow.
+	## - only simple_vector, rope, property_list, hash_table and
+	## set, and their subclasses are currently handled. Others can
+	## be easily added.
+	## - no support for approximate equality of floats, unlike
+	## assert_equals
+	## - reporting of unique keys doesn't say which 'side'
+	## (expected or actual) has the unique key
+	
+	result << _self.compare(expected, actual)
+	
+	_if _not result.empty?
+	_then
+		str << internal_text_output_stream.new()
+		_if a_message _isnt _unset
+		_then 
+			str.write(a_message, %newline)
+		_endif
+		str.write_list_with_separator(result, %newline)			
+		_self.fail(str.string)
+	_else		
+		_self.assert_true(_true) # only for assertion counts
+	_endif 
+
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.same_class(object1,object2, location, errors)
+
+	_if object1.is_class_of?(object2)
+	_then
+		_return _true
+	_else
+		msg << write_string("Expected a ", object1.class_name,
+				    ", but is a ", object2.class_name)
+		errors.add( _self.format_error_message(msg, location))
+		_return false
+	_endif
+
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.compare( object1, object2, _optional location, errors)
+
+	location << location.default(rope.new())
+	errors << errors.default(rope.new())
+	
+	_if object1.is_kind_of?(simple_vector) _or object1.is_kind_of?(rope)
+	_then	
+		_self.compare_indexed_collection(object1, object2, location, errors)
+	_elif  object1.is_kind_of?(property_list) _orif object1.is_kind_of?(hash_table)
+	_then
+		_self.compare_external_keyed_collection(object1, object2,location, errors)
+	_elif  object1.is_kind_of?(set)
+	_then
+		_self.compare_sets(object1, object2,location, errors)		
+	_elif  object1 <> object2
+	_then
+		message << write_string(object1, " <> ", object2)
+		errors.add_last(_self.format_error_message(message,location))
+	_endif
+
+	_return errors
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.compare_external_keyed_collection( object1, object2, location, errors)
+
+	_if _not _self.same_class(object1, object2, location, errors)
+	_then
+		_return errors
+	_endif
+	
+	_for k,v _over object1.keys_and_elements()
+	_loop	 
+		_if _not object2.includes_key?(k)	
+		_then
+			_self.unique_key_error(k, location, errors)
+		_else
+			location.add(k)
+			_protect 
+				_self.compare(v, object2[k], location, errors)
+			_protection
+				location.remove_last(k)
+			_endprotect
+		_endif		
+	_endloop
+
+	_for k,v _over object2.keys_and_elements()
+	_loop
+		_if _not object1.includes_key?(k)	
+		_then
+			_self.unique_key_error(k, location, errors)			
+		_endif
+		
+	_endloop
+
+_endmethod 
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.compare_indexed_collection( object1, object2, location, errors)
+
+	_if _not _self.same_class(object1, object2, location, errors)
+	_then
+		_return errors
+	_endif
+	
+	_if object1.size <> object2.size
+	_then
+		errors.add( _self.format_error_message("sizes are not equal",
+						       location))
+		_return errors
+	_endif 
+
+
+	_for k, v _over object1.keys_and_elements()
+	_loop
+		location.add(k)
+		_protect
+			_self.compare(v, object2[k], location, errors)
+
+		_protection
+			location.remove_last()
+		_endprotect
+	_endloop
+
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.compare_sets( object1, object2, location, errors)
+
+
+	_if _not _self.same_class(object1, object2, location, errors)
+	_then
+		_return errors
+	_endif
+
+	# We don't recurse into sets looking for collections.
+	
+	_for el _over object1.difference(object2).elements()
+	_loop
+		msg << write_string(el, " not in ", object2.class_name)
+		errors.add(_self.format_error_message(msg, location))
+	_endloop
+
+	_for el _over object2.difference(object1).elements()
+	_loop
+		msg << write_string(el, " not in ", object1.class_name)
+		errors.add(_self.format_error_message(msg, location))
+	_endloop
+
+	_return errors
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.format_error_message(message, location)
+	str << internal_text_output_stream.new()
+	str.write_list_with_separator(location, "/")
+	
+	_return write_string(message, " at key /", str.string)
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.unique_key_error(k, location, errors)
+	message << write_string("The key '", k, "' is unique")
+	errors.add_last(_self.format_error_message(message,location))
+_endmethod
+$
+
