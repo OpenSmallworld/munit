@@ -210,9 +210,9 @@ _method magik_mock_test_case.test_stub_two_parameter_string_behaviours()
 	_self.assert_is(:|AAA_BBB|, m.doit("AAA", "BBB"))
 	_self.assert_is(:|ZZZ|, m.doit("ZZZ"))
 
-	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"AAA", "CCC"})
-	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"CCC", "BBB"})
-	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"AAA"})	
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"AAA", "CCC"}, "AAA_CCC behaviour wrong!")
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"CCC", "BBB"}, "CCC_BBB behaviour wrong!")
+	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|doit()|, {"AAA"}, "AAA behaviour wrong!")	
 _endmethod
 $
 
@@ -408,5 +408,83 @@ _method magik_mock_test_case.test_match_empty()
 	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|a_method()|, {{1}})
 	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|a_method()|, {:blah})
 	_self.assert_raised_condition(:mmock!no_behaviour_defined, m, :|a_method()|, {1})		
+_endmethod
+$
+
+
+_method magik_mock_test_case.test_empty_iterator_noargs()
+
+	m << mock(:test_iterator)
+	stub(m).iter_method().then_iterate()
+
+	r << rope.new_from_iter(m, :|iter_method()|)
+	_self.assert_true(r.empty?)
+			    
+_endmethod
+$
+
+
+_method magik_mock_test_case.test_iterator_noargs()
+
+	m << mock(:test_iterator)
+	stub(m).iter_method().then_iterate({:a}, {:b})
+
+	r << rope.new_from_iter(m, :|iter_method()|)
+	_self.assert_equals(2, r.size)
+	_self.assert_equals(:a, r[1])
+	_self.assert_equals(:b, r[2])
+			    
+_endmethod
+$
+
+_method magik_mock_test_case.test_iterator_args()
+
+	m << mock(:test_iterator)
+	stub(m).iter_method(1).then_iterate({:a}, {:b})
+	stub(m).iter_method(2).then_iterate({:c}, {:d}, {:e})
+
+	r1 << rope.new_from_iter(m, :|iter_method()|, 1)
+	r2 << rope.new_from_iter(m, :|iter_method()|, 2)
+	_self.assert_equals(2, r1.size)
+	_self.assert_equals(:a, r1[1])
+	_self.assert_equals(:b, r1[2])
+			    
+	_self.assert_equals(3, r2.size)
+	_self.assert_equals(:c, r2[1])
+	_self.assert_equals(:d, r2[2])
+	_self.assert_equals(:e, r2[3])
+_endmethod
+$
+
+_method magik_mock_test_case.test_iterator_multiple_iter_values_noargs()
+
+	m << mock(:test_iterator)
+	stub(m).iter_method().then_iterate({:a, :x}, {:b, :y})
+
+	i << 0
+	r << rope.new()
+	_for val1, val2 _over m.iter_method()
+	_loop
+		i +<< 1
+		r.add({val1, val2})
+	_endloop
+	
+	_self.assert_equals(2, i)
+	_self.assert_equals(:a, r[1][1])
+	_self.assert_equals(:x, r[1][2])
+	_self.assert_equals(:b, r[2][1])	
+	_self.assert_equals(:y, r[2][2])
+			    
+_endmethod
+$
+
+_method magik_mock_test_case.test_mock_theme_geometry()
+
+	tgm << mock(:tgm, theme_geometry).new_with(:geom, "dummy name")
+
+	# tgm didn't used to have a key (or value) method, so check
+	# that it is there and returns unset
+	_self.assert_unset(tgm.key)
+
 _endmethod
 $

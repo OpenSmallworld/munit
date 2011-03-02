@@ -1,5 +1,6 @@
 conditions
 match
+mock_manager
 mmock_object
 mmock_stub
 procs
