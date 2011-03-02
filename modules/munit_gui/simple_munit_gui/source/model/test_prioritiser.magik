@@ -1,5 +1,8 @@
 #% text_encoding = iso8859_1
 
+_package sw
+$
+
 _pragma(classify_level=debug, topic={MUnit})
 def_slotted_exemplar(:test_prioritiser, 
 	{
