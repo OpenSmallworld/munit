@@ -133,32 +133,14 @@ _method mmock_object.mmock!new_mock_object(name, _optional super_class)
 	super_method_tables <<
 		_if super_class _is _unset
 		_then
-			>> {mmock_object.method_table}
+			>> {}
 		_else
-			>> {super_class.method_table, mmock_object.method_table}
+			>> {super_class.method_table}
 		_endif 
 	
 	(method_tbl, new_mock_object) << method_table.new_for_slotted(name, {}, super_method_tables, {})
 
-	# Deliberately pseudo-slots to avoid adding real slots
-	_block
-		_handling pseudo_slot_added _with _proc()
-							  # ignore
-		                                  _endproc
-		
-		new_mock_object.define_pseudo_slot(:mmock!messages_received, _unset, :writable, :private)
-	        new_mock_object.define_pseudo_slot(:mmock!behaviours, hash_table.new(), :readable, :private)
-	_endblock 
-
-	_if super_class _isnt _unset
-	_then
-		p << super_class.method_table[:|show_on()|]
-		new_mock_object.define_method(:|show_on()|, p, _false)
-		p << super_class.method_table[:|shallow_copy()|]
-		new_mock_object.define_method(:|shallow_copy()|, p, _false)		
-	_endif
-
-	mock_manager
 	_return new_mock_object
+	
 _endmethod
 $
