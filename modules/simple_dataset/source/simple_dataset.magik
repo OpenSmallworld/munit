@@ -24,10 +24,17 @@ _method simple_dataset.connect( connect_spec )
 
 	_for name, a_table_def _over connect_spec.fast_keys_and_elements()
 	_loop
-		_local ( field_descriptors, key_field_indexes ) << _self.field_descriptors_for( a_table_def )
+		_local (field_def, rec_exemplar) <<
+			_if a_table_def.is_kind_of?({}) _then
+				>> ( a_table_def, _unset )
+			_else
+				>> ( a_table_def[:fields], a_table_def[:exemplar] )
+			_endif
+		_local ( field_descriptors, key_field_indexes ) << _self.field_descriptors_for( field_def )
 		_local desc << simple_collection_descriptor.new( _self, name,
 								 field_descriptors,
 								 key_field_indexes, _false )
+		_if rec_exemplar _isnt _unset _then desc.dd!record_exemplar << rec_exemplar _endif
 		_self.add_new_collection_for_descriptor( desc )
 	_endloop
 
