@@ -3,10 +3,7 @@ _package sw
 $
 
 _pragma(classify_level=debug, topic={MUnit})
-def_slotted_exemplar(:munit_module_display_tree,
-{
-},
-{:display_tree})
+def_slotted_exemplar(:munit_module_display_tree, {}, :munit_hierarchy_display_tree)
 $
 
 _pragma(classify_level=debug, topic={MUnit})
@@ -15,22 +12,14 @@ _method munit_module_display_tree.display_text
 _endmethod
 $
 
-_pragma(classify_level=debug, topic={MUnit})
-_method munit_module_display_tree.styled_string
-	>> styled_string.new_from( {:image, { :module, _self.module_name }, 
-								_self.colour, 	
-								_self.display_text } )
+_method munit_hierarchy_display_tree.not_run_icon()
+	_return { :module, _self.module_name }
 _endmethod
 $
 
 _pragma(classify_level=debug, topic={MUnit})
-_method munit_module_display_tree.colour
-	_if .key.loaded?
-	_then 
-		_return :blue
-	_else 
-		_return :black 
-	_endif 
+_method munit_module_display_tree.not_run_colour()
+	>> _if .key.loaded? _then >> :blue _else >> :black _endif 
 _endmethod
 $
 
@@ -47,7 +36,7 @@ $
 
 _pragma(classify_level=debug, topic={MUnit})
 _private _method munit_module_display_tree.add_suites_for_loaded_module( a_module )
-	tf           << test_suite_finder.new()
+	tf << test_suite_finder.new()
 	
 	_for a_suite _over tf.find_classes_for_module( a_module.name ).fast_elements()
 	_loop
@@ -66,34 +55,9 @@ $
 
 _pragma(classify_level=debug, topic={MUnit})
 _private _method munit_module_display_tree.add_suites_for_unloaded_modules( a_module )
+_endmethod
+$
 
-	# For modules not yet loaded, use information in the module.def file
-#	_for t _over a_module.tests( :framework, :munit )
-#	_loop
-#		test_display_tree << display_tree.new( t, _unset, module_display_tree )
-#		test_display_tree.styled_string << {:image, { :hierarchy, _self.module_name }, t.name.write_string }
-#		
-#		_for elem  _over t.args.split_by( %space ).elements()
-#		_loop
-#			_if ( rt << get_global_value(elem.as_symbol() ) ) _isnt _unset
-#			_then
-#				_self.suite_tree_list( rt, test_display_tree )
-#			_endif
-#		_endloop
-#		.my_display_trees.add( t )
-#	_endloop
-_endmethod
-$
-_pragma(classify_level=debug, topic={MUnit})
-_method munit_module_display_tree.tests()
-	result << rope.new()
-	_for a_child _over _self.children.fast_elements()
-	_loop 
-		result.add_all_last( a_child.tests() )
-	_endloop
-	_return result 
-_endmethod
-$
 _pragma(classify_level=debug, topic={MUnit})
 _method munit_module_display_tree.modules()
 	_return {.key}  

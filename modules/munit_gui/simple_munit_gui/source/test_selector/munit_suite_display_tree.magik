@@ -3,59 +3,13 @@ _package sw
 $
 
 _pragma(classify_level=basic, topic={MUnit})
-def_slotted_exemplar(:munit_suite_display_tree,
-{
-},
-{:display_tree})
+def_slotted_exemplar(:munit_suite_display_tree, {}, :munit_hierarchy_display_tree)
 $
 
 _pragma(classify_level=basic, topic={MUnit})
 _method munit_suite_display_tree.display_text
 
 	>> .key.get_name().default(.key.class_name).write_string.capitalise
-_endmethod
-$
-
-_pragma(classify_level=basic, topic={MUnit})
-_method munit_suite_display_tree.styled_string
-	_local status << _self.status()
-	>> _if status _is :success _then >> _self.successful_styled_string
-	   _elif status _is :failed _then >> _self.failed_styled_string
-	   _elif status _is :error _then >> _self.error_styled_string
-	   _else  >>_self.not_run_styled_string
-	   _endif
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={Munit})
-_private _method munit_suite_display_tree.failed_styled_string
-		>> styled_string.new_from( {:image, { :failure, _self.module_name }, 
-								:orange, 	
-								_self.display_text } )
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={Munit})
-_private _method munit_suite_display_tree.not_run_styled_string
-	>> styled_string.new_from( {:image, { :test, _self.module_name }, 
-								:black, 	
-								_self.display_text } )
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={Munit})
-_private _method munit_suite_display_tree.successful_styled_string
-	>> styled_string.new_from( {:image, { :ok, _self.module_name }, 
-								:green, 	
-								_self.display_text } )
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={Munit})
-_private _method munit_suite_display_tree.error_styled_string
-	>> styled_string.new_from( {:image, { :error, _self.module_name }, 
-								:red, 	
-								_self.display_text } )
 _endmethod
 $
 
@@ -78,19 +32,6 @@ _method munit_suite_display_tree.add_test_cases
 		
 _endmethod
 $
-_method munit_suite_display_tree.status()
-	_local status << :not_run
-	_for a_child _over _self.children()
-	_loop
-		_local child_status << a_child.status()
-		status << _if status _is :not_run _then >> child_status
-			  _elif status _is :success _andif child_status _isnt :not_run _then >> child_status
-			  _elif status _is :failed _andif child_status _is :error _then >> child_status
-			  _else >> status _endif
-	_endloop
-	_return status
-_endmethod
-$
 	
 _pragma(classify_level=basic, topic={MUnit})
 _method munit_suite_display_tree.add_test_suite( a_suite )
@@ -99,16 +40,5 @@ _method munit_suite_display_tree.add_test_suite( a_suite )
 	_then
 		_self.add_child( suite_tree )
 	_endif 
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={MUnit})
-_method munit_suite_display_tree.tests()
-	result << rope.new()
-	_for a_child _over _self.children.fast_elements()
-	_loop 
-		result.add_all_last( a_child.tests() )
-	_endloop
-	_return result 
 _endmethod
 $

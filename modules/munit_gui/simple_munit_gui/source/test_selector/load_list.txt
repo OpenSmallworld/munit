@@ -1,3 +1,4 @@
+munit_hierarchy_display_tree
 munit_product_display_tree
 munit_module_display_tree
 munit_suite_display_tree

@@ -115,18 +115,16 @@ _private _method mtest_selector_plugin.add_product( a_product, result )
 		product_display_tree.add_modules()
 
 		_if product_display_tree.children?
-		_then 
-			result.add( product_display_tree )
+		_then
+			result.add_last( product_display_tree )
 		_endif 
 _endmethod
 $
 
 _pragma(classify_level=debug, topic={MUnit})
 _method mtest_selector_plugin.hierarchy_tree()
-
-	.my_display_trees   << rope.new()
 	result       << rope.new_for( smallworld_product.products.size )
-	
+	.my_display_trees << result
 	_self.add_products( result )
 	_self.add_orphan_tree( result )
 
@@ -146,6 +144,21 @@ _private _method mtest_selector_plugin.add_orphan_tree( result )
 		result.add( orphan_tree )
 	_endif 
 	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.update_test( a_test )
+	_local a_tree << _unset
+	_for a_display_tree _over .my_display_trees.fast_elements()
+	_loop
+		_if (a_tree << a_display_tree[a_test]) _isnt _unset _then _leave _endif
+	_endloop
+	_if a_tree _isnt _unset
+	_then
+		_local keys << a_tree.branch_to_root.map( _proc(a) _return a.key _endproc )
+		_self.changed( :hierarchy_tree, :redraw_keys, keys )
+	_endif
 _endmethod
 $
 

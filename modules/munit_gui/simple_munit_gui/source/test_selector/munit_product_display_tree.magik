@@ -3,11 +3,7 @@ _package sw
 $
 
 _pragma(classify_level=debug, topic={MUnit})
-def_slotted_exemplar(:munit_product_display_tree,
-{
-	{:modules, _unset}
-},
-{:display_tree})
+def_slotted_exemplar(:munit_product_display_tree, { {:modules, _unset} }, :munit_hierarchy_display_tree)
 $
 
 _pragma(classify_level=debug, topic={MUnit})
@@ -17,11 +13,11 @@ _endmethod
 $
 
 _pragma(classify_level=debug, topic={MUnit})
-_method munit_product_display_tree.styled_string
-	>> styled_string.new_from( {:image, { :product, _self.module_name }, 
-		_self.display_text } )
+_method munit_hierarchy_display_tree.not_run_icon()
+	_return { :product, _self.module_name }
 _endmethod
 $
+
 
 _pragma(classify_level=debug, topic={MUnit})
 _method munit_product_display_tree.add_modules()
@@ -50,29 +46,6 @@ _method munit_product_display_tree.add_module( a_module )
 	_endif
 	
 	
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={MUnit})
-_method munit_product_display_tree.tests()
-	result << rope.new()
-	_for a_child _over _self.children.fast_elements()
-	_loop 
-		result.add_all_last( a_child.tests() )
-	_endloop
-	_return result 
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={MUnit})
-_method munit_product_display_tree.modules()
-	result << set.new()
-	_for a_child _over _self.children.fast_elements()
-	_loop 
-		result.add_all( a_child.modules() )
-	_endloop
-	
-	_return result  
 _endmethod
 $
 
