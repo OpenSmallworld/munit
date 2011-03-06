@@ -3,30 +3,13 @@ _package sw
 $
 
 _pragma(classify_level=basic, topic={MUnit})
-def_slotted_exemplar(:munit_suite_display_tree,
-{
-},
-{:display_tree})
+def_slotted_exemplar(:munit_suite_display_tree, {}, :munit_hierarchy_display_tree)
 $
 
 _pragma(classify_level=basic, topic={MUnit})
 _method munit_suite_display_tree.display_text
 
 	>> .key.get_name().default(.key.class_name).write_string.capitalise
-_endmethod
-$
-
-_pragma(classify_level=basic, topic={MUnit})
-_method munit_suite_display_tree.styled_string
-	>> styled_string.new_from( {:image, { :hierarchy, _self.module_name }, 
-								_self.colour, 	
-								_self.display_text } )
-_endmethod
-$
-
-_pragma(classify_level=basic, topic={MUnit})
-_method munit_suite_display_tree.colour
-	_return :black 
 _endmethod
 $
 
@@ -49,7 +32,7 @@ _method munit_suite_display_tree.add_test_cases
 		
 _endmethod
 $
-
+	
 _pragma(classify_level=basic, topic={MUnit})
 _method munit_suite_display_tree.add_test_suite( a_suite )
 	suite_tree << munit_suite_display_tree.new( a_suite )
@@ -57,16 +40,5 @@ _method munit_suite_display_tree.add_test_suite( a_suite )
 	_then
 		_self.add_child( suite_tree )
 	_endif 
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={MUnit})
-_method munit_suite_display_tree.tests()
-	result << rope.new()
-	_for a_child _over _self.children.fast_elements()
-	_loop 
-		result.add_all_last( a_child.tests() )
-	_endloop
-	_return result 
 _endmethod
 $

@@ -1,0 +1,82 @@
+def_slotted_exemplar( :munit_hierarchy_display_tree, { {:status, :not_run} }, :display_tree )
+$
+
+munit_hierarchy_display_tree.define_slot_access( :status, :writable, :read_only)
+$
+
+_method munit_hierarchy_display_tree.update_status( a_status )
+	.status << _self.combine_statuses( _self.status, a_status )
+	_if _self.parent _isnt _unset _andif
+	    _self.parent.responds_to?( :update_status|()| )
+	_then
+		_self.parent.update_status( _self.status )
+	_endif
+_endmethod
+$
+
+_method munit_hierarchy_display_tree.combine_statuses( old_status, new_status )
+	>> _if old_status _is :not_run _then >> new_status
+			  _elif old_status _is :success _andif new_status _isnt :not_run _then >> new_status
+			  _elif old_status _is :failed _andif new_status _is :error _then >> new_status
+	   _else >> old_status _endif
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={MUnit})
+_method munit_hierarchy_display_tree.styled_string
+	_local status << _self.status
+	>> styled_string.new_from(
+		   {:image, _self.icon( status ), 
+		    _self.colour( status ),
+		    _self.display_text } )
+_endmethod
+$
+
+_method munit_hierarchy_display_tree.not_run_icon()
+	_return { :hierarchy, _self.module_name }
+_endmethod
+$
+
+_method munit_hierarchy_display_tree.colour( status )
+	>> _if status _is :success _then >> :green
+	   _elif status _is :error _then >> :red
+	   _elif status _is :failed _then >> :orange
+	   _else >> _self.not_run_colour() _endif
+_endmethod
+$
+
+_method munit_hierarchy_display_tree.not_run_colour()
+	_return :black
+_endmethod
+$
+
+_method munit_hierarchy_display_tree.icon( status )
+	>> _if status _is :success _then >> { :ok, _self.module_name }
+	   _elif status _is :error _then >> { :error, _self.module_name }
+	   _elif status _is :failed _then >> { :failure, _self.module_name }
+	   _else >> _self.not_run_icon() _endif
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_hierarchy_display_tree.tests()
+	result << rope.new()
+	_for a_child _over _self.children.fast_elements()
+	_loop 
+		result.add_all_last( a_child.tests() )
+	_endloop
+	_return result 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method munit_hierarchy_display_tree.modules()
+	result << set.new()
+	_for a_child _over _self.children.fast_elements()
+	_loop 
+		result.add_all( a_child.modules() )
+	_endloop
+	
+	_return result  
+_endmethod
+$
