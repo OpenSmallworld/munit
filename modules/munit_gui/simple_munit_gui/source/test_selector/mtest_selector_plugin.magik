@@ -156,6 +156,7 @@ _method mtest_selector_plugin.update_test( a_test )
 	_endloop
 	_if a_tree _isnt _unset
 	_then
+		a_tree.update_status()
 		_local keys << a_tree.branch_to_root.map( _proc(a) _return a.key _endproc )
 		_self.changed( :hierarchy_tree, :redraw_keys, keys )
 	_endif

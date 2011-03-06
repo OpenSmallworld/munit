@@ -13,7 +13,7 @@ _method munit_test_display_tree.display_text
 _endmethod
 $
 
-_method munit_test_display_tree.status()
+_method munit_test_display_tree.status
 	>> _if .key _is _unset _orif _not .key.has_run? _then >> :not_run
 	   _elif .key.errored? _then >> :error
 	   _elif .key.failed? _then >> :failed
@@ -21,8 +21,16 @@ _method munit_test_display_tree.status()
 _endmethod
 $
 
+_method munit_test_display_tree.update_status()
+	_if _self.parent _isnt _unset _andif
+	    _self.parent.responds_to?( :update_status|()| )
+	_then
+		_self.parent.update_status( _self.status )
+	_endif
+_endmethod
+$
 
-_method munit_hierarchy_display_tree.not_run_icon()
+_method munit_test_display_tree.not_run_icon()
 	_return { :test, _self.module_name }
 _endmethod
 $

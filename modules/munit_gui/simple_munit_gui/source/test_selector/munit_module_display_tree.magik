@@ -12,7 +12,7 @@ _method munit_module_display_tree.display_text
 _endmethod
 $
 
-_method munit_hierarchy_display_tree.not_run_icon()
+_method munit_module_display_tree.not_run_icon()
 	_return { :module, _self.module_name }
 _endmethod
 $

@@ -13,7 +13,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug, topic={MUnit})
-_method munit_hierarchy_display_tree.not_run_icon()
+_method munit_product_display_tree.not_run_icon()
 	_return { :product, _self.module_name }
 _endmethod
 $

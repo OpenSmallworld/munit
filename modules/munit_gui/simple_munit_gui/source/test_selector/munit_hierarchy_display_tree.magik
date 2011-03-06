@@ -1,27 +1,39 @@
-def_slotted_exemplar( :munit_hierarchy_display_tree, {}, :display_tree )
+def_slotted_exemplar( :munit_hierarchy_display_tree, { {:status, :not_run} }, :display_tree )
 $
 
-_method munit_hierarchy_display_tree.status()
-	_local status << :not_run
-	_for a_child _over _self.children()
-	_loop
-		_local child_status << a_child.status()
-		status << _if status _is :not_run _then >> child_status
-			  _elif status _is :success _andif child_status _isnt :not_run _then >> child_status
-			  _elif status _is :failed _andif child_status _is :error _then >> child_status
-			  _else >> status _endif
-	_endloop
-	_return status
+munit_hierarchy_display_tree.define_slot_access( :status, :writable, :read_only)
+$
+
+_method munit_hierarchy_display_tree.update_status( a_status )
+	.status << _self.combine_statuses( _self.status, a_status )
+	_if _self.parent _isnt _unset _andif
+	    _self.parent.responds_to?( :update_status|()| )
+	_then
+		_self.parent.update_status( _self.status )
+	_endif
+_endmethod
+$
+
+_method munit_hierarchy_display_tree.combine_statuses( old_status, new_status )
+	>> _if old_status _is :not_run _then >> new_status
+			  _elif old_status _is :success _andif new_status _isnt :not_run _then >> new_status
+			  _elif old_status _is :failed _andif new_status _is :error _then >> new_status
+	   _else >> old_status _endif
 _endmethod
 $
 
 _pragma(classify_level=basic, topic={MUnit})
 _method munit_hierarchy_display_tree.styled_string
-	_local status << _self.status()
+	_local status << _self.status
 	>> styled_string.new_from(
 		   {:image, _self.icon( status ), 
 		    _self.colour( status ),
 		    _self.display_text } )
+_endmethod
+$
+
+_method munit_hierarchy_display_tree.not_run_icon()
+	_return { :hierarchy, _self.module_name }
 _endmethod
 $
 
@@ -45,7 +57,6 @@ _method munit_hierarchy_display_tree.icon( status )
 	   _else >> _self.not_run_icon() _endif
 _endmethod
 $
-
 
 _pragma(classify_level=debug, topic={MUnit})
 _method munit_hierarchy_display_tree.tests()
