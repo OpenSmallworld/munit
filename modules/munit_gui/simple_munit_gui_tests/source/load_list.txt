@@ -1,5 +1,5 @@
-simple_munit_gui_test
 failure_selector/
 model/
 test_aspect/
 test_selector/
+simple_munit_gui_test
