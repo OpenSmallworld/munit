@@ -504,3 +504,39 @@ _method simple_dataset_test.test_can_associate_geometry()
 _endmethod
 $
 
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_default_record_exemplar_is_simple_record_exemplar()
+	## 
+	## 
+	_if _self.create_dataset_with_collection(
+		    { property_list.new_with( :name, :field1,
+					      :type, :ds_int,
+					      :key?, _true ) } )
+
+	_then
+		_self.assert_is( simple_record_exemplar, .collection.descriptor.record_exemplar )
+		_self.assert_true( .collection.record_exemplar.is_kind_of?( simple_record_exemplar ) )
+	_endif
+_endmethod
+$
+
+def_slotted_exemplar( :simple_dataset_test_exemplar, {}, { :uds_rwo_record } )
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_explicit_record_exemplar_gets_set()
+	## 
+	## 
+	_if _self.create_dataset_with_collection(
+		    property_list.new_with( :exemplar, simple_dataset_test_exemplar,
+					    :fields, { property_list.new_with( :name, :field1,
+									       :type, :ds_int,
+									       :key?, _true ) } ) )
+		    
+	_then
+		_self.assert_is( simple_dataset_test_exemplar, .collection.descriptor.record_exemplar )
+		_self.assert_true( .collection.record_exemplar.is_kind_of?( simple_dataset_test_exemplar ) )
+	_endif
+_endmethod
+$
+
