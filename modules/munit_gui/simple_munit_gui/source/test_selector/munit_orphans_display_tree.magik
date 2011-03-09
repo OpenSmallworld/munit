@@ -39,17 +39,24 @@ _method munit_orphans_display_tree.add_suite( a_suite )
 	_endif  
 _endmethod
 $
+
 _method munit_orphans_display_tree.orphan_suites
 	results << rope.new()
 	tf << test_suite_finder.new()
 	
 	_for suite_name _over tf.get_test_suite_owner_names().fast_elements()
 	_loop
-		_if ( suite << get_global_value(suite_name) ) _isnt _unset _andif 
-			suite.module_name _is _unset 
-		_then 
-		
-			results.add( suite )
+		_if ( suite << get_global_value(suite_name) ) _isnt _unset
+		_then
+			mn << suite.module_name
+
+			_if mn _is _unset 
+			_then
+				results.add( suite )
+			_elif _not sw_module_manager.module(mn).test_module?
+			_then
+				results.add( suite )
+			_endif				
 		_endif 
 	_endloop 
 	
