@@ -253,6 +253,8 @@ simple_dataset_test.define_one_key_field_test( :ds_date, _unset, "ds_date" )
 $
 simple_dataset_test.define_one_key_field_test( :date_time, _unset, "date_time" )
 $
+simple_dataset_test.define_one_key_field_test( :ds_bool, _unset, "_true" )
+$
 
 _pragma(classify_level=restricted)
 _method simple_dataset_test.test_two_physical_fields_collection()
