@@ -46,36 +46,27 @@ $
 _pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
 _method db_test_case.ds_views
 
-	## Return a property list of available views which the tests
-	## can access.
-
-	# Cache a collection to hold the views we find
-	_if (views << .ds_views) _is _unset _then views << .ds_views << property_list.new() _endif
-
-	# Not got started yet
-	_if ds_environment.views.empty? _then _return views _endif
-
-	_for name, a_view _over gis_program_manager.databases.fast_keys_and_elements()
+	## Return a property list of available databases which the
+	## tests can access.
+	##
+	## This will only included views that are registed in
+	## gis_program_manager.databases and which also appear in
+	## ds_environment.views.
+	##
+	## This means it will not return things like oracle databases,
+	## if you want them then use the databases method directly.
+	
+	databases << _self.databases
+	all_views << ds_environment.views
+	_for view_name, ds_view _over databases.keys_and_elements() # Not fast_keys_and_elements()!
 	_loop
-		views[name] << a_view
+		_if _not all_views.includes?(ds_view)
+		_then
+			databases.remove_key(view_name)
+		_endif 
 	_endloop 
 
-	# Set up the various oddball view so they are visible to the harness
-	views[:auth]      << gis_program_manager.authorisation_view
-	views[:ace]       << gis_program_manager.ace_top_view
-	views[:style]     << gis_program_manager.style_view
-	views[:scratch]   << gis_program_manager.scratch_view
-	views[:scrapbook] << gis_program_manager.scrapbook().scrapbook_view
-
-	# Check that the database is an in memory one the tests ask for it
-	_if _self.in_memory_only? _andif 
-	    (v << views.an_element()) _isnt _unset _andif
-	    v.searchpath[1].index_of_seq("memory::") _isnt 1
-	_then
-		condition.raise(:error, :string, "The database is not an in-memory one created by the test suite.  Don't run these tests in an open image, they won't work.")
-	_endif
-	
-	>> views
+	>> databases
 _endmethod
 $
 
@@ -144,11 +135,18 @@ $
 
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method db_test_case.goto_test_alternatives()
-	## 
+
+	## Go the the test alternative in each of the ds views.  Any 
+	## changes are commited before the views are moved.
+	##
+	## The test alternative on named after the class name of the
+	## test and located below the result of
+	## _self.main_testing_alternative_name
 
 	_for a_ds_view _over _self.ds_views.fast_elements()
 	_loop
-		a_ds_view.rollback()
+		# This will commit changes made by one_time_setup_database()
+		a_ds_view.commit()
 		
 		_if ( a_path << a_ds_view.alternative_path ).empty? _orif 
 		    a_path.last ~= _self.class_name.write_string
@@ -398,4 +396,44 @@ _method db_test_case.create_and_open_database(_optional create_dataset_args, cre
 _endmethod
 $
 
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_method db_test_case.databases
 
+	## Return a property list of available databases which the
+	## tests can access.
+	##
+	## Note that this may include databases other then swdp views
+	## e.g. it may include Oracle databases which don't respond to
+	## the normal version control methods.  Use ds_views if you
+	## want only views which are both registered and appear in
+	## ds_environment.views.
+
+	# Cache a collection to hold the views we find
+	_if (views << .ds_views) _is _unset _then views << .ds_views << property_list.new() _endif
+
+	# Not got started yet
+	_if ds_environment.views.empty? _then _return views _endif
+
+	_for name, a_view _over gis_program_manager.databases.fast_keys_and_elements()
+	_loop
+		views[name] << a_view
+	_endloop 
+
+	# Set up the various oddball view so they are visible to the harness
+	views[:auth]      << gis_program_manager.authorisation_view
+	views[:ace]       << gis_program_manager.ace_top_view
+	views[:style]     << gis_program_manager.style_view
+	views[:scratch]   << gis_program_manager.scratch_view
+	views[:scrapbook] << gis_program_manager.scrapbook().scrapbook_view
+
+	# Check that the database is an in memory one the tests ask for it
+	_if _self.in_memory_only? _andif 
+	    (v << views.an_element()) _isnt _unset _andif
+	    v.searchpath[1].index_of_seq("memory::") _isnt 1
+	_then
+		condition.raise(:error, :string, "The database is not an in-memory one created by the test suite.  Don't run these tests in an open image, they won't work.")
+	_endif
+	
+	>> views
+_endmethod
+$
