@@ -253,6 +253,8 @@ simple_dataset_test.define_one_key_field_test( :ds_date, _unset, "ds_date" )
 $
 simple_dataset_test.define_one_key_field_test( :date_time, _unset, "date_time" )
 $
+simple_dataset_test.define_one_key_field_test( :ds_bool, _unset, "_true" )
+$
 
 _pragma(classify_level=restricted)
 _method simple_dataset_test.test_two_physical_fields_collection()
@@ -500,6 +502,42 @@ _method simple_dataset_test.test_can_associate_geometry()
 				_self.assert_equals( 0, retrieved_geom.y )
 			_endif 
 		_endif 
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_default_record_exemplar_is_simple_record_exemplar()
+	## 
+	## 
+	_if _self.create_dataset_with_collection(
+		    { property_list.new_with( :name, :field1,
+					      :type, :ds_int,
+					      :key?, _true ) } )
+
+	_then
+		_self.assert_is( simple_record_exemplar, .collection.descriptor.record_exemplar )
+		_self.assert_true( .collection.record_exemplar.is_kind_of?( simple_record_exemplar ) )
+	_endif
+_endmethod
+$
+
+def_slotted_exemplar( :simple_dataset_test_exemplar, {}, { :uds_rwo_record } )
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_explicit_record_exemplar_gets_set()
+	## 
+	## 
+	_if _self.create_dataset_with_collection(
+		    property_list.new_with( :exemplar, simple_dataset_test_exemplar,
+					    :fields, { property_list.new_with( :name, :field1,
+									       :type, :ds_int,
+									       :key?, _true ) } ) )
+		    
+	_then
+		_self.assert_is( simple_dataset_test_exemplar, .collection.descriptor.record_exemplar )
+		_self.assert_true( .collection.record_exemplar.is_kind_of?( simple_dataset_test_exemplar ) )
 	_endif
 _endmethod
 $
