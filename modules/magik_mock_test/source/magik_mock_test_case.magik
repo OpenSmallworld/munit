@@ -488,3 +488,51 @@ _method magik_mock_test_case.test_mock_theme_geometry()
 
 _endmethod
 $
+
+_method magik_mock_test_case.test_stub_with_no_args_procedure_sets_method()
+	## 
+	## 
+	m << mock( :test_mock_with_proc )
+
+	_local ret << "something"
+	stub( m ).my_method().with_method( _proc()
+						   _import ret
+						   >> ret
+					   _endproc )
+
+	_self.assert_is( ret, m.my_method() )
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_with_args_procedure_sets_method()
+	## 
+	## 
+	m << mock( :test_mock_with_proc )
+
+	stub( m ).my_method().with_method( _proc( arg )
+						   >> ret
+					   _endproc )
+
+	_local ret << "something"
+	_self.assert_is( ret, m.my_method( ret ) )
+	
+_endmethod
+$
+
+_pragma(classify_level=advanced, topic={service, test})
+_method magik_mock_test_case.test_stub_with_procedure_can_call_self()
+	## 
+	## 
+	m << mock( :test_mock_with_proc )
+
+	_local ret << "something"
+	
+	stub( m ).standard_method.then_return( ret )
+	stub( m ).my_method.with_method( _proc()
+						 >> _self.standard_method
+					 _endproc )
+
+	_self.assert_is( ret, m.my_method )
+_endmethod
+$
