@@ -511,7 +511,7 @@ _method magik_mock_test_case.test_stub_with_args_procedure_sets_method()
 	m << mock( :test_mock_with_proc )
 
 	stub( m ).my_method().with_method( _proc( arg )
-						   >> ret
+						   >> arg
 					   _endproc )
 
 	_local ret << "something"
