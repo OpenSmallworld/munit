@@ -15,7 +15,7 @@ $
 ##
 ## m << mock(:blah) # Create a class that will be thrown away later.
 ## mock_manager.run_with_mocks(
-##   { {m, :my_stub_method, ::returns, unset} } ) (
+##   { {m, :my_stub_method, :returns, _unset} } ) (
 ##     _proc ()
 ##         m.my_stub_method # Actually call the stubbed method.
 ##     _endproc )
@@ -146,6 +146,15 @@ _method mock_manager.mock_method_with_arg( mock_data, arg, mock_part, _gather mo
 	_local args_mock_data << mock_data[:arg]
 	args_mock_data[arg] << args_mock_data[arg].default(hash_table.new())
 	_return _self.mock_method(mock_part, args_mock_data[arg], _scatter mock_rest )
+_endmethod
+$
+
+_method mock_manager.mock_method_method( mock_data, method_proc )
+	## 
+	## 
+	mock_data[ :method_proc ] << method_proc
+
+	>> :method_proc
 _endmethod
 $
 
@@ -327,6 +336,13 @@ _method mock_manager.mock_iter( mock_data )
 _endmethod
 $
 
+_method mock_manager.mock_method_proc( mock_data )
+	## 
+	##
+	>> mock_data[ :method_proc ]
+_endmethod
+$
+
 _method mock_manager.get_mocking_data( an_object, a_method )
 	_local method_table_mocks << _self.mock_data[an_object.method_table]
 	_if method_table_mocks _isnt _unset
@@ -409,7 +425,8 @@ _method mock_manager.mocks_left?( mock_data )
 		mock_data.includes_key?( :raises ) _orif
 		mock_data.includes_key?( :with_args ) _orif
 		mock_data.includes_key?( :arg ) _orif
-		mock_data.includes_key?( :wildcard )
+		mock_data.includes_key?( :wildcard ) _orif
+		mock_data.includes_key?( :method_proc )
 _endmethod
 $
 
@@ -474,6 +491,15 @@ $
 	
 _method mock_manager.unmock_method_iterates( mock_data, _gather iteration_values )
 	mock_data.remove_key( :iter_returns )
+_endmethod
+$
+
+_method mock_manager.unmock_method_method( mock_data )
+	## 
+	## 
+	mock_data.remove_key( :method_proc )
+
+	_return mock_data.empty?
 _endmethod
 $
 
