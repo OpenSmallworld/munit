@@ -1,0 +1,3 @@
+_pragma(classify_level=debug,topic=MUnit)
+condition.define_condition( :munit_db_not_in_memory , :error, {} , "This test will only work in an in-memory database." )
+$

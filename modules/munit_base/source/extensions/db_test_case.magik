@@ -37,9 +37,12 @@ db_test_case.define_shared_constant(:in_memory_only?, _false, :private)
 $
 
 _pragma(classify_level=advanced, usage={subclassable})
-## Where the database will be created.  This should normally be
-## an in-memory database because that uses no public disk space
-## and is always creatable.
+## Where the database will be created, if the image is not
+## already open on a database.
+##
+## This should normally be an in-memory database (starting with
+## memory::) because that uses no public disk space and is always
+## creatable.
 db_test_case.define_shared_constant(:db_dir, "memory::/ds", :private)
 $
 
@@ -426,14 +429,57 @@ _method db_test_case.databases
 	views[:scratch]   << gis_program_manager.scratch_view
 	views[:scrapbook] << gis_program_manager.scrapbook().scrapbook_view
 
-	# Check that the database is an in memory one the tests ask for it
-	_if _self.in_memory_only? _andif 
-	    (v << views.an_element()) _isnt _unset _andif
-	    v.searchpath[1].index_of_seq("memory::") _isnt 1
-	_then
-		condition.raise(:error, :string, "The database is not an in-memory one created by the test suite.  Don't run these tests in an open image, they won't work.")
-	_endif
+	_self.check_for_in_memory_database()
 	
 	>> views
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_private _method db_test_case.check_for_in_memory_database()
+
+	## Check that the database is an in memory one the tests
+	## require one.
+	##
+	## If the test declares that it wants an in-memory database but
+	## the searchpath doesn't start with "memory::" then raise a
+	## :munit_db_not_in_memory condition.
+	
+	_if _self.in_memory_only? _andif
+	    (v << .ds_views.an_element()) _isnt _unset _andif
+	    v.searchpath[1].index_of_seq("memory::") _isnt 1
+	_then
+		condition.raise(:munit_db_not_in_memory)
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method db_test_case.delete_in_memory_database()
+
+	## Clear the database and reinitialise the C ready to create
+	## another database
+	##
+	## Note that this will only work for databases registered as
+	## being in_memory_only? as doing this on a real, on-disk
+	## database could be dangerous...
+	##
+	## This method will only work from 421 onwards
+
+	# Zap the top level database
+	(db_dir, ace_dir) << _self.default_directories
+	ds_environment.init()
+	(sub_dir,dir) << system.pathname_components(db_dir)
+
+	# In will only try to delete in-memory databases for safety
+	_if dir.index_of_seq("memory::") _is _unset
+	_then 
+		condition.raise(:munit_db_not_in_memory)
+	_endif 
+	
+	ds_environment.delete_directory(dir,sub_dir,:incore, :recurse?, _true)
+
+	# Close down the database nice and cleanly
+	ds_environment.reinitialise()
 _endmethod
 $
