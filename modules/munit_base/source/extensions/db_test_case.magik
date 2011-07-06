@@ -460,9 +460,8 @@ _method db_test_case.delete_in_memory_database()
 	## Clear the database and reinitialise the C ready to create
 	## another database
 	##
-	## Note that this will only work for databases registered as
-	## being in_memory_only? as doing this on a real, on-disk
-	## database could be dangerous...
+	## Note that this will only work for in-memory databases as
+	## doing this on a real, on-disk database could be dangerous...
 	##
 	## This method will only work from 421 onwards
 
