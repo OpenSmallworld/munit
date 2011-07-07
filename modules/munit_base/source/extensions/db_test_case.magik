@@ -41,8 +41,8 @@ _pragma(classify_level=advanced, usage={subclassable})
 ## already open on a database.
 ##
 ## This should normally be an in-memory database (starting with
-## memory::) because that uses no public disk space and is always
-## creatable.
+## "memory::") because that uses no public disk space and is
+## always creatable.
 db_test_case.define_shared_constant(:db_dir, "memory::/ds", :private)
 $
 
