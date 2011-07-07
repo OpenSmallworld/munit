@@ -453,32 +453,3 @@ _private _method db_test_case.check_for_in_memory_database()
 	_endif
 _endmethod
 $
-
-_pragma(classify_level=restricted,topic=MUnit)
-_method db_test_case.delete_in_memory_database()
-
-	## Clear the database and reinitialise the C ready to create
-	## another database
-	##
-	## Note that this will only work for in-memory databases as
-	## doing this on a real, on-disk database could be dangerous...
-	##
-	## This method will only work from 421 onwards
-
-	# Zap the top level database
-	(db_dir, ace_dir) << _self.default_directories
-	ds_environment.init()
-	(sub_dir,dir) << system.pathname_components(db_dir)
-
-	# In will only try to delete in-memory databases for safety
-	_if dir.index_of_seq("memory::") _is _unset
-	_then 
-		condition.raise(:munit_db_not_in_memory)
-	_endif 
-	
-	ds_environment.delete_directory(dir,sub_dir,:incore, :recurse?, _true)
-
-	# Close down the database nice and cleanly
-	ds_environment.reinitialise()
-_endmethod
-$
