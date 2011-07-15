@@ -9,13 +9,8 @@ def_slotted_exemplar(:assert,
 })
 $
 
-_pragma(classify_level=deprecated,topic=MUnit)
+_pragma(classify_level=basic,topic=MUnit)
 _method assert.fail( _optional a_message )
-	## -------Deprecated------
-	## Reason     : Replaces by new munit impl.
-	## Use instead: assert.fail()
-	## Action     : Restricted at next release.
-	## -----------------------
 	## Fails a test with the given A_MESSAGE.
 
 	condition.raise( :assertion_failed_warning , :message , a_message )
