@@ -168,7 +168,6 @@ _pragma(classify_level=debug, topic={MUnit})
 _method simple_munit_gui.end_test( a_test )
 	_self.update_test_selector( a_test )
 	_self.update_status_info()
-	_self.update_status_info_text(:run, a_test.write_string)
 _endmethod
 $
 _pragma(classify_level=debug, topic={MUnit})
@@ -186,7 +185,7 @@ _endmethod
 $
 _pragma(classify_level=debug, topic={MUnit})
 _method simple_munit_gui.update_test_selector ( a_test )
-	_self.plugin(:test_selector).update_test( a_test )
+		_self.plugin(:test_selector).update_test( a_test )
 _endmethod
 $
 _pragma(classify_level=debug, topic={MUnit})
