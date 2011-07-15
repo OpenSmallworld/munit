@@ -4,50 +4,19 @@ $
 
 #Create Display trees for displaying tests
 _pragma(classify_level=debug, topic={Munit})
-def_slotted_exemplar(:munit_test_display_tree,
-	{
-		{ :test, _unset }
-	},
-	:munit_hierarchy_display_tree)
-$
-
-_pragma(classify_level=debug, topic={Munit})
-_method munit_test_display_tree.key_for( a_test )
-	## 
-	## 
-	>> a_test.class_name + :|.| + a_test.get_name()
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={Munit})
-_method munit_test_display_tree.new( a_test, value, parent )
-	## 
-	## 
-	>> _clone.init( a_test, value, parent )
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={Munit})
-_private _method munit_test_display_tree.init( a_test, value, parent )
-	## 
-	## 
-	_super.init( _self.key_for( a_test ), value, parent )
-	.test << a_test
-
-	>> _self 
-_endmethod
+def_slotted_exemplar(:munit_test_display_tree, {}, :munit_hierarchy_display_tree)
 $
 
 _pragma(classify_level=debug, topic={Munit})
 _method munit_test_display_tree.display_text
-	>> .test.write_string
+	>> _self.key.write_string
 _endmethod
 $
 
 _method munit_test_display_tree.status
-	>> _if .test _is _unset _orif _not .test.has_run? _then >> :not_run
-	   _elif .test.errored? _then >> :error
-	   _elif .test.failed? _then >> :failed
+	>> _if .key _is _unset _orif _not .key.has_run? _then >> :not_run
+	   _elif .key.errored? _then >> :error
+	   _elif .key.failed? _then >> :failed
 	   _else >> :success _endif
 _endmethod
 $
@@ -68,7 +37,7 @@ $
 
 _pragma(classify_level=debug, topic={MUnit})
 _method munit_test_display_tree.tests()
-	_return rope.new_with(.test)
+	_return rope.new_with(.key)
 _endmethod
 $
 
