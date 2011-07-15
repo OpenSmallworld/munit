@@ -58,14 +58,8 @@ _private _method assert.assert( left_operand , an_operator ,
 		_else 
 			result? << left_operand.perform( an_operator , right_operand )
 		_endif 
-
-		_if ( rev << _self.reverse_operators[ an_operator ] ) _isnt _unset 
-		_then
-			default_message << write_string( left_operand, " ", rev, " ", right_operand )
-		_else
-			default_message << write_string( left_operand, " ", an_operator, " ", right_operand, " returned _false" )
-		_endif
 		
+		default_message << write_string( left_operand, " ", an_operator, " ",right_operand)
 		a_message << _self.format_message(a_message, default_message)
 		
 		_if result? _isnt _true 
@@ -89,22 +83,6 @@ _pragma(classify_level=restricted,topic=MUnit)
 assert.define_shared_constant(:supported_binary_operators,
 			      { :|=| , :|~=| , :|<|  , :|>| , :|<=| , :|>=| },
 			      :private )
-$
-
-_pragma(classify_level=restricted,topic=MUnit)
-## Reverse of the supported operators for .assert(), for
-## default reporting purposes
-assert.define_shared_constant( :reverse_operators,
-	property_list.new_with(
-		:|=|,    :|~=|,
-		:|~=|,   :|=|,
-		:|>|,    :|<=|,
-		:|<|,    :|>=|,
-		:|>=|,   :|<|,
-		:|<=|,   :|>|,
-		:|is|,   :|isnt|,
-		:|isnt|, :|is| ),
-	:private )
 $
 
 _pragma(classify_level=advanced,topic=MUnit)
