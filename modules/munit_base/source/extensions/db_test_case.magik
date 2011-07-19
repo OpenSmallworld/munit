@@ -344,7 +344,7 @@ _method db_test_case.open_database(ace_loc, _optional open_case_views?)
 	gis_program_manager.authorisation_view.login("root", "")
 
 	# Open up the CASE datasets
-	_if  open_case_views?
+	_if  open_case_views? _is _true
 	_then 
 		pred << predicate.eq(:type, "sw_case_manager")
 		case_ds_recs << gis_program_manager.ace_top_view.collections[:sw_gis!dataset].select(pred)
