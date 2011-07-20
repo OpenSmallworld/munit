@@ -330,11 +330,17 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method db_test_case.open_database(ace_loc, _optional open_case_views?)
+_method db_test_case.open_database(_optional ace_dir, open_case_views?)
 
 	## Actually open up the new database at the ACE_LOC
 	## directory. If OPEN_CASE_VIEWS? is true then all the CASE
 	## views are opened as well.
+
+	# Pick up a default ACE location if we haven't been given one
+	_if (ace_loc << ace_dir) _is _unset
+	_then
+		ace_loc << system.getenv( "SW_ACE_DB_DIR")
+	_endif
 	
 	# Open up the new database
 	smallworld_product.set_startup_option(:interactive?, _false)
