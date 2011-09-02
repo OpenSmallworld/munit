@@ -272,7 +272,7 @@ _private _method db_test_case.default_directories
 	## directory beneath it i.e. "ds_admin"
 	
 	# Work out which directories things are to go into
-	db_dir  << system.canonical_path_string(_self.db_dir)
+	db_dir  << _self.db_dir
 	ace_dir << system.pathname_down(db_dir, "ds_admin")
 
 	>> db_dir, ace_dir
