@@ -253,6 +253,8 @@ simple_dataset_test.define_one_key_field_test( :ds_date, _unset, "ds_date" )
 $
 simple_dataset_test.define_one_key_field_test( :date_time, _unset, "date_time" )
 $
+simple_dataset_test.define_one_key_field_test( :ds_bool, _unset, "_true" )
+$
 
 _pragma(classify_level=restricted)
 _method simple_dataset_test.test_two_physical_fields_collection()
@@ -445,6 +447,49 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
+_method simple_dataset_test.test_can_retrieve_records_not_deleted()
+	## 
+	## 
+	_local data << { { 1, "string" },
+			 { 2, "another_string" },
+			 { 3, "last_string" } }
+	_local rec1, rec2, rec3
+	
+	_if _self.create_dataset_with_data_test_collection()
+	_then
+		_self.assert_collection_size( 0 )
+		_for d _over data.fast_elements()
+		_loop
+			.collection.insert( d )
+		_endloop
+
+		# We won't check the collection size or access to a deleted record
+		# as this is included in test_can_delete()
+		rec2 << .collection.at( 2 )
+		rec2.delete()
+
+		rec1 << .collection.at( 1 )
+		_self.assert_not_unset( rec1 )
+		_self.assert_equals( 1, rec1.field1 )
+		
+		rec3 << .collection.at( 3 )
+		_self.assert_not_unset( rec3 )
+		_self.assert_equals( 3, rec3.field1 )
+
+		rec1.delete()
+		# Check I can still access record 3
+		rec3 << .collection.at( 3 )
+		_self.assert_not_unset( rec3 )
+		_self.assert_equals( 3, rec3.field1 )
+
+		rec3.delete()
+		rec3 << .collection.at( 3 )
+		_self.assert_unset( rec3 )		
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
 _method simple_dataset_test.test_can_update()
 	## 
 	##
@@ -500,6 +545,42 @@ _method simple_dataset_test.test_can_associate_geometry()
 				_self.assert_equals( 0, retrieved_geom.y )
 			_endif 
 		_endif 
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_default_record_exemplar_is_simple_record_exemplar()
+	## 
+	## 
+	_if _self.create_dataset_with_collection(
+		    { property_list.new_with( :name, :field1,
+					      :type, :ds_int,
+					      :key?, _true ) } )
+
+	_then
+		_self.assert_is( simple_record_exemplar, .collection.descriptor.record_exemplar )
+		_self.assert_true( .collection.record_exemplar.is_kind_of?( simple_record_exemplar ) )
+	_endif
+_endmethod
+$
+
+def_slotted_exemplar( :simple_dataset_test_exemplar, {}, { :uds_rwo_record } )
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_explicit_record_exemplar_gets_set()
+	## 
+	## 
+	_if _self.create_dataset_with_collection(
+		    property_list.new_with( :exemplar, simple_dataset_test_exemplar,
+					    :fields, { property_list.new_with( :name, :field1,
+									       :type, :ds_int,
+									       :key?, _true ) } ) )
+		    
+	_then
+		_self.assert_is( simple_dataset_test_exemplar, .collection.descriptor.record_exemplar )
+		_self.assert_true( .collection.record_exemplar.is_kind_of?( simple_dataset_test_exemplar ) )
 	_endif
 _endmethod
 $

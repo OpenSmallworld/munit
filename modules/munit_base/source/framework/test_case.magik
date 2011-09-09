@@ -58,12 +58,6 @@ def_slotted_exemplar(:test_case,
 )
 $
 
-_pragma(classify_level=advanced)
-## A property_list of test aspects
-## Holds the aspects that the image must provide for this
-## test_case to run
-test_case.define_shared_constant( :test_aspects, property_list.new(), :public )
-$
 
 _pragma(classify_level=restricted, usage={subclassable})
 ## The highest test number that will be looked for if the

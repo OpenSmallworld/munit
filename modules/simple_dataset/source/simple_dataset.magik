@@ -80,9 +80,6 @@ _private _method simple_dataset.field_descriptor_for( a_field_def )
 	   _elif _self.geometry_field_def?( a_field_def )
 	   _then
 		   >> _self.geom_field_descriptor_for( a_field_def )
-	   _elif _self.join_field_def?( a_field_def )
-	   _then
-		   >> _self.join_field_descriptor_for( a_field_def )	   
 	   _else
 		   >> _unset, _false
 	   _endif
@@ -92,35 +89,16 @@ $
 _pragma(classify_level=restricted)
 _private _method simple_dataset.physical_field_def?( a_field_def )
 	## 
-	##
-	>> _if a_field_def[:type] _isnt _unset
-	   _then 
-		   >> _self.get_field_type( a_field_def[ :type ] ) _isnt _unset
-	   _else
-		   >> _false 
-	   _endif 
+	## 
+	>> _self.get_field_type( a_field_def[ :type ] ) _isnt _unset 
 _endmethod
 $
 
 _pragma(classify_level=restricted)
 _private _method simple_dataset.geometry_field_def?( a_field_def ) 
 	## 
-	##
-	>> _if a_field_def[:type] _isnt _unset
-	   _then 
-		   >> _self.geometry_exemplar( a_field_def[ :type ] ) _isnt _unset
-	   _else
-		   >> _false 
-	_endif 
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_method simple_dataset.join_field_def?( a_field_def ) 
 	## 
-	## 
-
-	>> ( a_field_def[:type] _is _unset _andif a_field_def[:join_type] _isnt _unset )
+	>> _self.geometry_exemplar( a_field_def[ :type ] ) _isnt _unset 
 _endmethod
 $
 
@@ -144,15 +122,6 @@ _private _method simple_dataset.geom_field_descriptor_for( a_field_def )
 _endmethod
 $
 
-_pragma(classify_level=restricted)
-_method simple_dataset.join_field_descriptor_for( a_field_def )
-	## 
-	## 
-
-	>> ( uds_join_field.new( a_field_def[:name], _false, a_field_def[:join_type], {}, _unset), _false )
-_endmethod
-$
-
 _pragma(classify_level=restricted, topic={universal_rwo})
 _private _method simple_dataset.init_base_types()
 	##
@@ -167,6 +136,14 @@ _private _method simple_dataset.init_base_types()
 	derived_type << uds_field_type.new_derived(_self, :ds_string, base_type.class,
 						   base_type.element_class, base_type.size,
 						   base_type.enumerator, base_type.phys_type)
+	_self.field_types.add(derived_type)
+
+	# Add :ds_bool
+	base_type << database_view.defined_types[:ds_bool]
+	derived_type << uds_field_type.new_derived(_self, :ds_bool, base_type.class,
+						   base_type.element_class, base_type.size,
+						   base_type.enumerator, base_type.phys_type)
+	
 	_self.field_types.add(derived_type)
 _endmethod
 $

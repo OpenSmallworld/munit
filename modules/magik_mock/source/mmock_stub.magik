@@ -86,6 +86,15 @@ _method mmock_stub.then_iterate(_gather iter_values)
 _endmethod
 $
 
+_method mmock_stub.with_method( method_proc )
+	## 
+	## 
+	_self.int!check_api("with_method()")
+
+	_self.install_mock( .object, .current_behaviour[ 1 ], .current_behaviour[ 2 ],
+			    :method, method_proc )
+_endmethod
+$
 
 _private _method mmock_stub.int!check_api(caller)
 	_if .current_behaviour _is _unset

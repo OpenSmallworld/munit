@@ -300,7 +300,35 @@ _method mock_manager_test.int!test_wildcard_and_arg(class_name)
 	_self.assert_equals( :unmocked, thing.mockable_method() )
 _endmethod
 $
-	
+
+_method mock_manager_test.test_running_mock_with_proc()
+	## 
+	## 
+	_self.run_test_clearing_mock_manager( :int!test_running_mock_with_proc|()|,
+					      :mt!rmwp )
+_endmethod
+$
+
+_method mock_manager_test.int!test_running_mock_with_proc( class_name )
+	## 
+	##
+	_local unmocked << "unmocked"
+	_local thing << _self.def_exemplar_and_methods(
+				class_name, :mockable_method|()|, unmocked )
+	_self.assert_equals( unmocked, thing.mockable_method() )
+	_local this << _self
+
+	_local mocked << "mocked"
+	_local test_proc << _proc () _import thing, this, mocked;
+				    this.assert_is( mocked, thing.mockable_method() )
+			    _endproc
+	mock_manager.run_with_mocks(
+		{ { thing, :mockable_method|()|, :method, _proc() _import mocked; _return mocked _endproc  } }
+		     ) ( test_proc )
+	_self.assert_equals( unmocked, thing.mockable_method() )
+_endmethod
+$
+
 _method mock_manager_test.run_test_clearing_mock_manager( test_method, exemplar_name )
 	_protect
 		_self.perform(test_method, exemplar_name )
