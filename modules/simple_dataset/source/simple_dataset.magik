@@ -80,6 +80,9 @@ _private _method simple_dataset.field_descriptor_for( a_field_def )
 	   _elif _self.geometry_field_def?( a_field_def )
 	   _then
 		   >> _self.geom_field_descriptor_for( a_field_def )
+	   _elif _self.join_field_def?( a_field_def )
+	   _then
+		   >> _self.join_field_descriptor_for( a_field_def )	   
 	   _else
 		   >> _unset, _false
 	   _endif
@@ -90,7 +93,13 @@ _pragma(classify_level=restricted)
 _private _method simple_dataset.physical_field_def?( a_field_def )
 	## 
 	## 
-	>> _self.get_field_type( a_field_def[ :type ] ) _isnt _unset 
+	##
+	>> _if a_field_def[ :type ] _isnt _unset
+	   _then 
+		   >> _self.get_field_type( a_field_def[ :type ] ) _isnt _unset
+	   _else
+		   >> _false 
+	   _endif 
 _endmethod
 $
 
@@ -98,7 +107,21 @@ _pragma(classify_level=restricted)
 _private _method simple_dataset.geometry_field_def?( a_field_def ) 
 	## 
 	## 
-	>> _self.geometry_exemplar( a_field_def[ :type ] ) _isnt _unset 
+	>> _if a_field_def[ :type ] _isnt _unset
+	   _then 
+		   >> _self.geometry_exemplar( a_field_def[ :type ] ) _isnt _unset
+	   _else
+		   >> _false
+	   _endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset.join_field_def?( a_field_def ) 
+ 	## 
+	## 
+
+	>> ( a_field_def[:type] _is _unset _andif a_field_def[:join_type] _isnt _unset )
 _endmethod
 $
 
@@ -119,6 +142,15 @@ _private _method simple_dataset.geom_field_descriptor_for( a_field_def )
 	## 
 	>> ( uds_geom_field.new( a_field_def[ :name ], _self.geometry_exemplar( a_field_def[ :type ] ) ),
 	     _false  )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset.join_field_descriptor_for( a_field_def )
+	## 
+	## 
+
+	>> ( uds_join_field.new( a_field_def[:name], _false, a_field_def[:join_type], {}, _unset), _false )
 _endmethod
 $
 
