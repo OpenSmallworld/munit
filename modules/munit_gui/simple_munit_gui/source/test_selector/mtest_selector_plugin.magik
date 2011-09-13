@@ -152,7 +152,7 @@ _method mtest_selector_plugin.update_test( a_test )
 	_local a_tree << _unset
 	_for a_display_tree _over .my_display_trees.fast_elements()
 	_loop
-		_if (a_tree << a_display_tree[a_test]) _isnt _unset _then _leave _endif
+		_if (a_tree << a_display_tree[munit_test_display_tree.key_for( a_test ) ]) _isnt _unset _then _leave _endif
 	_endloop
 	_if a_tree _isnt _unset
 	_then
@@ -179,9 +179,15 @@ $
 
 _pragma(classify_level=debug, topic={MUnit})
 _method mtest_selector_plugin.selected_tests()
-	_return .tree.selection.an_element().tests()
+	>> _if ( sel << .tree.selection.an_element() ) _isnt _unset
+	   _then
+		   >> sel.tests()
+	   _else
+		   >> {}
+	   _endif
 _endmethod
 $
+
 _pragma(classify_level=debug, topic={MUnit})
 _method mtest_selector_plugin.selected_modules()
 	_return .tree.selection.an_element().modules()
@@ -220,7 +226,7 @@ $
 _pragma(classify_level=debug, topic={MUnit})
 _method mtest_selector_plugin.select( a_sel )
 	_if a_sel.an_element() _isnt _unset 
-	_then 
+	_then
 		.selection << a_sel.an_element().key
 		.framework.select_test( .selection )
 	_endif 

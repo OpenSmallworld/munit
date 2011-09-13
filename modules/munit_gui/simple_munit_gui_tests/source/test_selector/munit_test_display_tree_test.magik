@@ -68,7 +68,7 @@ $
 
 _pragma(classify_level=debug, topic={MUnit})
 _method munit_test_display_tree_test.new_styled_string()
-	dt << munit_test_display_tree.new( .a_test )
+	dt << munit_test_display_tree.new( .a_test, _unset, _unset )
 	_return dt.styled_string.styled_string
 _endmethod
 $

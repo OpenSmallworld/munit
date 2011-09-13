@@ -145,7 +145,23 @@ _method simple_collection.int!remove( values )
 	_then
 		.data.remove_nth( i )
 		.index_hash.remove_key( k )
+		_self.rehash_index_table( i )
 	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
+_private _method simple_collection.rehash_index_table( i )
+	## Rehash the index table for those elements internally stored after
+	## position I
+	
+	_for key, pos _over .index_hash.fast_keys_and_elements()
+	_loop
+		_if pos > i
+		_then
+			.index_hash[key] -<< 1
+		_endif
+	_endloop
 _endmethod
 $
 
