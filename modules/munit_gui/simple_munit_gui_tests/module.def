@@ -10,7 +10,14 @@ end
 
 requires
 	munit_base
-end	
+end
+	
+test
+	name		simple_munit_gui_tests
+	topics		munit
+	framework	munit
+	args		simple_munit_gui_test
+end
 
 language en_gb
 

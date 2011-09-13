@@ -88,36 +88,47 @@ $
 _pragma(classify_level=advanced,topic=MUnit)
 _method assert.assert_equals( expected , actual , _optional a_message , delta , relative? , a_type )
 	## Assert that EXPECTED and ACTUAL are equal.
-	## For numbers assert that EXPECTED and ACTUAL
+	## For numbers and unit values assert that EXPECTED and ACTUAL
 	## are equal concerning a DELTA.
 	## DELTA can be absolute value or if RELATIVE? is true than 
 	## DELTA is relative value. ( E.g relative delta 0.2 means
 	## that ACTUAL value have to equals EXPECTED value +- 20 %.)
 	## Absolute value of DELTA from relative value is calculated by
-	## ABS_DELTA = REL_DELTA * EXPECTED
+	## ABS_DELTA = REL_DELTA * EXPECTED.
+	##
+	## NOTE: Asserts if RELATIVE? is true and EXPECTED is 0.0!
 
 	a_type << a_type.default( :assert_equals )
+	relative? << relative?.default( _false )
 
-	_if ( _not expected.is_kind_of?( simple_number_mixin )) _orif
+	_if ( expected.is_kind_of?( unit_value )) _andif
+	    ( actual.is_kind_of?( unit_value )) _andif 
+	    expected.finite? _andif actual.finite? _andif  
+	    delta _isnt _unset
+	_then
+		_if relative? _andif delta.is_kind_of?( unit_value )
+		_then   # Ensure delta is not a unit_value
+			delta << delta.value
+		_elif _not relative? _andif _not delta.is_kind_of?( unit_value )
+		_then # Ensure delta is in unit_value
+			delta << expected.new( delta, expected.unit )
+		_endif
+	_elif ( _not expected.is_kind_of?( simple_number_mixin )) _orif
 	    ( _not actual.is_kind_of?( simple_number_mixin )) _orif
 	    ( _not expected.finite? _orif _not actual.finite? ) _orif 
 	    delta _is _unset _orif delta = 0 
 	_then
-		result? << _self.assert( actual , :|=| , expected , a_message , a_type )
-	_else
-		relative? << relative?.default( _false )
-		
-		_if relative? _then delta_type << " Rel." _else delta_type << " Abs." _endif 
-		
-		default_message << write_string("Exp:", expected, " Act:", actual, 
-						delta_type, "Delta:", delta)
-		a_message << _self.format_message(a_message,  default_message)
-		
-		_if relative? _then delta << expected * delta _endif
-		result? << _self.assert( (expected - actual).abs , :|<| , delta , a_message , a_type )
+		_return _self.assert( actual , :|=| , expected , a_message , a_type )
+#<====================
 	_endif
-
-	>> result? 
+	
+	_if relative? _then delta_type << " Rel." _else delta_type << " Abs." _endif 
+	default_message << write_string("Exp:", expected, " Act:", actual, 
+					delta_type, "Delta:", delta)
+	a_message << _self.format_message(a_message,  default_message)
+	
+	_if relative? _then delta << (expected * delta).abs _endif
+	_return _self.assert( (expected - actual).abs , :|<| , delta , a_message , a_type )
 _endmethod
 $
 

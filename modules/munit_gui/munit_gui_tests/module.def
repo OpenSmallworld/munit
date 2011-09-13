@@ -12,6 +12,13 @@ requires
 	simple_munit_gui_tests
 end	
 
+test
+	name		munit_gui_tests
+	topics		munit
+	framework	munit
+	args		munit_gui_test
+end
+
 language en_gb
 
 hidden
