@@ -1,2 +1,2 @@
-test_runner_model
 test_prioritiser
+test_runner_model

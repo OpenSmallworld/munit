@@ -1,4 +1,6 @@
+simple_traceback_viewer
 traceback_viewer_plugin
+simple_what_got_run
 what_got_run_plugin
 munit_gui
 message_usages

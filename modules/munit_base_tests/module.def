@@ -12,5 +12,12 @@ tests_modules
 	munit_base
 end
 
+test
+	name		munit_base_tests
+	topics		munit
+	framework	munit
+	args		assert_test
+end
+
 hidden
 language en_gb
