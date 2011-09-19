@@ -83,6 +83,59 @@ _private _method simple_dataset_test.create_dataset_with_geom_test_collection()
 _endmethod
 $
 
+_pragma(classify_level=restricted)
+_private _method simple_dataset_test.create_dataset_with_joined_collections( join_flavour )
+	## 
+	##
+	_local join_flavour_params <<
+		property_list.new_with(
+			:|0toN|, { _false, _true, _false },
+			:|1toN|, { _false, _true, _true  },
+			:|0to1|, { _true , _true, _false } )
+					      
+	( parent_single_result?, child_single_result?, parent_id_mandatory? ) <<
+		( _scatter join_flavour_params[ join_flavour ] )
+	>> _self.create_dataset( property_list.new_with(
+					 :parent,
+					 { property_list.new_with(
+						   :name, :id,
+						   :type, :ds_int,
+						   :key?, _true ),
+					   property_list.new_with(
+						   :name,           :children,
+						   :join_type,      :follow,
+						   :result_table,   :child,
+						   :single_result?, parent_single_result?,
+						   :condition,      { :id, :|=|, :parent_id } )
+					 },
+					 :child,
+					 { property_list.new_with(
+						   :name, :id,
+						   :type, :ds_int,
+						   :key?, _true ),
+					   property_list.new_with(
+						   :name,       :parent_id,
+						   :type,       :ds_int,
+						   :key?,       _false,
+						   :mandatory?, parent_id_mandatory? ),
+					   property_list.new_with(
+						   :name,           :parent,
+						   :join_type,      :follow,
+						   :result_table,   :parent,
+						   :single_result?, child_single_result?,
+						   :condition,      { :parent_id, :|=|, :id } )
+					 } ) )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.collection( name )
+	## 
+	## 
+	>> .dataset.collections[ name ]
+_endmethod
+$
+
 #
 # CUSTOM ASSERTIONS
 #
@@ -100,12 +153,13 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method simple_dataset_test.assert_collection_fields( key_field_names, phys_field_names, geom_field_names )
+_method simple_dataset_test.assert_collection_fields( key_field_names, phys_field_names, geom_field_names, join_field_names )
 	## 
 	##
 	_self.int!assert_collection_fields( :key_field_names, key_field_names )
 	_self.int!assert_collection_fields( :physical_field_names, phys_field_names )
 	_self.int!assert_collection_fields( :geometry_field_names, geom_field_names )
+	_self.int!assert_collection_fields( :join_field_names, join_field_names )
 _endmethod
 $
 
@@ -133,7 +187,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method simple_dataset_test.assert_phys_field_properties( field_name, key?, value_class, _optional size )
+_method simple_dataset_test.assert_phys_field_properties( field_name, key?, value_class, _optional size, mandatory? )
 	## 
 	## 
 	_if _self.assert_not_unset( fd << .collection.field( field_name ), write_string( "Didn't find ", field_name ) ) _andif
@@ -158,6 +212,15 @@ _method simple_dataset_test.assert_phys_field_properties( field_name, key?, valu
 						       " to be ",
 						       size, ", got ", fd.type.size ) )
 		_endif
+
+		_if mandatory? _isnt _unset 
+		_then
+			_self.assert_is( mandatory?, fd.mandatory?,
+					 write_string( "Expected mandatory? for ",
+						       field_name,
+						       " to be ",
+						       mandatory?, ", got ", fd.mandatory? ) )
+		_endif
 	_endif
 _endmethod
 $
@@ -175,6 +238,32 @@ _method simple_dataset_test.assert_geom_field_properties( field_name, geom_type 
 					       field_name,
 					       " to be :",
 					       geom_type, ", got :", fd.geom_type ) )
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.assert_join_field_properties( field_name, result_table_name, join_type, single_result? )
+	## 
+	## 
+	_if _self.assert_not_unset( fd << .collection.field( field_name ), write_string( "Didn't find ", field_name ) ) _andif
+	    _self.assert_true( fd.is_join?,
+			       write_string( "Expected ", field_name, " to be join but it wasn't" ) )
+	_then
+		_self.assert_is( join_type, fd.join_type,
+				 write_string( "Expected join_type for ",
+					       field_name,
+					       " to be :",
+					       join_type, ", got :", fd.join_type ) )
+		_self.assert_is( result_table_name, fd.result_table_name,
+				 write_string( "Expected ", result_table_name,
+					       " to be the result of join ", field_name,
+					       " but got ", fd.result_table_name ) )
+
+		_self.assert_is( single_result?, fd.simple_result?,
+				 write_string( "Expected ", field_name, ".simple_result? ",
+					       " to return ", single_result?, 
+					       " but got ", fd.simple_result? ) )
 	_endif 
 _endmethod
 $
@@ -201,7 +290,7 @@ _method simple_dataset_test.test_create_no_fields_collection()
 	_if _self.create_dataset_with_collection( {} )
 	_then
 		_self.assert_collection_size( 0 )
-		_self.assert_collection_fields( {}, {}, {} )
+		_self.assert_collection_fields( {}, {}, {}, {} )
 	_endif
 _endmethod
 $
@@ -221,7 +310,7 @@ _method simple_dataset_test.int!test_create_one_key_field_collection( type, size
 
 	_if _self.create_dataset_with_collection( { field_params } ) _then
 		_self.assert_collection_size( 0 )
-		_self.assert_collection_fields( { :field1 }, { :field1 }, {} )
+		_self.assert_collection_fields( { :field1 }, { :field1 }, {}, {} )
 
 		_self.assert_phys_field_properties( :field1, _true, expected_class )
 	_endif
@@ -268,10 +357,31 @@ _method simple_dataset_test.test_two_physical_fields_collection()
 					      :type, :ds_float ) } )
 	_then
 		_self.assert_collection_size( 0 )
-		_self.assert_collection_fields( { :field1 }, { :field1, :field2 }, {} )
+		_self.assert_collection_fields( { :field1 }, { :field1, :field2 }, {}, {} )
 		
 		_self.assert_phys_field_properties( :field1, _true,  integer )
 		_self.assert_phys_field_properties( :field2, _false, float )
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_non_mandatory_field_collection()
+	## 
+	## 
+	_if _self.create_dataset_with_collection(
+		    { property_list.new_with( :name, :field1,
+					      :type, :ds_int,
+					      :key?, _true ),
+		      property_list.new_with( :name,       :field2,
+					      :type,       :ds_float,
+					      :mandatory?, _false ) } )
+	_then
+		_self.assert_collection_size( 0 )
+		_self.assert_collection_fields( { :field1 }, { :field1, :field2 }, {}, {} )
+		
+		_self.assert_phys_field_properties( :field1, _true,  integer, _unset, _true )
+		_self.assert_phys_field_properties( :field2, _false, float, _unset, _false )
 	_endif
 _endmethod
 $
@@ -288,7 +398,7 @@ _method simple_dataset_test.int!test_geom_field_collection( geom_type )
 					      :type, geom_type ) } )
 	_then
 		_self.assert_collection_size( 0 )
-		_self.assert_collection_fields( { :field1 }, { :field1 }, { :geom1 } )
+		_self.assert_collection_fields( { :field1 }, { :field1 }, { :geom1 }, {} )
 		
 		_self.assert_phys_field_properties( :field1, _true,  integer )
 		_self.assert_geom_field_properties( :geom1, geom_type )
@@ -318,6 +428,42 @@ $
 simple_dataset_test.define_geom_field_collection_test( :simple_area )
 $
 simple_dataset_test.define_geom_field_collection_test( :text )
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_can_define_follow_0n_join_between_two_tables()
+	## 
+	## 
+	_if _self.create_dataset_with_joined_collections( :|0toN| )
+	_then 
+		.collection << _self.collection( :parent )
+		_self.assert_phys_field_properties( :id, _true, integer )
+		_self.assert_join_field_properties( :children, :child, :follow, _false )
+		
+		.collection << _self.collection( :child )
+		_self.assert_phys_field_properties( :id, _true, integer )
+		_self.assert_phys_field_properties( :parent_id, _false, integer, _unset, _false )
+		_self.assert_join_field_properties( :parent, :parent, :follow, _true )
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_can_define_follow_1n_join_between_two_tables()
+	## 
+	## 
+	_if _self.create_dataset_with_joined_collections( :|1toN| )
+	_then 
+		.collection << _self.collection( :parent )
+		_self.assert_phys_field_properties( :id, _true, integer )
+		_self.assert_join_field_properties( :children, :child, :follow, _false )
+		
+		.collection << _self.collection( :child )
+		_self.assert_phys_field_properties( :id, _true, integer )
+		_self.assert_phys_field_properties( :parent_id, _false, integer, _unset, _true )
+		_self.assert_join_field_properties( :parent, :parent, :follow, _true )
+	_endif 
+_endmethod
 $
 
 _pragma(classify_level=restricted)
@@ -581,6 +727,190 @@ _method simple_dataset_test.test_explicit_record_exemplar_gets_set()
 	_then
 		_self.assert_is( simple_dataset_test_exemplar, .collection.descriptor.record_exemplar )
 		_self.assert_true( .collection.record_exemplar.is_kind_of?( simple_dataset_test_exemplar ) )
+	_endif
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_0n_join_with_no_child_records_is_empty()
+	## 
+	##
+	_if _self.create_dataset_with_joined_collections( :|0toN| )
+	_then
+		_local parent_collection << _self.collection( :parent )
+		parent_collection.insert( { 1 } )
+		_local parent << parent_collection.at( 1 )
+
+		_self.assert_true( parent.children.empty?, "Expected no child records but got some" )
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_can_add_and_retrieve_child_records_from_a_0n_join()
+	## 
+	## 
+	_if _self.create_dataset_with_joined_collections( :|0toN| )
+	_then
+		_local child_collection << _self.collection( :child )
+		child_collection.insert( { 1, _unset } )
+		_local child1 << child_collection.at( 1 )
+		child_collection.insert( { 2, _unset } )
+		_local child2 << child_collection.at( 2 )
+
+		_local parent_collection << _self.collection( :parent )
+		parent_collection.insert( { 1 } )
+		_local parent << parent_collection.at( 1 )
+
+		record_transaction.new_update( child1,
+					       property_list.new_with(
+						       :parent, parent ) ).run()
+
+		_local children << parent.children
+		_if _self.assert_is( 1, children.size, write_string( "Expected 1 child record but got ", children.size ) )
+		_then
+			_local found_child << children.an_element()
+			_self.assert_true( child1.is_same_record_as?( found_child ),
+					   write_string( "Expected children collection to contain ", child1,
+							 " but instead it contained ", found_child ) )
+		_endif 
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_deleted_record_no_longer_appears_in_a_0n_join()
+	## 
+	## 
+	_if _self.create_dataset_with_joined_collections( :|0toN| )
+	_then
+		_local child_collection << _self.collection( :child )
+		child_collection.insert( { 1, _unset } )
+		_local child1 << child_collection.at( 1 )
+		child_collection.insert( { 2, _unset } )
+		_local child2 << child_collection.at( 2 )
+
+		parent_collection << _self.collection( :parent )
+		parent_collection.insert( { 1 } )
+		_local parent << parent_collection.at( 1 )
+
+		record_transaction.new_update( child1,
+					       property_list.new_with(
+						       :parent, parent ) ).run()
+		record_transaction.new_update( child2,
+					       property_list.new_with(
+						       :parent, parent ) ).run()
+
+		_local children << parent.children
+		_self.assert_is( 2, children.size, write_string( "Expected 2 child records but got ", children.size ) )
+
+		record_transaction.new_delete( child2 ).run()
+		_local children << parent.children
+		_if _self.assert_is( 1, children.size, write_string( "Expected 1 child record but got ", children.size ) )
+		_then
+			_local found_child << children.an_element()
+			_self.assert_true( child1.is_same_record_as?( found_child ),
+					   write_string( "Expected children collection to contain ", child1,
+							 " but instead it contained ", found_child ) )
+		_endif 
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_parent_records_can_be_set_and_retrieved_in_a_0n_join()
+	## 
+	## 
+	_if _self.create_dataset_with_joined_collections( :|0toN| )
+	_then
+		_local child_collection << _self.collection( :child )
+		child_collection.insert( { 1, _unset } )
+		_local child1 << child_collection.at( 1 )
+		child_collection.insert( { 2, _unset } )
+		_local child2 << child_collection.at( 2 )
+
+		_self.assert_unset( child1.parent, write_string( "Expected child1 to have no parent, but got ", child1.parent ) )
+		_self.assert_unset( child2.parent, write_string( "Expected child2 to have no parent, but got ", child2.parent ) )
+		
+		_local parent_collection << _self.collection( :parent )
+		parent_collection.insert( { 1 } )
+		_local parent << parent_collection.at( 1 )
+
+		record_transaction.new_update( child1,
+					       property_list.new_with(
+						       :parent, parent ) ).run()
+
+		# Reget child record to get newly joined information
+		 child1 << child_collection.at( 1 )
+		_local found_parent << child1.parent
+		_if _self.assert_not_unset( found_parent, "Failed to find parent joined to child1" )
+		_then
+			_self.assert_true( found_parent.is_same_record_as?( parent ),
+					   write_string( "Expected child1 to have parent of ", parent,
+							 " but got ", found_parent ) )
+		_endif 
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_1n_join_with_no_child_records_is_empty()
+	## 
+	##
+	_if _self.create_dataset_with_joined_collections( :|1toN| )
+	_then
+		_local parent_collection << _self.collection( :parent )
+		parent_collection.insert( { 1 } )
+		_local parent << parent_collection.at( 1 )
+
+		_self.assert_true( parent.children.empty?, "Expected no child records but got some" )
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_cannot_insert_child_record_in_1n_join_without_parent()
+	## 
+	## 
+	_if _self.create_dataset_with_joined_collections( :|1toN| )
+	_then
+		_local parent_collection << _self.collection( :parent )
+		parent_collection.insert( { 1 } )
+		_local parent << parent_collection.at( 1 )
+
+		_local child_collection << _self.collection( :child )
+		_self.assert_raised_condition(
+			:dd_mandatory_field,
+			record_transaction.new_insert( child_collection, property_list.new_with( :id, 1 ) ),
+			:run|()| )
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_can_add_and_retrieve_child_records_from_a_1n_join()
+	## 
+	## 
+	_if _self.create_dataset_with_joined_collections( :|0toN| )
+	_then
+		_local parent_collection << _self.collection( :parent )
+		parent_collection.insert( { 1 } )
+		_local parent << parent_collection.at( 1 )
+
+		_local child_collection << _self.collection( :child )
+		_local child1 << record_transaction.new_insert( child_collection,
+								property_list.new_with( :id, 1,
+											:parent, parent ) ).run()
+
+		_local children << parent.children
+		_if _self.assert_is( 1, children.size, write_string( "Expected 1 child record but got ", children.size ) )
+		_then
+			_local found_child << children.an_element()
+			_self.assert_true( child1.is_same_record_as?( found_child ),
+					   write_string( "Expected children collection to contain ", child1,
+							 " but instead it contained ", found_child ) )
+		_endif 
 	_endif
 _endmethod
 $
