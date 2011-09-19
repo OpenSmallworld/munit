@@ -1,9 +1,16 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug, topic={MUnit})
 def_slotted_exemplar( :munit_hierarchy_display_tree, { {:status, :not_run} }, :display_tree )
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 munit_hierarchy_display_tree.define_slot_access( :status, :writable, :read_only)
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 _method munit_hierarchy_display_tree.update_status( a_status )
 	.status << _self.combine_statuses( _self.status, a_status )
 	_if _self.parent _isnt _unset _andif
@@ -14,6 +21,7 @@ _method munit_hierarchy_display_tree.update_status( a_status )
 _endmethod
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 _method munit_hierarchy_display_tree.combine_statuses( old_status, new_status )
 	>> _if old_status _is :not_run _then >> new_status
 			  _elif old_status _is :success _andif new_status _isnt :not_run _then >> new_status
@@ -22,7 +30,7 @@ _method munit_hierarchy_display_tree.combine_statuses( old_status, new_status )
 _endmethod
 $
 
-_pragma(classify_level=basic, topic={MUnit})
+_pragma(classify_level=debug, topic={MUnit})
 _method munit_hierarchy_display_tree.styled_string
 	_local status << _self.status
 	>> styled_string.new_from(
@@ -32,11 +40,13 @@ _method munit_hierarchy_display_tree.styled_string
 _endmethod
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 _method munit_hierarchy_display_tree.not_run_icon()
 	_return { :hierarchy, _self.module_name }
 _endmethod
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 _method munit_hierarchy_display_tree.colour( status )
 	>> _if status _is :success _then >> :green
 	   _elif status _is :error _then >> :red
@@ -45,11 +55,13 @@ _method munit_hierarchy_display_tree.colour( status )
 _endmethod
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 _method munit_hierarchy_display_tree.not_run_colour()
 	_return :black
 _endmethod
 $
 
+_pragma(classify_level=debug, topic={MUnit})
 _method munit_hierarchy_display_tree.icon( status )
 	>> _if status _is :success _then >> { :ok, _self.module_name }
 	   _elif status _is :error _then >> { :error, _self.module_name }

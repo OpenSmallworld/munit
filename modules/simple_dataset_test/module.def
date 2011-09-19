@@ -12,3 +12,13 @@ end
 tests_modules
 	simple_dataset
 end
+
+test
+	name		simple_dataset_test
+	topics		munit
+	framework	munit
+	args		simple_dataset_test
+end
+
+
+hidden

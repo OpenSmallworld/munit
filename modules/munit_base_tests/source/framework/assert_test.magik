@@ -281,6 +281,8 @@ _method assert_test.test_assert_equals_abs_delta()
 	## 
 	
 	_self.assert_equals( 1 , 2 , _unset , 2 )
+	_self.assert_equals( -1 , -2 , _unset , 2 )
+	_self.assert_equals( 4/2 , 5/2 , _unset , 3/4 )
 _endmethod
 $
 
@@ -290,6 +292,40 @@ _method assert_test.test_assert_equals_rel_delta()
 
 	_self.assert_equals( 3 , 2.8 , _unset , 0.3 , _true )
 	_self.assert_equals( 3 , 3.8 , _unset , 0.3 , _true )
+	_self.assert_equals( -3 , -3.8 , _unset , 0.3 , _true )
+	_self.assert_equals( -3 , -2.8 , _unset , 0.3 , _true )
+
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_equals_same_unit_value()
+	##
+	
+	_self.assert_equals( voltage_value.new(3, :v), voltage_value.new(3, :v) )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_equals_unit_value_abs_delta()
+	## 
+	
+	_self.assert_equals( voltage_value.new(3, :v), voltage_value.new(2.8, :v), _unset , 0.3  )
+	_self.assert_equals( voltage_value.new(-3, :v), voltage_value.new(-2.8, :v), _unset , 0.3  )
+	_self.assert_equals( voltage_value.new(3, :v), voltage_value.new(2.8, :v), _unset , voltage_value.new(0.3, :v) )
+	_self.assert_equals( voltage_value.new(-3, :v), voltage_value.new(-2.8, :v), _unset , voltage_value.new(0.3, :v) )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method assert_test.test_assert_equals_unit_value_rel_delta()
+	## 
+	
+	_self.assert_equals( voltage_value.new(3, :v), voltage_value.new(2.8, :v), _unset , 0.3, _true   )
+	_self.assert_equals( voltage_value.new(-3, :v), voltage_value.new(-2.8, :v), _unset , 0.3, _true   )
+	_self.assert_equals( voltage_value.new(3, :v), voltage_value.new(2.8, :v), _unset , voltage_value.new(0.3, :v), _true  )
+	
 _endmethod
 $
 
