@@ -93,6 +93,16 @@ _endmethod
 $
 
 _pragma(classify_level=restricted,usage={subclassable})
+_private _method simple_collection.geometry_fields
+	##
+	##
+
+	>> _self.descriptor.geometry_fields
+
+_endmethod
+$
+
+_pragma(classify_level=restricted,usage={subclassable})
 _private _method simple_collection.int!value_vector( raw_values )
 	## 
 	## 

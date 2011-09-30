@@ -599,6 +599,15 @@ def_slotted_exemplar( :simple_dataset_test_exemplar, {}, { :uds_rwo_record } )
 $
 
 _pragma(classify_level=restricted)
+_method simple_dataset_test_exemplar.derived_field
+	## 
+	## 
+	>> 2
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
 _method simple_dataset_test.test_explicit_record_exemplar_gets_set()
 	## 
 	## 
@@ -622,15 +631,19 @@ _method simple_dataset_test.test_derived_field_is_derived()
 	##
 
 	_if _self.create_dataset_with_collection(
-		    { property_list.new_with( :name,     :field1, 
-					      :type,     :ds_int,
-					      :key?,     _true ),
-		      property_list.new_with( :name,     :field2, 
-					      :type,     :ds_int,
-					      :derived?, _true ) })
+		    property_list.new_with( :exemplar, simple_dataset_test_exemplar,
+					    :fields, { property_list.new_with( :name,     :field1, 
+									       :type,     :ds_int,
+									       :key?,     _true ),
+						       property_list.new_with( :name,     :derived_field, 
+									       :type,     :ds_int,
+									       :derived?, _true ) }))
 
 	_then
-		_self.assert_derived_field_properties( :field2, integer )
+		_self.assert_derived_field_properties( :derived_field, integer )
+
+		rec << .dataset.collections[:test_collection].insert ( {1} )
+		_self.assert_equals ( 2, rec.derived_field, "Expected the value of derived_field to be 2 but is " + rec.derived_field.write_string )
 	_endif
 	
 _endmethod
@@ -652,6 +665,9 @@ _method simple_dataset_test.test_non_mandatory_field()
 
 	_then
 		_self.assert_non_mandatory_field_properties( :field2, integer )
+
+		rec << .dataset.collections[:test_collection].insert ( {1} )
+		_self.assert_equals ( _unset, rec.field2, "Expected the value of derived_field to be unset but is " + rec.field2.write_string )
 	_endif
 	
 _endmethod
