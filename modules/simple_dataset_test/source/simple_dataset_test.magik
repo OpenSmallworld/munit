@@ -163,6 +163,36 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
+_method simple_dataset_test.assert_derived_field_properties( field_name, value_class )
+	## 
+	## 
+	_if _self.assert_not_unset( fd << .collection.field( field_name ), write_string( "Didn't find ", field_name ) ) _andif
+	    _self.assert_true( fd.is_derived?,
+			       write_string( "Expected ", field_name, " to be derived but it wasn't" ) )
+	_then
+		_self.assert_true( value_class.is_class_of?( fd.type.class ),
+				   write_string( "Expected value class for ",
+						 field_name,
+						 " to be ",
+						 value_class, ", got ", fd.type.class ) )
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.assert_non_mandatory_field_properties( field_name, value_class )
+	## 
+	## 
+	_if _self.assert_not_unset( fd << .collection.field( field_name ), write_string( "Didn't find ", field_name ) )
+	_then
+		
+	    _self.assert_false( fd.mandatory?,
+			       write_string( "Expected ", field_name, " to be non mandatory but it wasn't" ) )
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
 _method simple_dataset_test.assert_geom_field_properties( field_name, geom_type )
 	## 
 	## 
@@ -582,6 +612,48 @@ _method simple_dataset_test.test_explicit_record_exemplar_gets_set()
 		_self.assert_is( simple_dataset_test_exemplar, .collection.descriptor.record_exemplar )
 		_self.assert_true( .collection.record_exemplar.is_kind_of?( simple_dataset_test_exemplar ) )
 	_endif
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_derived_field_is_derived()
+	## 
+	##
+
+	_if _self.create_dataset_with_collection(
+		    { property_list.new_with( :name,     :field1, 
+					      :type,     :ds_int,
+					      :key?,     _true ),
+		      property_list.new_with( :name,     :field2, 
+					      :type,     :ds_int,
+					      :derived?, _true ) })
+
+	_then
+		_self.assert_derived_field_properties( :field2, integer )
+	_endif
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_non_mandatory_field()
+	## 
+	##
+
+	_if _self.create_dataset_with_collection(
+		    { property_list.new_with( :name,       :field1, 
+					      :type,       :ds_int,
+					      :key?,       _true ),
+		      property_list.new_with( :name,       :field2, 
+					      :type,       :ds_int,
+					      :mandatory?, _false ) })
+
+	_then
+		_self.assert_non_mandatory_field_properties( :field2, integer )
+	_endif
+	
 _endmethod
 $
 
