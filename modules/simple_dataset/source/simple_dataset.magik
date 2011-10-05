@@ -154,7 +154,10 @@ _pragma(classify_level=restricted)
 _private _method simple_dataset.field_descriptor_for( a_field_def, table_name )
 	##
 	## Returns a field, and whether it is key
-	>> _if _self.physical_field_def?( a_field_def )
+	>> _if _self.derived_field_def?( a_field_def )
+	   _then
+		   >> _self.derived_field_descriptor_for( a_field_def )
+	   _elif _self.physical_field_def?( a_field_def )
 	   _then
 		   >> _self.phys_field_descriptor_for( a_field_def, table_name )
 	   _elif _self.geometry_field_def?( a_field_def )
@@ -171,12 +174,30 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
+_private _method simple_dataset.derived_field_def? ( a_field_def )
+	##
+	##
+	
+	>> a_field_def[:derived?] _is _true _andif _self.get_field_type( a_field_def[ :type ] ) _isnt _unset
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
 _private _method simple_dataset.physical_field_def?( a_field_def )
 	## 
 	## 
 	##
 	>> _if a_field_def[ :type ] _isnt _unset
 	   _then 
+		   >> _self.get_field_type( a_field_def[ :type ] ) _isnt _unset
+	   _else
+		   >> _false 
+	   _endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
 		   >> _self.get_field_type( a_field_def[ :type ] ) _isnt _unset
 	   _else
 		   >> _false 
@@ -221,6 +242,16 @@ _private _method simple_dataset.phys_field_descriptor_for( a_field_def, table_na
 _endmethod
 $
 
+_pragma(classify_level=restricted)
+_private _method simple_dataset.derived_field_descriptor_for( a_field_def )
+	##
+	##
+	>> ( uds_derived_field.new( a_field_def[ :name ],
+				    _self.get_field_type( a_field_def[ :type ],
+							  a_field_def[ :size ] ) ),
+	     ( a_field_def[ :key? ] _is _true ) )
+_endmethod
+$
 _pragma(classify_level=restricted)
 _private _method simple_dataset.geom_field_descriptor_for( a_field_def, table_name )
 	## 
