@@ -198,14 +198,6 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-		   >> _self.get_field_type( a_field_def[ :type ] ) _isnt _unset
-	   _else
-		   >> _false 
-	   _endif 
-_endmethod
-$
-
-_pragma(classify_level=restricted)
 _private _method simple_dataset.geometry_field_def?( a_field_def ) 
 	## 
 	## 

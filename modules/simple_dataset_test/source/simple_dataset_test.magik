@@ -797,6 +797,28 @@ _method simple_dataset_test.test_derived_field_is_derived()
 	
 _endmethod
 $
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_non_mandatory_field()
+	## 
+	##
+
+	_if _self.create_dataset_with_collection(
+		    { property_list.new_with( :name,       :field1, 
+					      :type,       :ds_int,
+					      :key?,       _true ),
+		      property_list.new_with( :name,       :field2, 
+					      :type,       :ds_int,
+					      :mandatory?, _false ) })
+
+	_then
+		_self.assert_non_mandatory_field_properties( :field2, integer )
+
+		rec << .dataset.collections[:test_collection].insert ( {1} )
+		_self.assert_equals ( _unset, rec.field2, "Expected the value of derived_field to be unset but is " + rec.field2.write_string )
+	_endif
+	
+_endmethod
+$
 
 _pragma(classify_level=restricted)
 _method simple_dataset_test.test_0n_join_with_no_child_records_is_empty()
@@ -872,7 +894,7 @@ _method simple_dataset_test.test_deleted_record_no_longer_appears_in_a_0n_join()
 		_self.assert_is( 2, children.size, write_string( "Expected 2 child records but got ", children.size ) )
 
 		record_transaction.new_delete( child2 ).run()
-		_local children << parent.children
+		children << parent.children
 		_if _self.assert_is( 1, children.size, write_string( "Expected 1 child record but got ", children.size ) )
 		_then
 			_local found_child << children.an_element()
@@ -982,187 +1004,4 @@ _endmethod
 $
 
 
-
-
-_pragma(classify_level=restricted)
-_method simple_dataset_test.test_0n_join_with_no_child_records_is_empty()
-	## 
-	##
-	_if _self.create_dataset_with_joined_collections( :|0toN| )
-	_then
-		_local parent_collection << _self.collection( :parent )
-		parent_collection.insert( { 1 } )
-		_local parent << parent_collection.at( 1 )
-
-		_self.assert_true( parent.children.empty?, "Expected no child records but got some" )
-	_endif
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_method simple_dataset_test.test_can_add_and_retrieve_child_records_from_a_0n_join()
-	## 
-	## 
-	_if _self.create_dataset_with_joined_collections( :|0toN| )
-	_then
-		_local child_collection << _self.collection( :child )
-		child_collection.insert( { 1, _unset } )
-		_local child1 << child_collection.at( 1 )
-		child_collection.insert( { 2, _unset } )
-		_local child2 << child_collection.at( 2 )
-
-		_local parent_collection << _self.collection( :parent )
-		parent_collection.insert( { 1 } )
-		_local parent << parent_collection.at( 1 )
-
-		record_transaction.new_update( child1,
-					       property_list.new_with(
-						       :parent, parent ) ).run()
-
-		_local children << parent.children
-		_if _self.assert_is( 1, children.size, write_string( "Expected 1 child record but got ", children.size ) )
-		_then
-			_local found_child << children.an_element()
-			_self.assert_true( child1.is_same_record_as?( found_child ),
-					   write_string( "Expected children collection to contain ", child1,
-							 " but instead it contained ", found_child ) )
-		_endif 
-	_endif
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_method simple_dataset_test.test_deleted_record_no_longer_appears_in_a_0n_join()
-	## 
-	## 
-	_if _self.create_dataset_with_joined_collections( :|0toN| )
-	_then
-		_local child_collection << _self.collection( :child )
-		child_collection.insert( { 1, _unset } )
-		_local child1 << child_collection.at( 1 )
-		child_collection.insert( { 2, _unset } )
-		_local child2 << child_collection.at( 2 )
-
-		parent_collection << _self.collection( :parent )
-		parent_collection.insert( { 1 } )
-		_local parent << parent_collection.at( 1 )
-
-		record_transaction.new_update( child1,
-					       property_list.new_with(
-						       :parent, parent ) ).run()
-		record_transaction.new_update( child2,
-					       property_list.new_with(
-						       :parent, parent ) ).run()
-
-		_local children << parent.children
-		_self.assert_is( 2, children.size, write_string( "Expected 2 child records but got ", children.size ) )
-
-		record_transaction.new_delete( child2 ).run()
-		_local children << parent.children
-		_if _self.assert_is( 1, children.size, write_string( "Expected 1 child record but got ", children.size ) )
-		_then
-			_local found_child << children.an_element()
-			_self.assert_true( child1.is_same_record_as?( found_child ),
-					   write_string( "Expected children collection to contain ", child1,
-							 " but instead it contained ", found_child ) )
-		_endif 
-	_endif
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_method simple_dataset_test.test_parent_records_can_be_set_and_retrieved_in_a_0n_join()
-	## 
-	## 
-	_if _self.create_dataset_with_joined_collections( :|0toN| )
-	_then
-		_local child_collection << _self.collection( :child )
-		child_collection.insert( { 1, _unset } )
-		_local child1 << child_collection.at( 1 )
-		child_collection.insert( { 2, _unset } )
-		_local child2 << child_collection.at( 2 )
-
-		_self.assert_unset( child1.parent, write_string( "Expected child1 to have no parent, but got ", child1.parent ) )
-		_self.assert_unset( child2.parent, write_string( "Expected child2 to have no parent, but got ", child2.parent ) )
-		
-		_local parent_collection << _self.collection( :parent )
-		parent_collection.insert( { 1 } )
-		_local parent << parent_collection.at( 1 )
-
-		record_transaction.new_update( child1,
-					       property_list.new_with(
-						       :parent, parent ) ).run()
-
-		# Reget child record to get newly joined information
-		 child1 << child_collection.at( 1 )
-		_local found_parent << child1.parent
-		_if _self.assert_not_unset( found_parent, "Failed to find parent joined to child1" )
-		_then
-			_self.assert_true( found_parent.is_same_record_as?( parent ),
-					   write_string( "Expected child1 to have parent of ", parent,
-							 " but got ", found_parent ) )
-		_endif 
-	_endif
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_method simple_dataset_test.test_1n_join_with_no_child_records_is_empty()
-	## 
-	##
-	_if _self.create_dataset_with_joined_collections( :|1toN| )
-	_then
-		_local parent_collection << _self.collection( :parent )
-		parent_collection.insert( { 1 } )
-		_local parent << parent_collection.at( 1 )
-
-		_self.assert_true( parent.children.empty?, "Expected no child records but got some" )
-	_endif
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_method simple_dataset_test.test_cannot_insert_child_record_in_1n_join_without_parent()
-	## 
-	## 
-	_if _self.create_dataset_with_joined_collections( :|1toN| )
-	_then
-		_local parent_collection << _self.collection( :parent )
-		parent_collection.insert( { 1 } )
-		_local parent << parent_collection.at( 1 )
-
-		_local child_collection << _self.collection( :child )
-		_self.assert_raised_condition(
-			:dd_mandatory_field,
-			record_transaction.new_insert( child_collection, property_list.new_with( :id, 1 ) ),
-			:run|()| )
-	_endif
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_method simple_dataset_test.test_can_add_and_retrieve_child_records_from_a_1n_join()
-	## 
-	## 
-	_if _self.create_dataset_with_joined_collections( :|0toN| )
-	_then
-		_local parent_collection << _self.collection( :parent )
-		parent_collection.insert( { 1 } )
-		_local parent << parent_collection.at( 1 )
-
-		_local child_collection << _self.collection( :child )
-		_local child1 << record_transaction.new_insert( child_collection,
-								property_list.new_with( :id, 1,
-											:parent, parent ) ).run()
-
-		_local children << parent.children
-		_if _self.assert_is( 1, children.size, write_string( "Expected 1 child record but got ", children.size ) )
-		_then
-			_local found_child << children.an_element()
-			_self.assert_true( child1.is_same_record_as?( found_child ),
-					   write_string( "Expected children collection to contain ", child1,
-							 " but instead it contained ", found_child ) )
-		_endif 
-_endmethod
-$
 
