@@ -61,21 +61,21 @@ _private _method simple_munit_gui.init_actions()
 					 :engine, _self,
 					 :image, {:run, :ui_resources},
 					 :enabled?, _false,
-					 :action_message, :run_test|()|
+					 :action_message, :|run_test()|
 				    ) )
 			  
 	_self.add_action( sw_action.new( :interrupt,
 					 :engine, _self,
 					 :image, {:stop, :ui_resources},
 					 :enabled?, _true,
-					 :action_message, :interrupt|()|
+					 :action_message, :|interrupt()|
 				    ) )
 		    
 	_self.add_action( sw_action.new( :add_target_modules,
 					 :engine, _self,
 					 :image, {:detail_view, :ui_resources},
 					 :enabled?, _true,
-					 :action_message, :add_target_modules|()|
+					 :action_message, :|add_target_modules()|
 				    ) )
 				    
 	_self.add_action( sw_action.new( :toggle_autorun,
@@ -83,7 +83,7 @@ _private _method simple_munit_gui.init_actions()
 					 :image, {:hidden_actions, :ui_resources},
 					 :toolbar_control, :image_toggle_item,
 					 :enabled?, _true,
-					 :value_change_message, :|toggle_run_on_compile()| #:enable_run_on_compile|()|
+					 :value_change_message, :|toggle_run_on_compile()| #:|enable_run_on_compile()|
 				    ) )
 				    
 				   				
@@ -91,7 +91,7 @@ _private _method simple_munit_gui.init_actions()
 					 :engine, _self,
 					 :image, {:load, :ui_resources},
 					 :enabled?, _true,
-					 :action_message, :load_test_modules|()|
+					 :action_message, :|load_test_modules()|
 				    ) )
 				   				
 	
@@ -99,35 +99,49 @@ _private _method simple_munit_gui.init_actions()
 					 :engine, _self,
 					 :image, {:clear, :ui_resources},
 					 :enabled?, _true,
-					 :action_message, :reset|()|
+					 :action_message, :|reset()|
 				    ) )
 				    
 	_self.add_action( sw_action.new( :refresh,
 					 :engine, _self,
 					 :image, {:refresh, :ui_resources},
 					 :enabled?, _true,
-					 :action_message, :refresh|()|
+					 :action_message, :|refresh()|
 				    ) )
 				    
 	_self.add_action( sw_action.new( :view_open_issues,
 					:image, {:open_issues, :simple_munit_gui},
 					:engine, _self,
 					:enabled?, _true,
-					:action_message, :view_open_issues|()|
+					:action_message, :|view_open_issues()|
 					))
 					
 	_self.add_action( sw_action.new( :view_help,
 					:engine, _self,
 					:image, {:help, :ui_resources },
 					:enabled?, _true,
-					:action_message, :view_help|()|
+					:action_message, :|view_help()|
 					))
-			 
+					
+	_self.add_action( sw_action.new( :open_old_test_runner,
+					:engine, _self,
+					:image, {:test_runner, :simple_munit_gui },
+					:enabled?, _true,
+					:action_message, :|open_old_test_runner()|
+					))
+
 _endmethod
 $
 
 #===
 
+_pragma(classify_level=debug, topic={MUnit})
+_method simple_munit_gui.open_old_test_runner()
+	test_runner_dialog.open()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
 _method simple_munit_gui.view_open_issues()
 	system.do_command( "start " + smallworld_product.get_resource_file("open_issues.URL", :data, :simple_munit_gui) )  
 _endmethod

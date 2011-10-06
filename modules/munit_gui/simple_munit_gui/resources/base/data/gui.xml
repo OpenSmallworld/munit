@@ -1,47 +1,49 @@
 <gui>
 
-    <toolbar name="tests">
-    	<action name="toggle_autorun"/>
-		<action name="run_test"/>
-		<action name="interrupt"/>
-	</toolbar>
-	
-	<toolbar name="munit_gui">
-		<action name="load_test_modules"/>
-		<action name="refresh"/>
-		<action name="reset"/>
-	</toolbar>
-
-	<toolbar name="links">
-		<action name="view_open_issues"/>
-		<action name="view_help"/>
-	</toolbar>
-	
-    <dock name="top">
-		<toolbar name="tests"/>
-		<toolbar name="munit_gui"/>
-		<toolbar name="links"/>
-    </dock>
-    
-    <work_area>
-	    	<paned_window side_by_side="false">
-	    		<plugin plugin_name="aspect_selector"/>
-	    		<paned_window side_by_side="true">
-	    			<plugin plugin_name="test_selector"/>
-	    			<paned_window side_by_side="false">
-	    				<plugin plugin_name="failure_lister"/>
-	    				<plugin plugin_name="traceback_viewer"/>
-	    			</paned_window>
-	    		</paned_window>
-	    	</paned_window>
-    </work_area>
-
-    <statusbar name="default">
-		<progress_bar id = "progress" style="innie" width = "200"/>
-			<pane        id = "status_info"  style="innie" width = "200" springy="true"/>
-			<pane        id = "tests_info"   style="innie" width = "80"/>
-			<pane        id = "error_info"   style="innie" width = "80"/>
-			<pane        id = "failure_info" style="innie" width = "80"/>
-    </statusbar>
-
+  <toolbar name="tests">
+    <action name="toggle_autorun"/>
+    <action name="run_test"/>
+    <action name="interrupt"/>
+  </toolbar>
+  
+  <toolbar name="munit_gui">
+    <action name="load_test_modules"/>
+    <action name="refresh"/>
+    <action name="reset"/>
+    <action name="edit_method"/>
+  </toolbar>
+  
+  <toolbar name="links">
+    <action name="open_old_test_runner"/>
+    <action name="view_open_issues"/>
+    <action name="view_help"/>
+  </toolbar>
+  
+  <dock name="top">
+    <toolbar name="tests"/>
+    <toolbar name="munit_gui"/>
+    <toolbar name="links"/>
+  </dock>
+  
+  <work_area>
+    <paned_window side_by_side="false">
+      <plugin plugin_name="aspect_selector"/>
+      <paned_window side_by_side="true">
+	<plugin plugin_name="test_selector"/>
+	<paned_window side_by_side="false">
+	  <plugin plugin_name="failure_lister"/>
+	  <plugin plugin_name="traceback_viewer"/>
+	</paned_window>
+      </paned_window>
+    </paned_window>
+  </work_area>
+  
+  <statusbar name="default">
+    <progress_bar id = "progress" style="innie" width = "200"/>
+    <pane        id = "status_info"  style="innie" width = "200" springy="true"/>
+    <pane        id = "tests_info"   style="innie" width = "80"/>
+    <pane        id = "error_info"   style="innie" width = "80"/>
+    <pane        id = "failure_info" style="innie" width = "80"/>
+  </statusbar>
+  
 </gui>

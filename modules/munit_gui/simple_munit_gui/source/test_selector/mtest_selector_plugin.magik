@@ -7,12 +7,10 @@ $
 _pragma(classify_level=debug, topic={MUnit})
 def_slotted_exemplar(:mtest_selector_plugin, 
 	{
-		{:tree, _unset },
-		{:controller, _unset},
+		{:tree,             _unset},
+		{:controller,       _unset},
 		{:my_display_trees, _unset},
-		
-		{:selection, _unset},
-		{:selected_tests, _unset}
+		{:selection,        _unset}
 	},
 	{:plugin})
 $
@@ -57,7 +55,7 @@ $
 _pragma(classify_level=debug, topic={MUnit})
 _method mtest_selector_plugin.manage_actions()
 	_self.action(:load).enabled?           << _self.module_selected?
-	_self.action(:edit_method).enabled?    << _self.test_selected?
+	_self.action(:edit_method).enabled?    << _self.method_selected?
 	_self.action(:run_test).enabled?       << _self.selected_tests().size > 0  
 	_self.action(:refresh).enabled?        << _true 
 _endmethod
@@ -165,15 +163,19 @@ $
 
 _pragma(classify_level=debug, topic={MUnit})
 _method mtest_selector_plugin.module_selected?
-	>>  .selection _isnt _unset _andif 
-			.selection.is_kind_of?( sw_module )
+	>>  .selection _isnt _unset _andif .selection.is_kind_of?( sw_module )
 _endmethod
 $
 
 _pragma(classify_level=debug, topic={MUnit})
 _method mtest_selector_plugin.test_selected?
-	>> .selection _isnt _unset _andif 
-			.selection.is_kind_of?( test_case )
+	>> .selection _isnt _unset _andif .selection.is_kind_of?( test_case )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.method_selected?
+	>> .selection _isnt _unset _andif .selection.is_kind_of?( symbol )
 _endmethod
 $
 
@@ -211,7 +213,10 @@ $
 
 _pragma(classify_level=debug, topic={MUnit})
 _method mtest_selector_plugin.edit_method()
-	.selection.send_to_emacs()
+	(class_name, method_name) << (_scatter .selection.as_charvec().split_by( %. ) )
+	test_class << get_global_value( class_name )
+	test_method << test_class.method( method_name.as_symbol() )
+	test_method.send_to_emacs()
 _endmethod
 $
 
@@ -231,5 +236,15 @@ _method mtest_selector_plugin.select( a_sel )
 		.framework.select_test( .selection )
 	_endif 
 	_self.manage_actions()
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method mtest_selector_plugin.reset()
+	_for a_test _over _self.selected_tests().fast_elements()
+	_loop
+		a_test.reset_result()
+	_endloop 
+	_self.changed(:hierarchy_tree, :refresh )
 _endmethod
 $
