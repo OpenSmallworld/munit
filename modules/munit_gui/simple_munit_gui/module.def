@@ -5,7 +5,7 @@ description
 end
 
 requires
-	munit_base 4
+	munit_magik_gui
 	tree_item
 	#magik_tools
 	#what_got_run_viewer
