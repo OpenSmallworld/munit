@@ -266,7 +266,7 @@ _method simple_dataset.record_join_info( a_field_def, table_name )
 					  _scatter a_field_def[ :condition ] },
 			:add_join_field_args,
 			{ a_field_def[ :name ], _false, a_field_def[ :join_type ],
-			  a_field_def[ :name ], _unset, a_field_def[ :single_result? ] } ) )
+			  a_field_def[ :name ], _unset, a_field_def[ :simple_result? ] } ) )
 _endmethod
 $
 
