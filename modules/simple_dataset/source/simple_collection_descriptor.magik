@@ -8,3 +8,14 @@ def_slotted_exemplar( :simple_collection_descriptor,
 	{ :uds_table_descriptor } )
 $
 
+_pragma(classify_level=restricted)
+_method simple_collection_descriptor.figure_cardinality_check_list()
+	## 
+	## This appears to be necessary for
+	## uds_table_descriptor.add_join() to work.  Just do nothing
+	## for the moment
+	
+	
+_endmethod
+$
+

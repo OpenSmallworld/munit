@@ -2,10 +2,15 @@
 _package sw
 $
 
+#remex( :simple_dataset )
+#$
+
 _pragma(classify_level=restricted)
 def_slotted_exemplar( :simple_dataset,
 	{
-		{ :world, _unset }
+		{ :world,                _unset },
+		{ :join_info,            _unset },
+		{ :non_mandatory_fields, _unset }
 	},
 	{ :universal_dataset } )
 $
@@ -21,6 +26,8 @@ _method simple_dataset.connect( connect_spec )
 	## 
 	## 
 	.world << uds_world.new( 0, 0, _self , _unset )
+	.join_info << rope.new()
+	.non_mandatory_fields << property_list.new()
 
 	_for name, a_table_def _over connect_spec.fast_keys_and_elements()
 	_loop
@@ -30,14 +37,84 @@ _method simple_dataset.connect( connect_spec )
 			_else
 				>> ( a_table_def[:fields], a_table_def[:exemplar] )
 			_endif
-		_local ( field_descriptors, key_field_indexes ) << _self.field_descriptors_for( field_def )
+		_local ( field_descriptors, key_field_indexes ) << _self.field_descriptors_for( field_def, name )
 		_local desc << simple_collection_descriptor.new( _self, name,
 								 field_descriptors,
 								 key_field_indexes, _false )
-		_if rec_exemplar _isnt _unset _then desc.dd!record_exemplar << rec_exemplar _endif
+		_if rec_exemplar _isnt _unset
+		_then
+			desc.dd!record_exemplar << rec_exemplar
+		_endif
+		
 		_self.add_new_collection_for_descriptor( desc )
 	_endloop
+_endmethod
+$
 
+_pragma(classify_level=advanced, topic={universal_rwo},usage={subclassable})
+_method simple_dataset.initialise_dd()
+	## 
+	## Subclassed to initialise joins from our internal join_info,
+	## rather than the shared constant dataset_metadata which is
+	## only really suitable for static dataset definitions, not the
+	## dynamic definitions we need here.  It might be preferable to
+	## subclass initialise_joins() instead, but that method is not
+	## subclassable
+	# init joins cache
+	.params[:joins] << property_list.new(10)
+	_self.create_join_fields()
+	_self.set_non_mandatory_fields()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_dataset.create_join_fields()
+	## 
+	## 
+	_for a_join_def _over .join_info.fast_elements()
+	_loop
+		_local table_name << a_join_def[ :table_name ]
+		_local j <<_self.new_join( _scatter a_join_def[ :new_join_args ] )
+		_self.collections[ table_name ].descriptor.add_join_field( _scatter a_join_def[ :add_join_field_args ] )
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_dataset.set_non_mandatory_fields()
+	## 
+	## 
+	_for desc _over _self.non_mandatory_field_descriptors()
+	_loop
+		desc.mandatory? << _false
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _iter _method simple_dataset.non_mandatory_field_descriptors()
+	## 
+	## 
+	_for table_name, field_names _over .non_mandatory_fields.fast_keys_and_elements()
+	_loop
+		_local desc << _self.collections[ table_name ].descriptor
+		_for field_name _over field_names.fast_elements()
+		_loop
+			_loopbody( desc.field( field_name ) )
+		_endloop
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_dataset.add_non_mandatory_field( table_name, field_name )
+	## 
+	## 
+	_if ( field_names << .non_mandatory_fields[ table_name ] ) _is _unset 
+	_then
+		field_names << .non_mandatory_fields[ table_name ] << rope.new()
+	_endif
+	field_names.add_last( field_name )
 _endmethod
 $
 
@@ -50,19 +127,22 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_private _method simple_dataset.field_descriptors_for( table_def )
+_private _method simple_dataset.field_descriptors_for( table_def, table_name )
 	## 
 	##
 	_local descriptors << rope.new()
 	_local key_field_indices << rope.new()
 	_for a_field_def _over table_def.fast_elements()
 	_loop
-		_local ( desc, key? ) << _self.field_descriptor_for( a_field_def )
+		_local ( desc, key? ) << _self.field_descriptor_for( a_field_def, table_name )
 
-		descriptors.add_last( desc )
-		_if key?
+		_if desc _isnt _unset 
 		_then
-			key_field_indices.add_last( descriptors.size )
+			descriptors.add_last( desc )
+			_if key?
+			_then
+				key_field_indices.add_last( descriptors.size )
+			_endif
 		_endif
 	_endloop
 
@@ -71,7 +151,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_private _method simple_dataset.field_descriptor_for( a_field_def )
+_private _method simple_dataset.field_descriptor_for( a_field_def, table_name )
 	##
 	## Returns a field, and whether it is key
 	>> _if _self.derived_field_def?( a_field_def )
@@ -79,10 +159,14 @@ _private _method simple_dataset.field_descriptor_for( a_field_def )
 		   >> _self.derived_field_descriptor_for( a_field_def )
 	   _elif _self.physical_field_def?( a_field_def )
 	   _then
-		   >> _self.phys_field_descriptor_for( a_field_def )
+		   >> _self.phys_field_descriptor_for( a_field_def, table_name )
 	   _elif _self.geometry_field_def?( a_field_def )
 	   _then
-		   >> _self.geom_field_descriptor_for( a_field_def )
+		   >> _self.geom_field_descriptor_for( a_field_def, table_name )
+	   _elif _self.join_field_def?( a_field_def )
+	   _then
+		   _self.record_join_info( a_field_def, table_name )
+		   >> _unset, _false 
 	   _else
 		   >> _unset, _false
 	   _endif
@@ -103,7 +187,13 @@ _pragma(classify_level=restricted)
 _private _method simple_dataset.physical_field_def?( a_field_def )
 	## 
 	## 
-	>> _self.get_field_type( a_field_def[ :type ] ) _isnt _unset 
+	##
+	>> _if a_field_def[ :type ] _isnt _unset
+	   _then 
+		   >> _self.get_field_type( a_field_def[ :type ] ) _isnt _unset
+	   _else
+		   >> _false 
+	   _endif 
 _endmethod
 $
 
@@ -111,7 +201,36 @@ _pragma(classify_level=restricted)
 _private _method simple_dataset.geometry_field_def?( a_field_def ) 
 	## 
 	## 
-	>> _self.geometry_exemplar( a_field_def[ :type ] ) _isnt _unset 
+	>> _if a_field_def[ :type ] _isnt _unset
+	   _then 
+		   >> _self.geometry_exemplar( a_field_def[ :type ] ) _isnt _unset
+	   _else
+		   >> _false
+	   _endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset.join_field_def?( a_field_def ) 
+ 	## 
+	## 
+	>> ( a_field_def[:type] _is _unset _andif a_field_def[:join_type] _isnt _unset )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method simple_dataset.phys_field_descriptor_for( a_field_def, table_name )
+	## 
+	##
+	_if a_field_def[ :mandatory? ] _is _false
+	_then
+		_self.add_non_mandatory_field( table_name, a_field_def[ :name ] )
+	_endif
+	
+	>> ( uds_phys_field.new( a_field_def[ :name ],
+				 _self.get_field_type( a_field_def[ :type ],
+						       a_field_def[ :size ] ) ),
+	     ( a_field_def[ :key? ] _is _true ) )
 _endmethod
 $
 
@@ -125,24 +244,29 @@ _private _method simple_dataset.derived_field_descriptor_for( a_field_def )
 	     ( a_field_def[ :key? ] _is _true ) )
 _endmethod
 $
-
 _pragma(classify_level=restricted)
-_private _method simple_dataset.phys_field_descriptor_for( a_field_def )
-	## 
-	##
-	
-	field_type << _self.get_field_type ( a_field_def[ :type ], a_field_def[ :size ] )
-	>> ( uds_phys_field.new( a_field_def[ :name ], field_type, a_field_def[ :mandatory?] ),
-	     ( a_field_def[ :key? ] _is _true ) )
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_private _method simple_dataset.geom_field_descriptor_for( a_field_def )
+_private _method simple_dataset.geom_field_descriptor_for( a_field_def, table_name )
 	## 
 	## 
 	>> ( uds_geom_field.new( a_field_def[ :name ], _self.geometry_exemplar( a_field_def[ :type ] ) ),
 	     _false  )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method simple_dataset.record_join_info( a_field_def, table_name )
+	## 
+	## 
+	.join_info.add_last( 
+		property_list.new_with(
+			:table_name, table_name,
+			:new_join_args,
+			{ table_name, a_field_def[ :name ],
+			  a_field_def[ :result_table ], a_field_def[ :reverse_join_name ],
+					  _scatter a_field_def[ :condition ] },
+			:add_join_field_args,
+			{ a_field_def[ :name ], _false, a_field_def[ :join_type ],
+			  a_field_def[ :name ], _unset, a_field_def[ :simple_result? ] } ) )
 _endmethod
 $
 
