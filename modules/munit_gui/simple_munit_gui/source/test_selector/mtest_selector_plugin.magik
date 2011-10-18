@@ -74,7 +74,6 @@ _method mtest_selector_plugin.build_gui( parent, _optional xml_element )
        	:aspect, :hierarchy_tree )
   						       
 	.tree << tree_item.new( parent, _scatter tree_properties )
-	_self.init_actions()
 	.tree.popup_menu << _self.popup_menu()
 	
 	_return .tree 

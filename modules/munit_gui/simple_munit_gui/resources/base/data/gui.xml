@@ -10,7 +10,7 @@
     <action name="load_test_modules"/>
     <action name="refresh"/>
     <action name="reset"/>
-    <action name="edit_method"/>
+    <action name="test_selector.edit_method"/>
   </toolbar>
   
   <toolbar name="links">
