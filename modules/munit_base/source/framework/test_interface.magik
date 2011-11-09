@@ -47,9 +47,12 @@ _abstract _method test_interface.infrastructure?
 _endmethod
 $
 
-_pragma(classify_level=advanced)
+_pragma(classify_level=advanced,topic=MUnit,usage=subclassable)
 ## A property_list of test aspects
 ## Holds the aspects that the image must provide for this
-## test_case to run
-test_interface.define_shared_constant( :test_aspects, property_list.new(), :public )
+## test_case to run.
+## subclasses should define their own shared_constant which
+## should be set to a property_list whose keys are the aspects
+## relevant to the test class
+test_interface.define_shared_constant( :test_aspects, property_list.new(), :private )
 $
