@@ -382,8 +382,11 @@ _endmethod
 $
 
 _pragma(classify_level=advanced)
-## A property_list of test aspects
-## Holds the aspects that the image must provide for this
-## test_case to run
-test_suite.define_shared_constant( :test_aspects, property_list.new(), :public )
+_method test_suite.test_aspects_keys
+	## Return my test aspect keys
+
+	>> _self.test_aspects.keys
+	
+_endmethod
 $
+

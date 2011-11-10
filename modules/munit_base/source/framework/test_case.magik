@@ -456,3 +456,12 @@ _method test_case.has_run?
 	>> .test_result _isnt _unset 
 _endmethod
 $
+
+_pragma(classify_level=advanced)
+_method test_case.test_aspects_keys
+	## Return my test aspect keys
+
+	>> _self.test_aspects.keys
+	
+_endmethod
+$

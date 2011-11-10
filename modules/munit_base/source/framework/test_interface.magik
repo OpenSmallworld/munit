@@ -47,6 +47,12 @@ _abstract _method test_interface.infrastructure?
 _endmethod
 $
 
+_pragma(classify_level=advanced,topic=MUnit)
+_abstract _method test_interface.test_aspects_keys
+	## Return my test aspect keys
+_endmethod
+$
+
 _pragma(classify_level=advanced,topic=MUnit,usage=subclassable)
 ## A property_list of test aspects
 ## Holds the aspects that the image must provide for this

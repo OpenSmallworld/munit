@@ -15,12 +15,6 @@ def_slotted_exemplar(:test_decorator,
 )
 $
 
-_pragma(classify_level=advanced)
-## A property_list of test aspects
-## Holds the aspects that the image must provide for this to run
-test_decorator.define_shared_constant( :test_aspects, property_list.new(), :public )
-$
-
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_decorator.new( a_test )
 	## Constructs a test decorator for A_TEST.
@@ -111,5 +105,14 @@ _method test_decorator.get_name()
 	## 
 	##
 	>> _self.class_name
+_endmethod
+$
+
+_pragma(classify_level=advanced)
+_method test_decorator.test_aspects_keys
+	## Return my test aspect keys
+
+	>> _self.test_aspects.keys
+	
 _endmethod
 $
