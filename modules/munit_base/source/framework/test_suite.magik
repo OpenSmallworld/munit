@@ -259,6 +259,7 @@ _private _method test_suite.is_test_method?( a_method )
 		a_method.name.matches?( "test*" ) _andif
 		a_method.name _isnt :|tests()| _andif
 		a_method.name _isnt :|test_aspects| _andif 
+		a_method.name _isnt :|test_aspects_keys| _andif 
 		a_method.name _isnt :|test_result|
 		
 _endmethod
