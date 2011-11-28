@@ -81,7 +81,7 @@ _method test_aspects_plugin.potential_test_aspects
 	_loop
 		_if ( suite << get_global_value(suite_name) ) _isnt _unset 
 		_then
-			s.add_all( suite.test_aspects.keys)			
+			s.add_all( suite.test_aspects_keys)			
 		_endif 
 	_endloop
 
