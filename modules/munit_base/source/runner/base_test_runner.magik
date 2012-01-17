@@ -83,6 +83,7 @@ _method base_test_runner.init_properties( _gather keys_and_elements )
 						system.getenv("TEST_RUNNER_OUTPUT_DIR")).default(
 								system.temp_directory_name )
 	.properties[:output_format]  << .properties[:output_format].default( :xml )
+	.properties[:output_identifier] << .properties[:output_identifier].default( "" )
 _endmethod
 $
 	
@@ -168,9 +169,41 @@ _endmethod
 $
 
 _pragma(classify_level=advanced,topic=MUnit)
+_method base_test_runner.run_suites_of_tests_to_new_streams( a_test_or_suite ) 
+	## 
+	## 
+	_for a_suite _over _self.suites_of_tests( a_test_or_suite )
+	_loop
+		_self.run_in_new_stream( a_suite )
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _iter _method base_test_runner.suites_of_tests( a_test_or_suite )
+	## 
+	## 
+	_for t _over a_test_or_suite.tests()
+	_loop
+		_if t.is_kind_of?( test_suite )
+		_then
+			_for ts _over _self.suites_of_tests( t )
+			_loop
+				_loopbody( ts )
+			_endloop
+		_else
+			_loopbody( a_test_or_suite )
+			_leave
+		_endif
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
 _method base_test_runner.new_stream( a_test )
 	##returns a new stream to output xml results
 
+	
 	_if a_test.module_name _is _unset _then
 		class_name << a_test.name
 		module_name << "unknown"
@@ -182,7 +215,7 @@ _method base_test_runner.new_stream( a_test )
 		product_name << a_mod.product.name
 	_endif 
 
-	fname << "".concatenation(product_name, "__", module_name, "__", class_name, ".", .properties[:output_format])
+	fname << "".concatenation( "test__", .properties[:output_identifier], "__", product_name, "__", module_name, "__", class_name, "__", system.host_name, ".", .properties[:output_format])
 	
 	a_file << system.name_new_file(
 			  system.pathname_from_components( fname, .properties[:output_dir] ))
