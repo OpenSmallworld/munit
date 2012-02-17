@@ -56,6 +56,8 @@ $
 
 _pragma(classify_level=debug, topic={MUnit})
 _private _method simple_munit_gui.init_actions()
+
+	mod_name << simple_munit_gui.module_name
 	
 	_self.add_action( sw_action.new( :run_test,
 					 :engine, _self,
@@ -80,7 +82,7 @@ _private _method simple_munit_gui.init_actions()
 				    
 	_self.add_action( sw_action.new( :toggle_autorun,
 					 :engine, _self,
-					 :image, {:hidden_actions, :ui_resources},
+					 :image, {:auto_run_test, mod_name},
 					 :toolbar_control, :image_toggle_item,
 					 :enabled?, _true,
 					 :value_change_message, :|toggle_run_on_compile()| #:|enable_run_on_compile()|
@@ -110,7 +112,7 @@ _private _method simple_munit_gui.init_actions()
 				    ) )
 				    
 	_self.add_action( sw_action.new( :view_open_issues,
-					:image, {:open_issues, :simple_munit_gui},
+					:image, {:bug_red, mod_name},
 					:engine, _self,
 					:enabled?, _true,
 					:action_message, :|view_open_issues()|
@@ -125,7 +127,7 @@ _private _method simple_munit_gui.init_actions()
 					
 	_self.add_action( sw_action.new( :open_old_test_runner,
 					:engine, _self,
-					:image, {:test_runner, :simple_munit_gui },
+					:image, {:test_runner, mod_name },
 					:enabled?, _true,
 					:action_message, :|open_old_test_runner()|
 					))
