@@ -4,4 +4,4 @@ mock_manager
 mmock_object
 mmock_stub
 procs
-
+stub_method_helper

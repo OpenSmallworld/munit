@@ -1,0 +1,106 @@
+#% text_encoding = iso8859_1
+_package sw
+
+def_slotted_exemplar(:stub_method_helper,
+	##
+	## Utility class for temporarily stubbing out magik methods
+	## during unit testing.
+	##
+	## See stub_method_helper_test for example usages.
+	##
+	{})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+stub_method_helper.define_shared_constant(
+	## All usage of this class is against the exemplar, therefore
+	## have to cache on constants instead of slots.
+	:replaced_method_data,
+	equality_property_list.new(),
+	_false
+		    )
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+stub_method_helper.define_shared_constant(
+	## All usage of this class is against the exemplar, therefore
+	## have to cache on constants instead of slots.
+	:defined_method_data,
+	equality_property_list.new(),
+	_false
+		    )
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper.print_on(a_terminal)
+	##
+	## Prints out any methods currently replaced or defined by this class
+	##
+	a_terminal.write(_self, newline_char)
+	a_terminal.write("Currently replaced methods:", newline_char)
+
+	_for i_method_string _over _self.replaced_method_data.keys()
+	_loop
+		(method_class, method_name) << (_scatter i_method_string.split_by("$$$"))
+		write(tab_char, method_class, tab_char, method_name,newline_char)
+	_endloop
+
+	a_terminal.write("Currently defined methods:", newline_char)
+	_for i_method_string _over _self.defined_method_data.keys()
+	_loop
+		(method_class, method_name) << (_scatter i_method_string.split_by("$$$"))
+		write(tab_char, method_class, tab_char, method_name,newline_char)
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper.replace_method(class, method_name, method_proc)
+	##
+	## If METHOD_NAME is local to CLASS then its procedure will be
+	## replaced by METHOD_PROC.
+	##
+	## If METHOD_NAME is implemented on a superclass of CLASS then
+	## a local method will be defined using METHOD_PROC
+	##
+	## Use :|restore_stubbed_methods()| to undo any changes made to
+	## methods using this class.
+	##
+
+	c_name << class.define_method_target.meta_at(:class_name)
+	
+	method_key << write_string(c_name, "$$$", method_name)
+	_if class.define_method_target.local_method?(method_name)
+	_then
+		class.sys!save_and_replace_method(method_name, method_proc)
+		_self.replaced_method_data[ method_key ] << class
+	_else
+		class.define_method(method_name, method_proc, _false)
+		_self.defined_method_data[ method_key ] << class
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper.restore_stubbed_methods()
+	##
+	## Restores the method tables of any class updated by this class
+	## to their original states.
+	##
+	## This method restores ALL method tables
+	##
+	_for i_method_string, j_class _over _self.replaced_method_data.keys_and_elements()
+	_loop
+		method_name << i_method_string.split_by("$$$")[2].as_symbol()
+		j_class.sys!restore_saved_method(method_name)
+		_self.replaced_method_data.remove_key(i_method_string)
+	_endloop
+
+	_for i_method_string, j_class _over _self.defined_method_data.keys_and_elements()
+	_loop
+		method_name << i_method_string.split_by("$$$")[2].as_symbol()
+		j_class.remove_method( method_name )
+		_self.defined_method_data.remove_key(i_method_string)
+	_endloop
+_endmethod
+$

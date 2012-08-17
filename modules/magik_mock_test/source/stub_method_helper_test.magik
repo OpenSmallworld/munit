@@ -1,0 +1,198 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug, topic={MUnit})
+def_slotted_exemplar(:stub_method_helper_test,
+	## 
+	## Test class for stub_method_helper
+	## 
+	{
+	},
+	{:test_case})
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method stub_method_helper_test.return_one()
+	_return write_string("one")
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method stub_method_helper_test.return_first(a,b)
+	_return a
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.test_replacing_methods()
+	##
+	## Tests that the contents of a local method defined on a class
+	## can be temporarily be replaced with a (usually) simplified
+	## procedure. 
+	##
+	_self.assert_equals("one", _self.return_one(), "Should return 'one'")
+	stub_method_helper.replace_method(stub_method_helper_test, :return_one|()|, _proc() _return write_string("not ","one") _endproc)
+	_protect
+		_self.assert_equals("not one", _self.return_one(), "Should return 'not one'")
+	_protection
+		stub_method_helper.restore_stubbed_methods()
+		_self.assert_equals("one", _self.return_one(), "Should return 'one' again")
+		_self.assert_true(stub_method_helper.replaced_method_data.empty? _and stub_method_helper.defined_method_data.empty?,
+				  "stub_method_helper should be completely reset")
+	_endprotect
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.test_defining_methods()
+	##
+	## Tests that a method defined on a superclass can be
+	## temporarily subclassed. 
+	##
+
+	initial_result << stub_method_helper_test.write_string
+	
+	_self.assert_equals(initial_result, actual << stub_method_helper_test.write_string,
+			    "1 Should return '"+ initial_result +"', not "+ actual)
+	stub_method_helper.replace_method(stub_method_helper_test, :write_string, _proc() _return "another string" _endproc)
+	_protect
+		_self.assert_equals("another string", actual << stub_method_helper_test.write_string, "2 Should return 'another string', not " + actual)
+	_protection
+		stub_method_helper.restore_stubbed_methods()
+		_self.assert_equals(initial_result, actual << stub_method_helper_test.write_string,
+				    "3 Should return '"+ initial_result +"', not "+ actual)
+		_self.assert_true(stub_method_helper.replaced_method_data.empty? _and stub_method_helper.defined_method_data.empty?,
+				  "stub_method_helper should be completely reset")
+	_endprotect
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.test_methods_with_params()
+	##
+	## Tests that the stub_method_helper can replaced methods that
+	## are defined with parameters
+	##
+	_self.assert_equals(:first, _self.return_first(:first, :second), "Should return :first")
+	stub_method_helper.replace_method(stub_method_helper_test, :|return_first()|, _proc(a,b) _return b _endproc)
+	_protect
+		_self.assert_equals(:second, _self.return_first(:first, :second), "Should return :second")
+	_protection
+		stub_method_helper.restore_stubbed_methods()
+		_self.assert_equals(:first, _self.return_first(:first, :second), "Should return :first again")
+		_self.assert_true(stub_method_helper.replaced_method_data.empty? _and stub_method_helper.defined_method_data.empty?,
+				  "stub_method_helper should be completely reset")
+	_endprotect
+		
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.test_replacing_methods_twice()
+	##
+	## Tests that the contents of a local method defined on a class
+	## can be temporarily replaced with a (usually) simplified
+	## procedure.
+	## But only once!
+	##
+	_self.assert_equals("one", _self.return_one(), "Should return 'one'")
+	stub_method_helper.replace_method(stub_method_helper_test, :return_one|()|, _proc() _return write_string("not ","one") _endproc)
+	_protect
+		_self.assert_equals("not one", _self.return_one(), "Should return 'not one'")
+
+		stub_method_helper.replace_method(stub_method_helper_test, :return_one|()|, _proc() _return write_string("not ","one", " again") _endproc)
+		_self.assert_equals("not one again", _self.return_one(), "Should return 'not one again'")
+	_protection
+		stub_method_helper.restore_stubbed_methods()
+		_self.assert_equals("one", _self.return_one(), "Should return 'one' again")
+		_self.assert_true(stub_method_helper.replaced_method_data.empty? _and stub_method_helper.defined_method_data.empty?,
+				  "stub_method_helper should be completely reset")
+	_endprotect
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.test_defining_and_then_replacing()
+
+	initial_result << stub_method_helper_test.write_string
+	
+	_self.assert_equals(initial_result , actual << stub_method_helper_test.write_string,
+			    "1 Should return '" + initial_result + "', not "+ actual)
+	stub_method_helper.replace_method(stub_method_helper_test, :write_string, _proc() _return "another string" _endproc)
+	_protect
+		_self.assert_equals("another string", actual << stub_method_helper_test.write_string, "2 Should return 'another string', not " + actual)
+
+		stub_method_helper.replace_method(stub_method_helper_test, :write_string, _proc() _return "yet another string" _endproc)
+		_self.assert_equals("yet another string", actual << stub_method_helper_test.write_string, "2 Should return 'yet another string', not " + actual)
+	_protection
+		stub_method_helper.restore_stubbed_methods()
+		_self.assert_equals(initial_result , actual << stub_method_helper_test.write_string,
+			    "3 Should return '" + initial_result + "', not "+ actual)
+		_self.assert_true(stub_method_helper.replaced_method_data.empty? _and stub_method_helper.defined_method_data.empty?,
+				  "stub_method_helper should be completely reset")
+	_endprotect
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.test_replacing_method_on_mixin()
+	##
+	## Tests that the contents of a local method defined on a mixin
+	## can be temporarily replaced with another procedure. 
+	##
+
+	my_mixin << def_mixin(:tc!stub_method_helper_test_mixin)
+	_protect
+		my_mixin.define_method(:hello,_proc() >> "Hello" _endproc,_false)
+		my_class << def_slotted_exemplar(:tc!stub_method_helper_test_class,{},:tc!stub_method_helper_test_mixin)
+		_self.assert_equals("Hello", my_class.hello, "Should return 'Hello'")
+		stub_method_helper.replace_method(my_mixin, :hello, _proc() _return write_string("not ","Hello") _endproc)
+		_self.assert_equals("not Hello", my_class.hello, "Should return 'not Hello'")
+		stub_method_helper.restore_stubbed_methods()
+		_self.assert_equals("Hello", my_class.hello, "Should return 'Hello' again")	
+		_self.assert_true(stub_method_helper.replaced_method_data.empty? _and stub_method_helper.defined_method_data.empty?,
+				  "stub_method_helper should be completely reset")	
+	_protection
+		remove_exemplar(:tc!stub_method_helper_test_class)
+		remove_mixin(:tc!stub_method_helper_test_mixin)
+	_endprotect
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.test_defining_same_method_on_two_mixins()
+	##
+	## Tests that we can temporarily define methods with the same
+	## name on two different mixins and that they get restored
+	## correctly afterwards.
+	##
+
+	my_mixin1 << def_mixin(:tc!stub_method_helper_test1_mixin)
+	_protect
+		my_mixin2 << def_mixin(:tc!stub_method_helper_test2_mixin)
+		my_class1 << def_slotted_exemplar(:tc!stub_method_helper_test1_class,{},:tc!stub_method_helper_test1_mixin)
+		my_class2 << def_slotted_exemplar(:tc!stub_method_helper_test2_class,{},:tc!stub_method_helper_test2_mixin)
+		_self.assert_unset(my_mixin1.method(:hello))
+		_self.assert_unset(my_mixin2.method(:hello))
+		stub_method_helper.replace_method(my_mixin1, :hello, _proc() >> "Hello from one" _endproc)
+		stub_method_helper.replace_method(my_mixin2, :hello, _proc() >> "Hello from two" _endproc)
+		_self.assert_equals("Hello from one", my_class1.hello, "Should return 'Hello from one'")
+		_self.assert_equals("Hello from two", my_class2.hello, "Should return 'Hello from two'")
+		stub_method_helper.restore_stubbed_methods()
+		_self.assert_unset(my_mixin1.method(:hello))
+		_self.assert_unset(my_mixin2.method(:hello))
+	_protection
+		remove_exemplar(:tc!stub_method_helper_test2_class)
+		remove_exemplar(:tc!stub_method_helper_test1_class)
+		remove_mixin(:tc!stub_method_helper_test2_mixin)
+		remove_mixin(:tc!stub_method_helper_test1_mixin)
+	_endprotect
+	_self.assert_true(stub_method_helper.replaced_method_data.empty? _and stub_method_helper.defined_method_data.empty?,
+			  "stub_method_helper should be completely reset")	
+_endmethod
+$
+
