@@ -1,0 +1,22 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+# As simple_dataset but with support for methods
+# specific to gis_ds_view, e.g. .gis_world
+def_slotted_exemplar( :gis_simple_dataset,
+	{
+	},
+	{ :simple_dataset } )
+$
+
+_pragma(classify_level=restricted)
+_method gis_simple_dataset.gis_world
+
+	# simple dataset has a single world (0,0)
+	# hence _self.gis_world returns this
+	
+	>> .world
+_endmethod
+$

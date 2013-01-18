@@ -1,0 +1,25 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+#remex( :simple_dataset_test )
+#$
+
+def_slotted_exemplar( :gis_simple_dataset_test,
+	{
+	},
+	{ :test_case } )
+$
+
+_pragma(classify_level=restricted)
+_method gis_simple_dataset_test.test_gis_world
+	## 
+	## Test for the presence of the .gis_world method
+	## on gis_simple_dataset and that it returns .world
+
+	a_simple_dataset << gis_simple_dataset.new(:test_db, property_list.new())
+	a_simple_dataset_gis_world << a_simple_dataset.gis_world
+	_self.assert_equals( a_simple_dataset_gis_world,  a_simple_dataset.world, "Failed to get gis_world for gis_simple_dataset" )
+			 
+_endmethod
+$
