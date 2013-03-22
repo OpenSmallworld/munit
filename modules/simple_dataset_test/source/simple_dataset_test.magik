@@ -1075,21 +1075,18 @@ _endmethod
 $
 
 
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_ds_bool_is_vector_returns_false()
+	## 
+	## Test the ds_bool field type.
+	##
+	## Make sure that the .is_vector? method returns false. 
+	##
 
+	_self.create_dataset_with_data_test_collection()
+	field_type << .dataset.get_field_type ( :ds_bool )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	_self.assert_false ( field_type.is_vector? )
+	
+_endmethod
+$

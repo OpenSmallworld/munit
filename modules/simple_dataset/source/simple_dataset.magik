@@ -289,7 +289,7 @@ _private _method simple_dataset.init_base_types()
 	# Add :ds_bool
 	base_type << database_view.defined_types[:ds_bool]
 	derived_type << uds_field_type.new_derived(_self, :ds_bool, base_type.class,
-						   base_type.element_class, base_type.size,
+						   _unset, base_type.size,
 						   base_type.enumerator, base_type.phys_type)
 	
 	_self.field_types.add(derived_type)
