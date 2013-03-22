@@ -1076,51 +1076,17 @@ $
 
 
 _pragma(classify_level=restricted)
-_method simple_dataset_test.test_ds_bool_class_slot_is_true()
+_method simple_dataset_test.test_ds_bool_is_vector_returns_false()
 	## 
 	## Test the ds_bool field type.
 	##
-	## Make sure that the .class slot is true.
+	## Make sure that the .is_vector? method returns false. 
 	##
 
 	_self.create_dataset_with_data_test_collection()
 	field_type << .dataset.get_field_type ( :ds_bool )
 
-	_self.assert_true ( field_type.sys!slot ( :class ))
-	
-_endmethod
-$
-
-
-_pragma(classify_level=restricted)
-_method simple_dataset_test.test_ds_bool_element_class_slot_is_unset()
-	## 
-	## Test the ds_bool field type.
-	##
-	## Make sure that the .element_class slot is unset.
-	##
-
-	_self.create_dataset_with_data_test_collection()
-	field_type << .dataset.get_field_type ( :ds_bool )
-
-	_self.assert_unset ( field_type.sys!slot ( :element_class ))
-	
-_endmethod
-$
-
-
-_pragma(classify_level=restricted)
-_method simple_dataset_test.test_ds_bool_element_class_is_true()
-	## 
-	## Test the ds_bool field type.
-	##
-	## Make sure that the .element_class method returns true.
-	##
-
-	_self.create_dataset_with_data_test_collection()
-	field_type << .dataset.get_field_type ( :ds_bool )
-
-	_self.assert_true ( field_type.element_class )
+	_self.assert_false ( field_type.is_vector? )
 	
 _endmethod
 $
