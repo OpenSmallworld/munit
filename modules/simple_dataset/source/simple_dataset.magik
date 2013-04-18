@@ -222,15 +222,20 @@ _pragma(classify_level=restricted)
 _private _method simple_dataset.phys_field_descriptor_for( a_field_def, table_name )
 	## 
 	##
-	_if a_field_def[ :mandatory? ] _is _false
+	non_mandatory? << a_field_def[ :mandatory? ] _is _false
+	key?           << a_field_def[ :key? ] _is _true
+	
+	_if non_mandatory?
 	_then
 		_self.add_non_mandatory_field( table_name, a_field_def[ :name ] )
 	_endif
 	
 	>> ( uds_phys_field.new( a_field_def[ :name ],
 				 _self.get_field_type( a_field_def[ :type ],
-						       a_field_def[ :size ] ) ),
-	     ( a_field_def[ :key? ] _is _true ) )
+						       a_field_def[ :size ] ),
+				 _not non_mandatory? _orif key?,   
+				 a_field_def[ :default_value ]),
+	     ( key? ) )
 _endmethod
 $
 
