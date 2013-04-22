@@ -1090,3 +1090,30 @@ _method simple_dataset_test.test_ds_bool_is_vector_returns_false()
 	
 _endmethod
 $
+
+_pragma(classify_level=restricted)
+_method simple_dataset_test.test_default_value_can_be_defined()
+	##
+	## Test that a field's default_value can be defined.
+	##
+	fields_spec <<  {
+			       property_list.new_with( :name, :field1,
+						       :type, :ds_bool,
+						       :mandatory?, _true,
+						       :default_value, _true,
+						       :key?, _true ),
+			       property_list.new_with( :name, :field2,
+						       :type, :ds_bool,
+						       :mandatory?, _false,
+						       :default_value, _false,
+						       :key?, _false )
+		       }
+	
+	_self.create_dataset_with_collection( fields_spec )
+	field1 << _self.collection( :test_collection ).field( :field1 )
+	field2 << _self.collection( :test_collection ).field( :field2 )
+
+	_self.assert_equals( _true,  field1.default_value, "Field 1 expected default_value is _true")
+	_self.assert_equals( _false, field2.default_value, "Field 2 expected default_value is _false")
+_endmethod
+$
