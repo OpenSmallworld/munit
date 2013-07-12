@@ -15,21 +15,25 @@ $
 
 _pragma(classify_level=basic, topic={MUnit})
 _method munit_suite_display_tree.add_test_cases
-		
-		_if .key.runnable?() _then 	
-			_for a_test _over .key.tests()
-			_loop
-				_if a_test.is_kind_of?( test_suite )
-				_then
-					_self.add_test_suite( a_test )
-				_elif a_test _isnt _unset
-				_then 
-					test_display_tree << munit_test_display_tree.new( a_test, _unset, _self )
-					_self.add_child( test_display_tree )
-				_endif 
-			_endloop
-		_endif
-		
+
+	_if .key.runnable?()
+	_then 	
+		tests << rope.new_from_iter( .key, :|tests()| )
+		sort_proc << _proc( a, b ) >> a.get_name() _cf b.get_name() _endproc
+		sorted_tests << sorted_collection.new_from( tests, sort_proc )
+		_for a_test _over sorted_tests.fast_elements()
+		_loop
+			_if a_test.is_kind_of?( test_suite )
+			_then
+				_self.add_test_suite( a_test )
+			_elif a_test _isnt _unset
+			_then 
+				test_display_tree << munit_test_display_tree.new( a_test, _unset, _self )
+				_self.add_child( test_display_tree )
+			_endif 
+		_endloop
+	_endif
+	
 _endmethod
 $
 	
