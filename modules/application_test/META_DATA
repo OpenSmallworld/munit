@@ -1,0 +1,8 @@
+:match 	META_DATA
+	:miss
+:match 	.*\.txt
+	:keep
+:match 	.*\.def
+	:keep
+:match 	source
+	:keep

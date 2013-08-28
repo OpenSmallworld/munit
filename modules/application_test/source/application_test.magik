@@ -1,0 +1,80 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+##
+## Top level test_case class providing infrastructure for tests
+## that require an application to be running.
+##
+## This class provides a framework for writing tests that
+## require an application to be running by implementing the
+## following behaviour: 
+##
+## * set_up() 
+##   * ensure that the required application (as specified by application_name) is running. 
+##     * If it is already running, the test will run
+##     * If it is available but not yet running, it will be started and the test will run
+##     * If it is not available, the test will fail. 
+##   * ensure that the database is writable 
+##     * It creates an in-memory scratchpad in any
+##       datasets (as specified by dataset_names) in which the test
+##       will make any changes.  
+## * tear_down() 
+##   * Remove the scratchpad so the dataset reverts to its original state. 
+##
+## Subclasses of application_test should implement the following methods:
+##
+## * application_name - This should return the name of the application to be used for these tests.
+## * writable_dataset_names - This should return the names of any datasets that need to be writable. 
+##
+## application_test provides the following API methods:
+##
+## * application - This returns the application that is running
+## * dataset( ds_name ) - This returns the dataset identified by ds_name  
+##
+def_slotted_exemplar( :application_test,
+        {
+		{ :application,  _unset }
+	},
+        { :database_test } )
+$
+
+application_test.define_shared_constant(:test_aspects,
+	property_list.new_with( :never, "NEVER" ), :public )
+$
+
+_pragma(classify_level=debug)
+application_test.define_slot_access( :application, :write, :private )
+$
+
+_pragma(classify_level=debug)
+## The application to open, it actually only needs an open database
+application_test.define_shared_constant(:application_name, "swaf_professional", :public)
+$
+
+_pragma(classify_level=debug)
+_method application_test.set_up()
+	##
+	## This gets called before each test and ensures that the
+	## correct application is running.
+	## It also creates a scratchpad to hold any transient data.
+	##
+
+	# Make sure the application is running
+	_if ( app << smallworld_product.application( _self.application_name ) ) _isnt _unset
+	_then
+		# Application is already running, use it
+		_self.application << app
+	_elif ( app_def << smallworld_product.application_definition( _self.application_name ) ) _isnt _unset
+	_then
+		# Application exists but is not yet running, start it
+		_self.application << app_def.int!start()
+	_else
+		# Application does not exist
+		condition.raise( :error, :string, "Cannot find " + _self.application_name + " application" )
+	_endif
+
+	_super.set_up()
+_endmethod
+$
+

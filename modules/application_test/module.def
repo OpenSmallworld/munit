@@ -1,0 +1,13 @@
+application_test	1
+
+description
+	Tests for application module
+end
+
+tests_modules
+	application
+end
+
+requires
+	munit_base
+end

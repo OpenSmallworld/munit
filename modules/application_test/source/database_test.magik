@@ -1,0 +1,96 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+##
+## Top level test_case class providing infrastructure for tests
+## that require an application to be running.
+##
+## This class provides a framework for writing tests that
+## require an database, but not an application, to be running
+## by implementing the following behaviour:
+##
+## * set_up() 
+##   * ensure that there is a database
+##   * ensure that the database is writable 
+##     * It creates an in-memory scratchpad in any
+##       datasets (as specified by dataset_names) in which the test
+##       will make any changes.  
+## * tear_down() 
+##   * Remove the scratchpad so the dataset reverts to its original state. 
+##
+## Subclasses of database_test should implement the following methods:
+##
+## * writable_dataset_names - This should return the names of any datasets that need to be writable. 
+##
+## database_test provides the following API methods:
+##
+## * dataset( ds_name ) - This returns the dataset identified by ds_name  
+##
+def_slotted_exemplar( :database_test,
+        {
+		{ :datasets,     _unset }
+	},
+        { :test_case } )
+$
+
+database_test.define_shared_constant(:test_aspects,
+	property_list.new_with(:never, "never"), :public )
+$
+
+_pragma(classify_level=debug, usage={subclassable})
+_method database_test.writable_dataset_names
+	## 
+	## Return the names of any datasets that need to be writable
+	##
+
+	>> {}
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method database_test.set_up()
+	##
+	## This gets called before each test and ensures that the
+	## correct database is available. 
+	## It also creates a scratchpad to hold any transient data.
+	##
+
+	# Create a scratchpad for each dataset to hold any changes
+	_for ds_name _over _self.writable_dataset_names.fast_elements()
+	_loop
+		v << gis_program_manager.databases[ds_name]
+		v.goto_top_alternative()
+		v.create_scratchpad( "memory::ds" )
+	_endloop 
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method database_test.tear_down()
+	##
+	## This gets called after each test and deletes the scratchpad.
+	##
+
+	_for ds_name _over _self.writable_dataset_names.fast_elements()
+	_loop 
+		v << _self.dataset( ds_name )
+		v.rollback()
+		v.up()
+	_endloop
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method database_test.dataset( ds_name )
+	##
+	## Returns the dataset named DS_NAME
+	##
+
+	>> gis_program_manager.databases[ds_name]
+	
+_endmethod
+$
