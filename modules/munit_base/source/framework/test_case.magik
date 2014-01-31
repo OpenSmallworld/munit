@@ -173,7 +173,12 @@ $
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_case.tear_down()
 	## Tears down the fixture, for example, close a CORBA connection.
-	
+	##
+	## Calls stub_method_helper.restore_stubbed_methods() to tidy
+	## up methods replaced by calling stub_method_helper.replace_method()
+	##
+
+	stub_method_helper.restore_stubbed_methods()
 _endmethod
 $
 
