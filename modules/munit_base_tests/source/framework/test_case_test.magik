@@ -260,6 +260,23 @@ _method test_case_test.test_infrastructure?()
 	_self.assert( a_test.infrastructure? , :is , _false )
 _endmethod
 $
+_pragma(classify_level=debug,topic=MUnit)
+_method test_case_test.test_tear_down_restores_stubbed_methods()
+	## test that test_case.tear_down() calls stub_method_helper.restore_stubbed_methods()
+	## 
+	_global test_case, stub_method_helper
+	_local restore_called?
+	stub_proc<< _proc () _import restore_called?; restore_called?<< _true  _endproc
+	stub_method_helper.sys!save_and_replace_method(:|restore_stubbed_methods()|, stub_proc)
+	_protect
+		test_case.tear_down()
+
+		_self.assert_true(restore_called?,"Tear down method in test_case doesn't call stub_method_helper.restore_stubbed_methods().")
+	_protection
+		stub_method_helper.sys!restore_saved_method(:|restore_stubbed_methods()|)
+	_endprotect	
+_endmethod
+$
 
 _pragma(classify_level=debug,topic=MUnit)
 _private _method test_case_test.verify_error( a_test )
