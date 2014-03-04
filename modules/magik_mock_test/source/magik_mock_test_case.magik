@@ -308,7 +308,9 @@ _method magik_mock_test_case.test_stub_show_on_works_correctly()
 	m << mock(:test, rope)
 	stream << internal_text_output_stream.new()
 	m.show_on(stream)
-	_self.assert_equals("test:[1-1]", stream.string)  # Ahem. Should really be sw:rope:, not test:
+	a_string << stream.string
+	_self.assert_equals("test", a_string.subseq(1, 4))  # Ahem. Should really be sw:rope:, not test:
+	_self.assert_equals(":[1-1]", a_string.subseq(a_string.size - 5, 6))
 
 _endmethod
 $
