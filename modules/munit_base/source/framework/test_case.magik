@@ -67,6 +67,12 @@ _pragma(classify_level=restricted, usage={subclassable})
 test_case.define_shared_constant(:suite_by_numbers_limit, 1024, :private)
 $
 
+_pragma(classify_level=restricted)
+## Ignore test aspects in cases where the set of tests to be
+## run is being determined externally.
+test_case.define_shared_variable(:ignore_aspects?, _false, :public)
+$
+
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_case.new( a_name )
 	## Constructs a test case with the given A_NAME.
@@ -430,7 +436,7 @@ _method test_case.runnable?( _optional test_name )
 	##
 
 	# For now, tests without any aspects are not runnable
-	>> _if _self.test_aspects.empty?
+	>> _if _self.ignore_aspects? _orif _self.test_aspects.empty?
 	   _then
 		   >> _true 
 	   _else 
