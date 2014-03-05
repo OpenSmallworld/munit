@@ -128,16 +128,6 @@ def_slotted_exemplar(:mmock_object,
 		     {})
 $
 
-mmock_object.define_shared_variable( :unique_counter, 10000 + random.new(10000).get(), :private )
-$
-
-_method mmock_object.get_next_unique_id()
-	_lock mmock_object
-	      _return (_self.unique_counter +<< 1).write_string
-	_endlock
-_endmethod
-$
-	
 _method mmock_object.mmock!new_mock_object(name, _optional super_class)
 
 	super_method_tables <<
@@ -146,10 +136,9 @@ _method mmock_object.mmock!new_mock_object(name, _optional super_class)
 			>> {}
 		_else
 			>> {super_class.method_table}
-		_endif
-	unique_name << (name.write_string + _self.get_next_unique_id()).as_symbol()
+		_endif 
 	
-	(method_tbl, new_mock_object) << method_table.new_for_slotted(unique_name, {}, super_method_tables, {})
+	(method_tbl, new_mock_object) << method_table.new_for_slotted(name, {}, super_method_tables, {})
 
 	_return new_mock_object
 	
