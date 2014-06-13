@@ -33,6 +33,21 @@ _private _method xml_test_runner.init( a_stream , _gather keys_and_elements )
 _endmethod
 $
 
+_pragma(classify_level=advanced,topic=MUnit)
+_method xml_test_runner.init_properties( _gather keys_and_elements )
+	##
+	## Init properties of runner from KEYS_AND_ELEMENTS.
+	## This subclassed implementation calls the super, and sets the
+	## :traceback_errors? and :traceback_failures? property
+	## defaults 
+	##
+	_super.init_properties( _scatter keys_and_elements )
+
+	.properties[ :traceback_errors? ]    << .properties[ :traceback_errors? ].default( _false )
+	.properties[ :traceback_failures? ]  << .properties[ :traceback_failures? ].default( _false )
+_endmethod
+$
+
 _pragma(classify_level=restricted,topic=munit)
 _method xml_test_runner.start_test(a_test)
 	## Store info about start of A_TEST
@@ -67,6 +82,12 @@ _method xml_test_runner.add_error( a_test_failure )
 			a_test_failure.raised_condition()[:message],
 			a_test_failure.raised_condition().write_string, #.name, 
 			a_test_failure.full_traceback_text()))
+
+	_if .properties[ :traceback_errors? ]
+	_then 
+		write( "**** Error: ", a_test_failure.raised_condition().report_contents_string )
+		write( a_test_failure.full_traceback_text() )
+	_endif 
 _endmethod
 $
 
@@ -81,6 +102,12 @@ _method xml_test_runner.add_failure( a_test_failure )
 			a_test_failure.raised_condition()[:message].write_string,
 			a_test_failure.raised_condition().name, 
 			a_test_failure.full_traceback_text()))
+
+	_if .properties[ :traceback_failures? ]
+	_then 
+		write( "**** Error: ", a_test_failure.raised_condition().report_contents_string )
+		write( a_test_failure.full_traceback_text() )
+	_endif 
 _endmethod
 $
 
