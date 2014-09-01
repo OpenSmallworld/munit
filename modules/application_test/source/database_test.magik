@@ -74,6 +74,8 @@ _method database_test.tear_down()
 	## This gets called after each test and deletes the scratchpad.
 	##
 
+	_super.tear_down()
+	
 	_for ds_name _over _self.writable_dataset_names.fast_elements()
 	_loop 
 		v << _self.dataset( ds_name )
