@@ -1,0 +1,69 @@
+#% text_encoding = iso8859_1
+_package sw
+
+#remex( :message_test_case)
+#$
+
+_pragma(classify_level=advanced,topic=MUnit)
+def_mixin(:message_test_case_mixin)
+## Provides tests for testng messages.
+##
+## Define abstract method
+##  -define_message_groups(
+##
+
+
+
+_pragma(classify_level=debug)
+_abstract _private _method message_test_case_mixin.define_message_groups()
+
+	## Define a property_list using the message_group name as the
+	## key and rope of messages to look for as the elements.
+	## 
+
+	#group_and_messages << property_list.new()
+
+	#group_and_messages[:browser] <<  {:object, :reset}
+	#group_and_messages[:browser_options] <<  {:cancel, :ok}
+
+	#>> group_and_messages
+
+
+_endmethod 
+$
+
+_pragma(classify_level=debug)
+_method message_test_case_mixin.test_for_missing_message()
+
+	##
+	## The method that test runner exectutes checking that given
+	## messages exist for a given message group
+	##
+
+	message_groups << _self.define_message_groups()
+	
+	_for group, msg_ids _over message_groups.keys_and_elements()
+	_loop
+		msg_hand <<  message_handler.new( group )
+		_self.check_for_missing_messages( msg_hand, msg_ids )
+	_endloop 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method  message_test_case_mixin.check_for_missing_messages(a_message_handler, messages_ids)
+
+	## Internal method that assets messages exist.
+	##
+	## A_MESSAGE_HANDLER an actual message handler
+	## MESSAGE_IDS a list of message ids as symbols look for
+	##
+
+	_for msg_id _over messages_ids.elements()
+	_loop
+		 _self.assert_true ( a_message_handler.has_message?(msg_id), msg_id  )
+	_endloop
+	
+_endmethod
+$
