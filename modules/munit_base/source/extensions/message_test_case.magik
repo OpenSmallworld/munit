@@ -1,21 +1,22 @@
 #% text_encoding = iso8859_1
 _package sw
 
-#remex( :message_test_case)
-#$
 
 _pragma(classify_level=advanced,topic=MUnit)
 def_mixin(:message_test_case_mixin)
 ## Provides tests for testng messages.
 ##
 ## Define abstract method
-##  -define_message_groups(
+##  -define_message_groups_and_messages()
 ##
-
+## Using this mixin gives you a test for free for testing for
+## missing messages if you define the abstract method.
+##
+$
 
 
 _pragma(classify_level=debug)
-_abstract _private _method message_test_case_mixin.define_message_groups()
+_abstract _private _method message_test_case_mixin.define_message_groups_and_messages()
 
 	## Define a property_list using the message_group name as the
 	## key and rope of messages to look for as the elements.
@@ -36,11 +37,13 @@ _pragma(classify_level=debug)
 _method message_test_case_mixin.test_for_missing_message()
 
 	##
+	
 	## The method that test runner exectutes checking that given
 	## messages exist for a given message group
 	##
 
-	message_groups << _self.define_message_groups()
+	
+	message_groups << _self.define_message_groups_and_messages()
 	
 	_for group, msg_ids _over message_groups.keys_and_elements()
 	_loop
@@ -62,7 +65,7 @@ _private _method  message_test_case_mixin.check_for_missing_messages(a_message_h
 
 	_for msg_id _over messages_ids.elements()
 	_loop
-		 _self.assert_true ( a_message_handler.has_message?(msg_id), msg_id  )
+		 _self.assert_true ( a_message_handler.has_message?(msg_id), "Missing message for: " + msg_id  )
 	_endloop
 	
 _endmethod
