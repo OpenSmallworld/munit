@@ -100,7 +100,7 @@ _method test_runner.print()
 
 	_if ( count << .test_result.failure_count() ) ~= 0
 	_then
-		_self.print_failures( count , " failure:" , " failures:" , :failures|()| ,:write_string )
+		_self.print_failures( count , " failure:" , " failures:" , :failures|()| )
 	_endif
 	
 	 _self.print_footer()
@@ -108,14 +108,14 @@ _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method test_runner.print_failures( count , singular , plural , iterator, report_method )
+_private _method test_runner.print_failures( count , singular , plural , iterator, _optional report_method )
 	## Prints failures.
 	
 	_if count = 1
 	_then
-		.stream.write("There was " + count.write_string + singular  + newline_char )
+		.stream.write("There was " + count.write_string + singular + newline_char )
 	_else 
-		.stream.write("There were " + count.write_string + plural  + newline_char )
+		.stream.write("There were " + count.write_string + plural + newline_char )
 	_endif
 
 	.stream.write( newline_char )
@@ -125,9 +125,12 @@ _private _method test_runner.print_failures( count , singular , plural , iterato
 	_for a_failure _over .test_result.perform_iter( iterator )
 	_loop
 		i + << 1
-		.stream.write( i.write_string +") " +  a_failure.write_string + newline_char )
-		.stream.write( a_failure.perform( report_method ))
-		.stream.write( newline_char )
+		.stream.write( i.write_string +") " + a_failure.write_string + newline_char )
+		_if report_method _isnt _unset
+		_then
+			.stream.write( a_failure.perform( report_method ) )
+			.stream.write( newline_char )
+		_endif
 	_endloop
 
 	.stream.write( newline_char )
