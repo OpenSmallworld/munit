@@ -1,0 +1,84 @@
+#% text_encoding = iso8859_1
+_package sw
+
+
+_pragma(classify_level=advanced,topic=MUnit)
+## Test helper methods for testing of messages.
+##
+## Provides two mechanisms for checking that message groups
+## have messages defined for given message ids.
+##   - Make a one shot call to .check_for_missing_messages() in
+##     one test. 
+##   - Build a set of registered messges during test
+##     definitions that can then be tested in one dedicated
+##     message test.  Use register_message_group() and
+##     check_for_registered_missing_messages(). 
+##
+def_slotted_exemplar(:message_tests,
+	{ },
+	{ :test_case }
+)
+
+$
+_pragma(classify_level=debug)
+## Holds a list of message groups and messages
+message_tests.define_shared_constant(:groups_and_messages, property_list.new(), :public)
+$
+
+_pragma(classify_level=debug)
+_method  message_tests.check_for_missing_messages(groups_and_messages)
+	##
+	## Checks message groups have messages defined for message ids.
+	## GROUPS_AND_MESSAGES is a property list with key 
+	## MESSAGE_GROUP (the name of the message group as a symbol),
+	## and element MESSAGES (a vector of the message ids to check
+	## for existence). 
+	
+	_self.int!check_for_missing_messages(groups_and_messages)
+_endmethod 
+$
+
+_pragma(classify_level=debug)
+_private _method  message_tests.int!check_for_missing_messages(groups_and_messages)
+
+	## Internal method that asserts that messages exist.
+
+	_for group, msg_ids _over groups_and_messages.keys_and_elements()
+	_loop
+		msg_handler <<  message_handler.new( group )
+		_for msg_id _over msg_ids.elements()
+		_loop
+			_self.assert_true ( msg_handler.has_message?(msg_id),
+					     "Missing message for: " + msg_id + " in handler: " + msg_handler.name  )
+		_endloop
+	_endloop			
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method  message_tests.register_message_group(message_group, messages)
+	##
+	## Registers message groups and messages for use in testing the
+	## existence of messages.
+	## MESSAGE_GROUP is the name of the message group as a symbol
+	## MESSAGES is a vector of the message ids to check for
+	_self.groups_and_messages[message_group] << messages
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method  message_tests.check_for_registered_missing_messages()
+	##
+	## Checks a message group has messages defined for messge ids.
+	##
+	## Should be used following use of register_message_group().
+	## This can be used when multiple test suites register
+	## messages and then one test checks all messages.
+
+	_self.int!check_for_missing_messages(_self.groups_and_messages)
+_endmethod 
+$
+
+
+
+

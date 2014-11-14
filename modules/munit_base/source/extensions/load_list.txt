@@ -5,4 +5,4 @@ repeated_test
 active_test_suite
 db_test_case
 bitmap_comparison_utils
-message_test_case
+message_tests
