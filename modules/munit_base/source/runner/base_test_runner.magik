@@ -215,7 +215,7 @@ _method base_test_runner.new_stream( a_test )
 		product_name << a_mod.product.name
 	_endif 
 
-	fname << "".concatenation( "test__", .properties[:output_identifier], "__", product_name, "__", module_name, "__", class_name, "__", system.host_name, ".", .properties[:output_format])
+	fname << "".concatenation( "test__", .properties[:output_identifier], "__", class_name, "__", system.host_name, ".", .properties[:output_format])
 	
 	a_file << system.name_new_file(
 			  system.pathname_from_components( fname, .properties[:output_dir] ))
