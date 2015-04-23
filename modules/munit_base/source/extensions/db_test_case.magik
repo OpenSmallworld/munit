@@ -169,6 +169,11 @@ _private _method db_test_case.goto_test_alternatives()
 			_endif
 			
 			a_ds_view.go_to_alternative( _self.class_name , :write )
+
+			_if _not a_ds_view.writable?
+			_then
+				a_ds_view.select_writable_subalternative()
+			_endif 
 		_endif 
 	_endloop 
 _endmethod
