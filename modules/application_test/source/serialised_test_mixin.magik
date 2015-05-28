@@ -1,0 +1,211 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+
+_pragma(classify_level=debug)
+## This mixin provides the framework for tests to wait for
+## things to happen on the serialised thread
+def_mixin( :serialised_test_mixin )
+$
+
+
+_pragma(classify_level=debug)
+_abstract _method serialised_test_mixin.properties
+	## 
+	## 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method serialised_test_mixin.queue
+	## 
+	##
+
+	>> _self.properties[ :queue ]
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method serialised_test_mixin.wait_for_serialised_tasks_to_complete( top_frame )
+	## 
+	##
+	
+	_loop 
+		_if _self.queue _is _unset _orif
+		    top_frame.top_canvas_container _is _unset _orif
+		    _not top_frame.top_canvas_container.tasks_pending?()
+		_then
+			_leave
+		_endif
+		_self.wait_for_value_on_queue( :task_complete )
+	_endloop
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional copy_other_values? )
+	## 
+	## If COPY_OTHER_VALUES is false, don't copy anything else
+	## found on the queue back to the queue after finding the
+	## required value.  The default is true.
+
+	other_values   << rope.new()
+	timed_out?     << _false
+	task_complete? << _false 
+
+	_loop
+
+		# Prevent the test from hanging while waiting for something on
+		# the queue.  Only wait for 200ms and then continue
+		_if system.vm_version = 3 # magikSF
+		_then 
+			_self.force_value_on_queue( expected_value )
+			value << _self.properties[:queue].get()
+		_else
+			value << _self.properties[:queue].get( 200 )
+		_endif
+
+		timed_out? << value _is _unset 
+		
+		_if value = expected_value _orif timed_out?
+		_then
+			_leave
+		_elif copy_other_values? _isnt _false
+		_then 
+			other_values.add_last( value.copy() )
+		_elif value _is :task_complete
+		_then
+			task_complete? << _true
+			_if _not task_complete?
+			_then 
+				other_values.add_last( value.copy() )
+			_endif
+		_endif
+	_endloop
+
+	_self.add_values_to_queue( other_values )
+
+	>> ( _self, timed_out? )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, expected_id )
+	## 
+	## 
+
+	other_values   << rope.new()
+	task_complete? << _false 
+
+	_loop 
+		value << _self.properties[:queue].get()
+		_if value.is_kind_of?( {} ) _andif
+		    value[2] _isnt _unset _andif 
+		    value[2].id _is expected_id
+		_then
+			_leave
+		_elif value _is :task_complete
+		_then
+			task_complete? << _true
+			_if _not task_complete?
+			_then 
+				other_values.add_last( value.copy() )
+			_endif
+
+		_else
+			other_values.add_last( value.copy() )
+		_endif
+	_endloop
+
+	_self.add_values_to_queue( other_values )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method serialised_test_mixin.add_values_to_queue( values )
+	## 
+	##	
+
+	_for value _over values.fast_elements()
+	_loop 
+		_self.properties[:queue].put( value, _true )
+	_endloop
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method serialised_test_mixin.force_value_on_queue( value )
+	## 
+	## Fork a new thread.  Wait for 200ms and force VALUE on self's
+	## atomic queue if there is a thread waiting for it.
+	##
+
+	_proc @force_value_on_queue( value, test )
+		
+		_thisthread.sleep( 200 )
+		_if test.properties[:queue].first_waiting_thread _isnt _unset
+		_then
+			test.properties[:queue].put( value, _true )
+		_endif
+		
+	_endproc.fork_at( _thisthread.vm_priority - 1, value, _self )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method serialised_test_mixin.remove_value_from_queue( remove_value )
+	## 
+	## 
+	
+	other_values << rope.new()
+	
+	_loop
+		
+		_if _self.properties[:queue].reads_possible = 0 _then _leave _endif
+		value << _self.properties[:queue].get()
+		
+		_if value ~= remove_value
+		_then
+			other_values.add_last( value )
+		_endif
+
+	_endloop
+
+	_self.add_values_to_queue( other_values )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method serialised_test_mixin.note_change( who, what, data )
+	## 
+	##
+
+	_if ( test_queue << _self.queue ) _isnt _unset
+	_then 
+		_if what _is :event_handled
+		_then
+			test_queue.put( {what, data}, _true )
+		_else 
+			test_queue.put( what, _true )
+		_endif
+	_endif
+	
+_endmethod
+$

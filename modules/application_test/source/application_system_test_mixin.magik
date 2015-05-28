@@ -1,0 +1,309 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+##
+## This mixin defines given/when/then methods on applications.
+##
+## All classes that inherits from this mixin must define a
+## .properties method that returns a property_list.
+##
+def_mixin( :application_system_test_mixin, { :serialised_test_mixin } )
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_an_application( application_name )
+	## 
+	## Ensure that the required application (as specified by
+	## APPLICATION_NAME) is running.
+	##
+	##     * If it is already running, the test will run
+	##     * If it is available but not yet running, it will be
+	##       started and the test will run 
+	##     * If it is not available, the test will fail.
+	##
+
+	# Make sure the application is running
+	_if ( app << smallworld_product.application( application_name ) ) _is _unset
+	_then
+		_if ( app_def << smallworld_product.application_definition( application_name ) ) _isnt _unset
+		_then
+			# Application exists but is not yet running, start it
+			app << app_def.int!start()
+		_else
+			# Application does not exist
+			condition.raise( :error, :string, "Cannot find " + application_name + " application" )
+		_endif
+	_endif
+
+	_self.properties[ :application ] << app
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_an_embbeded_editor( dataset_name, collection_name )
+	## 
+	##
+
+	collection << _self.dataset( dataset_name ).collections[ collection_name ]
+
+	manager << _self.properties[ :application ].get_service_provider( :editor_manager )
+	editor  << manager.display_embedded_editor_for_collection( collection )
+
+	_self.properties[ :editor ] << editor
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_an_embbeded_editor_with_default_values( dataset_name, collection_name )
+	## 
+	##
+
+	_self.given_an_embbeded_editor( dataset_name, collection_name )
+	action << _self.properties[ :editor ].component( :field_lister ).action( :set_defaults )
+
+	>> _self.when_clicking_action_button( action )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_proposed_editor_values( proposed_values )
+	## 
+	##
+
+	_self.properties[ :editor ].set_proposed_values( proposed_values )
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_an_id_string( id, prefix )
+	## 
+	## Set the .properties[ ID ] to "PREFIX" +
+	## system.elapsed_seconds()
+	##
+
+	_self.properties[ id ] << write_string( prefix, system.elapsed_seconds().as_fixed_string( 10, 10 ))
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_inserting_record()
+	## 
+	##
+
+	action << _self.properties[ :editor ].action( :insert )
+	_self.click_action_button( action )
+	
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_action( plugin_name, action_name )
+	## 
+	## Click on the ACTION_NAME action of the PLUGIN_NAME plugin.
+	## This plugin is a plugin of .properties[ :application ]
+	##
+
+	action << _self.properties[ :application ].plugin( plugin_name ).action( action_name )
+	_self.click_action_button( action )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_tab( tab_name )
+	## 
+	## 
+
+	container << _self.properties[ :application ].top_frame.top_canvas_container
+	
+	_for item _over container.get_items_of_type( :tag!sw_tab_container ).fast_elements()
+	_loop @item
+
+		_for label_item _over item.get_items_of_type( :tag!sw_label_item ).fast_elements()
+		_loop
+			_if label_item.label = tab_name
+			_then
+				tab << label_item
+				_leave @item
+			_endif
+		_endloop 
+		
+	_endloop
+
+	_self.properties[ :tab ] << tab
+	_self.click_item( tab )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_going_to_bounds( xmin, ymin, xmax, ymax )
+	## 
+	##
+
+	bounds << bounding_box.new( xmin, ymin, xmax, ymax )
+
+	manager << _self.properties[ :application ].get_service_provider( :map_manager )
+	manager.current_map_view.goto_bounds( bounds )
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_record_inserted( dataset_name, collection_name, field_name, value )
+	## 
+	## Find the record in the collection named COLLECTION_NAME with
+	## VALUE for the field named FIELD_NAME in the difference
+	## stream between the current view and the base view.
+	##
+
+	ds_view    << _self.dataset( dataset_name )
+	collection << ds_view.collections[ collection_name ]
+	
+	base_view << ds_view.replicate( :base )
+	found?    << _false 
+
+	_protect 
+
+		stream << ds_difference_stream.new_on( collection, base_view.collections[ collection_name ] )
+
+		_loop
+			
+			( change, record, base_record ) << stream.get()
+			_if record _is _unset _then _leave _endif
+
+			_if base_record _is _unset _andif
+			    record.perform( field_name ) = value
+			_then
+				found? << _true
+			_endif
+			
+		_endloop
+
+	_protection
+		base_view.discard()
+	_endprotect
+
+	fail_str << write_string( "Expected record in ", collection_name, " with field ", field_name, " = ", value, " not found" )
+	_self.assert_true( found?, fail_str )
+
+	>> _self 
+		
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.dataset( ds_name )
+	##
+	## Returns the dataset named DS_NAME
+	##
+
+	>> gis_program_manager.databases[ds_name]
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.click_action_button( action )
+	## 
+	## Look through all the sw_button_items on the application's
+	## top container that has :model = ACTION.  Click on the first
+	## one found.
+	##
+
+	container << _self.properties[ :application ].top_frame.top_canvas_container
+	
+	_for item _over container.get_items_of_type( :tag!sw_button_item ).fast_elements()
+	_loop
+		
+		_if item.model = action
+		_then
+			button << item
+			_leave 
+		_endif
+		
+	_endloop
+
+	_self.properties[ :action_button ] << button
+	_self.click_item( button )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.click_item( item )
+	## 
+	## 
+
+	top_container << item.top_container
+	( x, y ) << item.location_in_window( top_container )
+
+	x << x + ( item.width  / 2.0 ).rounded
+	y << y + ( item.height / 2.0 ).rounded 
+
+	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
+	_self.handle_event( top_container, :button, :left, x, y, :press,   0 )
+	_self.handle_event( top_container, :button, :left, x, y, :release, 0 )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.handle_event( top_container, category, id, x, y, func, modmask )
+	## 
+	##
+
+	_if _self.properties[ :queue ] _is _unset
+	_then
+		_self.properties[ :queue ] << atomic_queue.new( 1019 )
+	_endif
+
+	top_container.add_dependent( _self )
+
+	time << system.elapsed_seconds()
+	new_event << input_event.new_with( category, time, top_container.actual.id, id, x, y, func, modmask )
+
+	top_container.handle_event( new_event )
+
+	_self.wait_for_event_on_queue( :event_handled, id )
+	
+_endmethod
+$

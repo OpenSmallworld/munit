@@ -1,0 +1,26 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+##
+## This mixin defines given/when/then methods for designs.
+##
+## All classes that inherits from this mixin must define a
+## .properties method that returns a property_list.
+##
+def_mixin( :design_manager_system_test_mixin )
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.given_a_design( design_name )
+	## 
+	##
+	
+	# Ensure we don't have a design open before we start.
+	# If we don't have an open design, this call should be fairly
+	# cheap.
+	swg_dsn_admin_engine.clear_current_design()
+	
+_endmethod
+$

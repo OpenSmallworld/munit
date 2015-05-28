@@ -29,14 +29,27 @@ _pragma(classify_level=debug)
 ##
 def_slotted_exemplar( :database_test,
         {
+		{ :properties,   _unset },
 		{ :datasets,     _unset }
 	},
-        { :test_case } )
+        { :test_case, :database_system_test_mixin } )
 $
 
 database_test.define_shared_constant(:test_aspects,
 	property_list.new_with(:never, "never"), :public )
 $
+
+
+_pragma(classify_level=debug)
+_method database_test.properties
+	## 
+	##
+
+	>> .properties
+	
+_endmethod
+$
+
 
 _pragma(classify_level=debug, usage={subclassable})
 _method database_test.writable_dataset_names
@@ -57,13 +70,8 @@ _method database_test.set_up()
 	## It also creates a scratchpad to hold any transient data.
 	##
 
-	# Create a scratchpad for each dataset to hold any changes
-	_for ds_name _over _self.writable_dataset_names.fast_elements()
-	_loop
-		v << gis_program_manager.databases[ds_name]
-		v.goto_top_alternative()
-		v.create_scratchpad( "memory::ds" )
-	_endloop 
+	.properties << property_list.new()
+	_self.given_writable_datasets( _self.writable_dataset_names )
 
 _endmethod
 $
@@ -74,25 +82,8 @@ _method database_test.tear_down()
 	## This gets called after each test and deletes the scratchpad.
 	##
 
-	_super.tear_down()
-	
-	_for ds_name _over _self.writable_dataset_names.fast_elements()
-	_loop 
-		v << _self.dataset( ds_name )
-		v.rollback()
-		v.up()
-	_endloop
-	
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_private _method database_test.dataset( ds_name )
-	##
-	## Returns the dataset named DS_NAME
-	##
-
-	>> gis_program_manager.databases[ds_name]
+	_super( test_case ).tear_down()
+	_self.close_datasets()
 	
 _endmethod
 $
