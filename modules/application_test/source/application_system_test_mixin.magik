@@ -71,7 +71,9 @@ _method application_system_test_mixin.given_an_embbeded_editor_with_default_valu
 	_self.given_an_embbeded_editor( dataset_name, collection_name )
 	action << _self.properties[ :editor ].component( :field_lister ).action( :set_defaults )
 
-	>> _self.when_clicking_action_button( action )
+	_self.click_action_button( action )
+
+	>> _self 
 	
 _endmethod
 $
@@ -83,21 +85,6 @@ _method application_system_test_mixin.given_proposed_editor_values( proposed_val
 	##
 
 	_self.properties[ :editor ].set_proposed_values( proposed_values )
-
-	>> _self 
-	
-_endmethod
-$
-
-
-_pragma(classify_level=debug)
-_method application_system_test_mixin.given_an_id_string( id, prefix )
-	## 
-	## Set the .properties[ ID ] to "PREFIX" +
-	## system.elapsed_seconds()
-	##
-
-	_self.properties[ id ] << write_string( prefix, system.elapsed_seconds().as_fixed_string( 10, 10 ))
 
 	>> _self 
 	
@@ -145,7 +132,7 @@ _method application_system_test_mixin.when_clicking_tab( tab_name )
 	_for item _over container.get_items_of_type( :tag!sw_tab_container ).fast_elements()
 	_loop @item
 
-		_for label_item _over item.get_items_of_type( :tag!sw_label_item ).fast_elements()
+		_for label_item _over item.tab_container.get_items_of_type( :tag!sw_label_item ).fast_elements()
 		_loop
 			_if label_item.label = tab_name
 			_then
@@ -171,7 +158,7 @@ _method application_system_test_mixin.when_going_to_bounds( xmin, ymin, xmax, ym
 	bounds << bounding_box.new( xmin, ymin, xmax, ymax )
 
 	manager << _self.properties[ :application ].get_service_provider( :map_manager )
-	manager.current_map_view.goto_bounds( bounds )
+	manager.goto( bounds )
 
 	>> _self 
 	
@@ -304,6 +291,26 @@ _private _method application_system_test_mixin.handle_event( top_container, cate
 	top_container.handle_event( new_event )
 
 	_self.wait_for_event_on_queue( :event_handled, id )
+
+	top_container.remove_dependent( _self )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.unique_id_string( id, prefix )
+	## 
+	## Set the .properties[ ID ] to "PREFIX" +
+	## system.elapsed_seconds()
+	##
+
+	_if _self.properties[ id ] _is _unset
+	_then 
+		_self.properties[ id ] << write_string( prefix, system.elapsed_seconds().as_fixed_string( 10, 10 ))
+	_endif
+
+	>> _self.properties[ id ]
 	
 _endmethod
 $

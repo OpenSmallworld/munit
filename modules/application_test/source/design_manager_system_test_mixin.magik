@@ -13,14 +13,134 @@ $
 
 
 _pragma(classify_level=debug)
-_method design_manager_system_test_mixin.given_a_design( design_name )
+_method design_manager_system_test_mixin.given_no_active_design()
 	## 
 	##
 	
-	# Ensure we don't have a design open before we start.
-	# If we don't have an open design, this call should be fairly
-	# cheap.
 	swg_dsn_admin_engine.clear_current_design()
+
+	>> _self
 	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.given_a_design( project_name, design_name )
+	## 
+	## If a design with DESIGN_NAME exists, use it, else create a
+	## new one.
+	##
+	
+	_if ( design << _self.get_existing_test_design( project_name, design_name )) _is _unset
+	_then
+		_self.given_a_new_design( project_name, design_name )
+		
+	_else
+		_self.goto_test_design()
+		
+	_endif
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.given_an_new_design( project_name, design_name )
+	## 
+	## This method will fail if a design with DESIGN_NAME exists
+	## already.
+	##
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_system_test_mixin.get_existing_test_design( project_name, design_name )
+	##
+	## Returns the test design if it exists and _unset otherwise
+	##
+
+	>> swg_dsn_admin_engine.find_scheme( design_name, project_name, _false )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_system_test_mixin.goto_test_design( project_name, design_name )
+	## 
+	##
+	
+	design << _self.int!goto_test_design( project_name, design_name )
+
+	.properties[ :design ] << design
+
+	>> design
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_system_test_mixin.int!goto_test_design( project_name, design_name )
+	## 
+	## Create a design and go to it
+	##
+
+	parent_design << swg_dsn_admin_engine.active_scheme
+
+	_try _with cond
+		
+		swg_dsn_admin_engine.clear_current_design()
+
+		project << swg_dsn_admin_engine.find_project_or_scheme( project_name, :project, _false )
+		
+		_if project _is _unset 
+		_then
+			project << _self.create_project( project_name, _self.ds_view_names, .bounds.as_sector_rope() )
+		_endif 
+		
+		design << _self.get_design( project, design_name, parent_design )
+		
+		_self.activate_design( design )
+
+		_return design
+		
+	_when ds_write_switch_failed
+		# We ought to be able to use the :view parameter of the
+		# condition, but this doesn't get set :-(
+		_local view << gis_program_manager.databases[ :design_admin ]
+		write( "Failed to get write access to to view ", view, " as it is being written to by ", view.current_writer )
+		cond.continue_handling()
+	_endtry
+	
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit, usage=subclassable)
+_private _method design_manager_system_test_mixin.get_design( project, design_name, parent_design )
+	## DESCRIPTION:
+	## Returns selfs design for P_PROJECT. Creates it, if it does
+	## not exist.
+	## ARGUMENTS ( - <name>: <class>; <description> ):
+	## -P_PROJECT: swg_dsn_project
+	## RESULTS ( - <class>; <description> ):
+	## swg_dsn_scheme; my design or  unset if not found.
+	
+	_constant _local c_design_name << a_design_name.default( _self.design_name )
+	_local pred<< predicate.eq(:name, c_design_name)
+	_local l_design << p_project.schemes.select( pred ).an_element()
+	_if l_design _is _unset 
+	_then
+		l_design << swg_dsn_admin_engine.create_scheme(p_project, a_parent_design, c_design_name,
+							       _self.ds_view_names, _unset, property_list.new())
+	_endif
+	_return l_design
 _endmethod
 $
