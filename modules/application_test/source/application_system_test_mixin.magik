@@ -51,10 +51,7 @@ _method application_system_test_mixin.given_an_embbeded_editor( dataset_name, co
 	##
 
 	collection << _self.dataset( dataset_name ).collections[ collection_name ]
-
-	manager << _self.properties[ :application ].get_service_provider( :editor_manager )
-	editor  << manager.display_embedded_editor_for_collection( collection )
-
+	editor << _self.editor_manager.display_embedded_editor_for_collection( collection )
 	_self.properties[ :editor ] << editor
 
 	>> _self 
@@ -99,9 +96,21 @@ _method application_system_test_mixin.when_inserting_record()
 
 	action << _self.properties[ :editor ].action( :insert )
 	_self.click_action_button( action )
+
+	.properties[:new_record] << _self.properties[ :editor ].current_object
 	
 	>> _self
 	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.new_record()
+	## 
+	## 
+
+	>> .properties[:new_record]
 _endmethod
 $
 
@@ -156,9 +165,7 @@ _method application_system_test_mixin.when_going_to_bounds( xmin, ymin, xmax, ym
 	##
 
 	bounds << bounding_box.new( xmin, ymin, xmax, ymax )
-
-	manager << _self.properties[ :application ].get_service_provider( :map_manager )
-	manager.goto( bounds )
+	_self.map_manager.goto( bounds )
 
 	>> _self 
 	
@@ -294,6 +301,87 @@ _private _method application_system_test_mixin.handle_event( top_container, cate
 
 	top_container.remove_dependent( _self )
 	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_editor_label_is( expected_string )
+	## 
+	## 
+
+	editor << _self.editor
+	con << editor.sys!slot(:container)
+
+	actual_string << _if ( a_label_item << con.get_item("collection_name_label") ) _isnt _unset
+			 _then
+				 >> a_label_item.label
+			 _endif
+	
+	_self.assert_equal( expected_string, actual_string )
+	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_editor_field_displays( field_name, expected_string )
+	## 
+	## 
+
+	# FIXME - should check what is displayed in editor tree_item
+	
+	editor << _self.editor
+	actual_values << editor.get_proposed_field_values( :insert )
+	
+	actual_string << _if ( actual << actual_values[ field_name ] ) _isnt _unset
+			 _then
+				 >> actual.write_string
+			 _endif
+	
+	_self.assert_equal( expected_string, actual_string,
+			    "Expected field " + field_name, " to have value '", expected_string,
+			    "' not '", actual_string.default(""), "'" )
+	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_record_is_shown_on_map( a_rwo )
+	## 
+	## 
+
+	manager << _self.map_manager
+	mv << manager.current_map_view
+	geoms << mv.get_visible_geometry_set()
+
+	_self.assert_true( geoms.rwo_set().includes?( a_rwo ),
+			   "Expect current map to show " + a_record.description() )
+
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.map_manager
+	## 
+	## 
+
+	>> _self.properties[ :application ].get_service_provider( :map_manager )
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.editor_manager
+	## 
+	## 
+
+	>> _self.properties[ :application ].get_service_provider( :editor_manager )
 _endmethod
 $
 
