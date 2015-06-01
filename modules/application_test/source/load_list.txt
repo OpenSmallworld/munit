@@ -2,6 +2,7 @@ serialised_test_mixin
 
 database_system_test_mixin
 application_system_test_mixin
+design_manager_system_test_mixin
 
 database_test
 application_test
