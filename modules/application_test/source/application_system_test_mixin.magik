@@ -661,7 +661,7 @@ _private _method application_system_test_mixin.editor_label()
 	## 
 	##
 	
-	record << _self.new_record()
+	record << _self.parameter_new_record()
 	label  << write_string( "[", record.source_view.external_name, "] ", record.external_name )
 
 	>> label 

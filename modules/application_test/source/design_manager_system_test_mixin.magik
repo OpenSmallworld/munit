@@ -225,6 +225,7 @@ _private _method design_manager_system_test_mixin.delete_project()
 	_then
 		swg_dsn_admin_engine.activate_design( _unset )
 		swg_dsn_admin_engine.delete_project( project, _true )
+		swg_dsn_admin_engine.rollforward()
 	_endif
 	
 _endmethod
