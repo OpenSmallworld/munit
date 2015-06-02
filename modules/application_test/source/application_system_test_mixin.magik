@@ -445,13 +445,13 @@ _method application_system_test_mixin.scenario_insert_record( dataset_name, coll
 	## 
 	##
 	
-	_self.given_an_embbeded_editor_with_default_values( dataset_name, collection_name ).
+	>> _self.given_an_embbeded_editor_with_default_values( dataset_name, collection_name ).
 		given_proposed_editor_values( proposed_values ).
 		
 		when_inserting_record().
 
-		then_record_is_shown_on_map( _self.new_record() ).
-		then_editor_label_is( _self.editor_label_inserted() ).
+		then_record_is_shown_on_map( _self.parameter_new_record() ).
+		then_editor_label_is( _self.parameter_editor_label_inserted() ).
 		then_editor_fields_display( expected_values )	
 	
 _endmethod
@@ -459,7 +459,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.new_record()
+_private _method application_system_test_mixin.parameter_new_record()
 	## 
 	## 
 
@@ -607,7 +607,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.unique_id_string( id, prefix )
+_method application_system_test_mixin.parameter_unique_id_string( id, prefix )
 	## 
 	## Set the .properties[ ID ] to "PREFIX" +
 	## system.elapsed_seconds()
@@ -625,7 +625,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.editor_label_inserted()
+_private _method application_system_test_mixin.parameter_editor_label_inserted()
 	## 
 	## Return a string with the expected string for the editor when
 	## a record is inserted.
@@ -641,7 +641,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.editor_label_updated()
+_private _method application_system_test_mixin.parameter_editor_label_updated()
 	## 
 	## Return a string with the expected string for the editor when
 	## a record is updated.
@@ -671,7 +671,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.pulldown_menu_container
+_private _method application_system_test_mixin.parameter_pulldown_menu_container
 	## 
 	##
 

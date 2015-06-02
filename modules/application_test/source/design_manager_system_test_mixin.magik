@@ -136,7 +136,7 @@ _method design_manager_system_test_mixin.scenario_create_design( xmin, ymin, xma
 		when_going_to_bounds( xmin, ymin, xmax, ymax ).
 		given_a_new_design( project_name, design_name ).
 		when_changing_design_status( new_status ).
-		then_masthead_title_is( _self.masthead_title ).
+		then_masthead_title_is( _self.parameter_masthead_title ).
 		then_dataset_light_is( dataset_light )
 	
 _endmethod
@@ -200,7 +200,7 @@ $
 
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method design_manager_system_test_mixin.masthead_title
+_private _method design_manager_system_test_mixin.parameter_masthead_title
 	## 
 	## This method should be subclassed to provide the correct
 	## masthead title for the application the test is testing.
