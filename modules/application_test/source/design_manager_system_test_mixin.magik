@@ -1,0 +1,232 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+##
+## This mixin defines given/when/then methods for designs.
+##
+## All classes that inherits from this mixin must define a
+## .properties method that returns a property_list.
+##
+def_mixin( :design_manager_system_test_mixin, { :application_system_test_mixin } )
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.given_no_active_design()
+	## 
+	##
+	
+	swg_dsn_admin_engine.clear_current_design()
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.given_a_design( project_name, design_name, _optional xmin, ymin, xmax, ymax )
+	## 
+	## If a design with DESIGN_NAME exists, use it, else create a
+	## new one.
+	##
+	
+	_if ( design << _self.get_existing_test_design( project_name, design_name )) _is _unset
+	_then
+		_self.given_a_new_design( project_name, design_name, xmin, ymin, xmax, ymax )		
+	_else
+		swg_dsn_admin_engine.activate_design( design )
+
+		_self.properties[ :design  ] << design
+		_self.properties[ :project ] << design.project
+		
+	_endif
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.given_a_new_design( project_name, design_name, _optional xmin, ymin, xmax, ymax )
+	## 
+	## This method will fail if a design with DESIGN_NAME exists
+	## already.
+	##
+	
+	parent_design << swg_dsn_admin_engine.active_scheme
+
+	_try _with cond
+		
+		swg_dsn_admin_engine.clear_current_design()
+
+		project << _self.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
+		design  << swg_dsn_admin_engine.create_scheme( project, parent_design, design_name, _self.ds_view_names, _unset )
+		
+		swg_dsn_admin_engine.activate_design( design )
+		
+	_when ds_write_switch_failed
+		# We ought to be able to use the :view parameter of the
+		# condition, but this doesn't get set :-(
+		_local view << gis_program_manager.databases[ :design_admin ]
+		write( "Failed to get write access to to view ", view, " as it is being written to by ", view.current_writer )
+		cond.continue_handling()
+	_endtry
+
+	_self.properties[ :design  ] << design
+	_self.properties[ :project ] << design.project
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.given_no_active_design()
+	## 
+	##
+	
+	swg_dsn_admin_engine.activate_design( _unset )
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.when_changing_design_status( new_status )
+	## 
+	## Change the status of the current design to NEW_STATUS
+	##
+
+	design << swg_dsn_admin_engine.active_scheme
+	swg_dsn_admin_engine.find_and_perform_transition( design, design.status, new_status )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.scenario_create_design( xmin, ymin, xmax, ymax, project_name, design_name, new_status, dataset_light )
+	## 
+	## Create a writable design.  An application must be running
+	## before executing this scenario.
+	##
+	## GIVEN an application is running
+	##  
+	## WHEN I create a design with 
+	##  Name="<PROJECT_NAME>"
+	##  Type="<TYPE>"
+	##  Bounds=(<XMIN,YMIN,XMAX,YMAX>)
+	## AND I transitioned the Design to "<NEW_STATUS>"
+	##
+	## THEN Masthead_title= "<_self.masthead_title>"
+	##  AND Dataset Light=<DATASET_LIGHT>
+	##
+
+	_dynamic !current_world!
+	!current_world! << _self.map_manager.current_map_view.world
+			
+	>> _self.given_no_active_design().
+		when_going_to_bounds( xmin, ymin, xmax, ymax ).
+		given_a_new_design( project_name, design_name ).
+		when_changing_design_status( new_status ).
+		then_masthead_title_is( _self.parameter_masthead_title ).
+		then_dataset_light_is( dataset_light )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_system_test_mixin.get_existing_test_design( project_name, design_name )
+	##
+	## Returns the test design if it exists and _unset otherwise
+	##
+
+	>> swg_dsn_admin_engine.find_scheme( design_name, project_name, _false )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_system_test_mixin.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
+	## 
+	##
+	
+	project << swg_dsn_admin_engine.find_project_or_scheme( project_name, :project, _false )
+	_if project _is _unset 
+	_then
+		
+		_if xmin _isnt _unset
+		_then
+			bounds << bounding_box.new( xmin, ymin, xmax, ymax )
+		_else
+			manager << _self.properties[ :application ].get_service_provider( :map_manager )
+			bounds  << manager.current_map_view.current_view_bounds
+		_endif
+		
+		project  << swg_dsn_admin_engine.create_project( project_name, _self.ds_view_names, bounds.as_sector_rope())
+		
+	_endif
+
+	>> project
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_system_test_mixin.ds_view_names
+	## 
+	##	
+		
+	dataset_names << rope.new()
+	_for dataset _over swg_dsn_admin_engine.dm_managed_datasets().fast_elements()
+	_loop
+		dataset_names.add_last( dataset.name )
+	_endloop
+
+	>> dataset_names
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_system_test_mixin.parameter_masthead_title
+	## 
+	## This method should be subclassed to provide the correct
+	## masthead title for the application the test is testing.
+	##
+
+	>> ""
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_system_test_mixin.delete_project()
+	## 
+	## Delete the project and designs created by this test.
+	##
+	## This method can be called in the tear_down() method of tests
+	## inheriting from this mixin.
+	##
+	
+	_if ( project << _self.properties[ :project ] ) _isnt _unset
+	_then
+		swg_dsn_admin_engine.activate_design( _unset )
+		swg_dsn_admin_engine.delete_project( project, _true )
+		swg_dsn_admin_engine.rollforward()
+	_endif
+	
+_endmethod
+$

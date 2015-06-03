@@ -1,0 +1,684 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+##
+## This mixin defines given/when/then methods on applications.
+##
+## All classes that inherits from this mixin must define a
+## .properties method that returns a property_list.
+##
+def_mixin( :application_system_test_mixin, { :serialised_test_mixin } )
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_an_application( application_name )
+	## 
+	## Ensure that the required application (as specified by
+	## APPLICATION_NAME) is running.
+	##
+	##     * If it is already running, the test will run
+	##     * If it is available but not yet running, it will be
+	##       started and the test will run 
+	##     * If it is not available, the test will fail.
+	##
+
+	# Make sure the application is running
+	_if ( app << smallworld_product.application( application_name ) ) _is _unset
+	_then
+		_if ( app_def << smallworld_product.application_definition( application_name ) ) _isnt _unset
+		_then
+			# Application exists but is not yet running, start it
+			app << app_def.int!start()
+			_self.wait_for_application_to_be_active( application_name )
+		_else
+			# Application does not exist
+			condition.raise( :error, :string, "Cannot find " + application_name + " application" )
+		_endif
+	_endif
+
+	_self.properties[ :application ] << app
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_an_embbeded_editor( dataset_name, collection_name )
+	## 
+	##
+
+	collection << _self.dataset( dataset_name ).collections[ collection_name ]
+	editor << _self.editor_manager.display_embedded_editor_for_collection( collection )
+	_self.properties[ :editor ] << editor
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_an_embbeded_editor_with_default_values( dataset_name, collection_name )
+	## 
+	##
+
+	_self.given_an_embbeded_editor( dataset_name, collection_name )
+	action << _self.properties[ :editor ].component( :field_lister ).action( :set_defaults )
+
+	_self.click_action_button( action )
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_proposed_editor_values( proposed_values )
+	## 
+	##
+
+	_self.properties[ :editor ].set_proposed_values( proposed_values )
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_inserting_record()
+	## 
+	##
+
+	_dynamic !current_application!, !current_world!
+	!current_application! << _self.properties[ :application ]
+	!current_world! << _self.map_manager.current_map_view.world
+
+	action << _self.properties[ :editor ].action( :insert )
+	_self.click_action_button( action )
+
+	_self.properties[:new_record] << _self.properties[ :editor ].current_object
+	
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_action( plugin_name, action_name )
+	## 
+	## Click on the ACTION_NAME action of the PLUGIN_NAME plugin.
+	## This plugin is a plugin of .properties[ :application ]
+	##
+
+	action << _self.properties[ :application ].plugin( plugin_name ).action( action_name )
+	_self.click_action_button( action )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_tab( tab_name )
+	## 
+	## 
+
+	container << _self.properties[ :application ].top_frame.top_canvas_container
+	
+	_for item _over container.get_items_of_type( :tag!sw_tab_container ).fast_elements()
+	_loop @item
+
+		_for label_item _over item.tab_container.get_items_of_type( :tag!sw_label_item ).fast_elements()
+		_loop
+			_if label_item.label = tab_name
+			_then
+				tab_label << label_item
+				tab       << item
+				_leave @item
+			_endif
+		_endloop 
+		
+	_endloop
+
+	_self.properties[ :tab ] << tab
+	_self.properties[ :tab_label ] << tab_label
+	_self.click_item( tab_label )
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_pulldown_menu_item( identifier )
+	## 
+	##
+
+	_self.when_clicking_item( :tag!sw_pulldown_menu_item, identifier )
+	_self.properties[ :pulldown_menu ] << _self.properties[ :click_item ].pulldown_menu
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_item_with_label( tag, label, _optional container )
+	## 
+	##	
+
+	_if container _is _unset
+	_then 
+		container << _self.properties[ :application ].top_frame.top_canvas_container
+	_endif
+	
+	_for item _over container.get_items_of_type( tag ).fast_elements()
+	_loop
+		_if item.responds_to?( :label ) _andif
+		    item.label = label
+		_then
+			click_item << item
+			_leave
+		_endif
+	_endloop
+
+	_if click_item _isnt _unset
+	_then
+		_self.click_item( click_item )
+	_endif
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_item( tag, identifier )
+	## 
+	##
+	
+	container << _self.properties[ :application ].top_frame.top_canvas_container
+	
+	_for item _over container.get_items_of_type( tag ).fast_elements()
+	_loop
+		_if item.identifier = identifier
+		_then
+			click_item << item
+			_leave
+		_endif
+	_endloop
+
+	_if click_item _isnt _unset
+	_then
+		_self.click_item( click_item )
+	_endif
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_going_to_bounds( xmin, ymin, xmax, ymax )
+	## 
+	##
+
+	bounds << bounding_box.new( xmin, ymin, xmax, ymax )
+	_self.map_manager.goto( bounds )
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_record_inserted( dataset_name, collection_name, field_name, value )
+	## 
+	## Find the record in the collection named COLLECTION_NAME with
+	## VALUE for the field named FIELD_NAME in the difference
+	## stream between the current view and the base view.
+	##
+
+	ds_view    << _self.dataset( dataset_name )
+	collection << ds_view.collections[ collection_name ]
+	
+	base_view << ds_view.replicate( :base )
+	found?    << _false 
+
+	_protect 
+
+		stream << ds_difference_stream.new_on( collection, base_view.collections[ collection_name ] )
+
+		_loop
+			
+			( change, record, base_record ) << stream.get()
+			_if record _is _unset _then _leave _endif
+
+			_if base_record _is _unset _andif
+			    record.perform( field_name ) = value
+			_then
+				found? << _true
+			_endif
+			
+		_endloop
+
+	_protection
+		base_view.discard()
+	_endprotect
+
+	fail_str << write_string( "Expected record in ", collection_name, " with field ", field_name, " = ", value, " not found" )
+	_self.assert_true( found?, fail_str )
+
+	>> _self 
+		
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_masthead_title_is( expected_title )
+	## 
+	##
+
+	title << _self.properties[ :application ].menubar.masthead_title
+
+	fail_str << write_string( "The expected masthead title is ", newline_char, expected_title, newline_char )
+	fail_str << write_string( fail_str, "but it is", newline_char, title )
+
+	_self.assert_equals( expected_title, title, fail_str )
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_dataset_light_is( expected_colour )
+	## 
+	## EXPECTED_COLOUR is a symbol, either, :red, :orange or :green
+	##
+
+	top_container << _self.properties[ :application ].top_frame.top_canvas_container
+	
+	write_item << top_container.get_item( :db_access_write )
+	read_item  << top_container.get_item( :db_access_read  )
+	mixed_item << top_container.get_item( :db_access_mixed )
+
+	_if expected_colour _is :red
+	_then
+		grey_items << property_list.new_with( :green, write_item, :orange, mixed_item )
+		red_light  << smallworld_product.get_raster_image( :traffic_light_red, :ui_resources )
+
+		fail_str << "The red light isn't red"
+		_self.assert_equals( read_item.image, red_light, fail_str )
+		
+	_elif expected_colour _is :green
+	_then
+		grey_items  << property_list.new_with( :red, read_item, :orange, mixed_item )
+		green_light << smallworld_product.get_raster_image( :traffic_light_green, :ui_resources )
+
+		fail_str << "The green light isn't green"
+		_self.assert_equals( write_item.image, green_light, fail_str )
+		
+	_else
+		grey_items   << property_list.new_with( :green, write_item, :red, read_item )
+		orange_light << smallworld_product.get_raster_image( :traffic_light_yellow, :ui_resources )
+
+		fail_str << "The orange light isn't orange"
+		_self.assert_equals( mixed_item.image, orange_light, fail_str )
+		
+	_endif
+
+        grey_light << smallworld_product.get_raster_image( :traffic_light_grey, :ui_resources )
+	_for light_name, grey_item _over grey_items.fast_keys_and_elements()
+	_loop
+		fail_str << write_string( "The ", light_name, " light should be grey, but it isn't" )
+		_self.assert_equals( grey_item.image, grey_light, fail_str )
+	_endloop
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_editor_label_is( expected_string )
+	## 
+	## 
+
+	editor << _self.properties[ :editor ]
+	con << editor.sys!slot(:container)
+
+	collection_string << _if ( a_label_item << con.get_item("collection_name_label") ) _isnt _unset
+			     _then
+				     >> a_label_item.label
+			     _endif
+	
+	status_string << _if ( a_label_item << con.get_item("status_label") ) _isnt _unset
+			 _then
+				 >> a_label_item.label
+			 _endif
+	actual_string << write_string( collection_string, " ", status_string )
+	
+	_self.assert_equals( expected_string, actual_string )
+	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_editor_field_displays( field_name, expected_string )
+	## 
+	## 
+
+	# FIXME - should check what is displayed in editor tree_item
+	
+	editor << _self.properties[ :editor ]
+	field_editor << editor.component( :field_lister ).field_editor( field_name )
+	
+	actual_string << _if ( actual << field_editor.field_item.value ) _isnt _unset
+			 _then
+				 >> actual.write_string
+			 _endif
+
+	fail_str << write_string( "Expected field " + field_name, " to have value '", expected_string,
+				  "' not '", actual_string.default(""), "'" )
+	_self.assert_equals( expected_string, actual_string, fail_str )
+	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_editor_fields_display( expected_values )
+	## 
+	## EXPECTED_VALUES is a property list keyed on field name
+	##
+
+	_for field_name, expected_value _over expected_values.fast_keys_and_elements()
+	_loop
+		_self.then_editor_field_displays( field_name, expected_value )
+	_endloop
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_record_is_shown_on_map( rwo )
+	## 
+	## 
+
+	manager << _self.map_manager
+	mv << manager.current_map_view
+	geoms << mv.get_visible_geometry_set()
+
+	_self.assert_true( geoms.rwo_set().includes?( rwo ),
+			   "Expect current map to show " + rwo.description() )
+
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.scenario_insert_record( dataset_name, collection_name, proposed_values, expected_values )
+	## 
+	##
+	
+	>> _self.given_an_embbeded_editor_with_default_values( dataset_name, collection_name ).
+		given_proposed_editor_values( proposed_values ).
+		
+		when_inserting_record().
+
+		then_record_is_shown_on_map( _self.parameter_new_record() ).
+		then_editor_label_is( _self.parameter_editor_label_inserted() ).
+		then_editor_fields_display( expected_values )	
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.parameter_new_record()
+	## 
+	## 
+
+	>> _self.properties[:new_record]
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.wait_for_application_to_be_active( app_name )
+	## 
+	##				
+		
+	# Wait for 3 mins and time out
+	_over 1.upto(6)
+	_loop
+		_if (app << smallworld_product.application(app_name)) _isnt _unset _andif
+		    app.active?
+		_then
+			#We've started.  Give it another 30secs to get comfy...
+			write("App waking up: ",app)
+			_thisthread.sleep(30000)
+			_leave
+		_endif
+		_thisthread.sleep(30000)
+	_endloop
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.dataset( ds_name )
+	##
+	## Returns the dataset named DS_NAME
+	##
+
+	>> gis_program_manager.databases[ds_name]
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.click_action_button( action, _optional container )
+	## 
+	## Look through all the sw_button_items on the application's
+	## top container that has :model = ACTION.  Click on the first
+	## one found.
+	##
+
+	_if container _is _unset
+	_then 
+		container << _self.properties[ :application ].top_frame.top_canvas_container
+	_endif
+	
+	_for item _over container.all_items()
+	_loop
+		
+		_if ( model << item.model ) = action _orif
+		    ( model.is_kind_of?( toolbar_action_proxy ) _andif
+		      model.real_subject = action )
+		_then
+			button << item
+			_leave 
+		_endif
+		
+	_endloop
+
+	_self.properties[ :action_button ] << button
+	_self.click_item( button )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.click_item( item )
+	## 
+	##
+	
+	_self.properties[ :click_item ] << item
+
+	top_container << item.top_container
+	( x, y ) << item.location_in_window( top_container )
+
+	x << x + ( item.width  / 2.0 ).rounded
+	y << y + ( item.height / 2.0 ).rounded 
+
+	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
+	_self.handle_event( top_container, :button, :left, x, y, :press,   0 )
+	_self.handle_event( top_container, :button, :left, x, y, :release, 0 )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.handle_event( top_container, category, id, x, y, func, modmask )
+	## 
+	##
+
+	_if _self.properties[ :queue ] _is _unset
+	_then
+		_self.properties[ :queue ] << atomic_queue.new( 1019 )
+	_endif
+
+	top_container.add_dependent( _self )
+
+	time << system.elapsed_seconds()
+	new_event << input_event.new_with( category, time, top_container.actual.id, id, x, y, func, modmask )
+
+	top_container.handle_event( new_event )
+
+	_self.wait_for_event_on_queue( :event_handled, id )
+
+	top_container.remove_dependent( _self )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.map_manager
+	## 
+	## 
+
+	>> _self.properties[ :application ].get_service_provider( :map_manager )
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.editor_manager
+	## 
+	## 
+
+	>> _self.properties[ :application ].get_service_provider( :editor_manager )
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.parameter_unique_id_string( id, prefix )
+	## 
+	## Set the .properties[ ID ] to "PREFIX" +
+	## system.elapsed_seconds()
+	##
+
+	_if _self.properties[ id ] _is _unset
+	_then 
+		_self.properties[ id ] << write_string( prefix, system.elapsed_seconds().as_fixed_string( 10, 10 ))
+	_endif
+
+	>> _self.properties[ id ]
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.parameter_editor_label_inserted()
+	## 
+	## Return a string with the expected string for the editor when
+	## a record is inserted.
+	##
+	## This is based on the current record:
+	## [<dataset_name>] <collection_name> - record inserted
+	##
+
+	>> write_string( _self.editor_label(), " - record inserted" )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.parameter_editor_label_updated()
+	## 
+	## Return a string with the expected string for the editor when
+	## a record is updated.
+	##
+	## This is based on the current record:
+	## [<dataset_name>] <collection_name> - record updated
+	##
+
+	>> write_string( _self.editor_label(), " - record updated" )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.editor_label()
+	## 
+	##
+	
+	record << _self.parameter_new_record()
+	label  << write_string( "[", record.source_view.external_name, "] ", record.external_name )
+
+	>> label 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.parameter_pulldown_menu_container
+	## 
+	##
+
+	_if ( menu << _self.properties[ :pulldown_menu ] ) _isnt _unset
+	_then
+		_return menu.top_container
+	_endif
+	
+_endmethod
+$

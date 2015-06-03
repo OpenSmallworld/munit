@@ -36,7 +36,7 @@ def_slotted_exemplar( :application_test,
         {
 		{ :application,  _unset }
 	},
-        { :database_test } )
+        { :database_test, :application_system_test_mixin } )
 $
 
 application_test.define_shared_constant(:test_aspects,
@@ -60,19 +60,8 @@ _method application_test.set_up()
 	## It also creates a scratchpad to hold any transient data.
 	##
 
-	# Make sure the application is running
-	_if ( app << smallworld_product.application( _self.application_name ) ) _isnt _unset
-	_then
-		# Application is already running, use it
-		_self.application << app
-	_elif ( app_def << smallworld_product.application_definition( _self.application_name ) ) _isnt _unset
-	_then
-		# Application exists but is not yet running, start it
-		_self.application << app_def.int!start()
-	_else
-		# Application does not exist
-		condition.raise( :error, :string, "Cannot find " + _self.application_name + " application" )
-	_endif
+	_self.given_an_application( _self.application_name )
+	_self.application << .properties[ :application ]
 
 	_super.set_up()
 _endmethod
