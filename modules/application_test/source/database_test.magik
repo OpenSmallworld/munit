@@ -45,6 +45,18 @@ $
 
 
 _pragma(classify_level=debug)
+_method database_test.tear_down()
+	##
+	## This gets called after each test and deletes the scratchpad.
+	##
+	
+	>> _super( database_system_test_mixin ).tear_down()
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method database_test.properties
 	## 
 	##
