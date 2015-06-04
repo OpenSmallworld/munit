@@ -39,6 +39,10 @@ def_slotted_exemplar( :application_test,
         { :database_test, :application_system_test_mixin } )
 $
 
+
+application_test.method_table.resolve_conflicts( :database_test )
+$
+
 application_test.define_shared_constant(:test_aspects,
 	property_list.new_with( :never, "NEVER" ), :public )
 $
