@@ -64,10 +64,10 @@ _method application_test.set_up()
 	## It also creates a scratchpad to hold any transient data.
 	##
 
+	_super.set_up()
+	
 	_self.given_an_application( _self.application_name )
 	_self.application << .properties[ :application ]
-
-	_super.set_up()
 _endmethod
 $
 
