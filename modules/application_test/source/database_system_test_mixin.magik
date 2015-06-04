@@ -30,7 +30,7 @@ _method database_system_test_mixin.given_writable_datasets( writable_dataset_nam
 	##
 	
 	# Create a scratchpad for each dataset to hold any changes
-	_for ds_name _over _self.dataset_names.fast_elements()
+	_for ds_name _over writable_dataset_names.fast_elements()
 	_loop
 		v << gis_program_manager.databases[ds_name]
 		v.goto_top_alternative()
