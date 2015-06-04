@@ -40,6 +40,10 @@ database_test.define_shared_constant(:test_aspects,
 $
 
 
+database_test.method_table.resolve_conflicts( :test_case )
+$
+
+
 _pragma(classify_level=debug)
 _method database_test.properties
 	## 
