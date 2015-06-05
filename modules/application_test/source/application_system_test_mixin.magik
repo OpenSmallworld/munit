@@ -110,7 +110,7 @@ _method application_system_test_mixin.when_inserting_record()
 
 	_dynamic !current_application!, !current_world!
 	!current_application! << _self.properties[ :application ]
-	!current_world! << _self.map_manager.current_map_view.world
+	!current_world! << _self.default_world()
 
 	action << _self.insert_action()
 	_self.click_action_button( action )
@@ -706,6 +706,17 @@ _private _method application_system_test_mixin.insert_action()
 	##
 	
 	>> _self.properties[ :editor ].action( :insert )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method application_system_test_mixin.default_world()
+	## 
+	##
+
+	>> _self.map_manager.current_map_view.world
 	
 _endmethod
 $
