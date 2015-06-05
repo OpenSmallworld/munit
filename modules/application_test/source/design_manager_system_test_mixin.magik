@@ -130,7 +130,7 @@ _method design_manager_system_test_mixin.scenario_create_design( xmin, ymin, xma
 	##
 
 	_dynamic !current_world!
-	!current_world! << _self.map_manager.current_map_view.world
+	!current_world! << _self.default_world()
 			
 	>> _self.given_no_active_design().
 		when_going_to_bounds( xmin, ymin, xmax, ymax ).
