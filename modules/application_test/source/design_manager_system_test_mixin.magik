@@ -128,9 +128,6 @@ _method design_manager_system_test_mixin.scenario_create_design( xmin, ymin, xma
 	## THEN Masthead_title= "<_self.masthead_title>"
 	##  AND Dataset Light=<DATASET_LIGHT>
 	##
-
-	_dynamic !current_world!
-	!current_world! << _self.default_world()
 			
 	>> _self.given_no_active_design().
 		when_going_to_bounds( xmin, ymin, xmax, ymax ).
