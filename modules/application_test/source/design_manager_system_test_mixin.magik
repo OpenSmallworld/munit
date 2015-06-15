@@ -102,8 +102,12 @@ _method design_manager_system_test_mixin.when_changing_design_status( new_status
 	## Change the status of the current design to NEW_STATUS
 	##
 
-	design << swg_dsn_admin_engine.active_scheme
-	swg_dsn_admin_engine.find_and_perform_transition( design, design.status, new_status )
+	design << swg_dsn_admin_engine.active_scheme	
+
+	_if (design.status <> new_status)
+	_then 	
+		swg_dsn_admin_engine.find_and_perform_transition( design, design.status, new_status )
+	_endif
 
 	>> _self
 	
