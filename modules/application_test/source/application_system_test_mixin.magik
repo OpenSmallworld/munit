@@ -123,6 +123,31 @@ $
 
 
 _pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_item( id_path )
+	## 
+	## Click on the Swift widget identified by the path string ID_PATH.
+	##
+	## ID_PATH can be found using get_identifier_path() and is
+	## displayed in the Object Spy for widgets with a unique
+	## identifier path.
+	## (Load magik_tools from sw_dev_tools to enable Object Spy
+	## activation using F4)
+
+	container << _self.properties[ :application ].top_frame.top_canvas_container
+
+	click_item << container.get_item_with_path( id_path )
+	
+	_if click_item _isnt _unset
+	_then
+		_self.click_item( click_item )
+	_endif
+	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_action( plugin_name, action_name )
 	## 
 	## Click on the ACTION_NAME action of the PLUGIN_NAME plugin.
@@ -175,7 +200,7 @@ _method application_system_test_mixin.when_clicking_pulldown_menu_item( identifi
 	## 
 	##
 
-	_self.when_clicking_item( :tag!sw_pulldown_menu_item, identifier )
+	_self.when_clicking_item_with_identifier( :tag!sw_pulldown_menu_item, identifier )
 	_self.properties[ :pulldown_menu ] << _self.properties[ :click_item ].pulldown_menu
 
 	>> _self 
@@ -216,7 +241,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_item( tag, identifier )
+_method application_system_test_mixin.when_clicking_item_with_identifier( tag, identifier )
 	## 
 	##
 	
