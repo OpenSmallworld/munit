@@ -478,6 +478,26 @@ $
 
 
 _pragma(classify_level=debug)
+_method application_system_test_mixin.then_dialog_activated( plugin_name, dialog_name )
+	## 
+	##
+	a_plugin << _self.properties[ :application ].plugin( plugin_name )
+	_if a_plugin _isnt _unset
+	_then
+		a_dialog << a_plugin.dialogs[ dialog_name ]
+	_endif
+
+	_self.add_dialog( a_dialog )
+	
+	fail_string << write_string( "Dialog: ", dialog_name, " Not found from Plugin: ", plugin_name )
+	_self.assert_not_unset( a_dialog, fail_string )
+
+	>> _self  
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method application_system_test_mixin.scenario_insert_record( dataset_name, collection_name, proposed_values, expected_values )
 	## 
 	##
@@ -730,6 +750,45 @@ _private _method application_system_test_mixin.insert_action()
 	##
 	
 	>> _self.properties[ :editor ].action( :insert )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.close_dialogs()
+	## 
+	## Close any dialogs that are listed in the properties
+	## [:dialogs ] slot
+	##
+
+	dialogs << _self.properties[ :dialogs ]
+	_if dialogs _isnt _unset
+	_then
+		_for dialog _over dialogs.elements()
+		_loop
+			dialog.close()
+		_endloop
+	_endif 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.add_dialog( a_dialog )
+	## 
+	## Add A_DIALOG to the properties
+	## [:dialogs ] slot
+	##
+
+	_if _self.properties[ :dialogs ] _is _unset
+	_then 
+		_self.properties[ :dialogs ] << rope.new()
+	_endif 
+
+	_if a_dialog _isnt _unset
+	_then 
+		_self.properties[ :dialogs ].add( a_dialog )
+	_endif 
 	
 _endmethod
 $
