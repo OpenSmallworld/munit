@@ -123,6 +123,16 @@ $
 
 
 _pragma(classify_level=debug)
+_method application_system_test_mixin.get_item( id_path )
+	## 
+	## Return the UI widget matching the supplied string ID_PATH.
+
+	>> sw_swift_manager.get_item_with_path( id_path )
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_item( id_path )
 	## 
 	## Click on the Swift widget identified by the path string ID_PATH.
@@ -133,10 +143,7 @@ _method application_system_test_mixin.when_clicking_item( id_path )
 	## (Load magik_tools from sw_dev_tools to enable Object Spy
 	## activation using F4)
 
-	container << _self.properties[ :application ].top_frame.top_canvas_container
-
-	click_item << container.get_item_with_path( id_path )
-	
+	click_item << _self.get_item( id_path )
 	_if click_item _isnt _unset
 	_then
 		_self.click_item( click_item )
