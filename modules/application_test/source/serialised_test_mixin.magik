@@ -31,6 +31,18 @@ $
 
 
 _pragma(classify_level=debug)
+_method serialised_test_mixin.queue << new_queue
+        ## 
+        ##
+
+        _self.properties[:queue] << new_queue
+        
+_endmethod
+$
+
+
+
+_pragma(classify_level=debug)
 _method serialised_test_mixin.wait_for_serialised_tasks_to_complete( top_frame )
 	## 
 	##
@@ -207,5 +219,26 @@ _method serialised_test_mixin.note_change( who, what, data )
 		_endif
 	_endif
 	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method serialised_test_mixin.when_the_frame_is_activated( top_frame )
+	## 
+	## 
+
+	_if top_frame _isnt _unset _andif
+	    _not top_frame.active?
+	_then
+		_if _self.queue _is _unset
+		_then 
+			_self.queue << atomic_queue.new( 1019 )
+		_endif 
+		top_frame.activate()
+		_self.wait_for_value_on_queue( :done_realise, _false )
+	_endif
+	
+	>> _self
 _endmethod
 $
