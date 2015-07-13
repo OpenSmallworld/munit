@@ -48,6 +48,28 @@ _endmethod
 $
 
 
+_private _method application_system_test_mixin.given_a_case_application( app_name, soc_name )
+	## Start Case application with soc name (as specificied by the app_name and soc_name)
+	## This would start the application in the given soc_name,
+	## skipping the SOC selector dialog. 				
+
+	app_def << smallworld_product.application_definition(app_name)
+	new_app_def << application_definition.new(app_def.application_name, app_def.application_class_name, :soc_name, soc_name, _scatter app_def.properties.for_scatter())
+	new_app_def.int!start()
+
+	app << new_app_def.application
+	
+	app.top_frame.maximized? << true
+  
+	_self.properties[ :application ] << app
+	
+	_self.wait_for_application_to_be_active(app_name)
+	>> _self 
+	
+_endmethod
+$
+
+
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_an_embbeded_editor( dataset_name, collection_name )
 	## 
@@ -801,3 +823,4 @@ _private _method application_system_test_mixin.add_dialog( a_dialog )
 	
 _endmethod
 $
+
