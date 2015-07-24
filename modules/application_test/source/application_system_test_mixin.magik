@@ -24,6 +24,12 @@ _method application_system_test_mixin.given_an_application( application_name )
 	##     * If it is not available, the test will fail.
 	##
 
+	# Make sure there is a queue for events
+	_if _self.properties[ :queue ] _is _unset
+	_then
+		_self.properties[ :queue ] << atomic_queue.new( 1019 )
+	_endif
+	
 	# Make sure the application is running
 	_if ( app << smallworld_product.application( application_name ) ) _is _unset
 	_then
@@ -38,7 +44,7 @@ _method application_system_test_mixin.given_an_application( application_name )
 		_endif
 	_endif
 
-  app.top_frame.maximized? << true
+	app.top_frame.maximized? << true
   
 	_self.properties[ :application ] << app
 
@@ -157,7 +163,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_item( id_path )
+_method application_system_test_mixin.when_clicking_item( id_path, _optional new_frame_wait_time )
 	## 
 	## Click on the Swift widget identified by the path string ID_PATH.
 	##
@@ -170,7 +176,7 @@ _method application_system_test_mixin.when_clicking_item( id_path )
 	click_item << _self.get_item( id_path )
 	_if click_item _isnt _unset
 	_then
-		_self.click_item( click_item )
+		_self.click_item( click_item, new_frame_wait_time )
 	_endif
 	
 	>> _self
@@ -179,14 +185,15 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_action( plugin_name, action_name )
+_method application_system_test_mixin.when_clicking_action( plugin_name, action_name,
+							    _optional new_frame_wait_time )
 	## 
 	## Click on the ACTION_NAME action of the PLUGIN_NAME plugin.
 	## This plugin is a plugin of .properties[ :application ]
 	##
 
 	action << _self.properties[ :application ].plugin( plugin_name ).action( action_name )
-	_self.click_action_button( action )
+	_self.click_action_button( action, new_frame_wait_time )
 
 	>> _self
 	
@@ -227,13 +234,16 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_pulldown_menu_item( identifier )
+_method application_system_test_mixin.when_clicking_pulldown_menu_item( identifier,
+									_optional new_frame_wait_time )
 	## 
 	##
 
-	_self.when_clicking_item_with_identifier( :tag!sw_pulldown_menu_item, identifier )
+	_self.when_clicking_item_with_identifier( :tag!sw_pulldown_menu_item, identifier,
+						  new_frame_wait_time.default(250) )
+	
 	_self.properties[ :pulldown_menu ] << _self.properties[ :click_item ].pulldown_menu
-
+	
 	>> _self 
 	
 _endmethod
@@ -241,7 +251,8 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_item_with_label( tag, label, _optional container )
+_method application_system_test_mixin.when_clicking_item_with_label( tag, label,
+								     _optional container, new_frame_wait_time )
 	## 
 	##	
 
@@ -262,7 +273,7 @@ _method application_system_test_mixin.when_clicking_item_with_label( tag, label,
 
 	_if click_item _isnt _unset
 	_then
-		_self.click_item( click_item )
+		_self.click_item( click_item, new_frame_wait_time )
 	_endif
 
 	>> _self
@@ -272,7 +283,8 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_item_with_identifier( tag, identifier )
+_method application_system_test_mixin.when_clicking_item_with_identifier( tag, identifier,
+									  _optional new_frame_wait_time )
 	## 
 	##
 	
@@ -289,7 +301,7 @@ _method application_system_test_mixin.when_clicking_item_with_identifier( tag, i
 
 	_if click_item _isnt _unset
 	_then
-		_self.click_item( click_item )
+		_self.click_item( click_item, new_frame_wait_time )
 	_endif
 
 	>> _self
@@ -592,7 +604,8 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.click_action_button( action, _optional container )
+_private _method application_system_test_mixin.click_action_button( action,
+								    _optional container, new_frame_wait_time )
 	## 
 	## Look through all the sw_button_items on the application's
 	## top container that has :model = ACTION.  Click on the first
@@ -618,7 +631,7 @@ _private _method application_system_test_mixin.click_action_button( action, _opt
 	_endloop
 
 	_self.properties[ :action_button ] << button
-	_self.click_item( button )
+	_self.click_item( button, new_frame_wait_time )
 
 	>> _self
 	
@@ -627,7 +640,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.click_item( item )
+_private _method application_system_test_mixin.click_item( item, _optional new_frame_wait_time )
 	## 
 	##
 	
@@ -641,8 +654,21 @@ _private _method application_system_test_mixin.click_item( item )
 
 	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
 	_self.handle_event( top_container, :button, :left, x, y, :press,   0 )
+
+	_if new_frame_wait_time _isnt _unset
+	_then
+		_self.remove_value_from_queue( :frame_active )
+		frame.add_dependent( _self, :frame_active )
+	_endif
+	
 	_self.handle_event( top_container, :button, :left, x, y, :release, 0 )
 
+	_if new_frame_wait_time _isnt _unset
+	_then
+		_self.wait_for_value_on_queue( :frame_active, _false, new_frame_wait_time )
+		frame.remove_dependent( _self )
+	_endif
+	
 	>> _self
 	
 _endmethod
@@ -653,11 +679,6 @@ _pragma(classify_level=debug)
 _private _method application_system_test_mixin.handle_event( top_container, category, id, x, y, func, modmask )
 	## 
 	##
-
-	_if _self.properties[ :queue ] _is _unset
-	_then
-		_self.properties[ :queue ] << atomic_queue.new( 1019 )
-	_endif
 
 	top_container.add_dependent( _self )
 
