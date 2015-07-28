@@ -71,3 +71,14 @@ _method application_test.set_up()
 _endmethod
 $
 
+
+_pragma(classify_level=debug)
+_method application_test.note_change( who, what, data )
+	## 
+	## Conflict resolution method
+	##
+
+	>> _super( application_system_test_mixin ).note_change( who, what, data )
+	
+_endmethod
+$

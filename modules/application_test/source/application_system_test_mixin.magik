@@ -325,6 +325,45 @@ $
 
 
 _pragma(classify_level=debug)
+_method application_system_test_mixin.when_refreshing_the_map()
+	## 
+	## Refresh the map and wait for the rendering to complete
+	##
+
+	# Add self as a dependent on the render_controller to be able
+	# to wait for :end_render
+	current_map << _self.map_manager.current_map
+	n_views << 0
+	_for view _over current_map.views()
+	_loop
+		n_views +<< 1
+		view.sys!slot( :controller ).add_dependent( _self )
+	_endloop
+
+	_self.when_clicking_item( "application|map_gui_framework.view_refresh" )
+
+	# Wait for each view to finish rendering.  Wait for a maximum
+	# of 1 second per view
+	_self.remove_value_from_queue( :end_render )
+	_for view_index _over range( 1, n_views )
+	_loop
+		_self.wait_for_value_on_queue( :end_render, _unset, 1000 )
+	_endloop
+
+	# Remove the dependencies
+	_for view _over current_map.views()
+	_loop
+		n_views +<< 1
+		view.sys!slot( :controller ).add_dependent( _self )
+	_endloop
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method application_system_test_mixin.then_record_inserted( dataset_name, collection_name, field_name, value )
 	## 
 	## Find the record in the collection named COLLECTION_NAME with
