@@ -1,0 +1,10 @@
+gherkin_application_test	1
+
+description
+	Allows definition of application tests in gherkin format
+end
+
+requires
+	munit_gherkin
+	application_test
+end

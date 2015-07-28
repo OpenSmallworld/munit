@@ -1,0 +1,38 @@
+_package sw
+$
+
+_pragma(classify_level=debug, topic={Munit})
+##
+## Parent class for Gherkin-driven application tests
+##
+def_slotted_exemplar( :gherkin_application_test,
+        {},
+        {:gherkin_test_case, :application_test} )
+$
+
+# Below are all conflict resolution methods
+
+_pragma(classify_level=debug, topic=unit_testing)
+_method gherkin_application_test.suite( _gather args )
+	>> _super( gherkin_test_case ).suite( _scatter args )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic=unit_testing)
+_method gherkin_application_test.define_method( _gather args )
+	>> _super( gherkin_test_case ).define_method( _scatter args )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic=unit_testing)
+_method gherkin_application_test.set_up( _gather args )
+	## application_test.set_up() is not in a healthy state - avoid/fixup
+	>> _super( gherkin_test_case ).set_up( _scatter args )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic=unit_testing)
+_method gherkin_application_test.tear_down( _gather args )
+	>> _super( application_test ).tear_down( _scatter args )
+_endmethod
+$
