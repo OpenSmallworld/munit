@@ -1,0 +1,9 @@
+example_gherkin_tests	1
+
+description
+	An example of how to write gherkin tests
+end
+
+requires
+	munit_gherkin
+end

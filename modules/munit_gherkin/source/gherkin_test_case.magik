@@ -1,0 +1,860 @@
+_package sw
+$
+
+_pragma(classify_level=debug, topic={Munit})
+##
+## Parent class for Gherkin-driven MUnit tests
+##
+def_slotted_exemplar( :gherkin_test_case,
+        {
+		{:test_mappings, _unset},           # A map of method names to strings (regular expressions)
+		{:current_method_text, _unset}      # Build area - a string which will be converted into a method
+	},
+        :test_case )
+$
+
+_pragma(classify_level=debug, topic={Munit}, usage={subclassable})
+##
+## Any variables listed here (on subclasses) will be converted
+## into shared variables as the test initialises
+##
+gherkin_test_case.define_shared_constant( :variables, rope.new(), :private )
+$
+
+_pragma(classify_level=debug, topic={Munit})
+##
+## A mapping between Gherkin keywords and the methods used to
+## interpret them
+##
+gherkin_test_case.define_shared_constant( :processor_for_keyword,
+	equality_property_list.new_with(
+		"feature:", :null_line_processor|()|,
+		"background:", :scenario_line_processor|()|,
+		"scenario:", :scenario_line_processor|()|,
+		"scenario outline:", :scenario_outline_line_processor|()|,
+		"given", :gherkin_line_processor|()|,
+		"when", :gherkin_line_processor|()|,
+		"then", :gherkin_line_processor|()|,
+		"and", :gherkin_line_processor|()|,
+		"but", :gherkin_line_processor|()|,
+		"*", :gherkin_line_processor|()|,
+		"examples:", :null_line_processor|()|,
+		"|", :example_line_processor|()|,
+		"#", :null_line_processor|()|
+			       ), :private )
+$
+
+_pragma(classify_level=debug, topic={Munit})
+##
+## Global proc used to introduce a new Gherkin
+## mapping. A_MATCH_STRING (string) should be a string of text
+## which may appear in a Gherkin file. After using this
+## procedure the next method to be parsed will be mapped to
+## A_MATCH_STRING
+##
+_global \@ << _proc@\@( a_match_string )
+
+		      _if system.responds_to?( :|sys!load_file_on_jvm()| )
+		      _then
+			      # SW5 does not use define_method() - need to match strings to
+			      # code another way
+			      _return \@_sw5()
+		      _endif
+		      
+		      _global !current_gherkin_mapping!
+		      _if !current_gherkin_mapping! _is _unset
+		      _then
+			      !current_gherkin_mapping! << rope.new_with( a_match_string )
+		      _else
+			      !current_gherkin_mapping!.add( a_match_string )
+		      _endif
+	      _endproc
+$
+
+_pragma(classify_level=debug, topic={Munit})
+##
+## List of files we have already processed for matches
+##
+_global \@_SW5_processed_files << rope.new()
+$
+
+_pragma(classify_level=debug, topic={Munit})
+##
+## 
+##
+_global \@_SW5 << _proc@\@_SW5()
+			  
+			  _dynamic !source_file!, !current_package!
+			  _global \@_SW5_processed_files
+
+			  # The below adds !source_file! (a string) to a rope and then uses includes?
+			  # to pull it back out (identity rather than equality). This is intended. I
+			  # want the file to be re-matched when loaded again (in which case !source_file!
+			  # will be a new string, even if equal to an existing one). Test this works...
+
+			  _if \@_SW5_processed_files.includes?( !source_file! ) _then _return _endif
+			  \@_SW5_processed_files.add( !source_file! )
+			   
+			  read_strm << external_text_input_stream.new( !source_file! )
+			  current_gherkin_mapping << rope.new()
+			  
+			  _loop
+				  _if (read_line << read_strm.get_line()) _is _unset
+				  _then
+					  _leave
+				  _endif
+
+				  _if read_line.size > 4 _andif
+				      read_line.slice( 1, 2 ) = "\@"
+				  _then
+					  start_idx << read_line.index_of( %" ) + 1
+					  end_idx << read_line.rindex_of( %" ) - 1
+					  
+					  current_gherkin_mapping.add( read_line.slice( start_idx, end_idx ) )
+				  _endif
+
+				  _if read_line.size > 7 _andif
+				      read_line.slice( 1, 7 ) = "_method"
+				  _then
+					  start_idx << read_line.index_of( %space ) + 1
+					  dot_idx << read_line.index_of( %. )
+					  end_idx << read_line.index_of( %( ) - 1
+
+					  class_name << read_line.slice( start_idx, dot_idx - 1 ).as_symbol()
+					  gherkin_class << !current_package![class_name]
+
+					  _if ~gherkin_class.responds_to?( :gherkin_mappings )
+					  _then 
+						  gherkin_class.define_shared_constant( :gherkin_mappings, property_list.new(), :public )
+					  _endif
+					  
+					  method_name_without_brackets << read_line.slice( dot_idx + 1, end_idx ).as_symbol()
+					  gherkin_class.gherkin_mappings[method_name_without_brackets] << current_gherkin_mapping
+					  current_gherkin_mapping << rope.new()
+				  _endif 
+			  _endloop
+		  _endproc
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.create_gherkin_tests()
+	##
+	## Create test methods for this class. Note that no test
+	## methods exist for the class - all are auto-generated using
+	## this method from a Gherkin file in the resources directory.
+	##
+
+	_self.create_variables()
+
+	a_module << sw_module_manager.module( _self.module_name )
+
+	_try 
+		test_description_file << a_module.get_resource_file( _self.class_name.write_string + ".feature", :data )
+	_when error
+		_return
+	_endtry 
+
+	test_stream << external_text_input_stream.new( test_description_file )
+	_protect 
+		test_def << _unset
+		ignore_bad_text? << _true
+		
+		in_scenario_or_examples? << _false
+		_loop
+			_if (test_line << test_stream.get_line()) _is _unset
+			_then
+				_self.complete_test_section( test_def )
+				_leave
+			_elif test_line ~= ""
+			_then
+				(test_def, ignore_bad_text?) << _self.process_line( test_line.trim_spaces(), test_def, ignore_bad_text? )
+			_endif
+		_endloop
+	_protection 
+		test_stream.close()
+	_endprotect 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.create_variables()
+	##
+	## Convert the list of variables names in _self.variables into
+	## shared variables
+	##
+
+	_for var_name _over _self.variables.fast_elements()
+	_loop
+		_self.define_shared_variable( var_name, _unset, :private )
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.create_gherkin_test( test_title, test_lines )
+	##
+	## Define a new test method with a name like TEST_TITLE
+	## (string). The functionality of the method is described in
+	## TEST_LINES (a collection of strings)
+	##
+
+	#FIXME - need to sub more than spaces. Refactor .stub() - has same issue
+	test_method_name << :test_ + test_title.lowercase.substitute_character( %space, %_ ) 
+
+	_self.build_method_text( test_lines )
+
+	_self.define_method( test_method_name, .current_method_text.evaluate(), _false )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.build_method_text( test_lines, _optional proc? )
+	##
+	## Convert TEST_LINES (a collection of strings) into text
+	## suitable to define a method or procedure. PROC? (bool)
+	## should be set to true if the generated text is to be used to
+	## make a procedure (rather than a method). It will ensure an
+	## imported variable is used in place of _self.
+	##
+
+	self_string << "_self."
+	.current_method_text << "_proc()" + newline_char
+	
+	_if proc? _is _true
+	_then
+		.current_method_text +<< "_import me" + newline_char
+		self_string << "me."
+	_endif
+	
+	_for test_line _over test_lines.fast_elements()
+	_loop
+		_self.build_method_text_line( test_line, self_string )
+	_endloop
+
+	.current_method_text +<< "_endproc"
+	#write( .current_method_text ) # uncomment for debug
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.create_gherkin_test_with_examples( test_title, test_lines, example_lines )
+	##
+	## Define new test methods with a name like TEST_TITLE
+	## (string). The functionality of the method is described in
+	## TEST_LINES (a collection of strings)
+	##
+	## Several methods will be created - one for each example in
+	## EXAMPLE_LINES (a collection of strings which should look
+	## like a table). Each new test method will have a name ending
+	## in _ex1, _ex2, _ex3...
+	## For instance, four tests for a clock application could be
+	## set up with the following test line and examples:
+	##
+	## Given a <clock_type> clock with a <max_hours> display
+	##
+	## Examples:
+	## | clock_type | max_hours | remarks                     |
+	## | digital    | 12        |                             |
+	## | digital    | 24        | midnight displayed as 00:00 |
+	## | analogue   | 12        |                             |
+	## | analogue   | 24        | this display is disabled    |
+	##
+
+	_if example_lines _is _unset
+	_then
+		_self.create_gherkin_test( test_lines )
+	_else
+		examples << _self.read_examples( example_lines )
+		
+		_for example_idx _over 1.upto( examples.an_element().size )
+		_loop
+			new_title << test_title + " EX" + example_idx.write_string
+			new_test << rope.new()
+			_for a_line _over test_lines.fast_elements()
+			_loop
+				new_line << a_line
+				
+				_for a_key, some_vals _over examples.fast_keys_and_elements()
+				_loop
+					search_string << %< + a_key + %>
+					replace_string << some_vals[example_idx]
+					search_length << search_string.size
+					replace_length << replace_string.size
+
+					_if (start_idx << new_line.index_of_seq( search_string )) _isnt _unset
+					_then
+						new_line << new_line.slice( 1, start_idx - 1 ) +
+							    replace_string +
+							    new_line.slice( start_idx + search_length, new_line.size )
+					_endif
+				_endloop 
+				
+				new_test.add( new_line )
+			_endloop
+			_self.create_gherkin_test( new_title, new_test )
+		_endloop 
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.read_examples( some_lines )
+	##
+	## Read an examples table in SOME_LINES (a collection of
+	## strings - see method create_gherkin_test_with_examples for
+	## an example). 
+	## The table of text is converted into a equality_property list
+	## and returned
+	##
+	
+	ret_val << equality_property_list.new()
+	key_line << some_lines.remove_first()
+	keys << key_line.split_by( %| )
+	
+	_for an_example _over some_lines.fast_elements()
+	_loop
+		vals << an_example.split_by( %| )
+		_for val_idx _over 1.upto( vals.size )
+		_loop
+			a_key << keys[val_idx]
+			_if (vals_for_key << ret_val[a_key]) _is _unset
+			_then
+				ret_val[a_key] << vals_for_key << rope.new_with( vals[val_idx] )
+			_else
+				vals_for_key.add( vals[val_idx] )
+			_endif
+		_endloop 
+	_endloop 
+	>> ret_val
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.process_line( a_line, test_def, ignore_bad_text? )
+	##
+	## Interpret string A_LINE. If IGNORE_BAD_TEXT? is true then
+	## the line can contain any text (and will be ignored if it is
+	## not usable Gherkin).
+	## 'Good' Gherkin text will start with a keyword and then have
+	## additional text. How the lie is interpreted will depend on
+	## the keyword (see .processor_for_keyword). These lines of
+	## text help to build a test definition in TEST_DEF (a
+	## property_list)
+	##
+	
+	# | and # should still be recognisable even if not followed by
+	# a space. For all other keywords we need either a space or
+	# carriage return after the keyword
+
+	# FIXME - below parsing is not great. Lines ending in a colon
+	# will be interpreted as <keyword>:
+	keyword << _if (first_char << a_line.an_element()) _is %#
+		   _then
+			   >> "#"
+		   _elif first_char _is %|
+		   _then
+			   >> "|"
+		   _elif (colon_idx << a_line.index_of( %: )) _isnt _unset
+		   _then
+			   >> a_line.slice( 1, colon_idx ).lowercase
+		   _else
+			   >> a_line.split_by( %space )[1].lowercase
+		   _endif
+
+	_if (line_processor << _self.processor_for_keyword[keyword]) _is _unset
+	_then
+		_if ignore_bad_text?
+		_then
+			_return test_def, _true
+		_else 
+			# FIXME condition - bad gherkin
+			write( "Gherkin Smell Detected: ", a_line )
+		_endif 
+	_else
+		a_line << a_line.slice( keyword.size + 1, a_line.size ).trim_spaces()
+		_return _self.perform( line_processor, a_line, test_def, ignore_bad_text? )
+	_endif	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.build_method_text_line( test_line, self_string )
+	##
+	## Convert string TEST_LINE into code, and add to .method_text
+	##
+	
+	_if ~_self.responds_to?( :gherkin_mappings, _true )
+	_then 
+		_self.define_shared_constant( :gherkin_mappings, property_list.new(), :private )
+	_endif
+	
+	_for method_name, match_strings _over _self.gherkin_mappings.fast_keys_and_elements()
+	_loop@outer
+		_for match_string _over match_strings.fast_elements()
+		_loop 
+			(check_string, arg_list) << _self.add_wildcards( match_string )
+			_if test_line.matches?( check_string )
+			_then
+				_if (figured_args << _self.figure_argument_list( test_line, check_string, method_name, arg_list )) _isnt _unset
+				_then 
+					.current_method_text +<< self_string + method_name + figured_args + newline_char
+				_endif 
+				_leave@outer
+			_endif
+		_endloop 
+	_finally
+		write( "Gherkin: Stubbing unrecognised line ", test_line )
+		_self.stub( test_line )
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.step( _gather test_lines )
+	##
+	## Interpret TEST_LINES (collection of strings)
+	##
+
+	_self.build_method_text( test_lines, _true )
+
+	proc_wrapper << ("_proc( me )" + newline_char +
+			 .current_method_text + "()" + newline_char +
+			 "_endproc").evaluate()
+
+	proc_wrapper( _self )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.add_wildcards( a_string )
+	##
+	## Replace variables (format - $my_variable) with * wildcard
+	## characters. The variable name is still required, so as each
+	## variable is replaced we collect the names in a rope
+	## (arg_list)
+	##
+
+	arg_list << rope.new()
+	_loop
+		_if (wild_start_idx << a_string.index_of( %$ )) _is _unset 
+		_then
+			_leave
+		_endif
+		
+		working_string << a_string.slice( 1, wild_start_idx - 1 ) + %*
+		
+		_if (end_idx << _self.index_of_non_alpha( a_string, wild_start_idx + 1 )) _isnt _unset
+		_then
+			working_string +<< a_string.slice( end_idx, a_string.size )
+			end_idx -<< 1
+		_else
+			end_idx << a_string.size
+		_endif
+		
+		arg_list.add( a_string.slice( wild_start_idx + 1, end_idx ) )
+		a_string << working_string
+	_endloop
+	
+	>> a_string, arg_list
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.index_of_non_alpha( a_string, start_idx )
+	##
+	## Return index of first character not to be alphanumeric, and
+	## also not _ or ?. We are trying to establish where the end of
+	## an argument name occurs
+	##
+
+	_for n _over start_idx.upto( a_string.size )
+	_loop
+		_if ~(a_char << a_string[n]).ascii_alphanumeric? _andif
+		    ~({%_, %?}.includes?( a_char ))
+		_then
+			_return n
+		_endif 
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.figure_argument_list( test_line, wildcarded_line, method_name, arg_list )
+	##
+	## Return a string holding brackets filled with argument
+	## values. arg_list is a list or argument NAMES in the order
+	## they appear in test_line. Note that this might not be the
+	## order in which method method_name wants them.
+	## This code would be easier to write if split_by didn't trim whitespace...
+	##
+
+	# FIXME - refactor - below should be two methods
+	
+	_if arg_list.an_element() _is _unset
+	_then
+		_return "()"
+	_endif
+
+	ret_value << "("
+	arg_values << equality_property_list.new()
+	current_idx << 1
+	wild_idx << wildcarded_line.index_of( %* )
+
+	_loop
+		_if wild_idx _is _unset
+		_then
+			_leave
+		_endif
+		_if wild_idx _is wildcarded_line.size
+		_then
+			arg_name << arg_list[current_idx]
+			arg_values[arg_name] << test_line.slice( wild_idx, test_line.size )
+			_leave 
+		_else
+			# trim uninteresting/handled stuff off the front
+			wildcarded_line << wildcarded_line.slice( wild_idx + 1, wildcarded_line.size )
+			test_line << test_line.slice( wild_idx, test_line.size )
+			
+			_if (next_wild_idx << wildcarded_line.index_of( %* )) _isnt _unset
+			_then
+				next_chunk << wildcarded_line.slice( 1, next_wild_idx - 1)
+			_else
+				next_chunk << wildcarded_line
+			_endif
+			
+			match_idx << test_line.index_of_seq( next_chunk )
+			arg_value << test_line.slice( 1, match_idx - 1 )
+			test_line << test_line.slice( match_idx, test_line.size )
+			arg_values[arg_list[current_idx]] << arg_value
+			
+			current_idx +<< 1
+		_endif
+		wild_idx << next_wild_idx
+	_endloop
+
+	_if (my_method << _self.method( method_name + :|()| )) _is _unset
+	_then
+		write( "Gherkin: Missing method ", method_name )
+		_return 
+	_endif 
+	_for arg_name _over my_method.value.basic_arglist.fast_elements()
+	_loop
+		_if (arg_val << arg_values[arg_name]) _isnt _unset
+		_then
+			ret_value +<< %" + arg_val + %" + %,
+		_else
+			ret_value +<< "_unset" + %,
+		_endif 
+	_endloop 
+
+	_if ret_value[end_idx << ret_value.size] _is %,
+	_then
+		ret_value[end_idx] << %)
+	_else 
+		ret_value +<< %)
+	_endif 
+	>> ret_value
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.null_line_processor( a_line, test_def, ignore_bad_text? )
+	##
+	## Process uninteresting lines - do nothing
+	##
+	
+	>> test_def, ignore_bad_text?
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.scenario_line_processor( a_line, test_def, ignore_bad_text?, _optional expect_examples? )
+	##
+	## Process a 'Scenario:' line. Create a new test definition (a
+	## property_list).
+	## Lines of documentation may follow a scenario
+	## line ('bad' text which will be thrown away), so
+	## IGNORE_BAD_TEXT? should be replaced with _true (second
+	## return value)
+	## EXPECT_EXAMPLES? is set to true if we are expecting a table
+	## of examples to appear after the test
+	##
+	
+	expect_examples? << expect_examples?.default( _false )
+	
+	_if test_def _isnt _unset
+	_then
+		_self.complete_test_section( test_def )
+	_endif
+
+	test_def << property_list.new_with(
+			    :title, a_line,
+			    :expect_examples?, expect_examples?,
+			    :test_lines, rope.new(),
+			    :examples_lines, rope.new()
+			    )
+	
+	>> test_def, _true
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.scenario_outline_line_processor( a_line, test_def, ignore_bad_text? )
+	##
+	## Process a 'Scenarion Outline:' line. This is the same as a
+	## scenario line, apart from we know it will be followed by examples.
+	##
+	
+	>> _self.scenario_line_processor( a_line, test_def, ignore_bad_text?, _true )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.gherkin_line_processor( a_line, test_def, ignore_bad_text? )
+	##
+	## Process a line of Gherkin text. This should add a new
+	## 'test_line' to the test definition (a line of text which
+	## will map to a method).
+	## Once we have started reading Gherkin lines the lines should
+	## all be valid Gherkin until we get to the next scenario - any
+	## invalid lines should be reported. Hence IGNORE_BAD_TEXT? is
+	## replaced by _false (second return value)
+	##
+	
+	test_def[:test_lines].add( a_line )
+	>> test_def, _false
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.example_line_processor( a_line, test_def, ignore_bad_text? )
+	##
+	## Process an 'Examples:' line (which will followed by a table
+	## of examples). This title line is not very interesting, so do
+	## nothing except set IGNORE_BAD_TEXT? to _false (second return value)
+	##
+	
+	test_def[:examples_lines].add( a_line )
+	>> test_def, _false
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.complete_test_section( test_def )
+	##
+	## We have finished defining a scenario. Turn the test
+	## definition (TEST_DEF - property_list) into code
+	##
+	
+	test_lines << test_def[:test_lines]
+	test_title << test_def[:title]
+
+	_if test_def[:expect_examples?]
+	_then
+		_if (examples << test_def[:examples_lines]).an_element() _is _unset
+		_then
+			# FIXME condition - bad gherkin
+			write( "Gherkin Smell Detected: MISSING EXAMPLES in ", test_title )
+		_else
+			_self.create_gherkin_test_with_examples( test_title, test_lines, examples )
+		_endif 
+	_else
+		_self.create_gherkin_test( test_title, test_lines )
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.stub( a_line )
+	##
+	## Create a stub method which will match text A_LINE
+	##
+
+	a_module << sw_module_manager.module( _self.module_name )
+	base_dir << a_module.full_directory
+	
+	source_file_name << system.pathname_down( base_dir, "source", _self.class_name + ".magik" )
+	source_file << external_text_output_stream.new_appending( source_file_name )
+
+	source_file.write( "\@ (" + %" + a_line + %" + %) + newline_char )
+	source_file.write( "_pragma(classify_level=debug, topic=unit_testing)" + newline_char )
+	source_file.write( "_method " + _self.class_name + %. )
+
+	# Only include alphanumeric characters and space(replaced with
+	# underscore) as method name
+
+	_for a_char _over a_line.fast_elements()
+	_loop
+		_if a_char _is %space
+		_then
+			source_file.write( %_ )
+		_elif a_char.ascii_alphanumeric?
+		_then
+			source_file.write( a_char )
+		_endif 
+	_endloop
+	
+	source_file.write( "()" + newline_char )
+	source_file.write( "	#" + newline_char )
+	source_file.write( "_endmethod" + newline_char )
+	source_file.write( "$" + newline_char + newline_char )
+	
+	source_file.close()
+
+	load_file( source_file_name )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.null()
+	##
+	## do nothing. Map 'padding' text to null
+	##
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.null
+	##
+	## Allows sub-class methods to inherit null()
+	##
+	
+	_self.add_mapping( :null )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.add_mapping( method_name )
+	##
+	## Add a new mapping. Usually in a Gherkin test we match
+	## strings to new method definitions. In this case the mapping
+	## is generated in :define_method().
+	##
+	## If we want to map to an inherited method then we need to
+	## explicitly call this method. See method :null for an example
+	## of an 'add_mapping' method. To use it in subclass my_test you
+	## could write something like:
+	##
+	## \@ ("When I do nothing at all")
+	## my_test.null
+	##
+	
+	_global !current_gherkin_mapping!
+
+	_if !current_gherkin_mapping! _isnt _unset
+	_then
+		_if ~_self.responds_to?( :gherkin_mappings, _true )
+		_then 
+			_self.define_shared_constant( :gherkin_mappings, property_list.new(), :private )
+		_endif
+		
+		_if (current_mapping << _self.gherkin_mappings[method_name]) _is _unset
+		_then
+			_self.gherkin_mappings[method_name] << !current_gherkin_mapping!
+		_else
+			_self.gherkin_mappings[method_name].add_all_last( !current_gherkin_mapping! )
+		_endif 
+		!current_gherkin_mapping! << _unset
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.export_to_cucumber()
+	##
+	## Copy feature file and dump out some Ruby test steps
+	##
+
+	# FIXME - currently hardcoded directory, and not copying the
+	# feature file
+
+	steps_file_name << "C:\karl\cucumber\output\" +
+			   _self.class_name + "_step_definitions.rb"
+
+	steps_file << external_text_output_stream.new( steps_file_name )
+
+	_protect 
+		steps_file.write( "require 'magik'" + newline_char + newline_char )
+		steps_file.write( "# Create Ruby-Magik bridge" + newline_char )
+		steps_file.write( "magik_session = Magik::Session.new( " + %" + "localhost" + %" + ", 7777 )" +
+				  newline_char + newline_char + newline_char)
+		
+		_for method_name, match_strings _over _self.gherkin_mappings.fast_keys_and_elements()
+		_loop
+			_for match_string _over match_strings.fast_elements()
+			_loop
+				work_string << match_string.copy()
+				var_string << arg_string << ""
+				
+				# Look for variables (start with a $)
+				_loop
+					_if (idx << work_string.index_of( %$ )) _is _unset
+					_then
+						_leave
+					_endif
+					
+					end_idx << _self.index_of_non_alpha( work_string, idx + 1 )
+					var_name << work_string.slice( idx + 1, end_idx - 1 )  # FIXME cope with var at end of line
+					arg_string +<< var_name + %,
+					var_string +<< " |" + var_name + %| 
+					work_string << work_string.slice( 1, idx - 1 ) + "(.*)" +
+						       work_string.slice( end_idx, work_string.size )
+				_endloop
+
+				_if arg_string.an_element() _isnt _unset
+				_then
+					arg_string << arg_string.slice( 1, arg_string.size - 1 ) # remove last comma
+				_endif
+				
+				steps_file.write( "Given(/^" + work_string + "$/) do" + var_string + newline_char )
+				steps_file.write( "  magik_session[:" + _self.class_name + "]." + method_name + %( +
+						  arg_string + %) + newline_char )
+				steps_file.write( "end" + newline_char + newline_char )
+			_endloop 
+		_endloop
+	_protection 
+		steps_file.close()
+	_endprotect 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.define_method( name, _gather args )
+	##
+	## If we have a pending mapping then handle it (map the pending
+	## string to NAME - the name of this new method)
+	##
+
+	_global !current_gherkin_mapping!
+
+	_if !current_gherkin_mapping! _isnt _unset
+	_then
+		write( "I'm doing some mapping! ", name )    #FIXME would be nice to add 'add_mapping' methods too
+		_if ~_self.responds_to?( :gherkin_mappings, _true )
+		_then 
+			_self.define_shared_constant( :gherkin_mappings, property_list.new(), :private )
+		_endif
+		
+		name_without_brackets << name.slice( 1, name.size - 2 )
+		_self.gherkin_mappings[name_without_brackets] << !current_gherkin_mapping!
+		
+		!current_gherkin_mapping! << _unset
+	_endif
+
+	>> _super.define_method( name, _scatter args )
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method gherkin_test_case.suite( _gather args )
+	##
+	## Whenever the class is asked for its suite it should re-read
+	## the Gherkin files and generate an up-to-date set of test
+	## methods
+	##
+	
+	_self.create_gherkin_tests()
+	
+	>> _super.suite( _scatter args )
+_endmethod
+$

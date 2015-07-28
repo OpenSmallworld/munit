@@ -1,0 +1,52 @@
+_package sw
+$
+
+# A rather simple test - just writes steps to the Magik prompt
+# so you can see the test is doing something.
+# If you look at the .feature file you'll see it shows some ways
+# of adding comments/documentation. The text straight after a 
+# Feature: or Scenario: line is free text. It's only when you
+# get a proper Gherking line (say, starting with the word 'Given')
+# that the rules get tighter. Text following a # is always free
+ 
+
+def_slotted_exemplar( :example_gherkin_tests,
+        {},
+        :gherkin_test_case )
+$
+
+\@ ("I should display coordinate $nugget")
+_method example_gherkin_tests.nugget_in_useless_text( nugget )
+	_self.step( nugget )
+_endmethod
+$
+
+\@ ("my test has been set up")
+_method example_gherkin_tests.my_test_has_been_set_up()
+
+	write( "Test set up!" )
+_endmethod
+$
+
+\@ ("I try to run the test")
+\@ ("I try to run the test again")
+_method example_gherkin_tests.i_try_to_run_the_test()
+
+	write( "Trying to run the test!" )
+_endmethod
+$
+
+\@ ("the test should say it is $state")
+_method example_gherkin_tests.the_test_should_say_it_is( state )
+
+	write( "The test should return ", state )
+_endmethod
+$
+
+\@ ("($x_coord,$y_coord)")
+_method example_gherkin_tests.make_coordinate( x_coord, y_coord )
+
+	write( "New coordinate x=", x_coord, " and y=", y_coord )
+_endmethod
+$
+

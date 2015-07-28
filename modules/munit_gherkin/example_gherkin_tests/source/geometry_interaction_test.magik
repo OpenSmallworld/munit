@@ -1,0 +1,92 @@
+_package sw
+$
+
+# A slighty more adventurous test, which can build up geometries
+# over a number of Gherkin lines. It gives some examples of using
+# 'nested steps' - including a single line of text that runs two methods.
+# The line:
+#
+# Given a shape called shape1 with coordinates (1000,1000)
+#
+# is picked up by match string:
+# "a $step1 with coordinates $step2"
+#
+# This then uses the :step() method to call two further steps, matching
+# 'shape called shape1' to string "shape called $name"
+# and '(1000,1000)' to "($x,$y)"
+
+
+def_slotted_exemplar( :geometry_interaction_test,
+        {},
+        :gherkin_test_case )
+$
+
+
+geometry_interaction_test.define_shared_constant( :variables, rope.new_with(
+	:current_shape,
+	:shapes,
+	:geom_test_result
+								   ), :private )
+$
+
+\@ ("a $step1 with coordinates $step2")
+\@ ("I test that $step1") 
+_method geometry_interaction_test.do_steps( step1, _optional step2 )
+
+	_if step2 _isnt _unset
+	_then
+		_self.step( step1, step2 )
+	_else
+		_self.step( step1 )
+	_endif 
+_endmethod
+$
+
+\@ ("shape called $name")
+_method geometry_interaction_test.make_shape( name )
+
+	_self.current_shape << new_shape << sector_rope.new()
+	new_shape.add( sector.new() )
+	
+	_if _self.shapes _is _unset
+	_then
+		_self.shapes << equality_property_list.new()
+	_endif
+	
+	_self.shapes[name] << new_shape
+_endmethod
+$
+
+\@ ("($x,$y)")
+_method geometry_interaction_test.make_coordinate( x, y )
+
+	_self.current_shape[1].add( coordinate( x.as_integer(), y.as_integer() ) )
+_endmethod
+$
+
+\@ ("$shape_name1 contains $shape_name2")
+_method geometry_interaction_test.contains( shape_name1, shape_name2 )
+
+	area1 << pseudo_area.new_with_sectors( _self.shapes[shape_name1] )
+	area2 << pseudo_area.new_with_sectors( _self.shapes[shape_name2] )
+	
+	_self.geom_test_result << area1.contains?( area2 )
+_endmethod
+$
+
+\@ ("I get a $positive_or_negative result")
+_method geometry_interaction_test.check_result( positive_or_negative )
+
+	_self.assert_equals( positive_or_negative = "positive", _self.geom_test_result )
+_endmethod
+$
+
+\@ ("$var1 touches $var2")
+_method geometry_interaction_test.touches( var1, var2 )
+
+	area1 << pseudo_area.new_with_sectors( _self.shapes[var1] )
+	area2 << pseudo_area.new_with_sectors( _self.shapes[var2] )
+
+	_self.geom_test_result << area1.touches?( area2 )
+_endmethod
+$

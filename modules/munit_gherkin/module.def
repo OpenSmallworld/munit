@@ -1,0 +1,9 @@
+munit_gherkin	1
+
+description
+	Allows definition of munit tests in gherkin format
+end
+
+requires
+	munit_base
+end

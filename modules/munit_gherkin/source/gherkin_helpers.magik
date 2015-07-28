@@ -1,0 +1,59 @@
+_package sw
+$
+
+# Helper procedures to generate new test classes/test modules
+
+_pragma(classify_level=debug, topic={Munit})
+make_gherkin_class << _proc@make_gherkin_class( module_name, class_name )
+			      ##
+			      ## Generate a new class and source file in module MODULE_NAME
+			      ## (symbol). The new class will be called CLASS_NAME (string)
+			      ## and will be a suitable starting point for a new MUnit
+			      ## Gherkin test. A text editor (notepad) will appear with a
+			      ## template Gherkin file. 
+			      ##
+
+			      a_module << sw_module_manager.module( module_name )
+			      base_dir << a_module.full_directory
+
+			      test_file_name   << system.pathname_down( base_dir, "resources", "base", "data",
+									class_name + ".feature" )
+			      source_file_name << system.pathname_down( base_dir, "source",
+									class_name + ".magik" )
+			      load_list        << system.pathname_down( base_dir, "source",
+									"load_list.txt" )
+			      
+			      test_file   << external_text_output_stream.new( test_file_name )
+			      source_file << external_text_output_stream.new( source_file_name )
+			      load_list   << external_text_output_stream.new_appending( load_list )
+
+			      test_file.write( "Feature: " + newline_char + newline_char )
+			      test_file.write( "Scenario: " + newline_char + newline_char )
+			      test_file.write( "Given " + newline_char )
+			      test_file.write( "When " + newline_char )
+			      test_file.write( "Then " + newline_char )
+
+			      source_file.write( "_package sw" + newline_char )
+			      source_file.write( "$" + newline_char + newline_char )
+			      source_file.write( "_pragma(classify_level=debug, topic=unit_testing)" + newline_char )
+			      source_file.write( "def_slotted_exemplar( :" + class_name + %, + newline_char )
+			      source_file.write( "        {}," + newline_char )
+			      source_file.write( "        :gherkin_test_case )" + newline_char )
+			      source_file.write( "$" + newline_char + newline_char )
+			      source_file.write( "_pragma(classify_level=debug, topic=unit_testing)" + newline_char )
+			      source_file.write( class_name + ".define_shared_constant( :variables, rope.new_with(" + newline_char )
+			      source_file.write( "	:my_test_class" + newline_char )
+			      source_file.write( "								   ), :private )" + newline_char )
+			      source_file.write( "$" + newline_char + newline_char )
+			      
+			      load_list.write( class_name + newline_char )
+			      
+			      test_file.close()
+			      source_file.close()
+			      load_list.close()
+
+			      sw_module_manager.load_module( module_name, _unset, :force_reload?, _true )
+			      system.do_command( "notepad " + test_file_name )
+		      _endproc
+$
+
