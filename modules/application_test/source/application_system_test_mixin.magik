@@ -354,7 +354,7 @@ _method application_system_test_mixin.when_refreshing_the_map()
 	_for view _over current_map.views()
 	_loop
 		n_views +<< 1
-		view.sys!slot( :controller ).add_dependent( _self )
+		view.sys!slot( :controller ).remove_dependent( _self )
 	_endloop
 
 	>> _self 
