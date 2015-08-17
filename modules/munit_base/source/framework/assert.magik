@@ -128,7 +128,7 @@ _method assert.assert_equals( expected , actual , _optional a_message , delta , 
 	a_message << _self.format_message(a_message,  default_message)
 	
 	_if relative? _then delta << (expected * delta).abs _endif
-	_return _self.assert( (expected - actual).abs , :|<| , delta , a_message , a_type )
+	_return _self.assert( (expected - actual).abs , :|<=| , delta , a_message , a_type )
 _endmethod
 $
 
