@@ -715,7 +715,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.handle_event( top_container, category, id, x, y, func, modmask )
+_private _method application_system_test_mixin.handle_event( top_container, category, id, x, y, func, modmask, _optional second_id )
 	## 
 	##
 
@@ -723,6 +723,7 @@ _private _method application_system_test_mixin.handle_event( top_container, cate
 
 	time << system.elapsed_seconds()
 	new_event << input_event.new_with( category, time, top_container.actual.id, id, x, y, func, modmask )
+	new_event.second_id << second_id
 
 	top_container.handle_event( new_event )
 

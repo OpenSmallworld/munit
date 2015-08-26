@@ -36,7 +36,7 @@ _method design_manager_system_test_mixin.given_a_design( project_name, design_na
 	_then
 		_self.given_a_new_design( project_name, design_name, xmin, ymin, xmax, ymax )		
 	_else
-		swg_dsn_admin_engine.activate_design( design )
+		_self.activate_design( design )
 
 		_self.properties[ :design  ] << design
 		_self.properties[ :project ] << design.project
@@ -65,7 +65,7 @@ _method design_manager_system_test_mixin.given_a_new_design( project_name, desig
 		project << _self.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
 		design  << swg_dsn_admin_engine.create_scheme( project, parent_design, design_name, _self.ds_view_names, _unset )
 		
-		swg_dsn_admin_engine.activate_design( design )
+		_self.activate_design( design )
 		
 	_when ds_write_switch_failed
 		# We ought to be able to use the :view parameter of the
@@ -250,6 +250,17 @@ _private _method design_manager_system_test_mixin.wait_for_threads_to_finish( ta
 		_if task_owner.task_runner().thread_pool.empty? _then _leave _endif
 		_thisthread.sleep( 1000 )
 	_endloop 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_system_test_mixin.activate_design( design )
+	## 
+	##
+	
+	swg_dsn_admin_engine.activate_design( design )
 	
 _endmethod
 $
