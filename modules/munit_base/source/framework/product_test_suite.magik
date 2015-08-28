@@ -48,7 +48,7 @@ _private _method product_test_suite.init( product_name, excluded_module_names )
 		condition.raise( :error, :string, write_string( "No product called ", product_name, " loaded" ))
 	_endif
 	
-	.excluded_modules << equality_set.new_from( excluded_modules )
+	.excluded_modules << equality_set.new_from( excluded_module_names )
 
 	_self.add_module_test_suites()
 
