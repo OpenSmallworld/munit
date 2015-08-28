@@ -1,0 +1,88 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=basic,topic=MUnit)
+##
+## Use this class to create a test suite consiting of
+## all the test cases in the module
+##
+def_slotted_exemplar( :module_test_suite,
+	              {
+			      { :module_name,  _unset }
+		      },
+		      { :test_suite }
+)
+$
+
+
+_pragma(classify_level=basic,topic=MUnit)
+_method module_test_suite.new( product_name, module_name )
+	## 
+	## Create a new instance of the module_test_suite.
+	##
+	## This is a test suite that contains all the test cases in the
+	## module defined by PRODUCT_NAME.MODULE_NAME
+	##
+
+	product << smallworld_product.product( product_name )
+	_if product _is _unset
+	_then
+		condition.raise( :error, :string, write_string( "No product called ", product_name, " loaded" ))
+	_endif
+
+	test_module << product.module( module_name )
+	_if module _is _unset
+	_then
+		condition.raise( :error, :string, write_string( "No module called ", module_name, " loaded" ))
+	_endif
+
+	>> _self.new_for_module( test_module )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=basic,topic=MUnit)
+_method module_test_suite.new_for_test_module( test_module )
+	## 
+	## Create a new instance of the module_test_suite.
+	##
+	## This is a test suite that contains all the test cases in the
+	## MODULE
+	##
+
+	>> _clone.init( test_module )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method module_test_suite.init( test_module )
+	## 
+	##
+
+	_super.init()
+
+	.module_name  << test_module.name
+	
+	_for module_test_case _over test_module.test_cases()
+	_loop
+		_self.add_test( module_test_case )
+	_endloop
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method module_test_suite.module_name
+	## 
+	## 
+
+	>> .module_name.default( _super.module_name )
+	
+_endmethod
+$
