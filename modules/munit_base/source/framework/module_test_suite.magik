@@ -62,7 +62,7 @@ _private _method module_test_suite.init( test_module )
 	## 
 	##
 
-	_super.init()
+	_super.init( _unset, test_module.name )
 
 	.module_name  << test_module.name
 	

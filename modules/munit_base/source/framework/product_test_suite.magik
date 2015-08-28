@@ -40,7 +40,7 @@ _private _method product_test_suite.init( product_name, excluded_module_names )
 	## 
 	##
 
-	_super.init()
+	_super.init( _unset, product_name )
 
 	.product << smallworld_product.product( product_name )
 	_if .product _is _unset
