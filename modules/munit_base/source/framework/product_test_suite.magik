@@ -1,0 +1,94 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=basic,topic=MUnit)
+##
+## Use this class to create a test suite consiting of
+## module_test_suites for each one of the modules in the
+## product
+##
+def_slotted_exemplar( :product_test_suite,
+	              {
+			      { :product,          _unset },
+			      { :excluded_modules, _unset }
+		      },
+		      { :test_suite }
+)
+$
+
+
+_pragma(classify_level=basic,topic=MUnit)
+_method product_test_suite.new( product_name, _gather excluded_module_names )
+	## 
+	## Create a new instance of a product_test_suite.
+	##
+	## PRODUCT_NAME is a symbol and refers to a test product.
+	## EXCLUDED_MODULE_NAMES is a list (strings/symbols) of modules
+	## in the PRODUCT_NAME product that should not be included in
+	## the suite of tests.
+	##
+
+	>> _clone.init( product_name, excluded_module_names )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method product_test_suite.init( product_name, excluded_module_names )
+	## 
+	##
+
+	_super.init( _unset, product_name )
+
+	.product << smallworld_product.product( product_name )
+	_if .product _is _unset
+	_then
+		condition.raise( :error, :string, write_string( "No product called ", product_name, " loaded" ))
+	_endif
+	
+	.excluded_modules << equality_set.new_from( excluded_module_names )
+
+	_self.add_module_test_suites()
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method product_test_suite.add_module_test_suites()
+	## 
+	## Loop over all the modules defined for .product_name and add
+	## a module_test_suite for each module to self.
+	##
+
+	_for test_module _over .product.defined_modules.fast_elements()
+	_loop
+
+		module_name << test_module.name
+
+		_if .excluded_modules.includes?( module_name ) _orif
+		    .excluded_modules.includes?( module_name.write_string )
+		_then
+			_continue
+		_endif
+		
+		_if _not sw_module_manager.module( module_name ).loaded?
+		_then 
+			_try
+				sw_module_manager.load_module( module_name )
+			_when error
+				write( "Error loading: ", test_module )
+				_continue
+			_endtry
+		_endif
+		
+		_self.add_test( module_test_suite.new_for_test_module( test_module ))
+		
+	_endloop
+	
+_endmethod
+$

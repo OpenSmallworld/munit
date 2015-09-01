@@ -8,3 +8,6 @@ test_case
 warning_test_case
 test_suite
 test_case_equality_set
+
+product_test_suite
+module_test_suite
