@@ -223,8 +223,7 @@ _private _method design_manager_system_test_mixin.delete_project()
 	##
 
 	# Wait for all GUI and application threads to finish
-	_self.wait_for_threads_to_finish( _self.properties[ :application ] )
-	_self.wait_for_threads_to_finish( _self.properties[ :application ].top_frame.top_canvas_container )
+	_self.wait_for_application_threads_to_finish()
 	
 	_if ( project << _self.properties[ :project ] ) _isnt _unset
 	_then
@@ -237,22 +236,7 @@ _endmethod
 $
 
 
-_pragma(classify_level=restricted,topic=MUnit)
-_private _method design_manager_system_test_mixin.wait_for_threads_to_finish( task_owner )
-	## 
-	## Wait for all the tasks on TASK_OWNER to finish.
-	##
-	## Wait for 1 second and check if TASK_OWNER.thread_pool is
-	## empty.
-	##
 
-	_loop
-		_if task_owner.task_runner().thread_pool.empty? _then _leave _endif
-		_thisthread.sleep( 1000 )
-	_endloop 
-	
-_endmethod
-$
 
 
 _pragma(classify_level=restricted,topic=MUnit)
