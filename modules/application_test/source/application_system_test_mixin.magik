@@ -885,3 +885,38 @@ _private _method application_system_test_mixin.add_dialog( a_dialog )
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_an_alternative(alt_name,_optional dataset)
+	## given_an_alternative() for Core based applications
+	## alt_name that is the name of the alternative should be
+	## provided by the user in a string e.g. "test_alternative".
+	## Tester can optionally provide the dataset name as a symbol
+	## e.g. :gis.
+	##
+	## By default, given_an_alternative will always
+	## create alternatives in GIS dataset.
+	##
+	## Example of method usage would be: given_an_alternative("test", :gis)
+	## to create an alternative named test in gis dataset.
+
+	gpm << gis_program_manager
+	_if dataset _is _unset
+	_then
+		ds << gpm.databases[:gis]
+	_else
+		ds << gpm.databases[dataset]
+	_endif
+
+	ds.goto_top_alternative()
+
+	_if ds.has_alternative?(alt_name) _is _false
+	_then
+		ds.create_alternative(alt_name)
+	_endif
+
+	ds.go_to_alternative(alt_name)
+	ds.switch(:write)
+
+	>> _self 
+	
+_endmethod 
