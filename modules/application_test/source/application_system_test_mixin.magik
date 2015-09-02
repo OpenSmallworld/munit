@@ -939,7 +939,7 @@ _private _method application_system_test_mixin.wait_for_threads_to_finish( task_
 _endmethod
 $
 
-_private _method application_sysem_test_mixin.wait_for_application_threads_to_finish()
+_private _method application_system_test_mixin.wait_for_application_threads_to_finish()
 	
 
 	_self.wait_for_threads_to_finish( _self.properties[ :application ] )
