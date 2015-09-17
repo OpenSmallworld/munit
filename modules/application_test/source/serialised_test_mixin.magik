@@ -62,7 +62,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional copy_other_values? )
+_method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional copy_other_values?, wait_time )
 	## 
 	## If COPY_OTHER_VALUES is false, don't copy anything else
 	## found on the queue back to the queue after finding the
@@ -70,7 +70,8 @@ _method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional
 
 	other_values   << rope.new()
 	timed_out?     << _false
-	task_complete? << _false 
+	task_complete? << _false
+	wait_time      << wait_time.default( 200 )
 
 	_loop
 
@@ -81,12 +82,14 @@ _method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional
 			_self.force_value_on_queue( expected_value )
 			value << _self.properties[:queue].get()
 		_else
-			value << _self.properties[:queue].get( 200 )
+			value << _self.properties[:queue].get( wait_time )
 		_endif
 
 		timed_out? << value _is _unset 
 		
-		_if value = expected_value _orif timed_out?
+		_if value = expected_value _orif
+		    timed_out? _orif
+		    value.eq?( expected_value )
 		_then
 			_leave
 		_elif copy_other_values? _isnt _false
@@ -121,6 +124,7 @@ _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, 
 	_loop 
 		value << _self.properties[:queue].get()
 		_if value.is_kind_of?( {} ) _andif
+		    value[1] _is :event_handled _andif 
 		    value[2] _isnt _unset _andif 
 		    value[2].id _is expected_id
 		_then
@@ -205,15 +209,42 @@ $
 
 
 _pragma(classify_level=debug)
+_private _method serialised_test_mixin.remove_event_from_queue( remove_event_id )
+	## 
+	## 
+	
+	other_values << rope.new()
+	
+	_loop
+		
+		_if _self.properties[:queue].reads_possible = 0 _then _leave _endif
+		value << _self.properties[:queue].get()
+		
+		_if _not value.is_kind_of?( {} ) _orif
+		    value[2].id ~= remove_event_id
+		_then
+			other_values.add_last( value )
+		_endif
+
+	_endloop
+
+	_self.add_values_to_queue( other_values )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method serialised_test_mixin.note_change( who, what, data )
 	## 
 	##
 
 	_if ( test_queue << _self.queue ) _isnt _unset
 	_then 
-		_if what _is :event_handled
+		_if what _is :event_handled _orif
+		    what _is :frame_active
 		_then
-			test_queue.put( {what, data}, _true )
+			test_queue.put( {what, data}, _true )		
 		_else 
 			test_queue.put( what, _true )
 		_endif
@@ -236,7 +267,7 @@ _method serialised_test_mixin.when_the_frame_is_activated( top_frame )
 			_self.queue << atomic_queue.new( 1019 )
 		_endif 
 		top_frame.activate()
-		_self.wait_for_value_on_queue( :done_realise, _false )
+		_self.wait_for_value_on_queue( {:frame_active, top_frame}, _true )
 	_endif
 	
 	>> _self
