@@ -6,3 +6,5 @@ active_test_suite
 db_test_case
 bitmap_comparison_utils
 message_tests
+
+serialised_test_mixin
