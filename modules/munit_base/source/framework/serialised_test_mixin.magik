@@ -276,9 +276,11 @@ $
 
 
 _pragma(classify_level=debug)
-_method serialised_test_mixin.when_the_frame_is_minimized( top_frame, minimized? )
+_method serialised_test_mixin.when_the_frame_is_minimized( top_frame, minimized?, _optional wait_value )
 	## 
-	## 
+	## WAIT_VALUE is the value to wait for on the queue.  The
+	## default is :task_complete
+	##
 
 	_if top_frame _isnt _unset
 	_then
@@ -288,9 +290,14 @@ _method serialised_test_mixin.when_the_frame_is_minimized( top_frame, minimized?
 			_self.queue << atomic_queue.new( 1019 )
 		_endif
 
-		_self.remove_value_from_queue( :task_complete )		
+		_if wait_value _is _unset
+		_then
+			wait_value << :task_complete
+		_endif
+
+		_self.remove_value_from_queue( wait_value )		
 		top_frame.minimized? << minimized?
-		_self.wait_for_value_on_queue( :task_complete )
+		_self.wait_for_value_on_queue( wait_value )
 		
 	_endif
 	
