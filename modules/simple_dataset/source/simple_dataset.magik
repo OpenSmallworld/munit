@@ -278,14 +278,14 @@ $
 _pragma(classify_level=restricted, topic={universal_rwo})
 _private _method simple_dataset.init_base_types()
 	##
-	## Subclassed to add :ds_string to use :ds_char16_vec (gives
+	## Subclassed to add :ds_string to use :extdb_string (gives
 	## some naming consistency)
 	##
 
 	_super.init_base_types()
 	
-	# Add :ds_string to use the :ds_char16_vec class
-	base_type << database_view.defined_types[:ds_char16_vec]
+	# Add :ds_string to use the :extdb_string class
+	base_type << database_view.defined_types[:extdb_string]
 	derived_type << uds_field_type.new_derived(_self, :ds_string, base_type.class,
 						   base_type.element_class, base_type.size,
 						   base_type.enumerator, base_type.phys_type)
