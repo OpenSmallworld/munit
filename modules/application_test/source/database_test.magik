@@ -39,6 +39,13 @@ database_test.define_shared_constant(:test_aspects,
 	property_list.new_with(:never, "never"), :public )
 $
 
+_pragma(classify_level=debug)
+database_test.define_shared_variable(:database_path,
+        ##
+        ## The location of the cambridge_db to use.
+        ##
+        "u:/swdev/databases/dev_ds_420/ds/ds_admin", :public)
+$
 
 database_test.method_table.resolve_conflicts( :test_case )
 $
@@ -55,14 +62,20 @@ $
 
 
 _pragma(classify_level=debug, usage={subclassable})
-_method database_test.writable_dataset_names
+database_test.define_shared_variable(:writable_dataset_names,
 	## 
-	## Return the names of any datasets that need to be writable
+	## A vector containing the names of any datasets that need to
+	## be writable.
 	##
+        {}, :public)
+$        
 
-	>> {}
-	
-_endmethod
+_pragma(classify_level=debug, usage={subclassable})
+database_test.define_shared_variable(:other_dataset_names,
+        ##
+        ## The names of any datasets which aren't in the normal SOC (eg case)
+        ##
+        {}, :public)
 $
 
 _pragma(classify_level=debug)
@@ -72,12 +85,43 @@ _method database_test.set_up()
 	## correct database is available. 
 	## It also creates a scratchpad to hold any transient data.
 	##
-
+        _self.check_correct_database_open()
 	.properties << property_list.new()
 	_self.given_writable_datasets( _self.writable_dataset_names )
 
 _endmethod
 $
+
+_private _method database_test.check_correct_database_open()
+        ## 
+        ## If there is no database open, then opens the nominated
+        ## one. If one is open but it isn't the correct one (the ace
+        ## path is incorrect) then closes that and opens the correct
+        ## one.
+        ##
+        _if _not ds_environment.c_is_initialised? _orif
+            gis_program_manager.ace_top_view _is _unset _orif
+            gis_program_manager.ace_top_view.searchpath.at_using_default("", 1) <> _self.database_path
+        _then 
+                #
+                # Suppress witterage. Note that
+                # raw_swdp_manager.open_partition() forcibly witters to
+                # !terminal! and that easily can't be suppressed without hiding
+                # real errors. 
+                #
+                _handling information _with procedure 
+                _handling warning _with procedure
+
+                smallworld_product.set_startup_option(:login, "root")
+
+                gis_program_manager.reinitialise()
+                open_database({_self.database_path})
+        _endif
+
+        _self.open_other_datasets()
+_endmethod
+$
+
 
 _pragma(classify_level=debug)
 _method database_test.tear_down()
@@ -90,3 +134,16 @@ _method database_test.tear_down()
 	
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method database_test.open_other_datasets()
+        ##
+        ## Open any datasets used by the case tool
+        ##
+        _for name _over _self.other_dataset_names.elements()
+        _loop 
+                _if gis_program_manager.databases[name] _is _unset
+                _then gis_program_manager.open_datasets(name)
+                _endif 
+        _endloop 
+_endmethod 
