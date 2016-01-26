@@ -81,46 +81,17 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method database_test.one_time_set_up()
-	##
-	## This gets called before each test and ensures that the
-	## correct database is available. 
-	## It also creates a scratchpad to hold any transient data.
-	##
-        _self.check_correct_database_open()
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method database_test.one_time_tear_down()
-	##
-	## This gets called before each test and ensures that the
-	## correct database is available. 
-	## It also creates a scratchpad to hold any transient data.
-	##
-        gis_program_manager.reinitialise()
-_endmethod
-$
-
-_pragma(classify_level=debug)
 _method database_test.set_up()
 	##
 	## This gets called before each test and ensures that the
 	## correct database is available. 
 	## It also creates a scratchpad to hold any transient data.
 	##
+        _self.check_correct_database_open()
 	.properties << property_list.new()
 	_self.given_writable_datasets( _self.writable_dataset_names )
-_endmethod
-$
 
-_pragma(classify_level=debug)
-database_test.define_shared_variable(:concurrency_mode,
-        ##
-        ## The concurrecny_mode used to reference the database. This
-        ## may be :single_user or :multi_user. The default is :multi_user.
-        ##
-        :multi_user, :public)
+_endmethod
 $
 
 _private _method database_test.check_correct_database_open()
@@ -132,8 +103,7 @@ _private _method database_test.check_correct_database_open()
         ##
         _if _not ds_environment.c_is_initialised? _orif
             gis_program_manager.ace_top_view _is _unset _orif
-            gis_program_manager.ace_top_view.searchpath.at_using_default("", 1) <> _self.database_path _orif
-            ds_environment.concurrency_mode <> _self.concurrency_mode
+            gis_program_manager.ace_top_view.searchpath.at_using_default("", 1) <> _self.database_path
         _then 
                 #
                 # Suppress witterage. Note that
@@ -143,7 +113,7 @@ _private _method database_test.check_correct_database_open()
                 #
                 _handling information _with procedure 
                 _handling warning _with procedure
-                ds_environment.concurrency_mode << _self.concurrency_mode
+
                 smallworld_product.set_startup_option(:login, "root")
 
                 gis_program_manager.reinitialise()
@@ -153,6 +123,7 @@ _private _method database_test.check_correct_database_open()
         _self.open_other_datasets()
 _endmethod
 $
+
 
 _pragma(classify_level=debug)
 _method database_test.tear_down()
