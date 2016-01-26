@@ -73,6 +73,14 @@ _pragma(classify_level=restricted)
 test_case.define_shared_variable(:ignore_aspects?, _false, :public)
 $
 
+test_case.define_shared_variable(:prev_test_class,
+                                ##
+                                ## The previous test_class run, for one_time setup and
+                                ## tear-down.
+                                ##
+                                _unset, :private)
+$
+
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_case.new( a_name )
 	## Constructs a test case with the given A_NAME.
@@ -139,12 +147,61 @@ _pragma(classify_level=advanced,topic=MUnit)
 _method test_case.run_bare()
 	## Runs the bare test sequence.
 
+        _self.one_time_behaviour()
 	_protect
 		_self.set_up()
 		_self.run_test()
 	_protection
 		_self.tear_down()
 	_endprotect
+_endmethod
+$
+
+
+_pragma(classify_level=advanced,topic=MUnit, usage=subclassable)
+_method test_case.one_time_set_up()
+        ## 
+        ## A method to be called the first time this test_case is being
+        ## run. When another test_case is class is about to be run,
+        ## this class's one_time_tear_down() is called, so
+        ## one_time_set_up() will be run once again if more methods
+        ## from this class are subsequently run.
+        ##
+        ## This backstop method does nothing but subclass
+        ## implementations should always call _super.
+        ##
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit, usage=subclassable)
+_method test_case.one_time_tear_down()
+        ## 
+        ## A method to be called before starting testing a different
+        ## test class. See also one_time_set_up().
+        ##
+        ## This backstop method does nothing but subclass
+        ## implementations should always call _super.
+        ##
+_endmethod
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_private _method test_case.one_time_behaviour()
+        ## 
+        ## If_self class isn't the same as the one in the previous
+        ## test, call one_time_tear_down() on the previous test_class,
+        ## then one_time_set_up() on this class.
+        ##
+        _if _self.prev_test_class.is_class_of?(_self)
+        _then _return
+        _endif
+        
+        _if _self.prev_test_class _isnt _unset
+        _then (_self.prev_test_class ^<< _unset).one_time_tear_down()
+        _endif
+
+        _self.prev_test_class << _self 
+        _self.prev_test_class.one_time_set_up()
 _endmethod
 $
 
