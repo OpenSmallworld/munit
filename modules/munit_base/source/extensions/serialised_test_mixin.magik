@@ -152,7 +152,6 @@ _pragma(classify_level=debug)
 _private _method serialised_test_mixin.add_values_to_queue( values )
 	## 
 	##	
-
 	_for value _over values.fast_elements()
 	_loop 
 		_self.properties[:queue].put( value, _true )
@@ -309,5 +308,29 @@ _method serialised_test_mixin.when_the_frame_is_minimized( top_frame, minimized?
 	_endif
 	
 	>> _self
+_endmethod
+$
+_pragma(classify_level=debug)
+_method serialised_test_mixin.resize_frame(a_frame, width, height )
+	## Workaround for the problem that some resize events are lost 
+	## when testing
+	timed_out?<< _true
+	_self.remove_value_from_queue( :resize_complete )
+	_for attempt _over 1.upto(5)
+	_loop
+		a_frame.set_size( width, height )
+		( test, timed_out? ) << _self.wait_for_value_on_queue( :resize_complete, _true )
+		_if _not timed_out? _then _leave _endif
+	_endloop
+	_if timed_out? _is _true 
+	_then
+		write("Frame resize timed out in test: ", _self.get_name())
+		top_container<< a_frame.top_canvas_container
+		top_container.width << width
+		top_container.height << height
+		top_container.refresh()
+#	_else
+#		write("Frame resize OK in test: ", _self.get_name())
+	_endif	
 _endmethod
 $
