@@ -209,6 +209,7 @@ _private _method db_test_case.create_test_checkpoints()
 	_for a_ds_view _over _self.ds_views.fast_elements()
 	_loop
 		a_ds_view.checkpoint( _self.checkpoint_name )
+		a_ds_view.switch(:write)
 	_endloop 
 _endmethod
 $
