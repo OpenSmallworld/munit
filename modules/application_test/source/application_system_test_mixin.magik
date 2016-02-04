@@ -545,7 +545,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_record_is_shown_on_map( rwo )
 	## 
-	## 
+	## Verify that the record inserted is available on the main map.
 
 	manager << _self.map_manager
 	mv << manager.current_map_view
@@ -562,7 +562,8 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_dialog_activated( plugin_name, dialog_name )
 	## 
-	##
+	## Verify whether a dialog is active/available on the screen.
+	
 	a_plugin << _self.properties[ :application ].plugin( plugin_name )
 	_if a_plugin _isnt _unset
 	_then
@@ -578,6 +579,29 @@ _method application_system_test_mixin.then_dialog_activated( plugin_name, dialog
 
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_item_enabled?( id_path, expected_state )
+	## 
+	## Verify the state of a Swift widget, identified by the 
+	## path string ID_PATH, is Enabled or Disabled.
+	##
+	## ID_PATH can be found using get_identifier_path() and is
+	## displayed in the Object Spy for widgets with a unique
+	## identifier path.
+	##
+	## EXPECTED_STATE is enabled? attribute of the Swift widget 
+	## which could either _true(Enable) or _false(Disable)
+
+	item << _self.get_item( id_path )
+	state << item.enabled?
+	fail_string << write_string("Expected State of ", item, " is ", expected_state, " but it is ", state)
+	_self.assert_equals(expected_state, state, fail_string)
+
+	>> _self
+_endmethod
+$
+
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.scenario_insert_record( dataset_name, collection_name, proposed_values, expected_values )
