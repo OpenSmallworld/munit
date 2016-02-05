@@ -93,8 +93,8 @@ $
 _pragma(classify_level=debug)
 _method database_test.one_time_set_up()
 	##
-	## This gets called before each test and ensures that the
-	## correct database is available. 
+	## This gets called before first test in this test class and
+	## ensures that the correct database is available. 
 	## It also creates a scratchpad to hold any transient data.
         ##
         ## Subclass implemetations should always call _super.
@@ -107,10 +107,9 @@ $
 _pragma(classify_level=debug)
 _method database_test.one_time_tear_down()
 	##
-	## This gets called before each test and ensures that the
-	## correct database is available. 
-	## It also creates a scratchpad to hold any transient data.
-        ##
+	## This gets called before first test in next test class and
+	## ensures that the database opened in this test is discarded.
+	##
         ## Subclass implemetations should always call _super.
 	##
         _super.one_time_tear_down()

@@ -93,20 +93,35 @@ _private _method db_test_case.one_time_setup_database()
 	
 _endmethod
 $
+_pragma(classify_level=debug)
+_method db_test_case.one_time_tear_down()
+	##
+	## This gets called before first test in next test class and
+	## ensures that the database opened in this test is discarded.
+        ##
+        ## Subclass implemetations should always call _super.
+	##
+        _super.one_time_tear_down()
+        gis_program_manager.reinitialise()
+_endmethod
+$
 
 _pragma(classify_level=restricted,topic=MUnit)
-_method db_test_case.run_bare()
-	## Runs the bare test sequence
-
-	_self.setup_db()
-	_self.set_up()
-	
-	_protect
-		_self.run_test()
-	_protection
-		_self.tear_down()
-		_self.teardown_db()
-	_endprotect
+_method db_test_case.set_up()
+	## Sets up the fixture by calling setup_db()
+	## Subclass implementations should always call _super.
+	##
+	_super.set_up()
+	_self.setup_db()	
+_endmethod
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_method db_test_case.tear_down()
+	## Tears down the fixture by calling teardown_db()
+	## Subclass implementations should always call _super.
+	##
+	_self.teardown_db()
+	_super.tear_down()
 _endmethod
 $
 
@@ -308,7 +323,6 @@ _method db_test_case.create_database(_optional create_dataset_args, create_datab
 	_loop
 		creator << dataset_creator.new(_scatter args)
 		creators.add_last(creator)
-
 		# This shenanigans is needed because the defaults end up with
 		# ".." in the ACE searchpath, which the in-memory database
 		# can't cope with!
