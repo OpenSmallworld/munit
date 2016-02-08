@@ -1,0 +1,31 @@
+_package sw
+## Includes all methods as a test_suite and also methods
+## windows_test_*() when running on Windows
+##
+## If method test_case.suite() is overriden on subclass to use
+## windows_test_suite instead of test_suite then such a
+## test_case will include methods windows_test*() when running
+## on Windows OS. There is a helper method which does that
+## test_case.windows_suite() for convinience.
+def_slotted_exemplar(:windows_test_suite,
+{},
+{:test_suite})
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method windows_test_suite.is_test_method?( a_method )
+	## If A_METHOD name follow pattern test*() returns _true.
+	## On Windows it returns true also when pattern is windows_test*().
+
+	>> _super.is_test_method?( a_method ) _orif _self.is_windows_test_method?( a_method )
+_endmethod
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method windows_test_suite.is_windows_test_method?( a_method )
+	## On Windows it returns true if pattern is windows_test*().
+	## 
+	>> a_method.name.is_class_of?( symbol ) _andif
+		a_method.name.matches?( "windows_test_*" ) _andif
+		system.os_name _is :windows
+_endmethod
+$
+
