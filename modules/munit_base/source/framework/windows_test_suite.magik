@@ -1,0 +1,21 @@
+_package sw
+## Includes all methods as a test_suite when running on
+## Windows but on other OS excludes methods test_windows_*()
+##
+## If method test_case.suite() is overriden on subclass to use
+## windows_test_suite instead of test_suite then such a
+## test_case will exclude methods test_windows_*() when running
+## on non Windows OS. 
+def_slotted_exemplar(:windows_test_suite,
+{},
+{:test_suite})
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method windows_test_suite.is_test_method?( a_method )
+	## Returns true If A_METHOD name follow pattern test*() returns _true.
+	## If pattern test_windows_*() then returns true only on Windows 
+
+	>> _super.is_test_method?( a_method ) _and
+		(_not a_method.name.matches?( "test_windows_*" ) _orif system.os_name _is :windows)
+_endmethod
+$
