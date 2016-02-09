@@ -157,6 +157,7 @@ _private _method database_test.check_correct_database_open()
                 smallworld_product.set_startup_option(:login, "root")
 
                 gis_program_manager.reinitialise()
+                _dynamic !current_package! << !current_package!.all_packages[:sw]
                 open_database({_self.database_path})
         _endif
 
