@@ -157,7 +157,10 @@ _private _method database_test.check_correct_database_open()
                 smallworld_product.set_startup_option(:login, "root")
 
                 gis_program_manager.reinitialise()
-                _dynamic !current_package! << !current_package!.all_packages[:sw]
+write("Temporary tracing: !current_package! = ", !current_package!)
+                _dynamic !current_package! << !current_package!.all_packages[:user]
+write("Temporary tracing: !current_package! before opening database ", !current_package!)
+write("Temporary tracing: !current_package![:beer] = ", !current_package![:beer])
                 open_database({_self.database_path})
         _endif
 
