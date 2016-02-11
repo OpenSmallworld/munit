@@ -4,6 +4,7 @@ _package sw
 _pragma(classify_level=advanced,topic=MUnit)
 def_slotted_exemplar(:db_test_case,
 {
+	{ :db_created?, _false }
 	{ :ds_views , _unset }
 },
 {:test_case})
@@ -101,27 +102,51 @@ _method db_test_case.one_time_tear_down()
         ##
         ## Subclass implemetations should always call _super.
 	##
+	_if .db_created?
+	_then 
+		gis_program_manager.reinitialise()
+	_endif 
         _super.one_time_tear_down()
-        gis_program_manager.reinitialise()
 _endmethod
 $
+_pragma(classify_level=advanced,topic=MUnit, usage=subclassable)
+_method db_test_case.one_time_set_up()
+        ## 
+        ## A method to be called the first time this test_case is being
+        ## run. When another test_case is class is about to be run,
+        ## this class's one_time_tear_down() is called, so
+        ## one_time_set_up() will be run once again if more methods
+        ## from this class are subsequently run.
+        ##
+        ## Subclass implementations should always call _super.
+        ##
+	_super.one_time_set_up()
+	_if _self.ds_views.empty?
+	_then
+		_self.create_and_open_database()
+		.db_created?<< _true 
+	_endif 
+_endmethod
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_method db_test_case.run_bare()
+	## Runs the bare test sequence
+	# TODO instead of overriding this method
+	# setup_db() and teardown_db() this should be called in
+	# set_up(), tear_down() but this would require big refactoring
+	# (mainly in PNI tests)
 
-_pragma(classify_level=restricted,topic=MUnit)
-_method db_test_case.set_up()
-	## Sets up the fixture by calling setup_db()
-	## Subclass implementations should always call _super.
-	##
-	_super.set_up()
-	_self.setup_db()	
-_endmethod
-$
-_pragma(classify_level=restricted,topic=MUnit)
-_method db_test_case.tear_down()
-	## Tears down the fixture by calling teardown_db()
-	## Subclass implementations should always call _super.
-	##
-	_self.teardown_db()
-	_super.tear_down()
+        _self.one_time_behaviour()
+
+	_self.setup_db() 
+	_self.set_up()
+	
+	_protect
+		_self.run_test()
+	_protection
+		_self.tear_down() 
+		_self.teardown_db()
+	_endprotect
 _endmethod
 $
 
@@ -130,11 +155,6 @@ _method db_test_case.setup_db()
 
 	## Set up the database ready for the test, possibly creating it
 	## from scratch.
-
-	_if _self.ds_views.empty?
-	_then
-		_self.create_and_open_database()
-	_endif 
 	
 	_self.goto_test_alternatives()
 	_self.clear_alternatives_and_checkpoints()
