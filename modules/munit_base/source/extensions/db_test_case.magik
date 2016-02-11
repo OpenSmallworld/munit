@@ -4,6 +4,7 @@ _package sw
 _pragma(classify_level=advanced,topic=MUnit)
 def_slotted_exemplar(:db_test_case,
 {
+	{ :db_created?, _false },
 	{ :ds_views , _unset }
 },
 {:test_case})
@@ -93,18 +94,58 @@ _private _method db_test_case.one_time_setup_database()
 	
 _endmethod
 $
-
+_pragma(classify_level=debug)
+_method db_test_case.one_time_tear_down()
+	##
+	## This gets called before first test in next test class and
+	## ensures that the database opened in this test is discarded.
+        ##
+        ## Subclass implemetations should always call _super.
+	##
+	_if .db_created?
+	_then 
+		gis_program_manager.reinitialise()
+		.db_created?<< _false
+	_endif 
+        _super.one_time_tear_down()
+_endmethod
+$
+_pragma(classify_level=advanced,topic=MUnit, usage=subclassable)
+_method db_test_case.one_time_set_up()
+        ## 
+        ## A method to be called the first time this test_case is being
+        ## run. When another test_case is class is about to be run,
+        ## this class's one_time_tear_down() is called, so
+        ## one_time_set_up() will be run once again if more methods
+        ## from this class are subsequently run.
+        ##
+        ## Subclass implementations should always call _super.
+        ##
+	_super.one_time_set_up()
+	_if _self.ds_views.empty?
+	_then
+		_self.create_and_open_database()
+		.db_created?<< _true
+	_endif 
+_endmethod
+$
 _pragma(classify_level=restricted,topic=MUnit)
 _method db_test_case.run_bare()
 	## Runs the bare test sequence
+	# TODO instead of overriding this method
+	# setup_db() and teardown_db() this should be called in
+	# set_up(), tear_down() but this would require big refactoring
+	# (mainly in PNI tests)
 
-	_self.setup_db()
+        _self.one_time_behaviour()
+
+	_self.setup_db() 
 	_self.set_up()
 	
 	_protect
 		_self.run_test()
 	_protection
-		_self.tear_down()
+		_self.tear_down() 
 		_self.teardown_db()
 	_endprotect
 _endmethod
@@ -115,11 +156,6 @@ _method db_test_case.setup_db()
 
 	## Set up the database ready for the test, possibly creating it
 	## from scratch.
-
-	_if _self.ds_views.empty?
-	_then
-		_self.create_and_open_database()
-	_endif 
 	
 	_self.goto_test_alternatives()
 	_self.clear_alternatives_and_checkpoints()
@@ -308,7 +344,6 @@ _method db_test_case.create_database(_optional create_dataset_args, create_datab
 	_loop
 		creator << dataset_creator.new(_scatter args)
 		creators.add_last(creator)
-
 		# This shenanigans is needed because the defaults end up with
 		# ".." in the ACE searchpath, which the in-memory database
 		# can't cope with!
@@ -427,7 +462,15 @@ _method db_test_case.databases
 	_if (views << .ds_views) _is _unset _then views << .ds_views << property_list.new() _endif
 
 	# Not got started yet
-	_if ds_environment.views.empty? _then _return views _endif
+	_if ds_environment.views.empty? _orif
+	    gis_program_manager.ace_top_view _is _unset
+	_then
+		_if gis_program_manager.ace_top_view _is _unset
+		_then
+			gis_program_manager.reinitialise()
+		_endif 
+		_return views
+	_endif
 
 	_for name, a_view _over gis_program_manager.databases.fast_keys_and_elements()
 	_loop
