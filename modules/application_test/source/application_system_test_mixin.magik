@@ -96,11 +96,9 @@ _method application_system_test_mixin.given_an_embbeded_editor_with_default_valu
 	## 
 	##
 
-	_self.given_an_embbeded_editor( dataset_name, collection_name )
-	action << _self.properties[ :editor ].component( :field_lister ).action( :set_defaults )
-
-	_self.click_action_button( action )
-
+	_self.given_an_embbeded_editor( dataset_name, collection_name ).
+		 when_clicking_set_defaults_button()
+	
 	>> _self 
 	
 _endmethod
@@ -132,6 +130,52 @@ _method application_system_test_mixin.given_a_trail_coordinate( x, y )
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method application_system_test_mixin.given_an_alternative(alt_name,_optional dataset)
+	## given_an_alternative() for Core based applications
+	## alt_name that is the name of the alternative should be
+	## provided by the user in a string e.g. "test_alternative".
+	## Tester can optionally provide the dataset name as a symbol
+	## e.g. :gis.
+	##
+	## By default, given_an_alternative will always
+	## create alternatives in GIS dataset.
+	##
+	## Example of method usage would be: given_an_alternative("test", :gis)
+	## to create an alternative named test in gis dataset.
+
+	gpm << gis_program_manager
+	_if dataset _is _unset
+	_then
+		ds << gpm.databases[:gis]
+	_else
+		ds << gpm.databases[dataset]
+	_endif
+
+	ds.goto_top_alternative()
+
+	_if ds.has_alternative?(alt_name) _is _false
+	_then
+		ds.create_alternative(alt_name)
+	_endif
+
+	ds.go_to_alternative(alt_name)
+	ds.switch(:write)
+
+	>> _self 
+	
+_endmethod 
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.get_item( id_path )
+	## 
+	## Return the UI widget matching the supplied string ID_PATH.
+
+	>> sw_swift_manager.get_item_with_path( id_path )
+_endmethod
+$
+
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_inserting_record()
@@ -151,17 +195,6 @@ _method application_system_test_mixin.when_inserting_record()
 _endmethod
 $
 
-
-_pragma(classify_level=debug)
-_method application_system_test_mixin.get_item( id_path )
-	## 
-	## Return the UI widget matching the supplied string ID_PATH.
-
-	>> sw_swift_manager.get_item_with_path( id_path )
-_endmethod
-$
-
-
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_item( id_path, _optional new_frame_wait_time )
 	## 
@@ -170,8 +203,9 @@ _method application_system_test_mixin.when_clicking_item( id_path, _optional new
 	## ID_PATH can be found using get_identifier_path() and is
 	## displayed in the Object Spy for widgets with a unique
 	## identifier path.
-	## (Load magik_tools from sw_dev_tools to enable Object Spy
-	## activation using F4)
+	##
+	## (Load magik_tools from sw_dev_tools to enable Swift Explorer
+	## and activate it using F4 key)
 
 	click_item << _self.get_item( id_path )
 	_if click_item _isnt _unset
@@ -332,6 +366,7 @@ _method application_system_test_mixin.when_refreshing_the_map()
 
 	# Add self as a dependent on the render_controller to be able
 	# to wait for :end_render
+	
 	current_map << _self.map_manager.current_map
 	n_views << 0
 	_for view _over current_map.views()
@@ -359,6 +394,51 @@ _method application_system_test_mixin.when_refreshing_the_map()
 
 	>> _self 
 	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_set_defaults_button()
+	## 
+	## 
+
+	action << _self.properties[ :editor ].component( :field_lister ).action( :set_defaults )
+
+	_self.click_action_button( action )
+
+	>> _self
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_setting_value_in_text_item(id_path, new_text)
+       ## 
+       ## Set up Swift widget's VALUE to the NEW_TEXT.
+       ## This method can be used to set values in the text fields.
+       ## Text field should be ENABLED.
+       ##
+       ## ID_PATH can be found using get_identifier_path() and is
+       ## displayed in the Swift Explorer for widgets with a unique
+       ## identifier path.
+       ##
+       ## NEW_TEXT is string value provided to the Swift widget, 
+       ## the widget should be enabled.
+       
+       item << _self.get_item( id_path )
+
+       # set the NEW_TEXT when ITEM is enabled.       
+       _if item.enabled? _is _true
+       _then 
+       
+              item.value << new_text
+       _else
+              Condition.raise( :error, :string, write_string("Unable to set the text because the item ", item, " is not enabled."))
+       _endif
+
+       >> _self
+       
 _endmethod
 $
 
@@ -908,42 +988,6 @@ _private _method application_system_test_mixin.add_dialog( a_dialog )
 	
 _endmethod
 $
-
-_pragma(classify_level=debug)
-_method application_system_test_mixin.given_an_alternative(alt_name,_optional dataset)
-	## given_an_alternative() for Core based applications
-	## alt_name that is the name of the alternative should be
-	## provided by the user in a string e.g. "test_alternative".
-	## Tester can optionally provide the dataset name as a symbol
-	## e.g. :gis.
-	##
-	## By default, given_an_alternative will always
-	## create alternatives in GIS dataset.
-	##
-	## Example of method usage would be: given_an_alternative("test", :gis)
-	## to create an alternative named test in gis dataset.
-
-	gpm << gis_program_manager
-	_if dataset _is _unset
-	_then
-		ds << gpm.databases[:gis]
-	_else
-		ds << gpm.databases[dataset]
-	_endif
-
-	ds.goto_top_alternative()
-
-	_if ds.has_alternative?(alt_name) _is _false
-	_then
-		ds.create_alternative(alt_name)
-	_endif
-
-	ds.go_to_alternative(alt_name)
-	ds.switch(:write)
-
-	>> _self 
-	
-_endmethod 
 
 
 _pragma(classify_level=restricted,topic=MUnit)
