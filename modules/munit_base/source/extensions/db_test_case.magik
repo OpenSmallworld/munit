@@ -4,7 +4,7 @@ _package sw
 _pragma(classify_level=advanced,topic=MUnit)
 def_slotted_exemplar(:db_test_case,
 {
-	{ :db_created?, _false }
+	{ :db_created?, _false },
 	{ :ds_views , _unset }
 },
 {:test_case})
@@ -105,6 +105,7 @@ _method db_test_case.one_time_tear_down()
 	_if .db_created?
 	_then 
 		gis_program_manager.reinitialise()
+		.db_created?<< _false
 	_endif 
         _super.one_time_tear_down()
 _endmethod
@@ -124,7 +125,7 @@ _method db_test_case.one_time_set_up()
 	_if _self.ds_views.empty?
 	_then
 		_self.create_and_open_database()
-		.db_created?<< _true 
+		.db_created?<< _true
 	_endif 
 _endmethod
 $
@@ -461,7 +462,15 @@ _method db_test_case.databases
 	_if (views << .ds_views) _is _unset _then views << .ds_views << property_list.new() _endif
 
 	# Not got started yet
-	_if ds_environment.views.empty? _then _return views _endif
+	_if ds_environment.views.empty? _orif
+	    gis_program_manager.ace_top_view _is _unset
+	_then
+		_if gis_program_manager.ace_top_view _is _unset
+		_then
+			gis_program_manager.reinitialise()
+		_endif 
+		_return views
+	_endif
 
 	_for name, a_view _over gis_program_manager.databases.fast_keys_and_elements()
 	_loop
