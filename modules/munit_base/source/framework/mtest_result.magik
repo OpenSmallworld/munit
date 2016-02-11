@@ -19,6 +19,19 @@ def_slotted_exemplar(:mtest_result,
 },{})
 $
 
+_pragma(classify_level=advanced,topic=MUnit)
+mtest_result.define_shared_variable(:retry_count,
+        #
+        # If an individual test fails, it will be re-tried this number
+        # of times more, and a pass is accepted as OK. If the number of
+        # tries is met and the test is still failing, the test fails
+        # normally.
+        #
+        # The backstop is 0, so the default behaviour is not to retry.
+        #
+        0, :public)
+$
+
 _pragma(classify_level=basic,topic=MUnit)
 _method mtest_result.new( _optional exclude_slow_tests? )
 	## Constructs new mtest_result
@@ -131,24 +144,42 @@ _method mtest_result.run_protected( a_test , a_protectable )
 
 	_local me << _self
 	_local tag << "run".copy()
+        _local final?, ok?
+        
+        _for i _over 0.upwards()
+        _loop 
+                final? << i >= _self.retry_count
+                ok? << _true 
+                _catch tag
+                       
+                       _handling assertion_failed_warning
+                       _with _proc( a_condition )
+                                     _import a_test, me, final?, ok?
+                                     _if final?
+                                     _then me.add_failure( a_test, a_condition )
+                                     _endif 
+                                     ok? << _false 
+                       _endproc
+                       
+                       _handling error
+                       _with _proc( a_condition )
+                                     _import tag, a_test, me, final?, ok?
+                                     _if final?
+                                     _then me.add_error( a_test, a_condition )
+                                     _endif 
+                                     ok? << _false 
+                                     _throw tag
+                       _endproc
+                       
+                       a_test.perform( a_protectable , _self )
+                _endcatch
 
-	_catch tag
-	       
-	       _handling assertion_failed_warning
-	       _with _proc( a_condition )
-			     _import a_test, me
-			     me.add_failure( a_test, a_condition )
-	       _endproc
+                _if ok? _orif final?
+                _then _leave
+                _endif
 
-	       _handling error
-	       _with _proc( a_condition )
-			     _import tag, a_test, me
-			     me.add_error( a_test, a_condition )
-			     _throw tag
-	       _endproc
-		    
-	       a_test.perform( a_protectable , _self )
-	_endcatch
+                write("***RE-TRYING test after failure or error")
+        _endloop 
 _endmethod
 $
 
