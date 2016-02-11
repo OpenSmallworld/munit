@@ -156,6 +156,12 @@ _private _method database_test.check_correct_database_open()
                 smallworld_product.set_startup_option(:login, "root")
 
                 gis_program_manager.reinitialise()
+
+                #
+                # The Cambridge DB exemplars are declared in the user package,
+                # so this must be current when we open the database
+                #
+                _dynamic !current_package! << !current_package!.all_packages[:user]
                 open_database({_self.database_path})
         _endif
 

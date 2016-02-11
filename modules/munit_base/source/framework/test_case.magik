@@ -259,6 +259,19 @@ _method test_case.suite( _optional a_name, _gather suite_args)
 	>> test_suite.new( _self , a_name, _scatter suite_args )
 _endmethod
 $
+_pragma(classify_level=advanced,topic=MUnit,usage=subclassable)
+_private _method test_case.windows_suite( _optional a_name, _gather suite_args)
+	## Constructs a windows_test_suite called A_NAME with the
+	## non-private methods matching the pattern "test*()".
+	## plus methods "windows_test_*()" when running on Windows.
+	##
+	## SUITE_ARGS are passed to the test_suite.new() method. 
+	## 
+	a_name << a_name.default( _self.class_name )
+
+	>> windows_test_suite.new( _self , a_name, _scatter suite_args )	
+_endmethod
+$
 
 _pragma(classify_level=basic,topic=MUnit)
 _method test_case.write_on( a_stream )

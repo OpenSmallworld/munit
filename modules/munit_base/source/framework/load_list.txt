@@ -7,6 +7,7 @@ test_listener_interface
 test_case
 warning_test_case
 test_suite
+windows_test_suite
 test_case_equality_set
 
 product_test_suite
