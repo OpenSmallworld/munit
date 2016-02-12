@@ -52,12 +52,20 @@ _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 ## a_suite.add_test( math_test.new( :test_divide_by_zero|()| ))
 def_slotted_exemplar(:test_case,
 {
-	{ :name , _unset }
+	{ :name , _unset },
+        { :retry_count, 0 }
 },
 {:test_interface,:assert}
 )
 $
 
+test_case.define_slot_access(:retry_count,
+        ##
+        ## If a test fails, it will be re-run retry times. The default
+        ## is 0, in which case the test will only ever be run once. 
+        ##
+        :writable, :public)
+$
 
 _pragma(classify_level=restricted, usage={subclassable})
 ## The highest test number that will be looked for if the
