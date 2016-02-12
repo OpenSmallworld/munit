@@ -1,0 +1,401 @@
+_package sw
+$
+
+_pragma(classify_level=advanced)
+##
+## deep_comparator: A class for comparing two objects by
+## recursing through them. Things which are = match, and
+## collections are compared item by item. Slotted things of the
+## same class are compared slot by slot. Database objects are
+## compared as Magik objects, *not* according to their database
+## content (so no attempt is made to match whole collections).
+##
+## It is possible to skip particular slots, when it is known
+## that the content can legitimately be different.
+##
+## The result of a comparison includes a simple true/false
+## result, a string showing the path to a mismatch, and the
+## objects which caused the mismatch to occur. 
+##
+def_slotted_exemplar(:deep_comparator,
+		    {{:seen_before, hash_table.new()},
+		     {:path, rope.new()},
+		     {:error_depth, 0},
+		     {:error_reason, ""},
+		     {:params, property_list}})
+$
+
+_pragma(classify_level=basic)
+_method deep_comparator.new(_gather keys_and_args)
+	##
+	## Returns a new comparator. Valid KEYS_AND_ARGS comprise:
+	##   :report?, _true/_false
+	##     If _true, write the report message of why things didn't
+	##     match.
+	##   :skip_slots, property_list[exemplar]->{slotname,...}
+	##     If set for a particular class then don't compare the
+	##     nominated slots. If EXEMPLAR is :all, then ignore any
+	##     instances of the named slot. 
+	##
+	>> _clone.init(keys_and_args)
+_endmethod
+$
+
+_private _method deep_comparator.init(keys_and_args)
+	## 
+	## Initialise slots.
+	##
+	.params << property_list.new_from_gathered(keys_and_args)
+	
+	_self.process_skip_slots()
+	
+	.seen_before << .seen_before.new()
+	.path <<  .path.new()
+
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=basic)
+_private _method deep_comparator.process_skip_slots()
+	## 
+	## For all objects in skip_slots, include any subclasses with
+	## the same slots.
+	##
+	skip_slots << .params[:skip_slots]
+
+	_for ex, slots _over skip_slots.keys_and_elements()
+	_loop
+		_if ex _is :all
+		_then _continue
+		_endif
+
+		_for child_mt _over ex.method_table.children(_true)
+		_loop
+			child_ex << child_mt.meta_at(:exemplar)
+			
+			_if skip_slots[child_ex] _is _unset
+			_then skip_slots[child_ex] << slots
+			_endif 
+		_endloop
+	_endloop 
+_endmethod
+$
+
+
+_pragma(classify_level=basic)
+_method deep_comparator.compare(object1, object2)
+	## 
+	## Compares the two objects. Returns OK?, REPORT, BAD_OBJECT1,
+	## BAD_OBJECT2. If :report? was true, and there was a mismatch,
+	## writes out the path to the problem.
+	##
+	.seen_before.empty()
+	.path.empty()
+
+	ok? << _self.safe_compare(object1, object2, 0)
+	
+	_if _not ok?
+	_then
+		(report, bad_object1, bad_object2) << _self.report_string()
+		_if .params[:report?] _is _true 
+		_then write(report)
+		_endif
+	_else report << ""
+	_endif 
+	
+	_return ok?, report, bad_object1, bad_object2
+_endmethod
+$
+
+_pragma(classify_level=basic)
+_private _method deep_comparator.int!compare(object1, object2, depth, index_type, key_or_slotnum)
+	## 
+	## Recursively compare the objects.
+	##
+	_if object1 _is object2
+	_then _return
+	_endif
+	
+	#
+	# Do not drill down into database types of things, simply
+	# compare the slots. Most tests don't happen on database
+	# objects and we filter down to the slot code. 
+	#
+	database? << object1.inherits_from?(dd_collection_mixin) _orif
+		     object1.inherits_from?(dd_record_mixin) _orif
+		     object1.is_a_datastore_object? _orif
+		     object1.is_class_of?(ds_collection_stream)
+
+	_if (_not database? _andif object1 = object2) _orif
+	    ((s << .seen_before[object1]) _isnt _unset _andif
+	     s.includes?(object2))
+	_then _return 
+	_endif
+
+	depth +<< 1
+
+	_if object1 _isnt _unset _andif
+	    object2 _isnt _unset 
+	_then .seen_before.at_or_new_if_absent(object1, set).add(object2)
+	_endif 
+
+	.path[depth] << {object1, object2, index_type, key_or_slotnum}
+
+	_if _not object1.is_class_of?(object2) 
+	_then
+		#
+		# Might be a cooked up record_exemplar
+		#
+		_if _not object1.inherits_from?(dd_record_mixin) _orif
+		    _not object2.inherits_from?(dd_record_mixin) _orif
+		    object1.class_name _isnt object2.class_name # should really check inheritance
+		_then _self.fail(depth, "class mismatch")
+		_endif 
+	_endif
+
+	#
+	# If we have a simple string, the equality test above will have
+	# failed, so give up now.
+	#
+	_if object1.is_kind_of?(ro_charindex_mixin) _andif _not database?
+	_then _self.fail(depth, "string equality mismatch")
+	_endif
+	
+	_if _not database?  _andif
+	    object1.responds_to?(:size) _andif
+	    object1.size <> object2.size
+	_then _self.fail(depth, "size mismatch")
+	_endif
+
+	#
+	# Raw indexed vectors
+	#
+	_if object1.define_method_target.meta_at(:instance_format) _is :indexed _andif
+	    object1.define_method_target.meta_at(:instance_data_type) _isnt :pointer
+	_then
+		_if object1.cf_subseq(object2) _isnt _maybe
+		_then _self.fail(depth, "indexed_vector mismatch")
+		_endif
+
+	#
+	# Keyed collections (vectors, ropes, hash_tables etc)
+	#
+	_elif _not database? _andif object1.responds_to?(:keys_and_elements|()|)
+	_then
+		#
+		# This relies on the *keys* being truly equal, as an efficiency
+		# measure. It would be more strictly correct to adopt the set
+		# approach below.
+		#
+		_for k,el1 _over object1.keys_and_elements()
+		_loop
+			_self.int!compare(el1, object2[k], depth, :index, k)
+		_endloop
+
+	#
+	# Pure non-indexed collections (sets, bags etc)
+	#
+	_elif _not database? _andif object1.responds_to?(:elements|()|)
+	_then
+		_self.compare_non_indexed_collection(object1, object2, depth)
+
+	#
+	# Slotted things
+	#
+	_elif object1.is_kind_of?(slotted_format_mixin)
+	_then
+		_self.compare_slotted_object(object1, object2, depth)
+		
+	#
+	# Skip special case of a raw java vector
+	#
+	_elif object1.class_name.index_of_seq("[]") _isnt _unset 
+	_then _return
+	_else _self.fail(depth, "equality mismatch")
+	_endif
+	
+_endmethod
+$
+
+_private _method deep_comparator.compare_non_indexed_collection(object1, object2, depth)
+	## 
+	## OBJECT1 and OBJECT2 are collections which respond to
+	## .elements() but not to .keys_and_elements(). Compare them to
+	## ensure they contain entirely comparable contents.
+	##
+	#
+	# In the worst case we could end up doing a N-squared
+	# comparison, but attempt to mitigate that by doing obvious
+	# checks first.
+	#
+	_if object1.responds_to?(:difference|()|) _andif
+	    object1.difference(object2).empty? _andif
+	    object2.difference(object1).empty?
+	_then _return
+	_endif 
+
+	object2_copy << set.new_from(object2)
+	
+	_if .error_depth > depth
+	_then .error_depth << depth
+	_endif 
+	max_depth << .error_depth
+	
+	#
+	# Bad day: Having an object1, we want to see that it compares
+	# in object2. However, we want to do a deep comparison so we
+	# don't get false errors on equality mismatch, and in most
+	# cases this will fail. If, at the end, we haven't found a
+	# match, then it's useful to know the deepest path we got to
+	# (although sometimes this means we get an arbitrary result).
+	# So record the deepest mismatch and use that to report by
+	# cobbling the details togeter at the end. Note that it might
+	# be clearer to only report the whole object as mismatched if
+	# all the content ones are the same lower level down.
+	#
+	ok? << _true 
+	_for el1 _over object1.elements()
+	_loop @outer
+		_for el2 _over object2_copy.elements()
+		_loop
+			_if _not _self.safe_compare(el1, el2, depth)
+			_then
+				_if .error_depth > max_depth
+				_then
+					saved_path << .path.copy()
+					saved_reason << .error_reason
+					max_depth << .error_depth
+				_endif 
+				
+				_continue
+			_endif
+			
+			object2_copy.remove(el2)
+			_continue @outer
+		_endloop
+		
+		ok? << _false
+		_leave 
+	_endloop
+	
+	_if ok? _andif object2_copy.empty?
+	_then _return
+	_endif
+	
+	.path << saved_path
+	.error_reason << saved_reason
+	.error_depth << max_depth
+	
+	_throw @deep_comparator_mismatch
+_endmethod
+$
+
+_pragma(classify_level=basic)
+_private _method deep_comparator.compare_slotted_object(object1, object2, depth)
+	## 
+	## OBJECT1 and OBJECT2 are slotted objects to be compared slot
+	## by slot.
+	##
+	_if (skip_class_slots << .params[:skip_slots]) _isnt _unset
+	_then
+		skip_slots << {}.concatenation(skip_class_slots[:all].default({}),
+					       skip_class_slots[object1.exemplar].default({}))
+	_else skip_slots << {}
+	_endif 
+	
+	_for slot _over object1.method_table.meta_at(:instance_slot_data).elements()
+	_loop
+		sname << slot.slot_name
+		
+		_if skip_slots.includes?(sname)
+		_then _continue
+		_endif
+		
+		_self.int!compare(object1.sys!slot(sname),
+				  object2.sys!slot(sname),
+				  depth, :slot, sname)
+	_endloop
+_endmethod
+$
+
+
+_private _method deep_comparator.safe_compare(object1, object2, depth)
+	## 
+	## Compare the two objects and return _true if they match and
+	## false if they don't.
+	##
+	_catch @deep_comparator_mismatch
+		_self.int!compare(object1, object2, depth, :top, _unset)
+		
+		_return _true
+	_endcatch
+
+	_return _false 
+_endmethod
+$
+
+_pragma(classify_level=basic)
+_private _method deep_comparator.fail(depth, message)
+	## 
+	## Record the depth and reason for failue, and then throw.
+	##
+	.error_depth << depth
+	.error_reason << message
+
+	_throw @deep_comparator_mismatch
+_endmethod
+$
+
+_pragma(classify_level=advanced)
+_method deep_comparator.report_string(_optional after_error?)
+	## 
+	## Construct a path to a failing match and return it as a
+	## string. Also return the final failing pair of objects. This
+	## method can be used to track down where a problem causing a
+	## traceback occurred (in which case supply AFTER_ERROR?)
+	## _true. 
+	##
+	_if after_error? _is _true
+	_then .error_depth << .path.size
+	_endif 
+	#
+	# We are only really interested in one object down the path,
+	# because presumably it is the same as the other.
+	#
+	s << internal_text_output_stream.new()
+
+	_for k _over 1.upto(.error_depth)
+	_loop
+		(object1, object2, index_type, key_or_slot) << (_scatter  .path[k])
+
+		_if index_type _is :index
+		_then s.write(%[, _self.string_for(key_or_slot), %], "->")
+		_elif index_type _is :slot
+		_then s.write(%., key_or_slot, "->")
+		_elif k <> 1
+		_then s.write("->")
+		_endif
+
+		s.write(_self.string_for(object1))
+	_endloop
+
+	s.write(tab_char, .error_reason, " with ", _self.string_for(object2))
+
+	>> s.string, object1, object2
+_endmethod
+$
+
+_private _method deep_comparator.string_for(an_object)
+	## 
+	## Return a string to describe an_object which is fairly obvious
+	##
+	_if an_object.is_class_of?(symbol)
+	_then _return write_string(%:, an_object)
+	_elif an_object.inherits_from?(charindex_mixin)
+	_then _return write_string(%", an_object, %")
+	_else _return an_object.write_string
+	_endif 
+_endmethod
+$
+
