@@ -153,7 +153,7 @@ _private _method database_test.check_correct_database_open()
                 _handling information _with procedure 
                 _handling warning _with procedure
                 ds_environment.concurrency_mode << _self.concurrency_mode
-                smallworld_product.set_startup_option(:authorisation, _self.concurrency_mode)
+                smallworld_product.set_startup_option(:authorisation, :singleuser)
                 smallworld_product.set_startup_option(:login, "root")
 
                 gis_program_manager.reinitialise()
