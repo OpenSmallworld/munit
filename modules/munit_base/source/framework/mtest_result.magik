@@ -19,19 +19,6 @@ def_slotted_exemplar(:mtest_result,
 },{})
 $
 
-_pragma(classify_level=advanced,topic=MUnit)
-mtest_result.define_shared_variable(:retry_count,
-        #
-        # If an individual test fails, it will be re-tried this number
-        # of times more, and a pass is accepted as OK. If the number of
-        # tries is met and the test is still failing, the test fails
-        # normally.
-        #
-        # The backstop is 0, so the default behaviour is not to retry.
-        #
-        0, :public)
-$
-
 _pragma(classify_level=basic,topic=MUnit)
 _method mtest_result.new( _optional exclude_slow_tests? )
 	## Constructs new mtest_result
@@ -148,24 +135,26 @@ _method mtest_result.run_protected( a_test , a_protectable )
         
         _for i _over 0.upwards()
         _loop 
-                final? << i >= _self.retry_count
+                final? << i >= a_test.retry_count
                 ok? << _true 
                 _catch tag
                        
                        _handling assertion_failed_warning
                        _with _proc( a_condition )
-                                     _import a_test, me, final?, ok?
+                                     _import a_test, me, final?, ok?, i
                                      _if final?
                                      _then me.add_failure( a_test, a_condition )
+                                     _else me.report_non_final_problem( a_test, a_condition, _false, i+1)
                                      _endif 
                                      ok? << _false 
                        _endproc
                        
                        _handling error
                        _with _proc( a_condition )
-                                     _import tag, a_test, me, final?, ok?
+                                     _import tag, a_test, me, final?, ok?, i
                                      _if final?
                                      _then me.add_error( a_test, a_condition )
+                                     _else me.report_non_final_problem( a_test, a_condition , _true, i+1)
                                      _endif 
                                      ok? << _false 
                                      _throw tag
@@ -178,7 +167,7 @@ _method mtest_result.run_protected( a_test , a_protectable )
                 _then _leave
                 _endif
 
-                write("***RE-TRYING test after failure or error")
+                write("***RE-TRYING test after failure or error", newline_char)
         _endloop 
 _endmethod
 $
@@ -188,6 +177,22 @@ _method mtest_result.end_test( a_test )
 	## Informs the result that A_TEST was completed.
 
 	_self.notify_listeners( :end_test ,  a_test )
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method mtest_result.report_non_final_problem(a_test, a_condition, error?, attempt)
+        ## 
+        ## Called if a test fails, but we're going to have another
+        ## go. ERROR? is true for an error, _false for a
+        ## failure. ATTEMPT is which attempt this is. 
+        ##
+        write("Possible ", _if error? _then >> "Error" _else >> "Failure" _endif, " at attempt ", attempt, ":")
+        write(a_test, " : ", a_condition)
+        _if error?
+        _then !traceback!()
+        _endif 
+        write()
 _endmethod
 $
 
