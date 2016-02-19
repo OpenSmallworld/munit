@@ -596,6 +596,71 @@ _private _method assert.compare_sets( object1, object2, location, errors)
 	_return errors
 _endmethod
 $
+_pragma(classify_level=advanced,topic=MUnit)
+_method assert.compare_xml( an_xml_thing, other_xml_thing )
+	##
+	## Compares two chunks of xml and make sure they're the same.
+	##
+	# Check the types
+	_if (type<< an_xml_thing.type) _isnt other_xml_thing.type _then
+		_self.assert_true(
+			_false,
+			write_string( "Expected element <", type,
+				      "> but found element <", other_xml_thing.type,
+				      ">." ))
+		_return _false
+	_endif
+
+	an_attrib_list << an_xml_thing.attributes
+	other_attrib_list << other_xml_thing.attributes
+
+	_if an_attrib_list.size _isnt other_attrib_list.size _then
+		_self.assert_true(
+			_false,
+			write_string( "Expected ", an_attrib_list.size,
+				      " attributes but found ", other_attrib_list.size,
+				      " in element ",type ))
+		_return _false
+	_endif
+	_for k,e _over an_attrib_list.fast_keys_and_elements()
+	_loop
+		_if _not ( other_attrib_list[k.as_symbol()] = e.as_symbol() ) _then
+		_self.assert_true(
+			_false,
+			write_string( "Expected attribute ", k, " to be ", e,
+				      " but found ", other_attrib_list[k],
+				      " in element ",type ))
+			_return _false
+		_endif
+	_endloop
+
+	elements << an_xml_thing.elements
+	other_elements << other_xml_thing.elements
+	_if elements.size _isnt other_elements.size
+	_then
+		_self.assert_true(
+			_false,
+			write_string( "Expected ", elements.size,
+				      " child elements but found ", other_elements.size,
+				      " in element ",type ))
+		_return _false
+	_endif
+	_for index _over 1.upto(elements.size)
+	_loop
+		_if _not _self.compare_xml(elements[index], other_elements[index])
+		_then
+		_self.assert_true(
+			_false,
+			write_string( "Expected ", elements[index],
+				      " to match ", other_elements[index],
+				      "." ))
+			_return _false
+		_endif
+	_endloop
+
+	_return _true
+_endmethod
+$
 
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method assert.format_error_message(message, location)
