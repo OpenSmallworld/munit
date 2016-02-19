@@ -149,6 +149,32 @@ $
 
 
 _pragma(classify_level=debug)
+_private _method serialised_test_mixin.wait_for_task_to_complete( method_name )
+	## 
+	## Wait for the task executing METHOD_NAME to complete
+	##
+
+	other_values << rope.new()
+	
+	_loop 
+		value << _self.properties[:queue].get()
+		_if value.is_kind_of?( {} ) _andif
+		    value[1] _is :task_complete _andif 
+		    value[2] _is method_name
+		_then
+			_leave
+		_else
+			other_values.add_last( value.copy() )
+		_endif
+	_endloop
+
+	_self.add_values_to_queue( other_values )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _private _method serialised_test_mixin.add_values_to_queue( values )
 	## 
 	##	
@@ -241,9 +267,13 @@ _method serialised_test_mixin.note_change( who, what, data )
 	_if ( test_queue << _self.queue ) _isnt _unset
 	_then 
 		_if what _is :event_handled _orif
-		    what _is :frame_active
+		    what _is :frame_active 
 		_then
-			test_queue.put( {what, data}, _true )		
+			test_queue.put( {what, data}, _true )
+		_elif what _is :task_complete
+		_then
+			# data[1] = task, data[2] = method_name
+			test_queue.put( {what, data[2]}, _true )
 		_else 
 			test_queue.put( what, _true )
 		_endif

@@ -57,6 +57,23 @@ database_test.define_shared_variable(:concurrency_mode,
         :multi_user, :public)
 $
 
+
+_pragma(classify_level=debug)
+## This shared variable indicates if a database was opened by
+## this test.  If so, it is closed in the one_time_tear_down()
+## method. 
+database_test.define_shared_variable( :database_opened?, _false, :private )
+$
+
+
+_pragma(classify_level=debug)
+## This shared constant indicates if the database should be
+## closed.  If true, it is closed in the one_time_tear_down()
+## method regardless whether it was opened by this test.
+database_test.define_shared_variable( :force_close?, _true, :private )
+$
+
+
 database_test.method_table.resolve_conflicts( :test_case )
 $
 
@@ -113,7 +130,11 @@ _method database_test.one_time_tear_down()
         ## Subclass implemetations should always call _super.
 	##
         _super.one_time_tear_down()
-        gis_program_manager.reinitialise()
+	_if _self.database_opened? _orif
+	    _self.force_close?
+	_then 
+		gis_program_manager.reinitialise()
+	_endif
 _endmethod
 $
 
@@ -139,6 +160,9 @@ _private _method database_test.check_correct_database_open()
         ## path is incorrect) then closes that and opens the correct
         ## one.
         ##
+	
+	_self.database_opened? << _false
+	
         _if _not ds_environment.c_is_initialised? _orif
             gis_program_manager.ace_top_view _is _unset _orif
             gis_program_manager.ace_top_view.searchpath.at_using_default("", 1) <> _self.database_path _orif
@@ -164,6 +188,7 @@ _private _method database_test.check_correct_database_open()
                 #
                 _dynamic !current_package! << !current_package!.all_packages[:user]
                 open_database({_self.database_path})
+		_self.database_opened? << _true
         _endif
 
         _self.open_other_datasets()
