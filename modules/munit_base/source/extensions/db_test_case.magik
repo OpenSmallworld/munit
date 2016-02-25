@@ -125,7 +125,6 @@ _method db_test_case.one_time_set_up()
 	_if _self.ds_views.empty?
 	_then
 		_self.create_and_open_database()
-		.db_created?<< _true
 	_endif 
 _endmethod
 $
@@ -365,6 +364,7 @@ _method db_test_case.create_database(_optional create_dataset_args, create_datab
 	# Make the engine and run it to create the database
 	cde << create_database_engine.new(_scatter create_props)
 	results << _allresults cde.create_database()
+	.db_created?<< _true
 	
 	>> cde.ace_location, _scatter results
 _endmethod

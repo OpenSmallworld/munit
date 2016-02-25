@@ -63,14 +63,16 @@ _method design_manager_system_test_mixin.given_a_new_design( project_name, desig
 		swg_dsn_admin_engine.clear_current_design()
 
 		project << _self.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
-		design  << swg_dsn_admin_engine.create_scheme( project, parent_design, design_name, _self.ds_view_names, _unset )
+		views<< _self.ds_view_names
+		swg_dsn_admin_engine.get_admin_view().commit()
+		design  << swg_dsn_admin_engine.create_scheme( project, parent_design, design_name, views, _unset )
 		
 		_self.activate_design( design )
 		
 	_when ds_write_switch_failed
 		# We ought to be able to use the :view parameter of the
 		# condition, but this doesn't get set :-(
-		_local view << gis_program_manager.databases[ :design_admin ]
+		_local view << swg_dsn_admin_engine.get_admin_view()
 		write( "Failed to get write access to to view ", view, " as it is being written to by ", view.current_writer )
 		cond.continue_handling()
 	_endtry
