@@ -122,6 +122,14 @@ _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, 
 		    value[2].id _is expected_id
 		_then
 			_leave
+			
+		_elif value.is_kind_of?( {} ) _andif
+		      value[1] _is :task_complete
+		_then
+			# Do nothing, don't copy :task_complete notifications to the
+			# queue.  This is to prevent the queue from filling up with
+			# :task_complete notifications which will hang the tests if
+			# nothing else can be put on the queue.
 		_else
 			other_values.add_last( value.copy() )
 		_endif
@@ -205,7 +213,10 @@ _private _method serialised_test_mixin.remove_value_from_queue( remove_value )
 		_if _self.properties[:queue].reads_possible = 0 _then _leave _endif
 		value << _self.properties[:queue].get()
 		
-		_if value ~= remove_value
+		_if value ~= remove_value _andif
+		    ( _not value.is_kind_of?( {} ) _orif
+		      ( value.is_kind_of?( {} ) _andif
+			value[1] ~= remove_value ))
 		_then
 			other_values.add_last( value )
 		_endif
