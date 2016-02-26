@@ -70,7 +70,6 @@ _method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional
 
 	other_values   << rope.new()
 	timed_out?     << _false
-	task_complete? << _false
 	wait_time      << wait_time.default( 200 )
 
 	_loop
@@ -89,19 +88,14 @@ _method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional
 		
 		_if value = expected_value _orif
 		    timed_out? _orif
-		    value.eq?( expected_value )
+		    value.eq?( expected_value ) _orif
+		    ( value.is_kind_of?( {} ) _andif
+		      value[1] _is expected_value )
 		_then
 			_leave
 		_elif copy_other_values? _isnt _false
 		_then 
 			other_values.add_last( value.copy() )
-		_elif value _is :task_complete
-		_then
-			task_complete? << _true
-			_if _not task_complete?
-			_then 
-				other_values.add_last( value.copy() )
-			_endif
 		_endif
 	_endloop
 
@@ -119,7 +113,6 @@ _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, 
 	## 
 
 	other_values   << rope.new()
-	task_complete? << _false 
 
 	_loop 
 		value << _self.properties[:queue].get()
@@ -129,14 +122,6 @@ _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, 
 		    value[2].id _is expected_id
 		_then
 			_leave
-		_elif value _is :task_complete
-		_then
-			task_complete? << _true
-			_if _not task_complete?
-			_then 
-				other_values.add_last( value.copy() )
-			_endif
-
 		_else
 			other_values.add_last( value.copy() )
 		_endif
