@@ -38,7 +38,7 @@ db_test_case.define_shared_constant(:in_memory_only?, _false, :private)
 $
 
 _pragma(classify_level=advanced, usage={subclassable})
-_abstract _method db_test_case.db_dir
+_method db_test_case.db_dir
 	##
 	## Where the database will be created, if the image is not
 	## already open on a database.
@@ -47,11 +47,8 @@ _abstract _method db_test_case.db_dir
 	## "memory::") because that uses no public disk space and is
 	## always creatable.
 	##
-	## Subclasses can define it as a shared constant, but each
-	## subclass MUST be unique to ensure that tests don't interfere
-	## with one another.  E.g.
-	## my_test_case.define_shared_constant(:db_dir, "memory::/ds_my_test_case", :private)
-	##
+
+	>> write_string( "memory::/ds_", self.class_name )
 	
 _endmethod
 $
