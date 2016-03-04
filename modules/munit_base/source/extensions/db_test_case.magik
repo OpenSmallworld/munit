@@ -38,13 +38,19 @@ db_test_case.define_shared_constant(:in_memory_only?, _false, :private)
 $
 
 _pragma(classify_level=advanced, usage={subclassable})
-## Where the database will be created, if the image is not
-## already open on a database.
-##
-## This should normally be an in-memory database (starting with
-## "memory::") because that uses no public disk space and is
-## always creatable.
-db_test_case.define_shared_constant(:db_dir, "memory::/ds", :private)
+_method db_test_case.db_dir
+	##
+	## Where the database will be created, if the image is not
+	## already open on a database.
+	##
+	## This should normally be an in-memory database (starting with
+	## "memory::") because that uses no public disk space and is
+	## always creatable.
+	##
+
+	>> write_string( "memory::/ds_", self.class_name )
+	
+_endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
