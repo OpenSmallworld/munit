@@ -48,7 +48,7 @@ _method db_test_case.db_dir
 	## always creatable.
 	##
 
-	>> write_string( "memory::/ds_", self.class_name )
+	>> write_string( "memory::/ds_", _self.class_name )
 	
 _endmethod
 $
