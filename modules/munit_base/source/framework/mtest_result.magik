@@ -131,38 +131,59 @@ _method mtest_result.run_protected( a_test , a_protectable )
 
 	_local me << _self
 	_local tag << "run".copy()
+	_local outer_tag << "escape".copy()
         _local final?, ok?
         
         _for i _over 0.upwards()
         _loop 
                 final? << i >= a_test.retry_count
-                ok? << _true 
-                _catch tag
-                       
-                       _handling assertion_failed_warning
-                       _with _proc( a_condition )
-                                     _import a_test, me, final?, ok?, i
-                                     _if final?
-                                     _then me.add_failure( a_test, a_condition )
-                                     _else me.report_non_final_problem( a_test, a_condition, _false, i+1)
-                                     _endif 
-                                     ok? << _false 
-                       _endproc
-                       
-                       _handling error
-                       _with _proc( a_condition )
-                                     _import tag, a_test, me, final?, ok?, i
-                                     _if final?
-                                     _then me.add_error( a_test, a_condition )
-                                     _else me.report_non_final_problem( a_test, a_condition , _true, i+1)
-                                     _endif 
-                                     ok? << _false 
-                                     _throw tag
-                       _endproc
-                       
-                       a_test.perform( a_protectable , _self )
-                _endcatch
+                ok? << _true
 
+		normal_exit? << _false
+		_catch outer_tag
+		       _protect 
+			       _catch tag
+				      
+				      _handling assertion_failed_warning
+				      _with _proc( a_condition )
+						    _import a_test, me, final?, ok?, i
+						    _if final?
+						    _then me.add_failure( a_test, a_condition )
+						    _else me.report_non_final_problem( a_test, a_condition, _false, i+1)
+						    _endif 
+						    ok? << _false 
+				      _endproc
+				      
+				      _handling error
+				      _with _proc( a_condition )
+						    _import tag, a_test, me, final?, ok?, i
+						    _if final?
+						    _then me.add_error( a_test, a_condition )
+						    _else me.report_non_final_problem( a_test, a_condition , _true, i+1)
+						    _endif 
+						    ok? << _false 
+						    _throw tag
+				      _endproc
+				      
+				      a_test.perform( a_protectable , _self )
+			       _endcatch
+			       normal_exit? << _true
+		       _protection
+			       _if _not normal_exit?
+			       _then
+				       a_condition <<
+					       condition.new(:error, :string,
+							     "Somethig escaped from the test harness error handling.")
+				       _if final?
+				       _then me.add_error( a_test, a_condition )
+				       _else me.report_non_final_problem( a_test, a_condition , _true, i+1)
+				       _endif 
+				       ok? << _false
+				       _throw outer_tag
+			       _endif
+		       _endprotect
+		_endcatch
+		
                 _if ok? _orif final?
                 _then _leave
                 _endif
