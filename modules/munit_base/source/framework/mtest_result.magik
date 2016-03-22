@@ -173,7 +173,7 @@ _method mtest_result.run_protected( a_test , a_protectable )
 			       _then
 				       a_condition <<
 					       condition.new(:error, :string,
-							     "Somethig escaped from the test harness error handling.")
+							     "Something escaped from the test harness error handling.")
 				       _if final?
 				       _then me.add_error( a_test, a_condition )
 				       _else me.report_non_final_problem( a_test, a_condition , _true, i+1)
