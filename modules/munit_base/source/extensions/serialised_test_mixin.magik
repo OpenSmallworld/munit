@@ -308,48 +308,6 @@ $
 
 
 _pragma(classify_level=debug)
-_method serialised_test_mixin.when_activating_relative_to_frame( top_frame, id, x_offset, y_offset )
-	## 
-	##
-
-	stub_method_helper.replace_method( java_window_prim, :java_height,
-					   _proc()
-						   >> _self.ref.height
-					   _endproc )
-
-	_self.when_the_frame_is_activated( top_frame )
-	
-	child << _self.properties[ id ]
-	_if child _isnt _unset
-	_then
-		
-		_if _self.queue _is _unset
-		_then 
-			_self.queue << atomic_queue.new( 1019 )
-		_endif
-
-		_if child.is_kind_of?( model )
-		_then 
-			child.activate_relative_to( "test_dialog", top_frame, x_offset, y_offset )
-		_else
-			child.activate_relative_to( _unset, "test_dialog", top_frame, x_offset, y_offset )
-		_endif
-		
-		_self.wait_for_value_on_queue( {:frame_active, child.top_frame}, _true )
-		
-		# There are also at least two config_change events.
-		_self.wait_for_value_on_queue( :resize_complete )
-		_self.wait_for_value_on_queue( :resize_complete )
-		
-	_endif
-	
-	>> _self
-	
-_endmethod
-$
-
-
-_pragma(classify_level=debug)
 _method serialised_test_mixin.when_the_frame_is_minimized( top_frame, minimized?, _optional wait_value )
 	## 
 	## WAIT_VALUE is the value to wait for on the queue.  The
