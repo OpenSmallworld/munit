@@ -714,17 +714,16 @@ $
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.wait_for_application_to_be_active( app_name )
 	## 
-	##				
-		
-	# Wait for 3 mins and time out
+	##
+
 	_over 1.upto(6)
 	_loop
 		_if (app << smallworld_product.application(app_name)) _isnt _unset _andif
 		    app.active?
 		_then
-			#We've started.  Give it another 30secs to get comfy...
-			write("App waking up: ",app)
-			_thisthread.sleep(30000)
+			#We've started.
+			_self.properties[ :application ] << app
+			_self.wait_for_application_threads_to_finish()
 			_leave
 		_endif
 		_thisthread.sleep(30000)
