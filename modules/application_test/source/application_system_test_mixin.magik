@@ -442,6 +442,31 @@ _method application_system_test_mixin.when_setting_value_in_text_item(id_path, n
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_getting_records(dataset_name, collection_name, properties, id_path)
+	## 
+	## Get the record(s) based on PROPERTIES.
+	## In the Absence of selecting objects from the map, the
+	## alternative is to Get the Record in the Editor and Click
+	## Select Geometry button.
+	## Provide the search critieria as 'Properties'
+	##
+	## Example: when_getting_records(:electric,  :sub_substation,
+	##                              property_list.new_with(:asset_id, "sanity_substation"),
+	##                                "<ID Path>")
+	##
+	
+	_self.given_an_embbeded_editor( dataset_name,  collection_name ).
+		given_proposed_editor_values( properties ).
+		when_clicking_item( id_path )
+
+	# Remove this manual sleep when editor sync has improved
+	_thisthread.sleep(2000)
+	>> _self
+	
+_endmethod
+$
+
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_record_inserted( dataset_name, collection_name, field_name, value )
