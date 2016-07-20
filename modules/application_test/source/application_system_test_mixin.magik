@@ -45,6 +45,9 @@ _method application_system_test_mixin.given_an_application( application_name )
 	_endif
 
 	app.top_frame.maximized? << _self.properties[:frame_maximised?].default(_false)
+
+	app.top_frame.top_canvas_container.add_dependent(_self)
+	app.add_dependent(_self)
   
 	_self.properties[ :application ] << app
 
@@ -413,7 +416,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_setting_value_in_text_item(id_path, new_text)
+_method application_system_test_mixin.when_setting_value_in_text_item( id_path, new_text )
        ## 
        ## Set up Swift widget's VALUE to the NEW_TEXT.
        ## This method can be used to set values in the text fields.
@@ -434,7 +437,7 @@ _method application_system_test_mixin.when_setting_value_in_text_item(id_path, n
        
               item.value << new_text
        _else
-              Condition.raise( :error, :string, write_string("Unable to set the text because the item ", item, " is not enabled."))
+              condition.raise( :error, :string, write_string( "Unable to set the text because the item ", item, " is not enabled." ))
        _endif
 
        >> _self
@@ -443,7 +446,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_getting_records(dataset_name, collection_name, properties, id_path)
+_method application_system_test_mixin.when_getting_records( dataset_name, collection_name, properties, id_path )
 	## 
 	## Get the record(s) based on PROPERTIES.
 	## In the Absence of selecting objects from the map, the
@@ -460,8 +463,11 @@ _method application_system_test_mixin.when_getting_records(dataset_name, collect
 		given_proposed_editor_values( properties ).
 		when_clicking_item( id_path )
 
-	# Remove this manual sleep when editor sync has improved
-	_thisthread.sleep(2000)
+	# Getting records happen in a separate thread. Wait for the
+	# task to complete. 
+	_self.remove_value_from_queue( :task_complete )
+	_self.wait_for_task_to_complete( :|int!object_editor_get()| )
+	
 	>> _self
 	
 _endmethod
@@ -1039,3 +1045,4 @@ _private _method application_system_test_mixin.wait_for_application_threads_to_f
 
 
 _endmethod 
+
