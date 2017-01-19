@@ -262,6 +262,7 @@ _method application_system_test_mixin.when_clicking_tab( tab_name )
 
 	_self.properties[ :tab ] << tab
 	_self.properties[ :tab_label ] << tab_label
+	
 	_self.click_item( tab_label )
 
 	>> _self 
@@ -343,6 +344,19 @@ _method application_system_test_mixin.when_clicking_item_with_identifier( tag, i
 
 	>> _self
 	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_in_canvas( a_canvas, x, y )
+	## 
+	## 
+
+	_self.handle_event( a_canvas, :button, :left, x, y, :press, 0 )
+	_self.handle_event( a_canvas, :button, :left, x, y, :release, 0 )
+
+	>> _self
 _endmethod
 $
 
@@ -813,20 +827,29 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.click_item( item, _optional new_frame_wait_time )
+_private _method application_system_test_mixin.click_item( item, _optional new_frame_wait_time, x, y )
 	## 
 	##
 	
 	_self.properties[ :click_item ] << item
 
-	top_container << item.top_container
-	( x, y ) << item.location_in_window( top_container )
+	_if x _is _unset
+	_then
+		x << ( item.width  / 2.0 ).rounded
+	_endif
+	_if y _is _unset
+	_then
+		y << ( item.height / 2.0 ).rounded
+	_endif
 
-	x << x + ( item.width  / 2.0 ).rounded
-	y << y + ( item.height / 2.0 ).rounded 
+	top_container << item.top_container
+	(top_x, top_y) << item.location_in_window( top_container )
+	
+	x +<< top_x
+	y +<< top_y
 
 	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
-	_self.handle_event( top_container, :button, :left, x, y, :press,   0 )
+	_self.handle_event( top_container, :button, :left, x, y, :press, 0 )
 
 	_if new_frame_wait_time _isnt _unset
 	_then
@@ -849,21 +872,22 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.handle_event( top_container, category, id, x, y, func, modmask, _optional second_id )
+_private _method application_system_test_mixin.handle_event( a_canvas, category, id, x, y, func, modmask,
+							     _optional second_id )
 	## 
 	##
 
-	top_container.add_dependent( _self )
+	a_canvas.add_dependent( _self )
 
 	time << system.elapsed_seconds()
-	new_event << input_event.new_with( category, time, top_container.actual.id, id, x, y, func, modmask )
+	new_event << input_event.new_with( category, time, a_canvas.actual.id, id, x, y, func, modmask )
 	new_event.second_id << second_id
 
-	top_container.handle_event( new_event )
+	a_canvas.handle_event( new_event )
 
 	_self.wait_for_event_on_queue( :event_handled, id )
 
-	top_container.remove_dependent( _self )
+	a_canvas.remove_dependent( _self )
 	
 _endmethod
 $
@@ -1043,6 +1067,248 @@ _private _method application_system_test_mixin.wait_for_application_threads_to_f
 	_self.wait_for_threads_to_finish( _self.properties[ :application ] )
 	_self.wait_for_threads_to_finish( _self.properties[ :application ].top_frame.top_canvas_container )
 
-
 _endmethod 
+$
 
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.get_components( _optional a_string, a_component, module_name )
+	## 
+	## Returns a rope of components with a name or class name
+	## matching A_STRING in the component A_COMPONENT.
+	##
+	## All open applications will be searched if A_COMPONENT is not
+	## provided.
+	## All components will be returned if A_STRING is not provided.
+	##
+	## If MODULE_NAME is provided the results are restricted to
+	## modules matching that name.
+	##
+	## Example of use (with PNI user app open):
+	##  get_components("editor")
+	##    1    a topology_editor_plugin(topology)
+	##    2    a editor_activator_pi(editor_activator)
+	##    3    a pni_editor_manager(editor_manager)
+	##    4    a editor_viewer(embedded_viewer)
+	##    5    a pni_editor_manager(editor_manager)
+	##    sw:rope:[1-5]
+	##
+	##  get_components("con menu")
+	##    1    a connectivity_menu_plugin(connectivity_menu)
+	##    2    a connectivity_menu_framework(connectivity_menu)
+	##    sw:rope:[1-2]
+	##
+	##  get_components("app man")
+	##    1    a pni_application_manager(application_manager)
+	##    sw:rope:[1-1]
+	##
+	##  Return all components of the PNI application:
+	##  app << smallworld_product.application(:pni)
+	##  get_components( _unset, app )
+	##
+
+	test_string << _proc( a_string )
+
+			       _if a_string _is _unset
+			       _then
+				       _return
+			       _endif
+			       
+			       _for i, c _over a_string.fast_keys_and_elements()
+			       _loop
+				       _if c _is %space
+				       _then
+					       a_string[i] << %*
+				       _endif
+			       _endloop
+			       
+			       end << a_string.size
+			       
+			       a_stream << internal_text_output_stream.new()
+			       _if a_string[1] _is %^
+			       _then
+				       start << 2
+			       _else
+				       a_stream.put( %* )
+				       start << 1
+			       _endif
+			       _if a_string[end] _is %$
+			       _then
+				       a_stream.write( a_string.slice(start, end - 1) )
+			       _else
+				       a_stream.write( a_string.slice(start, end) )
+				       a_stream.put( %* )
+			       _endif
+			       
+			       _return a_stream.string
+		       _endproc
+
+	a_string << test_string( a_string )
+	module_name << test_string( module_name )
+	
+	results << rope.new()
+	done << set.new()
+
+	a_queue << queue.new()
+
+	_if a_component _isnt _unset
+	_then
+		a_queue.add( a_component )
+		done.add( a_component )
+	_else
+		_for app _over smallworld_product.applications.fast_elements()
+		_loop
+			a_queue.add( app )
+			done.add( app )
+		_endloop
+	_endif
+	
+	types << property_list.new_with( :gui, _false )
+
+	_loop
+		_if a_queue.empty? _then _leave _endif
+		
+		c << a_queue.next()
+
+		_if ( a_string _is _unset _orif
+		      c.class_name.write_string.matches?( a_string ) _orif
+		      ( c.responds_to?( :name ) _andif
+			c.name _isnt _unset _andif
+			c.name.write_string.matches?( a_string ) ) ) _andif
+		    ( module_name _is _unset _orif
+		      c.module_name.write_string.matches?( module_name ) )
+		_then
+			results.add_last( c )
+		_endif
+		
+		rel_items << _self.get_related_items( c, types )
+		
+		_for r _over rel_items.fast_elements()
+		_loop
+			_if _not done.includes?( r )
+			_then
+				a_queue.add( r )
+				done.add( r )
+			_endif
+		_endloop
+	_endloop
+	
+	>> results
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.get_related_items( obj, _optional types )
+	## 
+	## Returns a set of objects related to the object OBJ.
+	##
+	## TYPES controls what relationships are considered and should
+	## be a property list with relationship name and boolean pairs.
+	## By default all types are included.
+	##
+	## Supported relationships are:
+	##  :slots
+	##  :components
+	##  :framework
+	##  :dialogs
+	##  :gui
+	##  :gui_owner
+	##  :dependents
+	##  :action_engine
+	##
+	## Example of use:
+	##  app << smallworld_product.applications.an_element()
+	##  get_related_items( app, property_list.new_with(:gui, _false) )
+	##
+
+	_if types _is _unset
+	_then
+		types << property_list.new()
+	_endif
+	
+	others << set.new()
+
+	gui? << types[:gui] _isnt _false
+	
+	_if types[:slots] _isnt _false _andif
+	    obj.responds_to?( :|sys!slot_names_and_values()| )
+	_then
+		obj_mod_name << obj.module_name
+		_for slot_name, slot_value _over obj.sys!slot_names_and_values()
+		_loop
+			_if slot_value.is_kind_of?( sw_component ) _orif
+			    ( gui? _andif slot_value.responds_to?( :|tag!sw_item_base| ) ) _orif
+			    slot_value.module_name _is obj_mod_name
+			_then
+				others.add( slot_value )
+			_endif
+		_endloop
+	_endif
+
+	_if types[:components] _isnt _false _andif
+	    obj.responds_to?( :components|()| )
+	_then
+		_for c _over obj.components()
+		_loop
+			others.add( c )
+		_endloop
+	_endif
+	
+	_if types[:framework] _is _true _andif
+	    obj.responds_to?( :framework ) _andif
+	    obj.framework _isnt _unset
+	_then
+		others.add( obj.framework )
+	_endif
+	
+	_if types[:dialogs] _isnt _false _andif
+	    ( obj.is_kind_of?( gui_framework ) _orif
+	      obj.is_kind_of?( plugin ) )
+	_then
+		_for name, a_dialog _over obj.sys!slot(:dialogs).fast_keys_and_elements()
+		_loop
+			_if a_dialog _isnt _unset
+			_then
+				others.add( a_dialog )
+			_endif
+		_endloop
+	_endif
+	
+	_if types[:dependents] _isnt _false
+	_then
+		_for d _over obj.dependents()
+		_loop
+			_if d.is_kind_of?( sw_component ) _orif
+			    ( gui? _andif d.responds_to?( :|tag!sw_item_base| ) )
+			_then
+				others.add( d )
+			_endif
+		_endloop
+	_endif
+	
+	_if types[:action_engine] _isnt _false _andif
+	    obj.responds_to?( :|tag!sw_item_base| )
+	_then
+		_if ( a_model << obj.model ) _isnt _unset
+		_then
+			others.add( a_model )
+			_if a_model.is_kind_of?( sw_action ) _andif
+			    ( an_engine << a_model.engine ) _isnt _unset
+			_then
+				others.add( an_engine )
+			_endif
+		_endif
+	_endif
+
+	_if types[:gui_owner] _isnt _false _andif
+	    obj.responds_to?( :|tag!sw_item_base| ) _andif
+	    obj.responds_to?( :|get_gui_owner()| ) _andif
+	    ( owner << obj.get_gui_owner() ) _isnt _unset
+	_then
+		others.add( owner )
+	_endif
+	
+	>> others
+_endmethod
+$
