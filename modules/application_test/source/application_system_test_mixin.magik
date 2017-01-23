@@ -349,12 +349,30 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_in_canvas( a_canvas, x, y )
+_method application_system_test_mixin.when_clicking_in_canvas( id_path, x, y, _optional id )
 	## 
 	## 
 
-	_self.handle_event( a_canvas, :button, :left, x, y, :press, 0 )
-	_self.handle_event( a_canvas, :button, :left, x, y, :release, 0 )
+	a_canvas << _unset
+	top_con << _self.properties[ :application ].top_frame.top_canvas_container
+	
+	_for c _over top_con.all_canvases()
+	_loop
+		_if c.responds_to?( :get_identifier_path|()| ) _andif
+		    c.get_identifier_path() = id_path
+		_then
+			a_canvas << c
+			_leave
+		_endif
+	_endloop
+	
+	_if id _is _unset
+	_then
+		id << :left
+	_endif
+	
+	_self.handle_event( a_canvas, :button, id, x, y, :press, 0 )
+	_self.handle_event( a_canvas, :button, id, x, y, :release, 0 )
 
 	>> _self
 _endmethod
