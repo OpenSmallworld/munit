@@ -35,6 +35,7 @@ _method application_system_test_mixin.given_an_application( application_name )
 	_then
 		_if ( app_def << smallworld_product.application_definition( application_name ) ) _isnt _unset
 		_then
+			write( "*** Starting application: ", application_name )
 			# Application exists but is not yet running, start it
 			app << app_def.int!start()
 			_self.wait_for_application_to_be_active( application_name )
