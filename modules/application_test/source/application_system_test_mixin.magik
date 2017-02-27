@@ -748,6 +748,88 @@ $
 
 
 _pragma(classify_level=debug)
+_method application_system_test_mixin.then_item_is_enabled( item, expected_enabled? )
+	## 
+	## Verify the enabled state of ITEM.
+	##
+	## ITEM is a swift widget.  Compare ITEM.enabled? with
+	## EXPECTED_ENABLED?
+	##
+	## If ITEM is a sw_text_item, compare ITEM.editable? with
+	## EXPECTED_STATE
+	##
+
+	enabled? << item.enabled?
+	_if item.is_kind_of?( sw_text_item )
+	_then
+		enabled? << item.editable?
+	_endif
+	
+	_if expected_enabled?
+	_then 
+		fail_str << write_string( "Expected ", item, " to be enabled, but it is not" )
+	_else
+		fail_str << write_string( "Expected ", item, " to not be enabled, but it is" )
+	_endif
+	
+	_self.assert_equals( expected_enabled?, enabled?, fail_str )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_container_has_item_with_identifier_and_enabled( container, identifier,
+											   expected_enabled? )
+	## 
+	##
+
+	items << container.get_items( identifier )
+
+	fail_str << write_string( "The container ", container, " should have a GUI element with identifier " )
+	fail_str << write_string( fail_str, identifier, ", but it doesn't" )
+
+	_self.assert_false( items.empty?, fail_str )
+
+	_if ( item << items.an_element() ) _isnt _unset
+	_then
+		_self.then_item_is_enabled( item, expected_enabled? )
+	_endif
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_container_has_action_gui_element_and_enabled( container, action_string,
+											 expected_enabled?,
+											 _optional gui_type )
+	## 
+	##
+
+	items << _self.get_action_items( container, action_string, gui_type )
+	
+	fail_str << write_string( "The ", container, " should have a GUI element for the ", action_string )
+	fail_str << write_string( fail_str, " action on the ", gui_type, ", but it doesn't" )
+
+	_self.assert_false( items.empty?, fail_str )
+
+	_if ( item << items.an_element() ) _isnt _unset
+	_then
+		_self.then_item_is_enabled( item, expected_enabled? )
+	_endif
+
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method application_system_test_mixin.scenario_insert_record( dataset_name, collection_name, proposed_values, expected_values )
 	## 
 	##
@@ -1329,5 +1411,67 @@ _method application_system_test_mixin.get_related_items( obj, _optional types )
 	_endif
 	
 	>> others
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.get_action_items( container, action_string, _optional gui_type )
+	## 
+	## Return the items of CONTAINER that are actions where
+	## engine_and_action_string() equals ACTION_STRING.
+	##
+	## GUI_TYPE can be:
+	## - :toolbar
+	## - :menu
+	##
+	## If GUI_TYPE is specified, filter the items to only return
+	## those that are present on the specified GUI_TYPE.
+	##
+
+	items << set.new()
+	
+	_for item _over container.all_items()
+	_loop
+		_if item.responds_to?( :model ) _andif
+		    ( item_model << item.model ).responds_to?( :engine_and_action_string|()| ) _andif
+		    item_model.engine_and_action_string( _true ) = action_string _andif
+		    _self.correct_parent?( item, gui_type )
+		_then
+			items.add( item )
+		_endif
+	_endloop
+	
+	>> items
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.correct_parent?( item, _optional gui_type )
+	## 
+	## Check if ITEM has a parent item of GUI_TYPE.
+	##
+	## GUI_TYPE can be:
+	## - :toolbar
+	## - :menu
+	##
+	## Always return true if GUI_TYPE is not specified
+	##
+
+	correct_parent? << _true 
+
+	_if gui_type _is :toolbar
+	_then
+		correct_parent? << item.get_parent_of_type( :tag!sw_toolbar_container ) _isnt _unset
+		
+	_elif gui_type _is :menu
+	_then 
+		correct_parent? << item.get_parent_of_type( :tag!menubar ) _isnt _unset
+	_endif
+
+	>> correct_parent?
+	
 _endmethod
 $
