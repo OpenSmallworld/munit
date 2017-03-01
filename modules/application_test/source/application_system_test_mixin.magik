@@ -760,7 +760,8 @@ _method application_system_test_mixin.then_item_is_enabled( item, expected_enabl
 	##
 
 	enabled? << item.enabled?
-	_if item.is_kind_of?( sw_text_item )
+	_if item.is_kind_of?( sw_text_item ) _andif
+	    _not item.is_choice_item?
 	_then
 		enabled? << item.editable?
 	_endif
