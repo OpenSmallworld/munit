@@ -5,8 +5,10 @@ $
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ##
 ## A class that sets up a Design and Project to perform Munit testing.
-## In subclasses checkpoint_name, project_name and design_name
-## shared constants should be set. 
+##
+## Tests should provide subclasses.In subclasses the
+## checkpoint_name, project_name and design_name shared
+## constants should be set.  
 ##
 ## You need to define the extent for the project area: subclass
 ## and redefine the shared constants: start_coord and
