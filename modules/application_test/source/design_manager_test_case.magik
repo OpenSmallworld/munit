@@ -1,0 +1,553 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+##
+## A class that sets up a Design and Project to perform Munit testing.
+## In subclasses checkpoint_name, project_name and design_name
+## shared constants should be set. 
+##
+## You need to define the extent for the project area: subclass
+## and redefine the shared constants: start_coord and
+## :data_bounds_size
+##
+def_slotted_exemplar( :design_manager_test_case,
+	{
+		{:bounds, _unset},
+		{:rwo_set, _unset},
+		{:default_world,_unset},
+		{:properties, _unset}
+	},
+	{ :test_case, :design_manager_system_test_mixin })
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+## Coordinate used as starting point for Design area. The
+## design extent will be centred on this coordinate.
+design_manager_test_case.define_shared_constant( :start_coord, coordinate.new( 0, 0 ), :public )
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+## Size used to define the extent of the design area.
+design_manager_test_case.define_shared_constant( :data_bounds_size, 10000, :public )
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+## Checkpoint name for one time setup
+design_manager_test_case.define_shared_constant( :checkpoint_name, :one_time_setup_complete, :public )
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+## The status to transition the design to to ensure that it is writable
+design_manager_test_case.define_shared_constant( :writable_design_status, "In Design", :public )
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.properties
+	## 
+	##
+
+	>> .properties 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.set_up()
+	## 
+	##
+
+	.properties << property_list.new()
+	_super.set_up()
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.init( a_name )
+	##
+	## Defines slot values
+	##
+
+	_super.init( a_name )
+
+	.bounds << _self.start_coord.bounds.extended_by( _self.data_bounds_size )
+	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_private _method design_manager_test_case.project_name
+	##
+	## DM project name for this test. Defaults to test class name.
+	##
+	>> _self.class_name.write_string
+_endmethod 
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.design_name
+	##
+	## Default design name based on class name
+	##
+
+	design_name << _self.class_name()
+
+	_if design_name.size > 64
+	_then
+		design_name << design_name.slice( 1, 64 )
+	_endif
+
+	>> design_name
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.sub_design_name( parent_design )
+	##
+	## Default sub-design name based on  user_name + host_name + parent_design_id
+	##
+	## User name is obtained from system.getenv("TEST_USER") if
+	## set and non-empty, otherwise from system.user_name
+	##
+	## This creates a unique design name based on user and image so
+	## that tests can be run in parallel without read/write
+	## conflicts.
+	##
+	
+	test_user << system.getenv( "TEST_USER" )
+	_if test_user _is _unset _orif
+	    test_user = ""
+	_then
+		test_user << system.user_name
+	_endif
+
+	design_name << write_string( test_user, %@, system.host_name, %_, parent_design.key_value().an_element())
+	
+	_if design_name.size > 64
+	_then
+		design_name << design_name.slice ( 1, 64 )
+	_endif
+
+	>> design_name
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.class_name()
+	## 
+	## Return self.class_name.  This is a customization hook.
+	##
+
+	>> _self.class_name
+	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.ds_views
+	##
+	## Views attached to design
+	## Subclassed to restrict views to those specified by the test class
+	##
+	
+	ds_views << property_list.new()
+	
+	_for i_v_name _over _self.ds_view_names.fast_elements()
+	_loop
+		_if (a_view << gis_program_manager.databases[i_v_name]) _isnt _unset
+		_then
+			ds_views[i_v_name] << a_view
+		_endif
+		
+	_endloop 
+	
+	_return ds_views
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.one_time_set_up()
+	## 
+	##
+	
+	_if swg_dsn_admin_engine.view _is _unset
+	_then
+		swg_dsn_admin_engine.init()
+	_endif
+
+	_super.one_time_set_up()
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.one_time_tear_down()
+	## 
+	##
+
+	swg_dsn_admin_engine.activate_design( _unset )
+	_super.one_time_tear_down()
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_method design_manager_test_case.run_bare()
+        ## Runs the bare test sequence
+
+	# Bug needs refactor, see tc_eo_cim_mapping.run_bare() for details
+	
+	# Disable database notifications.
+	_dynamic !notify_database_data_changes?!, !current_application!
+	_local old_value << !notify_database_data_changes?!
+	!notify_database_data_changes?! << _false
+
+        _self.one_time_behaviour()
+
+	!current_application! << _self.current_application()
+
+        _protect
+		_self.set_up()
+		_self.setup_design()
+		_self.setup_sub_design()
+                _self.run_test()
+        _protection
+                _self.teardown_design()
+		_self.tear_down()
+		!notify_database_data_changes?! << old_value 
+        _endprotect
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_method design_manager_test_case.current_application()
+	## 
+	## Return the current running application.  This method does
+	## not start it if it is not running.
+	##
+	
+	>> _self.get_application()
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.setup_design()
+	##
+        ## Setup design
+	##
+
+	# Ensure we don't have a design open before we start.
+	# If we don't have an open design, this call should be fairly
+	# cheap.
+	sub_design << _self.sub_design()
+	correct_design? << swg_dsn_admin_engine.active_scheme = sub_design _andif
+			   sub_design _isnt _unset 
+	_if _not correct_design?
+	_then 
+		swg_dsn_admin_engine.clear_current_design()
+	_endif
+
+	# Ensure that we are looking at fresh design_admin view
+	swg_dsn_admin_engine.rollforward()
+	
+	design << _self.get_existing_test_design( _self.project_name, _self.design_name )
+	_if design _isnt _unset
+	_then
+		_if _not correct_design?
+		_then 
+			_self.goto_test_design()
+			
+			_if _self.one_time_setup_failed?()
+			_then
+				#debug write(_self, ": re-create design")
+				# Either we've never created data in here or the data is out of
+				# date. 
+				# In either case, it's safer to delete the current design and
+				# start again
+				swg_dsn_admin_engine.clear_current_design()
+				_self.delete_test_design()
+				_self.goto_test_design()
+				_self.setup_checkpoints_and_data()
+			_else
+				#debug write(_self, ": goto design")
+				# The correct data already exists, so we just need to go back
+				# to the correct checkpoint - we go there readonly
+				_self.goto_test_checkpoints( "", _true )
+			_endif
+		_endif
+	_else
+		#debug write(_self, ": create design")
+		# The design doesn't exist so we create it and add the data and
+		# checkpoints
+		_self.goto_test_design()
+		_self.setup_checkpoints_and_data()
+	_endif
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.goto_test_design( _optional design_name )
+	## 
+	##
+	
+	_if design_name _is _unset
+	_then 
+		design_name << _self.design_name
+	_endif
+	
+	_self.given_a_design( _self.project_name, design_name, .bounds.xmin, .bounds.ymin, .bounds.xmax, .bounds.ymax )
+	
+	>> .properties[ :design ]
+	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method design_manager_test_case.setup_sub_design()
+	## Setup sub design
+	## 
+
+	( sub_design, sub_design_name ) << _self.sub_design()
+	sub_design_existed? << sub_design _isnt _unset
+	
+	# go to test sub design where test will run (create it if it doesn't exist)
+	_if sub_design_existed?
+	_then
+		swg_dsn_admin_engine.activate_design( sub_design )
+		# go to state test run
+		_self.goto_test_checkpoints()
+	_else
+		_self.given_a_new_design( _self.project_name, sub_design_name )
+		sub_design << .properties[ :design ]
+
+		# save database state before test is run
+		_self.create_test_checkpoints()	
+	_endif
+
+	# make sure we have writable access before we run test
+	_self.check_writable_access( sub_design )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.sub_design()
+	## 
+	##
+
+	parent_design << _self.get_existing_test_design( _self.project_name, _self.design_name )
+	_if parent_design _isnt _unset
+	_then 
+		sub_design_name << _self.sub_design_name( parent_design )
+		sub_design      << _self.get_existing_test_design( _self.project_name, sub_design_name )
+	_endif
+
+	>> ( sub_design, sub_design_name )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.one_time_setup_failed?( _optional prefix )
+	##
+        ## Check if we've done already database setup
+	##
+
+	_for ds_view _over _self.ds_views.fast_elements()
+	_loop 
+		_if _not ds_view.has_checkpoint?( prefix.default( "" ) + _self.checkpoint_name )
+		_then
+			_return _true
+		_endif
+	_endloop
+	
+	>> _false
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.create_test_checkpoints( _optional prefix )
+	##
+        ## Create databases checkpoints
+	##
+
+	_local l_checkpoint_name << prefix.default( "" ) + _self.checkpoint_name
+	_for a_ds_view _over _self.ds_views.fast_elements()
+        _loop
+                a_ds_view.checkpoint( l_checkpoint_name )
+        _endloop 
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.goto_test_checkpoints( _optional prefix, readonly? )
+	##
+        ## Goto databases checkpoints
+	##
+
+	_local l_checkpoint_name << prefix.default( "" ) + _self.checkpoint_name
+	_local mode << _if readonly? _is _true _then >> :readonly _else >> :write _endif
+	
+	_for ds_view _over _self.ds_views.fast_elements()
+        _loop
+		ds_view.go_to_checkpoint( l_checkpoint_name, mode )
+		_if ds_view.alternative_level > 1
+		_then
+			ds_view.checkpoint( l_checkpoint_name )			
+		_endif
+        _endloop 
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.rollback()
+	##
+        ## Rollback changes in every view we're interested in.
+	##
+
+        _for a_ds_view _over _self.ds_views.fast_elements()
+        _loop
+                a_ds_view.rollback()
+        _endloop
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.teardown_design()
+	##
+	## Tear down the design.
+	##
+        ## This just rolls back the changes in every view we're
+        ## interested in
+	## 
+
+	_self.rollback()
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.activate_design( p_design )
+	##
+	## DESCRIPTION:
+	## Activates P_DESIGN and ensures status is "In Design"
+	## ARGUMENTS ( - <name>: <class>; <description> ):
+	## -P_DESIGN; swg_dsn_scheme
+	##
+
+	swg_dsn_admin_engine.activate_design( p_design )
+
+	_self.when_changing_design_status( _self.writable_design_status )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.setup_checkpoints_and_data( _optional dump_file_name )
+	##
+	## Set up the checkpoints and data in the current alternative
+	##
+
+	design << _self.get_existing_test_design( _self.project_name, _self.design_name )
+	_self.check_writable_access( design )
+
+	write("Loading data to design")
+	#save database state before
+	_self.create_test_checkpoints("pre_")
+	
+	#do changes
+	_self.one_time_setup_database( dump_file_name )
+	
+	#save database state after
+	_self.create_test_checkpoints()	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_private _method design_manager_test_case.one_time_setup_database( _optional dump_file_name  )
+	##
+        ## Subclass this method if test case requires database to be
+        ## updated prior to design creation.
+	##
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit)
+_private _method design_manager_test_case.delete_test_design()
+	##
+	## Delete the test design if it exists
+	##
+	
+	swg_dsn_admin_engine.activate_design( _unset )
+	design << _self.get_existing_test_design( _self.project_name, _self.design_name )
+	_if design _isnt _unset
+	_then
+		write( "Deleting design" )
+		swg_dsn_admin_engine.delete_scheme( design )
+	_endif
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={Munit})
+_private _method design_manager_test_case.check_writable_access( design )
+	##
+	## Assert the following conditions:
+	##
+	## 1. DESIGN is the active design
+	## 2. The active design is writable
+	##
+	
+	scheme << swg_dsn_admin_engine.active_scheme
+	wrong_scheme_msg << _if scheme _is _unset
+			    _then
+				    >> "no design is active."
+			    _else
+				    >> write_string( "the design ", scheme.name, " is active." )
+			    _endif
+	
+	desc << write_string( "Expected the design ", design.name,
+			      " to be active. However, ", wrong_scheme_msg )
+	_self.assert_equals( design, scheme, desc )
+	
+	_if scheme _isnt _unset _andif scheme _is design
+	_then
+		( ac_mode, act_read_reason, act_read_reason_msg ) << swg_dsn_admin_engine.activated_mode_for( scheme )
+
+		desc << write_string( "Unable to get write access to the design ", scheme.name, ". ",
+				      "Instead, the access mode was ", ac_mode, ". ",
+				      "Failed to get write access because ", act_read_reason_msg )
+		_self.assert_is( :write, ac_mode, desc )
+	_endif
+_endmethod
+$
