@@ -12,6 +12,9 @@ _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ## and redefine the shared constants: start_coord and
 ## :data_bounds_size
 ##
+## Subclasses can also redefine the writable_design_name - this
+## is the name of the state to which the design should be
+## transitioned in order to make it writable.
 def_slotted_exemplar( :design_manager_test_case,
 	{
 		{:bounds, _unset},
@@ -44,7 +47,8 @@ $
 
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ## The status to transition the design to to ensure that it is writable
-design_manager_test_case.define_shared_constant( :writable_design_status, "In Design", :public )
+## This implementation defaults to the ups_demo_db state model
+design_manager_test_case.define_shared_constant( :writable_design_status, "Design Layout", :public )
 $
 
 
@@ -551,3 +555,137 @@ _private _method design_manager_test_case.check_writable_access( design )
 	_endif
 _endmethod
 $
+
+# FIXME copied from eo_start_application_mixin
+# is this the right thing to do???
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+## Name of the application that should be open when this test
+## is run. Leave unset if a dummy application can be used. 
+## transitioned once it is created during setup
+design_manager_test_case.define_shared_constant(:application_name,
+	_unset,
+	:public)
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.get_application(_optional p_application_name)
+	## returns handle to application application_name
+	## doesn't start application (use application() to start application)
+	## p_application_name defaults to _self.application_name
+	_local app_name << p_application_name.default( _self.application_name )
+
+	>> _if app_name _isnt _unset
+	   _then 
+		   >> smallworld_product.application(app_name)
+	   _else
+		   >> smallworld_product.applications.an_element()
+	   _endif
+	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.given_compatible_unit_definition_with_code( cu_code )
+	##
+	## Looks up CO with code CU_CODE and caches in .properties
+	## using key cu_code as a symbol. Can be retrieved by 
+
+	cu_def <<  cost_object_library.get_for_code(cu_code,:compatible_unit)
+	_self.assert_not_unset( cu_def , "CU not found: ", cu_code)
+
+	.properties[cu_code.as_symbol()] << cu_def
+
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.and
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.rwo(p_rwo_name)
+	##
+	## Returns the record that is cached with name RWO_NAME
+
+	_local l_rwo << .properties[p_rwo_name]
+	_self.assert_not_unset( l_rwo, write_string("Cannot find RWO: ", rwo_name) )
+
+	>> l_rwo
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.cu(cu_name)
+	##
+	## Returns the record that is cached with name CU_NAME
+
+	_local l_cu << .properties[cu_name.as_symbol()]
+	_self.assert_not_unset( l_cu, write_string("Cannot find CU: ", cu_name) )
+
+	>> l_cu
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.when_cu_is_added_to_design( library_co_name, _optional rwo_name,
+							     point_span_rec, design_status, operation, overrides )
+
+	## Test case wrapper around cost_object_library.add_to_design()
+	## LIBRARY_CO_NAME - is the name of a CO definition that has
+	## been cached in a previous test step and is looked up by
+	## name. It must refer to a 
+	## macro_assembly_definition, compatible_unit_definition or a
+	## dw!compaitble_unit_record that references a library_co
+	##
+	## RWO_NAME is the name used to previously cache the rwo to
+	## which the CO will be associated
+	##
+	## See cost_object_library.add_to_design() for description of
+	## other arguments.
+	##
+	## Returns: self, arguments returned from cost_object_library.add_to_design()
+
+	_local library_cu << _self.cu( library_co_name.as_symbol() )
+	_local l_rwo << _self.rwo( rwo_name )
+
+	co_rec << co_rec << dw!compatible_unit_record.new( library_cu.code, 1,
+							   :work_record_name, "CO Assign WP") 
+	
+	(new_co,rwos) << cost_object_library.add_to_design( co_rec, l_rwo, _unset,
+							    _unset, #compatible_unit.design_string,
+					     operation.default(:install))
+	_return _self #, design_co, rwos
+	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.then_rwo_has_co_in_current_design( rwo_name, cu_name )
+	##
+	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
+	##
+
+	_local l_cu << _self.cu( cu_name )
+	_local l_rwo << _self.rwo( rwo_name )
+
+	attached_cos <<  dw!cu_engine.compatible_unit_records_for_rwo( l_rwo,:active_scheme )
+
+	found? << _false
+	_for a_co _over attached_cos.fast_elements()
+	_loop
+		_if a_co.code=cu_name
+		_then
+			found? << _true
+			_leave
+		_endif
+	_endloop
+
+	_self.assert_true( found?, write_string( rwo_name, " is not associated with CU ", cu_name ) )
+	
+_endmethod 	
+
+	
