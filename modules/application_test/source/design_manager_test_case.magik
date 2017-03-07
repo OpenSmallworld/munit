@@ -462,7 +462,7 @@ $
 
 
 _pragma(classify_level=debug,topic=MUnit)
-_private _method design_manager_test_case.setup_checkpoints_and_data( _optional dump_file_name )
+_private _method design_manager_test_case.setup_checkpoints_and_data()
 	##
 	## Set up the checkpoints and data in the current alternative
 	##
@@ -475,7 +475,7 @@ _private _method design_manager_test_case.setup_checkpoints_and_data( _optional 
 	_self.create_test_checkpoints("pre_")
 	
 	#do changes
-	_self.one_time_setup_database( dump_file_name )
+	_self.one_time_setup_database()
 	
 	#save database state after
 	_self.create_test_checkpoints()	
@@ -484,7 +484,7 @@ $
 
 
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
-_private _method design_manager_test_case.one_time_setup_database( _optional dump_file_name  )
+_private _method design_manager_test_case.one_time_setup_database()
 	##
         ## Subclass this method if test case requires database to be
         ## updated prior to design creation.
