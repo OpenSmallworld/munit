@@ -63,7 +63,7 @@ _method design_manager_system_test_mixin.given_a_new_design( project_name, desig
 		swg_dsn_admin_engine.clear_current_design()
 
 		project << _self.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
-		views<< _self.ds_view_names
+		views   << _self.ds_view_names
 		swg_dsn_admin_engine.get_admin_view().commit()
 		design  << swg_dsn_admin_engine.create_scheme( project, parent_design, design_name, views, _unset )
 		
