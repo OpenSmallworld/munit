@@ -17,6 +17,21 @@ _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ## Subclasses can also redefine the writable_design_name - this
 ## is the name of the state to which the design should be
 ## transitioned in order to make it writable.
+##
+## If the test will make use of cost objects, you can choose to
+## load a CO dump file. There are two constants to control the
+## behaviour: 
+## - if there are COs to load, then place the file in the
+## resources\base\data folder of the tests module and configure
+## the constant :cu_config_file_to_load with the file name
+## - you can choose to load the CO direct into the top
+## alternative or into a special test named alternative of the
+## design_config view. The view is committed after loading. If
+## the constant :co_load_test_alternative_name returns a
+## string, then an alternative with this name is created and
+## used. If this constant is unset then the top alternative is
+## used. 
+## 
 def_slotted_exemplar( :design_manager_test_case,
 	{
 		{:bounds, _unset},
@@ -587,6 +602,115 @@ _method design_manager_test_case.get_application(_optional p_application_name)
 _endmethod
 $
 
+
+
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+## The name of a CO dump file which should defines any COs
+## required for this test. The file should be located in the
+## resources\base of the tests module
+design_manager_test_case.define_shared_constant(:cu_config_file_to_load,
+	_unset,
+	:public)
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+## Identifies the name of an alternative in the design_config
+## partition into which any test specific COs will be loaded.
+## If unset then defaults to top.
+design_manager_test_case.define_shared_constant(:co_load_test_alternative_name,
+	_unset,
+	:public)
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method design_manager_test_case.setup_design_config_view()
+	##
+	## Some tests may not need any specific data and can run in
+	## top. Other tests may want to load specific data in top and
+	## the final case would be tests that want to load specific
+	## data into a named alternative in the design config view.
+	##
+	## If the test class has the constant
+	## _self.co_load_test_alternative_name defined, then an
+	## alternative with this name will be used, else top.
+
+	_local ds_config_view << cost_object_library.design_config_view
+        
+	ds_config_view.goto_top_alternative()
+
+	_if _self.co_load_test_alternative_name _isnt _unset
+	_then 
+		
+		_if _not ds_config_view.has_alternative?(_self.co_load_test_alternative_name)
+		_then 
+			ds_config_view.create_alternative(_self.co_load_test_alternative_name)
+		_endif
+		
+		write("Using design config alternative for  COs: ", _self.co_load_test_alternative_name )
+		ds_config_view.go_to_alternative(_self.co_load_test_alternative_name)
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.load_required_cos()
+	##
+	## If the test has specific COS defined by a CO dump file in
+	## the modules resources\data folder and specified by
+	## self.co_dump_file_name, then the
+	
+	_if _self.cu_config_file_to_load _isnt _unset _andif
+	    _self.module_name _isnt _unset
+	_then
+		_self.setup_design_config_view()
+		ds_config_view << cost_object_library.design_config_view		
+		l_module << sw_module_manager.module( _self.module_name )
+		_try
+			co_file << l_module.get_resource_file(_self.cu_config_file_to_load,"data" )
+		_when resource_not_found_in_module_error
+			write("Failed to find named CO dump file ", _self.cu_config_file_to_load  )
+		_endtry
+
+		# Load the COs
+		#Create a test alternative
+		ds_config_view.switch(:write)
+
+		_self.load_co_dump
+
+		ds_config_view.commit()
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method  design_manager_test_case.load_co_dump
+        ## 
+        ## Load Co dump
+        ##
+        
+        _local co_dump_path << smallworld_product.get_resource_file(_self.cu_config_file_to_load, "data", _self.module_name)
+        
+        _local (filename, directory)<< system.pathname_components(co_dump_path)
+        _local co_load_errors << system.pathname_from_components("CO_CONFIG_LOAD_ERRORS.txt", directory)
+        
+        stub_method_helper.replace_method(dw!cu_config_loader_engine, :|error_log_file_name|,
+                                          _proc()
+                                                  _import co_load_errors
+                                                  _return co_load_errors
+                                          _endproc )
+
+	write("Loading COs from: ", co_dump_path )
+	
+        dw!cu_config_loader_engine.do(co_dump_path)
+        system.unlink(co_load_errors,_true, _true)
+        
+_endmethod
+$
+
+
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.given_compatible_unit_definition_with_code( cu_code )
 	##
@@ -594,6 +718,14 @@ _method design_manager_test_case.given_compatible_unit_definition_with_code( cu_
 	## using key cu_code as a symbol. Can be retrieved by 
 
 	cu_def <<  cost_object_library.get_for_code(cu_code,:compatible_unit)
+
+	_if cu_def _is _unset
+	_then
+		_self.load_required_cos()
+	_endif
+	
+	cu_def <<  cost_object_library.get_for_code(cu_code,:compatible_unit)
+	
 	_self.assert_not_unset( cu_def , "CU not found: ", cu_code)
 
 	.properties[cu_code.as_symbol()] << cu_def
@@ -602,11 +734,6 @@ _method design_manager_test_case.given_compatible_unit_definition_with_code( cu_
 _endmethod
 $
 
-_pragma(classify_level=debug,topic={MUnit, Test})
-_method design_manager_test_case.and
-	_return _self
-_endmethod
-$
 
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.rwo(p_rwo_name)
@@ -655,12 +782,12 @@ _method design_manager_test_case.when_cu_is_added_to_design( library_co_name, _o
 	_local l_rwo << _self.rwo( rwo_name )
 
 	co_rec << co_rec << dw!compatible_unit_record.new( library_cu.code, 1,
-							   :work_record_name, "CO Assign WP") 
+							   :work_record_name, "Munit WP") 
 	
 	(new_co,rwos) << cost_object_library.add_to_design( co_rec, l_rwo, _unset,
-							    _unset, #compatible_unit.design_string,
+							    _unset, 
 					     operation.default(:install))
-	_return _self #, design_co, rwos
+	_return _self 
 	
 _endmethod
 $
