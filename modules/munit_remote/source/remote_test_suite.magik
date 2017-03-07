@@ -7,7 +7,8 @@ def_slotted_exemplar( :remote_test_suite,
 		{ :connection,   _unset },
 		{ :thread,       _unset },
 		{ :port,         _unset },
-		{ :remote_tests, _unset }
+		{ :remote_tests, _unset },
+		{ :clients,      _unset }
 	},
 	{ :test_suite } )
 $
@@ -34,6 +35,7 @@ _method remote_test_suite.init( port, test_product_names )
 	.port << port
         .connection << tcpip_connection_stream.new( port )
 	.remote_tests << rope.new()
+	.clients << rope.new()
 
         _if .connection _is _unset
         _then
@@ -58,19 +60,18 @@ _pragma(classify_level=debug)
 _method remote_test_suite.close_server()
         ## Closes down the server listener. Note that this does not
         ## shut down any client connections.
+
+	_for client _over .clients.fast_elements()
+	_loop
+		_self.send_module_name_to_client( :done, client )
+	_endloop
         
         _if .connection _isnt _unset
         _then
                 conn << .connection ^<< _unset
                 conn.close()
         _endif
-        
-        ## Kill the server thread if it's running.
-        thread << .thread ^<< _unset
-        _if thread _isnt _unset _andif thread.vm_status ~= thread.status_terminated
-        _then
-                thread.kill()
-        _endif
+	
 _endmethod
 $
 
@@ -100,6 +101,7 @@ _method remote_test_suite.listen()
                 
                 _if client _is _unset _then _leave _endif
 
+		.clients.add_last( client )
                 _self.run_tests_in_client( client )
         _endloop
 _endmethod
@@ -128,9 +130,7 @@ _private _method remote_test_suite.run_tests_in_client( client )
 						
 						( module_name, test_name ) << me.get_test_to_run()
 						
-						client.output.put_signed_int( module_name.size )
-						client.output.put_ascii_chars( module_name )
-						client.output.flush()				
+						me.send_module_name_to_client( module_name, client )
 						
 						_if module_name _is :done _then _leave _endif
 						
@@ -141,7 +141,7 @@ _private _method remote_test_suite.run_tests_in_client( client )
 					_endif
 				_endif
 
-			_when generic_prim_failure # Client died, stop listening for requests fornew tests
+			_when generic_prim_failure # Client died, stop listening for requests for new tests
 				_leave 
 			_endtry 
 
@@ -170,6 +170,19 @@ _method remote_test_suite.get_test_to_run()
 	_endlock
 
 	>> ( module_name, test_name )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_suite.send_module_name_to_client( module_name, client )
+	## 
+	##
+	
+	client.output.put_signed_int( module_name.size )
+	client.output.put_ascii_chars( module_name )
+	client.output.flush()
 	
 _endmethod
 $

@@ -107,7 +107,8 @@ _method remote_test_runner.connect( address, port )
 		_loop 
 			_try 
 				.connection << tcpip_connection.new( address, port )
-				connected? << _true 
+				connected? << _true
+				retry? << _false
 			_when sw_net_connection_failed
 				retry? << _true _andif count < 100
 			_endtry
