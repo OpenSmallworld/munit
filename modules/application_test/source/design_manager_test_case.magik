@@ -221,13 +221,11 @@ _method design_manager_test_case.run_bare()
 	# Bug needs refactor, see tc_eo_cim_mapping.run_bare() for details
 	
 	# Disable database notifications.
-	_dynamic !notify_database_data_changes?!, !current_application!
+	_dynamic !notify_database_data_changes?!
 	_local old_value << !notify_database_data_changes?!
 	!notify_database_data_changes?! << _false
 
         _self.one_time_behaviour()
-
-	!current_application! << _self.current_application()
 
         _protect
 		_self.set_up()
@@ -239,18 +237,6 @@ _method design_manager_test_case.run_bare()
 		_self.tear_down()
 		!notify_database_data_changes?! << old_value 
         _endprotect
-_endmethod
-$
-
-
-_pragma(classify_level=debug,topic=MUnit)
-_method design_manager_test_case.current_application()
-	## 
-	## Return the current running application.  This method does
-	## not start it if it is not running.
-	##
-	
-	>> _self.get_application()
 _endmethod
 $
 
@@ -555,35 +541,6 @@ _private _method design_manager_test_case.check_writable_access( design )
 				      "Failed to get write access because ", act_read_reason_msg )
 		_self.assert_is( :write, ac_mode, desc )
 	_endif
-_endmethod
-$
-
-# FIXME copied from eo_start_application_mixin
-# is this the right thing to do???
-_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
-## Name of the application that should be open when this test
-## is run. Leave unset if a dummy application can be used. 
-## transitioned once it is created during setup
-design_manager_test_case.define_shared_constant(:application_name,
-	_unset,
-	:public)
-$
-
-
-_pragma(classify_level=debug,topic={MUnit, Test})
-_method design_manager_test_case.get_application(_optional p_application_name)
-	## returns handle to application application_name
-	## doesn't start application (use application() to start application)
-	## p_application_name defaults to _self.application_name
-	_local app_name << p_application_name.default( _self.application_name )
-
-	>> _if app_name _isnt _unset
-	   _then 
-		   >> smallworld_product.application(app_name)
-	   _else
-		   >> smallworld_product.applications.an_element()
-	   _endif
-	
 _endmethod
 $
 
