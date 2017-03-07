@@ -677,7 +677,7 @@ _method design_manager_test_case.load_required_cos()
 		#Create a test alternative
 		ds_config_view.switch(:write)
 
-		_self.load_co_dump
+		_self.load_co_dump()
 
 		ds_config_view.commit()
 	_endif
@@ -686,7 +686,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method  design_manager_test_case.load_co_dump
+_method  design_manager_test_case.load_co_dump()
         ## 
         ## Load Co dump
         ##
