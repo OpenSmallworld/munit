@@ -745,6 +745,13 @@ _method design_manager_test_case.when_cu_is_added_to_design( library_co_name, _o
 	##
 	## Returns: self, arguments returned from cost_object_library.add_to_design()
 
+	_dynamic !current_application!
+
+	_if !current_application! _is _unset
+	_then
+		!current_application! << _self.properties[:application]
+	_endif 
+	
 	_local library_cu << _self.cu( library_co_name.as_symbol() )
 	_local l_rwo << _self.rwo( rwo_name )
 
