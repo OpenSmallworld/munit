@@ -44,7 +44,7 @@ _method remote_test_suite.init( port, test_product_names )
 
 	_for test_product_name _over test_product_names.fast_elements()
 	_loop
-		_self.add_product_test_suite( test_product_name )
+		_self.add_product_test_suite( test_product_name.as_symbol())
 	_endloop
         
         .thread << _proc @remote_test_suite( me )
