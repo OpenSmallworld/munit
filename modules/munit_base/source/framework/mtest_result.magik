@@ -133,6 +133,7 @@ _method mtest_result.run_protected( a_test , a_protectable )
 	_local tag << "run".copy()
 	_local outer_tag << "escape".copy()
         _local final?, ok?
+	_local escaped_condition
         
         _for i _over 0.upwards()
         _loop 
@@ -146,7 +147,8 @@ _method mtest_result.run_protected( a_test , a_protectable )
 				      
 				      _handling assertion_failed_warning
 				      _with _proc( a_condition )
-						    _import a_test, me, final?, ok?, i
+						    _import a_test, me, final?, ok?, i, escaped_condition
+						    escaped_condition << a_condition 
 						    _if final?
 						    _then me.add_failure( a_test, a_condition )
 						    _else me.report_non_final_problem( a_test, a_condition, _false, i+1)
@@ -156,7 +158,8 @@ _method mtest_result.run_protected( a_test , a_protectable )
 				      
 				      _handling error
 				      _with _proc( a_condition )
-						    _import tag, a_test, me, final?, ok?, i
+						    _import tag, a_test, me, final?, ok?, i, escaped_condition
+						    escaped_condition << a_condition 
 						    _if final?
 						    _then me.add_error( a_test, a_condition )
 						    _else me.report_non_final_problem( a_test, a_condition , _true, i+1)
@@ -171,11 +174,8 @@ _method mtest_result.run_protected( a_test , a_protectable )
 		       _protection
 			       _if _not normal_exit?
 			       _then
-				       a_condition <<
-					       condition.new(:error, :string,
-							     "Something escaped from the test harness error handling.")
 				       _if final?
-				       _then me.add_error( a_test, a_condition )
+				       _then me.add_error( a_test, escaped_condition )
 				       _else me.report_non_final_problem( a_test, a_condition , _true, i+1)
 				       _endif 
 				       ok? << _false
