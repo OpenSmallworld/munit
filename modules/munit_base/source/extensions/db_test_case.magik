@@ -222,9 +222,17 @@ $
 
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method db_test_case.one_time_setup_failed?()
-	## 
+	##
 
-	>> _not _self.ds_views.an_element().has_checkpoint?( _self.checkpoint_name ) 
+	_for a_ds_view _over _self.ds_views.fast_elements()
+	_loop
+		_if a_ds_view.has_checkpoint?( _self.checkpoint_name ) _isnt _true
+		_then
+			_return _true
+		_endif
+	_endloop
+	_return _false
+	
 _endmethod
 $
 

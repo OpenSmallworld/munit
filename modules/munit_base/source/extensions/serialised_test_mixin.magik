@@ -336,6 +336,23 @@ _method serialised_test_mixin.when_the_frame_is_minimized( top_frame, minimized?
 	>> _self
 _endmethod
 $
+
+
+_pragma(classify_level=debug)
+_method serialised_test_mixin.when_the_frame_is_deactivated( top_frame )
+	## 
+	## 
+
+	_if top_frame _isnt _unset
+	_then
+		top_frame.deactivate()
+	_endif
+	
+	>> _self
+_endmethod
+$
+
+
 _pragma(classify_level=debug)
 _method serialised_test_mixin.resize_frame(a_frame, width, height )
 	## Workaround for the problem that some resize events are lost 

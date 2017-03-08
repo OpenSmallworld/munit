@@ -634,7 +634,7 @@ _method test_runner_dialog.failure_selected( a_sel )
 		   _else
 			   >> ""
 		   _endif 
-	.items[:failure_details_window].value << details
+	.items[:failure_details_window].set_text_and_selection( details, 0 )
 
 	_self.manage_actions()
 	
