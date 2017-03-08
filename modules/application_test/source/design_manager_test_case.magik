@@ -69,6 +69,22 @@ design_manager_test_case.define_shared_constant( :writable_design_status, "Desig
 $
 
 
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+## The name of a CO dump file which should defines any COs
+## required for this test. The file should be located in the
+## resources\base of the tests module
+design_manager_test_case.define_shared_constant( :cu_config_file_to_load,_unset,:public)
+$
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+## Identifies the name of an alternative in the design_config
+## partition into which any test specific COs will be loaded.
+## If unset then defaults to top.
+design_manager_test_case.define_shared_constant( :co_load_test_alternative_name,_unset,	:public)
+$
+
+
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 _method design_manager_test_case.properties
 	## 
@@ -561,27 +577,8 @@ $
 
 
 
-
-_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
-## The name of a CO dump file which should defines any COs
-## required for this test. The file should be located in the
-## resources\base of the tests module
-design_manager_test_case.define_shared_constant(:cu_config_file_to_load,
-	_unset,
-	:public)
-$
-
-_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
-## Identifies the name of an alternative in the design_config
-## partition into which any test specific COs will be loaded.
-## If unset then defaults to top.
-design_manager_test_case.define_shared_constant(:co_load_test_alternative_name,
-	_unset,
-	:public)
-$
-
-_pragma(classify_level=restricted,topic=MUnit)
-_method design_manager_test_case.setup_design_config_view()
+_pragma(classify_level=restricted)
+_private _method design_manager_test_case.setup_design_config_view()
 	##
 	## Some tests may not need any specific data and can run in
 	## top. Other tests may want to load specific data in top and
@@ -603,7 +600,7 @@ _method design_manager_test_case.setup_design_config_view()
 		_then 
 			ds_config_view.create_alternative(_self.co_load_test_alternative_name)
 		_endif
-		
+
 		write("Using design config alternative for  COs: ", _self.co_load_test_alternative_name )
 		ds_config_view.go_to_alternative(_self.co_load_test_alternative_name)
 	_endif
@@ -611,41 +608,54 @@ _method design_manager_test_case.setup_design_config_view()
 _endmethod
 $
 
-_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
-_method design_manager_test_case.load_required_cos()
+_pragma(classify_level=restricted)
+_private _method design_manager_test_case.load_required_cos()
 	##
 	## If the test has specific COS defined by a CO dump file in
 	## the modules resources\data folder and specified by
-	## self.co_dump_file_name, then the
-	
+	## self.co_dump_file_name, then the file will be imported.
+	## The COs will be imported into the design config view - see
+	## setup_design_config_view() for details of alternatives
+
 	_if _self.cu_config_file_to_load _isnt _unset _andif
 	    _self.module_name _isnt _unset
 	_then
 		_self.setup_design_config_view()
 		ds_config_view << cost_object_library.design_config_view		
-		l_module << sw_module_manager.module( _self.module_name )
+		module << sw_module_manager.module( _self.module_name )
 		_try
-			co_file << l_module.get_resource_file(_self.cu_config_file_to_load,"data" )
+			co_file << module.get_resource_file(_self.cu_config_file_to_load,"data" )
+			ds_config_view.switch(:write)
+			_self.load_co_dump()
+			ds_config_view.commit()
+
+			# refresh the CO cache
+			_self.refresh_cost_object_library()
+			
 		_when resource_not_found_in_module_error
 			write("Failed to find named CO dump file ", _self.cu_config_file_to_load  )
 		_endtry
-
-		# Load the COs
-		#Create a test alternative
-		ds_config_view.switch(:write)
-
-		_self.load_co_dump()
-
-		ds_config_view.commit()
 	_endif
 	
 _endmethod
 $
 
+_pragma(classify_level=restricted)
+_private _method design_manager_test_case.refresh_cost_object_library()
+	##
+	## Reset CO caches after change to the config view.
+	##
+         cost_object_library.reset_interested_collections()
+         cost_object_library.reset_co_writable_and_logical_fields()
+         cost_object_library.reset_cos_for_rwo()
+         cost_object_library.reset_cached_cos()
+_endmethod
+$
+
 _pragma(classify_level=debug)
-_method  design_manager_test_case.load_co_dump()
+_private _method  design_manager_test_case.load_co_dump()
         ## 
-        ## Load Co dump
+        ## Load Cos from resource file
         ##
         
         _local co_dump_path << smallworld_product.get_resource_file(_self.cu_config_file_to_load, "data", _self.module_name)
