@@ -108,8 +108,102 @@ _method design_manager_system_test_mixin.when_changing_design_status( new_status
 
 	_if (design.status <> new_status)
 	_then 	
-		swg_dsn_admin_engine.find_and_perform_transition( design, design.status, new_status )
+		_self.when_transitioning_design_to_next_state( design, new_status )
 	_endif
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={Munit})
+_method design_manager_system_test_mixin.when_transitioning_design_to_future_state( future_state, ignore_states,
+										    _optional current_application )
+	## 
+	## Transition the current design from the current state to
+	## FUTURE_STATE. IGNORE_STATES is a equality_set of state names
+	## to ignore, e.g. if the current state is "In Design" and the
+	## next potential states are {"Cancelled", "Design Complete"},
+	## "Cancelled" should be added to IGNORE_STATES to ensure that
+	## the design is transitioned to "Design Complete"
+	##
+	## A transition that runs QM requires the dynamic
+	## !current_application! to be set.  In this case the optional
+	## CURRENT_APPLICATION argument should be provided.
+	##
+
+	scheme << swg_dsn_admin_engine.active_scheme
+
+	visited_states << equality_set.new()
+
+	_loop
+
+		# If the status didn't change from the previous iteration,
+		# something went wrong.  Leave now to prevent an endless loop
+		_if scheme.status = status _then _leave _endif
+		
+		status << scheme.status.copy()
+		visited_states.add( status )
+		_if status = future_state _then _leave _endif
+		
+		states << scheme.potential_subsequent_states()
+		_for next_state _over states.fast_elements()
+		_loop
+			
+			_if ignore_states.includes?( next_state ) _then _continue _endif
+			_if visited_states.includes?( next_state ) _then _continue _endif
+			
+			_self.when_transitioning_design_to_next_state( scheme, next_state, current_application )
+
+			# Only do one transition
+			_leave 
+			
+		_endloop
+	_endloop
+
+	fail_str << write_string( "The transition to ", future_state, " failed.  The design's current status is ",
+				  scheme.status, ".  The job that failed had the following description: ", newline_char,
+				  _self.properties[ :last_job ].outcome_description )
+	_self.assert_equals( future_state, scheme.status, fail_str )
+
+	show( "Transition through ", _scatter visited_states )
+			
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={Munit})
+_method design_manager_system_test_mixin.when_transitioning_design_to_next_state( scheme, next_state, _optional current_application )
+	## 
+	## Transition SCHEME to NEXT_STATE.  NEXT_STATE must be a
+	## potential subsequent state of the current state of SCHEME.
+	##
+	## A transition that runs QM requires the dynamic
+	## !current_application! to be set.  In this case the optional
+	## CURRENT_APPLICATION argument should be provided.
+	##
+
+	_dynamic !current_application! << current_application
+
+	state_model << scheme.state_model
+	state_model.find_and_perform_transition( scheme, scheme.status, next_state )
+
+	_if (je << sw_job_engine.job_engine()) _is _unset 
+	_then
+		je << sw_job_engine.new()
+	_endif
+	je.add_dependent( _self )
+
+	_loop 
+		jobs << je.find_and_run_next_jobs()
+		_if scheme.status = next_state _then _leave _endif
+		_if jobs.empty? _then _leave _endif
+	_endloop
+
+	je.remove_dependent( _self )
 
 	>> _self
 	
@@ -238,15 +332,31 @@ _endmethod
 $
 
 
-
-
-
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method design_manager_system_test_mixin.activate_design( design )
 	## 
 	##
 	
 	swg_dsn_admin_engine.activate_design( design )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_system_test_mixin.note_change( who, what, data )
+	## 
+	##
+
+	_if what _is :running_job
+	_then
+		_if data _isnt _unset
+		_then
+			_self.properties[ :last_job ] << data
+		_endif
+	_endif
+
+	_super.note_change( who, what, data )
 	
 _endmethod
 $
