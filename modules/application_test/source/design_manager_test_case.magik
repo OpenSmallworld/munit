@@ -819,7 +819,7 @@ _method design_manager_test_case.when_creating_child_design( child_design_name )
 		_self.create_test_checkpoints()
 	_endif
 
-	.properties[ :child_design ] << swg_dsn_admin_engine.active_scheme.properties[ :design ]
+	.properties[ :child_design ] << swg_dsn_admin_engine.active_scheme
 
 	>> _self
 	
@@ -832,13 +832,35 @@ _method design_manager_test_case.when_going_to_parent_design()
 	## 
 	##
 
-	fail_str << "No parent design to go to"
-	_self.assert_not_unset( .properties[ :parent_design ], fail_str )
+	>> _self.when_going_to_design( .properties[ :parent_design ], "child" )
+	
+_endmethod
+$
 
-	swg_dsn_admin_engine.activate_scheme( .properties[ :parent_design ] )
 
-	fail_str << "Failed to go to parent design";
-	_self.assert_equals( .properties[ :parent_design ], swg_dsn_admin_engine.active_scheme, fail_str )
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_going_to_child_design()
+	## 
+	##
+
+	>> _self.when_going_to_design( .properties[ :child_design ], "child" )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_going_to_design( design, design_identifier )
+	## 
+	## 
+
+	fail_str << write_string( "No ", design_identifier, " design to go to" )
+	_self.assert_not_unset( .properties[ :child_design ], fail_str )
+
+	swg_dsn_admin_engine.activate_scheme( design )
+
+	fail_str << write_string( "Failed to go to ", design_identifier, " design" )
+	_self.assert_equals( design, swg_dsn_admin_engine.active_scheme, fail_str )
 
 	>> _self
 	
