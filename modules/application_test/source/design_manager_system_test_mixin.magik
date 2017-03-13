@@ -118,20 +118,28 @@ $
 
 
 _pragma(classify_level=debug, topic={Munit})
-_method design_manager_system_test_mixin.when_transitioning_design_to_future_state( future_state, ignore_states,
-										    _optional current_application )
+_method design_manager_system_test_mixin.when_transitioning_active_design_to_future_state( transitions, future_state,
+											   _optional current_application )
 	## 
 	## Transition the current design from the current state to
-	## FUTURE_STATE. IGNORE_STATES is a equality_set of state names
-	## to ignore, e.g. if the current state is "In Design" and the
-	## next potential states are {"Cancelled", "Design Complete"},
-	## "Cancelled" should be added to IGNORE_STATES to ensure that
-	## the design is transitioned to "Design Complete"
+	## a future state.  TRANSITIONS is an equality hash table keyed
+	## on current state and the value being the state to transition
+	## to.
+	##
+	## Once a state is reached that does not have an entry in
+	## TRANSITIONS, this is the final future state.
+	##
+	## FUTURE_STATE is the goal state.  Check that this state is
+	## reached. 
 	##
 	## A transition that runs QM requires the dynamic
 	## !current_application! to be set.  In this case the optional
 	## CURRENT_APPLICATION argument should be provided.
 	##
+
+	# Always post only to the direct parent design
+	stub_method_helper.replace_method( swg_dsn_vmds_integrator, :|number_of_steps_to_post_active_scheme_to_design_top()|,
+					   _proc() >> 1 _endproc )
 
 	scheme << swg_dsn_admin_engine.active_scheme
 
@@ -145,21 +153,14 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_future_sta
 		
 		status << scheme.status.copy()
 		visited_states.add( status )
-		_if status = future_state _then _leave _endif
-		
-		states << scheme.potential_subsequent_states()
-		_for next_state _over states.fast_elements()
-		_loop
-			
-			_if ignore_states.includes?( next_state ) _then _continue _endif
-			_if visited_states.includes?( next_state ) _then _continue _endif
-			
-			_self.when_transitioning_design_to_next_state( scheme, next_state, current_application )
 
-			# Only do one transition
-			_leave 
+		# No more transitions specified, hopefully reached goal state
+		_if ( next_state << transitions[ status ] ) _is _unset _then _leave _endif
+		
+		_if visited_states.includes?( next_state ) _then _continue _endif
 			
-		_endloop
+		_self.when_transitioning_design_to_next_state( scheme, next_state, current_application )
+		
 	_endloop
 
 	fail_str << write_string( "The transition to ", future_state, " failed.  The design's current status is ",
@@ -167,7 +168,7 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_future_sta
 				  _self.properties[ :last_job ].outcome_description )
 	_self.assert_equals( future_state, scheme.status, fail_str )
 
-	show( "Transition through ", _scatter visited_states )
+	swg_dsn_admin_engine.activate_scheme( scheme )
 			
 	>> _self
 	
