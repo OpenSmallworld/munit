@@ -136,6 +136,10 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 	## !current_application! to be set.  In this case the optional
 	## CURRENT_APPLICATION argument should be provided.
 	##
+	## The last step is to open the current design again, since
+	## performing the transitions might have resulted in DM Top
+	## being the current alternative.
+	##
 
 	# Always post only to the direct parent design
 	stub_method_helper.replace_method( swg_dsn_vmds_integrator, :|number_of_steps_to_post_active_scheme_to_design_top()|,
