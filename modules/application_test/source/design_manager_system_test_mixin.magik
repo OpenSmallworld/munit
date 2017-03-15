@@ -8,6 +8,20 @@ _pragma(classify_level=debug)
 ## All classes that inherits from this mixin must define a
 ## .properties method that returns a property_list.
 ##
+## Method get_or_create_project() may create a new project for
+## the design. The state model use will default to the first
+## one found unless it is explicitly specified.
+##
+## The state model to use can be specified in one of two ways:
+## - call given_a_state_model( name ) will cached the supplied
+## name in .properties[:job_type] OR
+## - redefine the constant default_job_type on the subclass
+##
+## Note: if neither provides a suitable state model name, will
+## default to value
+## (swg_dsn_project.configuration[:state_model] and if this
+## gives no valid model, will just pick an_element() from the
+## state model table
 def_mixin( :design_manager_system_test_mixin, { :application_system_test_mixin } )
 $
 
@@ -30,6 +44,16 @@ _method design_manager_system_test_mixin.given_no_active_design()
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.given_a_state_model( state_model_name )
+	##
+	## STATE_MODEL_NAME is the name of the state model you want to
+	## use for a new project.
+	## Sets .properties[:job_type]
+
+	_self.properties[:job_type] << state_model_name
+_endmethod
+$
 
 _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.given_a_design( project_name, design_name, _optional xmin, ymin, xmax, ymax )
@@ -57,24 +81,15 @@ $
 
 
 _pragma(classify_level=debug)
-_method design_manager_system_test_mixin.given_a_new_design( project_name, design_name, _optional xmin, ymin, xmax, ymax, state_model_name )
+_method design_manager_system_test_mixin.given_a_new_design( project_name, design_name, _optional xmin, ymin, xmax, ymax )
 	##
-	## Create a new design in the project with name PROJECT_NAME
-	## which can be either new or an existing project. Set the
-	## design bounray to the coordinates supplied.
+	## Create a new design with name DESIGN_NAME in the project
+	## with name PROJECT_NAME  which can be either new or an
+	## existing project.
 	## This method will fail if a design with DESIGN_NAME exists
 	## already.
 	##
-	## If an existing project with name PROJECT_NAME does
-	## not exist, then create a new project with PROJECT_NAME using
-	## state model with STATE_MODEL_NAME
-	##
-	## If STATE_MODEL_NAME is not given, then use the logic of swg_dsn_admin_engine.create_project(:
-	## - use the job_type value for the project to look up the
-	## state model name
-	## - use the value (swg_dsn_project.configuration[:state_model]
-	## to see if there is a matching state model with that name
-	## - pick an_element() from the state models
+	## See method get_or_create_project() for argument description
 	
 	parent_design << swg_dsn_admin_engine.active_scheme
 
@@ -82,7 +97,7 @@ _method design_manager_system_test_mixin.given_a_new_design( project_name, desig
 		
 		swg_dsn_admin_engine.clear_current_design()
 
-		project << _self.get_or_create_project( project_name, xmin, ymin, xmax, ymax, state_model_name )
+		project << _self.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
 		views   << _self.ds_view_names
 		swg_dsn_admin_engine.get_admin_view().commit()
 		design  << swg_dsn_admin_engine.create_scheme( project, parent_design, design_name, views, _unset )
@@ -179,17 +194,10 @@ $
 
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method design_manager_system_test_mixin.get_or_create_project( project_name, xmin, ymin, xmax, ymax, state_model_name )
+_private _method design_manager_system_test_mixin.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
 	## 
 	## Create a new project record with PROJECT_NAME and bounds
 	## given by XMON,YMON,XMAX,YMAX.
-	## Use the state model given by STATE_MODEL_NAME or default to
-	## self.default_job_type
-	## Note: if neither provides a suitable state model name, will
-	## default to value
-	## (swg_dsn_project.configuration[:state_model] and if this
-	## gives no valid model, will just pick an_element() from the
-	## state model table
 	
 	project << swg_dsn_admin_engine.find_project_or_scheme( project_name, :project, _false )
 	_if project _is _unset 
@@ -202,7 +210,7 @@ _private _method design_manager_system_test_mixin.get_or_create_project( project
 			manager << _self.properties[ :application ].get_service_provider( :map_manager )
 			bounds  << manager.current_map_view.current_view_bounds
 		_endif
-		job_attributes << property_list.new_with(:job_type, state_model_name.default(_self.default_job_type) )
+		job_attributes << property_list.new_with(:job_type, _self.properties[:job_type].default( _self.default_job_type ) )
 		project  << swg_dsn_admin_engine.create_project( project_name, _self.ds_view_names, bounds.as_sector_rope(), job_attributes )
 		
 	_endif
