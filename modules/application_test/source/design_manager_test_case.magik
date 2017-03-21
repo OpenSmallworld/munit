@@ -250,7 +250,8 @@ _method design_manager_test_case.tear_down()
 	## 
 	##
 	
-	_if ( child_design << .properties[ :child_design ]) _isnt _unset
+	_if ( child_design << .properties[ :child_design ]) _isnt _unset _andif
+	    child_design.is_valid?
 	_then
 		_if swg_dsn_admin_engine.active_scheme = child_design
 		_then
@@ -803,7 +804,7 @@ _method design_manager_test_case.when_creating_child_design( child_design_name )
 	_self.properties[ :parent_design ] << swg_dsn_admin_engine.active_scheme
 
 	swg_dsn_admin_engine.save_design_changes()
-	_self.given_a_design( _self.project_name, child_design_name )
+	_self.given_a_design( _self.project_name, write_string( child_design_name, "-", system.host_name ))
 
 	# Use one_time_setup_failed?() to check if the checkpoint
 	# exists.  If it returns true, no checkpoint in one of the views
@@ -862,6 +863,18 @@ _method design_manager_test_case.when_going_to_design( design, design_identifier
 	fail_str << write_string( "Failed to go to ", design_identifier, " design" )
 	_self.assert_equals( design, swg_dsn_admin_engine.active_scheme, fail_str )
 
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_deleting_design( design )
+	## 
+	##
+
+	swg_dsn_admin_engine.delete_scheme( design )
 	>> _self
 	
 _endmethod
