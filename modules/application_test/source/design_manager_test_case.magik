@@ -708,7 +708,7 @@ _method design_manager_test_case.rwo(p_rwo_name)
 	## Returns the record that is cached with name RWO_NAME
 
 	_local l_rwo << .properties[p_rwo_name]
-	_self.assert_not_unset( l_rwo, write_string("Cannot find RWO: ", rwo_name) )
+	_self.assert_not_unset( l_rwo, write_string("Cannot find RWO: ", p_rwo_name) )
 
 	>> l_rwo
 _endmethod
