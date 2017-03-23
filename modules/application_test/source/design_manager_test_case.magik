@@ -953,9 +953,9 @@ _private _method design_manager_test_case.rwo_associated_with_cost_object?( rwo_
 
 	_if which_schemes _is :all
 	_then
-		attached_cos << design_cost_item.get_for_record_and_scheme(ws, _unset, :co )
+		attached_cos << design_cost_item.get_for_record_and_scheme(rwo, _unset, :co )
 	_else 
-		attached_cos <<  design_cost_item.get_for_record_and_scheme(ws, swg_dsn_admin_engine.active_scheme, :co )
+		attached_cos <<  design_cost_item.get_for_record_and_scheme(rwo, swg_dsn_admin_engine.active_scheme, :co )
 	_endif 
 
 	found? << _false
