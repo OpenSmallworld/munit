@@ -144,8 +144,124 @@ _method design_manager_system_test_mixin.when_changing_design_status( new_status
 
 	_if (design.status <> new_status)
 	_then 	
-		swg_dsn_admin_engine.find_and_perform_transition( design, design.status, new_status )
+		_self.when_transitioning_design_to_next_state( design, new_status )
 	_endif
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={Munit})
+_method design_manager_system_test_mixin.when_transitioning_active_design_to_future_state( transitions, future_state,
+											   _optional current_application )
+	## 
+	## Transition the current design from the current state to
+	## a future state.  TRANSITIONS is an equality hash table keyed
+	## on current state and the value being the state to transition
+	## to.
+	##
+	## Once a state is reached that does not have an entry in
+	## TRANSITIONS, this is the final future state.
+	##
+	## FUTURE_STATE is the goal state.  Check that this state is
+	## reached. 
+	##
+	## A transition that runs QM requires the dynamic
+	## !current_application! to be set.  In this case the optional
+	## CURRENT_APPLICATION argument should be provided.
+	##
+	## The last step is to open the current design again, since
+	## performing the transitions might have resulted in DM Top
+	## being the current alternative.
+	##
+
+	# Always post only to the direct parent design
+	stub_method_helper.replace_method( swg_dsn_vmds_integrator, :|number_of_steps_to_post_active_scheme_to_design_top()|,
+					   _proc() >> 1 _endproc )
+
+	scheme << swg_dsn_admin_engine.active_scheme
+
+	visited_states << equality_set.new()
+
+	_loop
+
+		# If the status didn't change from the previous iteration,
+		# something went wrong.  Leave now to prevent an endless loop
+		_if scheme.status = status _then _leave _endif
+		
+		status << scheme.status.copy()
+		visited_states.add( status )
+
+		# No more transitions specified, hopefully reached goal state
+		_if ( next_state << transitions[ status ] ) _is _unset _then _leave _endif
+		
+		_if visited_states.includes?( next_state ) _then _continue _endif
+			
+		_self.when_transitioning_design_to_next_state( scheme, next_state, current_application )
+		
+	_endloop
+
+	fail_str << write_string( "The transition to ", future_state, " failed.  The design's current status is ",
+				  scheme.status, ".  The job that failed had the following description: ", newline_char )
+	_if _self.properties[ :last_job ] _isnt _unset
+	_then
+		fail_str << write_string( fail_str, _self.properties[ :last_job ] )
+	_endif
+	_self.assert_equals( future_state, scheme.status, fail_str )
+
+	swg_dsn_admin_engine.activate_scheme( scheme )
+			
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={Munit})
+_method design_manager_system_test_mixin.when_transitioning_design_to_next_state( scheme, next_state, _optional current_application )
+	## 
+	## Transition SCHEME to NEXT_STATE.  NEXT_STATE must be a
+	## potential subsequent state of the current state of SCHEME.
+	##
+	## A transition that runs QM requires the dynamic
+	## !current_application! to be set.  In this case the optional
+	## CURRENT_APPLICATION argument should be provided.
+	##
+
+	_dynamic !current_application! << current_application
+
+	stub_method_helper.replace_method( swg_dsn_admin_engine, :|merge_to_build_plans()|,
+					   _proc()
+						   >> property_list.new_with( :result, _true )
+					   _endproc )
+
+	_if (je << sw_job_engine.job_engine()) _is _unset 
+	_then
+		je << sw_job_engine.new()
+	_endif
+	je.add_dependent( _self )
+
+	job_queue_view << je.job_view
+
+	_protect
+		_self.prepare_job_queue_view_for_transition_jobs( job_queue_view )
+		
+		state_model << scheme.state_model
+		state_model.find_and_perform_transition( scheme, scheme.status, next_state )
+		
+		_loop 
+			jobs << je.find_and_run_next_jobs()
+			_if scheme.status = next_state _then _leave _endif
+			_if jobs.empty? _then _leave _endif
+		_endloop
+	_protection
+		job_queue_view.commit()
+		job_queue_view.goto_top_alternative()
+	_endprotect
+
+	je.remove_dependent( _self )
 
 	>> _self
 	
@@ -275,15 +391,55 @@ _endmethod
 $
 
 
-
-
-
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method design_manager_system_test_mixin.activate_design( design )
 	## 
 	##
 	
 	swg_dsn_admin_engine.activate_design( design )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_system_test_mixin.note_change( who, what, data )
+	## 
+	##
+
+	_if what _is :running_job
+	_then
+		_if data _isnt _unset
+		_then
+			_self.properties[ :last_job ] << data.outcome_description.write_string
+		_endif
+	_endif
+
+	_super.note_change( who, what, data )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method design_manager_system_test_mixin.prepare_job_queue_view_for_transition_jobs( job_queue_view )
+	## 
+	##
+	
+	alternative_name << system.host_name
+
+	_if _not job_queue_view.alternative_path.empty?
+	_then
+		job_queue_view.goto_top_alternative()
+	_endif
+	
+	_if _not job_queue_view.has_alternative?( alternative_name )
+	_then
+		job_queue_view.spawn( alternative_name )
+	_endif
+	
+	job_queue_view.go_to_alternative( alternative_name )
+	job_queue_view.switch( :write )
 	
 _endmethod
 $

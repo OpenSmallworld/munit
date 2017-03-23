@@ -245,6 +245,28 @@ _endmethod
 $
 
 
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.tear_down()
+	## 
+	##
+	
+	_if ( child_design << .properties[ :child_design ]) _isnt _unset _andif
+	    child_design.is_valid?
+	_then
+		_if swg_dsn_admin_engine.active_scheme = child_design
+		_then
+			swg_dsn_admin_engine.activate_scheme( _unset )
+		_endif
+		swg_dsn_admin_engine.delete_scheme( child_design )
+		.properties[ :child_design ] << _unset 
+	_endif
+
+	_super.tear_down()
+	
+_endmethod
+$
+
+
 _pragma(classify_level=debug,topic=MUnit)
 _method design_manager_test_case.run_bare()
         ## Runs the bare test sequence
@@ -766,29 +788,155 @@ _method design_manager_test_case.when_cu_is_added_to_design( library_co_name, _o
 _endmethod
 $
 
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_creating_child_design( child_design_name )
+	##
+	## Store the current design in .properties[ :parent_design ]
+	## Commit all the changes in the current design
+	## Delete the sub design if it exists
+	## Create a new sub design
+	## Activate the new design
+	##
+
+	_self.properties[ :parent_design ] << swg_dsn_admin_engine.active_scheme
+
+	swg_dsn_admin_engine.save_design_changes()
+
+	design_name  << write_string( child_design_name, "-", system.host_name )
+	_if ( child_design << _self.get_existing_test_design( _self.project_name, design_name )) _isnt _unset
+	_then
+		swg_dsn_admin_engine.delete_scheme( child_design )
+	_endif
+	
+	_self.given_a_design( _self.project_name, design_name )
+
+	.properties[ :child_design ] << swg_dsn_admin_engine.active_scheme
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_going_to_parent_design()
+	## 
+	##
+
+	>> _self.when_going_to_design( .properties[ :parent_design ], "child" )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_going_to_child_design()
+	## 
+	##
+
+	>> _self.when_going_to_design( .properties[ :child_design ], "child" )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_going_to_design( design, design_identifier )
+	## 
+	## 
+
+	fail_str << write_string( "No ", design_identifier, " design to go to" )
+	_self.assert_not_unset( .properties[ :child_design ], fail_str )
+
+	swg_dsn_admin_engine.activate_scheme( design )
+
+	fail_str << write_string( "Failed to go to ", design_identifier, " design" )
+	_self.assert_equals( design, swg_dsn_admin_engine.active_scheme, fail_str )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_deleting_design( design )
+	## 
+	##
+
+	swg_dsn_admin_engine.delete_scheme( design )
+	>> _self
+	
+_endmethod
+$
+
+
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.then_rwo_has_co_in_current_design( rwo_name, cu_name )
 	##
 	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
 	##
 
-	_local l_cu << _self.cu( cu_name )
-	_local l_rwo << _self.rwo( rwo_name )
+	found? << _self.rwo_associated_with_compatible_unit?( rwo_name, cu_name )
 
-	attached_cos <<  dw!cu_engine.compatible_unit_records_for_rwo( l_rwo,:active_scheme )
+	_self.assert_true( found?, write_string( rwo_name, " is not associated with CU ", cu_name ))
+
+	>> _self
+	
+_endmethod 	
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.then_rwo_does_not_have_co_in_current_design( rwo_name, cu_name )
+	##
+	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
+	##
+
+	found? << _self.rwo_associated_with_compatible_unit?( rwo_name, cu_name )
+
+	_self.assert_false( found?, write_string( rwo_name, " is associated with CU ", cu_name, " when it should not be" ))
+
+	>> _self
+	
+_endmethod 	
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method design_manager_test_case.rwo_associated_with_compatible_unit?( rwo_name, cu_name )
+	## 
+	##
+
+	cu  << _self.cu( cu_name )
+	rwo << _self.rwo( rwo_name )
+
+	attached_cos << dw!cu_engine.compatible_unit_records_for_rwo( rwo, :active_scheme )
 
 	found? << _false
-	_for a_co _over attached_cos.fast_elements()
+	_for co _over attached_cos.fast_elements()
 	_loop
-		_if a_co.code=cu_name
+		_if co.code = cu_name
 		_then
 			found? << _true
 			_leave
 		_endif
 	_endloop
 
-	_self.assert_true( found?, write_string( rwo_name, " is not associated with CU ", cu_name ) )
+	>> found?
 	
-_endmethod 	
+_endmethod
+$
 
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.note_change( who, what, data )
+	## 
+	## Conflict resolution method
+	##
+
+	_super( design_manager_system_test_mixin ).note_change( who, what, data )
 	
+_endmethod
+$
