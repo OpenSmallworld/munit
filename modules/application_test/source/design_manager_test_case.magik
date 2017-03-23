@@ -43,6 +43,10 @@ def_slotted_exemplar( :design_manager_test_case,
 $
 
 
+design_manager_test_case.method_table.resolve_conflicts( :test_case )
+$
+
+
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ## Coordinate used as starting point for Design area. The
 ## design extent will be centred on this coordinate.
@@ -878,7 +882,7 @@ _method design_manager_test_case.then_rwo_has_co_in_current_design( rwo_name, cu
 	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
 	##
 
-	found? << _self.rwo_associated_with_compatible_unit?( rwo_name, cu_name )
+	found? << _self.rwo_associated_with_cost_object?( rwo_name, cu_name, :active_scheme )
 
 	_self.assert_true( found?, write_string( rwo_name, " is not associated with CU ", cu_name ))
 
@@ -894,7 +898,38 @@ _method design_manager_test_case.then_rwo_does_not_have_co_in_current_design( rw
 	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
 	##
 
-	found? << _self.rwo_associated_with_compatible_unit?( rwo_name, cu_name )
+	found? << _self.rwo_associated_with_cost_object?( rwo_name, cu_name, :active_scheme  )
+
+	_self.assert_false( found?, write_string( rwo_name, " is associated with CU ", cu_name, " when it should not be" ))
+
+	>> _self
+	
+_endmethod 	
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.then_rwo_has_co_in_any_design( rwo_name, cu_name )
+	##
+	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
+	##
+
+	found? << _self.rwo_associated_with_cost_object?( rwo_name, cu_name, :all )
+
+	_self.assert_true( found?, write_string( rwo_name, " is not associated with CU ", cu_name ))
+
+	>> _self
+	
+_endmethod 	
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.then_rwo_does_not_have_co_in_any_design( rwo_name, cu_name )
+	##
+	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
+	##
+
+	found? << _self.rwo_associated_with_cost_object?( rwo_name, cu_name, :all )
 
 	_self.assert_false( found?, write_string( rwo_name, " is associated with CU ", cu_name, " when it should not be" ))
 
@@ -905,19 +940,28 @@ $
 
 
 _pragma(classify_level=debug,topic={MUnit, Test})
-_private _method design_manager_test_case.rwo_associated_with_compatible_unit?( rwo_name, cu_name )
-	## 
+_private _method design_manager_test_case.rwo_associated_with_cost_object?( rwo_name, co_name, _optional which_schemes )
+	## Returns TRUE if the named RWO is associated with the named CU
 	##
+	## RWO_NAME is used to look up the cached rwo to test
+	## CU_NAME is used to look up the cached CO
+	## WHICH_SCHEMES defines the scope of COs of interest:
+	## :active_scheme, :all. Default to :active_scheme
 
-	cu  << _self.cu( cu_name )
+	co  << _self.cu( co_name )
 	rwo << _self.rwo( rwo_name )
 
-	attached_cos << dw!cu_engine.compatible_unit_records_for_rwo( rwo, :active_scheme )
+	_if which_schemes _is :all
+	_then
+		attached_cos << design_cost_item.get_for_record_and_scheme(ws, _unset, :co )
+	_else 
+		attached_cos <<  design_cost_item.get_for_record_and_scheme(ws, swg_dsn_admin_engine.active_scheme, :co )
+	_endif 
 
 	found? << _false
 	_for co _over attached_cos.fast_elements()
 	_loop
-		_if co.code = cu_name
+		_if co.code = co_name
 		_then
 			found? << _true
 			_leave
@@ -925,18 +969,6 @@ _private _method design_manager_test_case.rwo_associated_with_compatible_unit?( 
 	_endloop
 
 	>> found?
-	
-_endmethod
-$
-
-
-_pragma(classify_level=debug,topic={MUnit, Test})
-_method design_manager_test_case.note_change( who, what, data )
-	## 
-	## Conflict resolution method
-	##
-
-	_super( design_manager_system_test_mixin ).note_change( who, what, data )
 	
 _endmethod
 $

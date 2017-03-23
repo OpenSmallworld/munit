@@ -236,12 +236,17 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 					   _proc()
 						   >> property_list.new_with( :result, _true )
 					   _endproc )
+	_local properties << _self.properties
+	stub_method_helper.replace_method( sw_job, :|run()|, _proc( _gather args )
+								     _import properties
+								     properties[ :last_job ] << _self
+								     >> _self.saved!run( _scatter args )
+					   _endproc )
 
 	_if (je << sw_job_engine.job_engine()) _is _unset 
 	_then
 		je << sw_job_engine.new()
 	_endif
-	je.add_dependent( _self )
 
 	job_queue_view << je.job_view
 
@@ -397,25 +402,6 @@ _private _method design_manager_system_test_mixin.activate_design( design )
 	##
 	
 	swg_dsn_admin_engine.activate_design( design )
-	
-_endmethod
-$
-
-
-_pragma(classify_level=debug,topic={MUnit, Test})
-_method design_manager_system_test_mixin.note_change( who, what, data )
-	## 
-	##
-
-	_if what _is :running_job
-	_then
-		_if data _isnt _unset
-		_then
-			_self.properties[ :last_job ] << data.outcome_description.write_string
-		_endif
-	_endif
-
-	_super.note_change( who, what, data )
 	
 _endmethod
 $
