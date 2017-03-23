@@ -43,6 +43,10 @@ def_slotted_exemplar( :design_manager_test_case,
 $
 
 
+design_manager_test_case.method_table.resolve_conflicts( :test_case )
+$
+
+
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ## Coordinate used as starting point for Design area. The
 ## design extent will be centred on this coordinate.
