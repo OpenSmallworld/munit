@@ -968,15 +968,3 @@ _private _method design_manager_test_case.rwo_associated_with_cost_object?( rwo_
 	
 _endmethod
 $
-
-
-_pragma(classify_level=debug,topic={MUnit, Test})
-_method design_manager_test_case.note_change( who, what, data )
-	## 
-	## Conflict resolution method
-	##
-
-	_super( design_manager_system_test_mixin ).note_change( who, what, data )
-	
-_endmethod
-$
