@@ -8,9 +8,30 @@ _pragma(classify_level=debug)
 ## All classes that inherits from this mixin must define a
 ## .properties method that returns a property_list.
 ##
+## Method get_or_create_project() may create a new project for
+## the design. The state model use will default to the first
+## one found unless it is explicitly specified.
+##
+## The state model to use can be specified in one of two ways:
+## - call given_a_state_model( name ) will cached the supplied
+## name in .properties[:state_model_name] OR
+## - redefine the constant default_job_type on the subclass
+##
+## If the state model name is not explicitly configured, then
+## the standard DM behaviour applies:
+## the project will pick up a state model from 
+## (swg_dsn_project.configuration[:state_model] and if this
+## gives no valid model, will just pick an_element() from the
+## state model table
 def_mixin( :design_manager_system_test_mixin, { :application_system_test_mixin } )
 $
 
+
+_pragma(classify_level=debug, usage=subclassable)
+## Defines the Job type for the project - used to look up the
+## state model. Can be subclassed.
+design_manager_system_test_mixin.define_shared_constant( :default_state_model_name, _unset, :public )
+$
 
 _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.given_no_active_design()
@@ -24,6 +45,16 @@ _method design_manager_system_test_mixin.given_no_active_design()
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.given_a_state_model( state_model_name )
+	##
+	## STATE_MODEL_NAME is the name of the state model you want to
+	## use for a new project.
+	## Sets .properties[:state_model_name]
+
+	_self.properties[:state_model_name] << state_model_name
+_endmethod
+$
 
 _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.given_a_design( project_name, design_name, _optional xmin, ymin, xmax, ymax )
@@ -49,12 +80,17 @@ _endmethod
 $
 
 
+
 _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.given_a_new_design( project_name, design_name, _optional xmin, ymin, xmax, ymax )
-	## 
+	##
+	## Create a new design with name DESIGN_NAME in the project
+	## with name PROJECT_NAME  which can be either new or an
+	## existing project.
 	## This method will fail if a design with DESIGN_NAME exists
 	## already.
 	##
+	## See method get_or_create_project() for argument description
 	
 	parent_design << swg_dsn_admin_engine.active_scheme
 
@@ -108,8 +144,129 @@ _method design_manager_system_test_mixin.when_changing_design_status( new_status
 
 	_if (design.status <> new_status)
 	_then 	
-		swg_dsn_admin_engine.find_and_perform_transition( design, design.status, new_status )
+		_self.when_transitioning_design_to_next_state( design, new_status )
 	_endif
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={Munit})
+_method design_manager_system_test_mixin.when_transitioning_active_design_to_future_state( transitions, future_state,
+											   _optional current_application )
+	## 
+	## Transition the current design from the current state to
+	## a future state.  TRANSITIONS is an equality hash table keyed
+	## on current state and the value being the state to transition
+	## to.
+	##
+	## Once a state is reached that does not have an entry in
+	## TRANSITIONS, this is the final future state.
+	##
+	## FUTURE_STATE is the goal state.  Check that this state is
+	## reached. 
+	##
+	## A transition that runs QM requires the dynamic
+	## !current_application! to be set.  In this case the optional
+	## CURRENT_APPLICATION argument should be provided.
+	##
+	## The last step is to open the current design again, since
+	## performing the transitions might have resulted in DM Top
+	## being the current alternative.
+	##
+
+	# Always post only to the direct parent design
+	stub_method_helper.replace_method( swg_dsn_vmds_integrator, :|number_of_steps_to_post_active_scheme_to_design_top()|,
+					   _proc() >> 1 _endproc )
+
+	scheme << swg_dsn_admin_engine.active_scheme
+
+	visited_states << equality_set.new()
+
+	_loop
+
+		# If the status didn't change from the previous iteration,
+		# something went wrong.  Leave now to prevent an endless loop
+		_if scheme.status = status _then _leave _endif
+		
+		status << scheme.status.copy()
+		visited_states.add( status )
+
+		# No more transitions specified, hopefully reached goal state
+		_if ( next_state << transitions[ status ] ) _is _unset _then _leave _endif
+		
+		_if visited_states.includes?( next_state ) _then _continue _endif
+			
+		_self.when_transitioning_design_to_next_state( scheme, next_state, current_application )
+		
+	_endloop
+
+	fail_str << write_string( "The transition to ", future_state, " failed.  The design's current status is ",
+				  scheme.status, ".  The job that failed had the following description: ", newline_char )
+	_if _self.properties[ :last_job ] _isnt _unset
+	_then
+		fail_str << write_string( fail_str, _self.properties[ :last_job ] )
+	_endif
+	_self.assert_equals( future_state, scheme.status, fail_str )
+
+	swg_dsn_admin_engine.activate_scheme( scheme )
+			
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={Munit})
+_method design_manager_system_test_mixin.when_transitioning_design_to_next_state( scheme, next_state, _optional current_application )
+	## 
+	## Transition SCHEME to NEXT_STATE.  NEXT_STATE must be a
+	## potential subsequent state of the current state of SCHEME.
+	##
+	## A transition that runs QM requires the dynamic
+	## !current_application! to be set.  In this case the optional
+	## CURRENT_APPLICATION argument should be provided.
+	##
+
+	_dynamic !current_application! << current_application
+
+	stub_method_helper.replace_method( swg_dsn_admin_engine, :|merge_to_build_plans()|,
+					   _proc()
+						   >> property_list.new_with( :result, _true )
+					   _endproc )
+	_local properties << _self.properties
+	stub_method_helper.replace_method( sw_job, :|run()|, _proc( _gather args )
+								     _import properties
+								     properties[ :last_job ] << _self
+								     >> _self.saved!run( _scatter args )
+					   _endproc )
+
+	_if (je << sw_job_engine.job_engine()) _is _unset 
+	_then
+		je << sw_job_engine.new()
+	_endif
+
+	job_queue_view << je.job_view
+
+	_protect
+		_self.prepare_job_queue_view_for_transition_jobs( job_queue_view )
+		
+		state_model << scheme.state_model
+		state_model.find_and_perform_transition( scheme, scheme.status, next_state )
+		
+		_loop 
+			jobs << je.find_and_run_next_jobs()
+			_if scheme.status = next_state _then _leave _endif
+			_if jobs.empty? _then _leave _endif
+		_endloop
+	_protection
+		job_queue_view.commit()
+		job_queue_view.goto_top_alternative()
+	_endprotect
+
+	je.remove_dependent( _self )
 
 	>> _self
 	
@@ -161,7 +318,8 @@ $
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method design_manager_system_test_mixin.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
 	## 
-	##
+	## Create a new project record with PROJECT_NAME and bounds
+	## given by XMON,YMON,XMAX,YMAX.
 	
 	project << swg_dsn_admin_engine.find_project_or_scheme( project_name, :project, _false )
 	_if project _is _unset 
@@ -174,8 +332,8 @@ _private _method design_manager_system_test_mixin.get_or_create_project( project
 			manager << _self.properties[ :application ].get_service_provider( :map_manager )
 			bounds  << manager.current_map_view.current_view_bounds
 		_endif
-		
-		project  << swg_dsn_admin_engine.create_project( project_name, _self.ds_view_names, bounds.as_sector_rope())
+		job_attributes << property_list.new_with(:job_type, _self.properties[:state_model_name].default( _self.default_state_model_name ) )
+		project  << swg_dsn_admin_engine.create_project( project_name, _self.ds_view_names, bounds.as_sector_rope(), job_attributes )
 		
 	_endif
 
@@ -238,15 +396,36 @@ _endmethod
 $
 
 
-
-
-
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method design_manager_system_test_mixin.activate_design( design )
 	## 
 	##
 	
 	swg_dsn_admin_engine.activate_design( design )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method design_manager_system_test_mixin.prepare_job_queue_view_for_transition_jobs( job_queue_view )
+	## 
+	##
+	
+	alternative_name << system.host_name
+
+	_if _not job_queue_view.alternative_path.empty?
+	_then
+		job_queue_view.goto_top_alternative()
+	_endif
+	
+	_if _not job_queue_view.has_alternative?( alternative_name )
+	_then
+		job_queue_view.spawn( alternative_name )
+	_endif
+	
+	job_queue_view.go_to_alternative( alternative_name )
+	job_queue_view.switch( :write )
 	
 _endmethod
 $

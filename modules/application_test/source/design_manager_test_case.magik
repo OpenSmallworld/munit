@@ -17,6 +17,21 @@ _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ## Subclasses can also redefine the writable_design_name - this
 ## is the name of the state to which the design should be
 ## transitioned in order to make it writable.
+##
+## If the test will make use of cost objects, you can choose to
+## load a CO dump file. There are two constants to control the
+## behaviour: 
+## - if there are COs to load, then place the file in the
+## resources\base\data folder of the tests module and configure
+## the constant :cu_config_file_to_load with the file name
+## - you can choose to load the CO direct into the top
+## alternative or into a special test named alternative of the
+## design_config view. The view is committed after loading. If
+## the constant :co_load_test_alternative_name returns a
+## string, then an alternative with this name is created and
+## used. If this constant is unset then the top alternative is
+## used. 
+## 
 def_slotted_exemplar( :design_manager_test_case,
 	{
 		{:bounds, _unset},
@@ -25,6 +40,10 @@ def_slotted_exemplar( :design_manager_test_case,
 		{:properties, _unset}
 	},
 	{ :test_case, :design_manager_system_test_mixin })
+$
+
+
+design_manager_test_case.method_table.resolve_conflicts( :test_case )
 $
 
 
@@ -51,6 +70,22 @@ _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ## The status to transition the design to to ensure that it is writable
 ## This implementation defaults to the ups_demo_db state model
 design_manager_test_case.define_shared_constant( :writable_design_status, "Design Layout", :public )
+$
+
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+## The name of a CO dump file which should defines any COs
+## required for this test. The file should be located in the
+## resources\base of the tests module
+design_manager_test_case.define_shared_constant( :cu_config_file_to_load,_unset,:public)
+$
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+## Identifies the name of an alternative in the design_config
+## partition into which any test specific COs will be loaded.
+## If unset then defaults to top.
+design_manager_test_case.define_shared_constant( :co_load_test_alternative_name,_unset,	:public)
 $
 
 
@@ -209,6 +244,28 @@ _method design_manager_test_case.one_time_tear_down()
 
 	swg_dsn_admin_engine.activate_design( _unset )
 	_super.one_time_tear_down()
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.tear_down()
+	## 
+	##
+	
+	_if ( child_design << .properties[ :child_design ]) _isnt _unset _andif
+	    child_design.is_valid?
+	_then
+		_if swg_dsn_admin_engine.active_scheme = child_design
+		_then
+			swg_dsn_admin_engine.activate_scheme( _unset )
+		_endif
+		swg_dsn_admin_engine.delete_scheme( child_design )
+		.properties[ :child_design ] << _unset 
+	_endif
+
+	_super.tear_down()
 	
 _endmethod
 $
@@ -544,6 +601,109 @@ _private _method design_manager_test_case.check_writable_access( design )
 _endmethod
 $
 
+
+
+_pragma(classify_level=restricted)
+_private _method design_manager_test_case.setup_design_config_view()
+	##
+	## Some tests may not need any specific data and can run in
+	## top. Other tests may want to load specific data in top and
+	## the final case would be tests that want to load specific
+	## data into a named alternative in the design config view.
+	##
+	## If the test class has the constant
+	## _self.co_load_test_alternative_name defined, then an
+	## alternative with this name will be used, else top.
+
+	_local ds_config_view << cost_object_library.design_config_view
+        
+	ds_config_view.goto_top_alternative()
+
+	_if _self.co_load_test_alternative_name _isnt _unset
+	_then 
+		
+		_if _not ds_config_view.has_alternative?(_self.co_load_test_alternative_name)
+		_then 
+			ds_config_view.create_alternative(_self.co_load_test_alternative_name)
+		_endif
+
+		write("Using design config alternative for  COs: ", _self.co_load_test_alternative_name )
+		ds_config_view.go_to_alternative(_self.co_load_test_alternative_name)
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method design_manager_test_case.load_required_cos()
+	##
+	## If the test has specific COS defined by a CO dump file in
+	## the modules resources\data folder and specified by
+	## self.co_dump_file_name, then the file will be imported.
+	## The COs will be imported into the design config view - see
+	## setup_design_config_view() for details of alternatives
+
+	_if _self.cu_config_file_to_load _isnt _unset _andif
+	    _self.module_name _isnt _unset
+	_then
+		_self.setup_design_config_view()
+		ds_config_view << cost_object_library.design_config_view		
+		module << sw_module_manager.module( _self.module_name )
+		_try
+			co_file << module.get_resource_file(_self.cu_config_file_to_load,"data" )
+			ds_config_view.switch(:write)
+			_self.load_co_dump()
+			ds_config_view.commit()
+
+			# refresh the CO cache
+			_self.refresh_cost_object_library()
+			
+		_when resource_not_found_in_module_error
+			write("Failed to find named CO dump file ", _self.cu_config_file_to_load  )
+		_endtry
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method design_manager_test_case.refresh_cost_object_library()
+	##
+	## Reset CO caches after change to the config view.
+	##
+         cost_object_library.reset_interested_collections()
+         cost_object_library.reset_co_writable_and_logical_fields()
+         cost_object_library.reset_cos_for_rwo()
+         cost_object_library.reset_cached_cos()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method  design_manager_test_case.load_co_dump()
+        ## 
+        ## Load Cos from resource file
+        ##
+        
+        _local co_dump_path << smallworld_product.get_resource_file(_self.cu_config_file_to_load, "data", _self.module_name)
+        
+        _local (filename, directory)<< system.pathname_components(co_dump_path)
+        _local co_load_errors << system.pathname_from_components("CO_CONFIG_LOAD_ERRORS.txt", directory)
+        
+        stub_method_helper.replace_method(dw!cu_config_loader_engine, :|error_log_file_name|,
+                                          _proc()
+                                                  _import co_load_errors
+                                                  _return co_load_errors
+                                          _endproc )
+
+	write("Loading COs from: ", co_dump_path )
+	
+        dw!cu_config_loader_engine.do(co_dump_path)
+        system.unlink(co_load_errors,_true, _true)
+        
+_endmethod
+$
+
+
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.given_compatible_unit_definition_with_code( cu_code )
 	##
@@ -551,6 +711,14 @@ _method design_manager_test_case.given_compatible_unit_definition_with_code( cu_
 	## using key cu_code as a symbol. Can be retrieved by 
 
 	cu_def <<  cost_object_library.get_for_code(cu_code,:compatible_unit)
+
+	_if cu_def _is _unset
+	_then
+		_self.load_required_cos()
+	_endif
+	
+	cu_def <<  cost_object_library.get_for_code(cu_code,:compatible_unit)
+	
 	_self.assert_not_unset( cu_def , "CU not found: ", cu_code)
 
 	.properties[cu_code.as_symbol()] << cu_def
@@ -559,11 +727,6 @@ _method design_manager_test_case.given_compatible_unit_definition_with_code( cu_
 _endmethod
 $
 
-_pragma(classify_level=debug,topic={MUnit, Test})
-_method design_manager_test_case.and
-	_return _self
-_endmethod
-$
 
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.rwo(p_rwo_name)
@@ -571,7 +734,7 @@ _method design_manager_test_case.rwo(p_rwo_name)
 	## Returns the record that is cached with name RWO_NAME
 
 	_local l_rwo << .properties[p_rwo_name]
-	_self.assert_not_unset( l_rwo, write_string("Cannot find RWO: ", rwo_name) )
+	_self.assert_not_unset( l_rwo, write_string("Cannot find RWO: ", p_rwo_name) )
 
 	>> l_rwo
 _endmethod
@@ -608,19 +771,110 @@ _method design_manager_test_case.when_cu_is_added_to_design( library_co_name, _o
 	##
 	## Returns: self, arguments returned from cost_object_library.add_to_design()
 
+	_dynamic !current_application!
+
+	_if !current_application! _is _unset
+	_then
+		!current_application! << _self.properties[:application]
+	_endif 
+	
 	_local library_cu << _self.cu( library_co_name.as_symbol() )
 	_local l_rwo << _self.rwo( rwo_name )
 
 	co_rec << co_rec << dw!compatible_unit_record.new( library_cu.code, 1,
-							   :work_record_name, "CO Assign WP") 
+							   :work_record_name, "Munit WP") 
 	
 	(new_co,rwos) << cost_object_library.add_to_design( co_rec, l_rwo, _unset,
-							    _unset, #compatible_unit.design_string,
+							    _unset, 
 					     operation.default(:install))
-	_return _self #, design_co, rwos
+	_return _self 
 	
 _endmethod
 $
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_creating_child_design( child_design_name )
+	##
+	## Store the current design in .properties[ :parent_design ]
+	## Commit all the changes in the current design
+	## Delete the sub design if it exists
+	## Create a new sub design
+	## Activate the new design
+	##
+
+	_self.properties[ :parent_design ] << swg_dsn_admin_engine.active_scheme
+
+	swg_dsn_admin_engine.save_design_changes()
+
+	design_name  << write_string( child_design_name, "-", system.host_name )
+	_if ( child_design << _self.get_existing_test_design( _self.project_name, design_name )) _isnt _unset
+	_then
+		swg_dsn_admin_engine.delete_scheme( child_design )
+	_endif
+	
+	_self.given_a_design( _self.project_name, design_name )
+
+	.properties[ :child_design ] << swg_dsn_admin_engine.active_scheme
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_going_to_parent_design()
+	## 
+	##
+
+	>> _self.when_going_to_design( .properties[ :parent_design ], "child" )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_going_to_child_design()
+	## 
+	##
+
+	>> _self.when_going_to_design( .properties[ :child_design ], "child" )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_going_to_design( design, design_identifier )
+	## 
+	## 
+
+	fail_str << write_string( "No ", design_identifier, " design to go to" )
+	_self.assert_not_unset( .properties[ :child_design ], fail_str )
+
+	swg_dsn_admin_engine.activate_scheme( design )
+
+	fail_str << write_string( "Failed to go to ", design_identifier, " design" )
+	_self.assert_equals( design, swg_dsn_admin_engine.active_scheme, fail_str )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method design_manager_test_case.when_deleting_design( design )
+	## 
+	##
+
+	swg_dsn_admin_engine.delete_scheme( design )
+	>> _self
+	
+_endmethod
+$
+
 
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.then_rwo_has_co_in_current_design( rwo_name, cu_name )
@@ -628,23 +882,93 @@ _method design_manager_test_case.then_rwo_has_co_in_current_design( rwo_name, cu
 	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
 	##
 
-	_local l_cu << _self.cu( cu_name )
-	_local l_rwo << _self.rwo( rwo_name )
+	found? << _self.rwo_associated_with_cost_object?( rwo_name, cu_name, :active_scheme )
 
-	attached_cos <<  dw!cu_engine.compatible_unit_records_for_rwo( l_rwo,:active_scheme )
+	_self.assert_true( found?, write_string( rwo_name, " is not associated with CU ", cu_name ))
+
+	>> _self
+	
+_endmethod 	
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.then_rwo_does_not_have_co_in_current_design( rwo_name, cu_name )
+	##
+	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
+	##
+
+	found? << _self.rwo_associated_with_cost_object?( rwo_name, cu_name, :active_scheme  )
+
+	_self.assert_false( found?, write_string( rwo_name, " is associated with CU ", cu_name, " when it should not be" ))
+
+	>> _self
+	
+_endmethod 	
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.then_rwo_has_co_in_any_design( rwo_name, cu_name )
+	##
+	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
+	##
+
+	found? << _self.rwo_associated_with_cost_object?( rwo_name, cu_name, :all )
+
+	_self.assert_true( found?, write_string( rwo_name, " is not associated with CU ", cu_name ))
+
+	>> _self
+	
+_endmethod 	
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.then_rwo_does_not_have_co_in_any_design( rwo_name, cu_name )
+	##
+	## Asserts that the rwo with RWO_NAME has an assoicated CU CU_NAME
+	##
+
+	found? << _self.rwo_associated_with_cost_object?( rwo_name, cu_name, :all )
+
+	_self.assert_false( found?, write_string( rwo_name, " is associated with CU ", cu_name, " when it should not be" ))
+
+	>> _self
+	
+_endmethod 	
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method design_manager_test_case.rwo_associated_with_cost_object?( rwo_name, co_name, _optional which_schemes )
+	## Returns TRUE if the named RWO is associated with the named CU
+	##
+	## RWO_NAME is used to look up the cached rwo to test
+	## CU_NAME is used to look up the cached CO
+	## WHICH_SCHEMES defines the scope of COs of interest:
+	## :active_scheme, :all. Default to :active_scheme
+
+	co  << _self.cu( co_name )
+	rwo << _self.rwo( rwo_name )
+
+	_if which_schemes _is :all
+	_then
+		attached_cos << design_cost_item.get_for_record_and_scheme(rwo, _unset, :co )
+	_else 
+		attached_cos <<  design_cost_item.get_for_record_and_scheme(rwo, swg_dsn_admin_engine.active_scheme, :co )
+	_endif 
 
 	found? << _false
-	_for a_co _over attached_cos.fast_elements()
+	_for co _over attached_cos.fast_elements()
 	_loop
-		_if a_co.code=cu_name
+		_if co.code = co_name
 		_then
 			found? << _true
 			_leave
 		_endif
 	_endloop
 
-	_self.assert_true( found?, write_string( rwo_name, " is not associated with CU ", cu_name ) )
+	>> found?
 	
-_endmethod 	
-
-	
+_endmethod
+$
