@@ -42,13 +42,23 @@ _private _method test_failure.init_traceback_text()
 	## Init slot .traceback_text.
 
 	_global !ts!
-	
-	a_stream << internal_text_output_stream.new()
-	_thisthread.traceback( a_stream , _true , _unset , _false   )
-	.traceback << !ts!
-	a_traceback_text << a_stream.string
-	a_traceback_text << a_traceback_text.slice( a_traceback_text.index_of(%-) , a_traceback_text.size )
-	.traceback_text << a_traceback_text
+
+	_try _with error_variable
+		a_stream << internal_text_output_stream.new()
+		_thisthread.traceback( a_stream , _true , _unset , _false   )
+		.traceback << !ts!
+		a_traceback_text << a_stream.string
+		a_traceback_text << a_traceback_text.slice( a_traceback_text.index_of(%-) , a_traceback_text.size )
+		.traceback_text << a_traceback_text
+	_when error
+		_if .traceback_text _is _unset
+		_then
+			.traceback_text << write_string( "Error getting traceback text ",
+							 " running on the ", _thisthread.name, " thread", newline_char,
+							 error_variable.report_contents_string,
+							 a_stream.string )
+		_endif
+	_endtry 
 
 _endmethod
 $
