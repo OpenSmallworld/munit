@@ -29,15 +29,11 @@ _pragma(classify_level=debug)
 ##
 def_slotted_exemplar( :database_test,
         {
-		{ :properties,   _unset },
-		{ :datasets,     _unset }
+		{ :properties,   _unset }
 	},
         { :test_case, :database_system_test_mixin } )
 $
 
-database_test.define_shared_constant(:test_aspects,
-	property_list.new_with(:never, "never"), :public )
-$
 
 _pragma(classify_level=debug)
 database_test.define_shared_variable(:database_path,
@@ -73,7 +69,6 @@ _pragma(classify_level=debug)
 database_test.define_shared_variable( :force_close?, _true, :private )
 $
 
-
 database_test.method_table.resolve_conflicts( :test_case )
 $
 
@@ -96,7 +91,144 @@ _method database_test.writable_dataset_names
 	##
         >> {}
 _endmethod 
-$        
+$
+_pragma(classify_level=debug, usage={subclassable})
+## nslots when opening world for dataset clone
+database_test.define_shared_variable(:clone_nslots, 1000, :public )
+$
+_pragma(classify_level=debug, usage={subclassable})
+_method database_test.dataset_clones
+	## Number of database clones on which test will run
+	## concurrently alongside when running on main dataset.
+	## See also run_with_clones() API.
+	>> 0
+_endmethod
+$
+database_test.define_shared_variable(:clones, property_list.new(), :private)
+$
+
+_pragma(classify_level=debug, usage={subclassable})
+_private _method database_test.dataset_clones?
+	## 
+	## 
+	>> _self.dataset_clones > 0 _andif 
+		_not _self.writable_dataset_names.empty? _andif
+		_self.database_opened?
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=unit_testing)
+_private _method database_test.make_dataset_clones()
+	## 
+	##
+	_dynamic !output!,!error!,!terminal!
+	_if _not _self.dataset_clones?	_then _return _endif
+
+	worlds<< simple_vector.new(_self.dataset_clones)
+	_for i _over 1.upto(_self.dataset_clones)
+	_loop
+		worlds[i]<< ds_world.new(_self.clone_nslots)
+	_endloop
+	# Create a scratchpad for each dataset to hold any changes
+	_for ds_name _over _self.writable_dataset_names.fast_elements()
+	_loop
+		write("Clonning ",_self.dataset_clones," times database: ",ds_name)
+		_block
+			# Suppress witterage when creating clone
+			_handling information _with procedure 
+			_handling warning _with procedure
+			!error!<< !terminal!<< !output!<< internal_text_output_stream.new()
+			
+			_if (v << gis_program_manager.databases[ds_name]) _is _unset _then _continue _endif
+			_self.clones[ds_name]<< simple_vector.new(_self.dataset_clones)
+			v<< _self.dataset(ds_name)
+			_for i, a_world _over worlds.fast_keys_and_elements()
+			_loop
+				_self.clones[ds_name][i]<< clone<< gis_ds_view.new(:write, :searchpath, v.searchpath)
+				_for f _over v.files.fast_elements()
+				_loop
+					clone.add_file(f.name, :world, a_world )
+				_endloop
+				clone.init_view()
+				clone.goto_top_alternative()
+			_endloop
+		_endblock
+	_endloop 
+_endmethod
+$
+_pragma(classify_level=restricted,topic=unit_testing)
+_private _method database_test.given_writable_dataset_clones()
+	## 
+	## 
+	_if _not _self.dataset_clones?	_then _return _endif
+	# Create a scratchpad for each dataset clone to hold any changes
+	_for ds_name _over _self.writable_dataset_names.fast_elements()
+	_loop
+		_for i,clone _over _self.clones[ds_name].fast_keys_and_elements()
+		_loop
+			clone.goto_top_alternative()
+			clone.create_scratchpad( write_string("memory::ds",i) )
+		_endloop
+	_endloop	
+_endmethod
+$
+_pragma(classify_level=restricted,topic=unit_testing)
+_private _method database_test.close_dataset_clones()
+	## 
+	## 
+	_if _not _self.dataset_clones?	_then _return _endif
+	# Create a scratchpad for each dataset clone to hold any changes
+	_for ds_name _over _self.writable_dataset_names.fast_elements()
+	_loop
+		_for clone _over _self.clones[ds_name].fast_elements()
+		_loop
+			clone.rollback()
+			clone.up()
+		_endloop
+	_endloop		
+_endmethod
+$
+_pragma(classify_level=restricted,topic=unit_testing)
+_method database_test.run_with_clones(ds_name, meth_name, _gather parameters)
+	## Runs method METH_NAME for DS_NAME and all its clones in parallel
+	## The method METH_NAME is expected to have parameters view and PARAMETERS.
+	## Method is run in parallel on the view DS_VIEW and its clones.
+	_local aq<< atomic_queue.new(_self.dataset_clones + 1)
+	_local a_test<< _self 
+	_local run_for_dataset<< _proc @run_for_dataset(view, meth_name, _gather parameters)
+					 _import aq, a_test
+					 _protect
+						 a_test.perform(meth_name, view, _scatter parameters)
+					 _protection
+						 aq.put(1)
+					 _endprotect
+				 _endproc
+	
+	_local started<< 0
+	_protect
+		started+<< 1
+		run_for_dataset.fork(_self.dataset(ds_name), meth_name, _scatter parameters)
+		_for clone _over _self.clones[ds_name].fast_elements()
+		_loop
+			started+<< 1
+			run_for_dataset.fork(clone, meth_name, _scatter parameters)
+		_endloop
+	_protection
+		write("Waiting for ",started," tests ",meth_name," to finish.") 
+		id << 0
+		_if started > 0
+		_then 
+			_loop
+				# waiting 30 - 60 sec max
+				_if aq.get(60 * 1000 * (started - id/2) / started) _is _unset _then _leave _endif 
+				id+<< 1
+				_if id >= started _then _leave _endif 
+			_endloop
+		_endif
+	_endprotect	
+_endmethod
+$
+
 
 _pragma(classify_level=debug, usage={subclassable})
 _method database_test.other_dataset_names
@@ -118,6 +250,45 @@ _method database_test.one_time_set_up()
 	##
         _super.one_time_set_up()
         _self.check_correct_database_open()
+	_self.make_dataset_clones()
+_endmethod
+$
+_pragma(classify_level=debug)
+_private _method database_test.discard_clones()
+	## 
+	## 
+	_if _not _self.dataset_clones? _orif _self.clones.empty? _then _return _endif 
+	worlds<< set.new()
+	_for clone _over _self.clones.an_element().fast_elements()
+	_loop
+		worlds.add(clone.files.an_element().world)
+	_endloop
+	_for clones _over _self.clones.fast_elements()
+	_loop
+		_for clone _over clones.fast_elements()
+		_loop
+			clone.discard()
+		_endloop
+	_endloop
+	_for a_world _over worlds.fast_elements()
+	_loop
+		a_world.close()
+	_endloop
+	_self.clones.empty()
+_endmethod
+$
+_pragma(classify_level=debug)
+_private _method database_test.clones_dataset_options()
+	## increase some ds_environment options when using clones
+	## 
+	_if _self.dataset_clones > 0
+	_then
+		dbs<< _self.dataset_clones + 1
+		options<< property_list.new_with(_scatter smallworld_product.startup_options[:ds_environment_options])
+		options[:npcls]<< max(8192 * dbs, options[:npcls].default(ds_environment.npcls))
+		options[:ndsfs]<< max(2048 * dbs, options[:ndsfs].default(ds_environment.ndsfs))
+		smallworld_product.set_startup_option(:ds_environment_options, options.for_scatter())
+	_endif 	
 _endmethod
 $
 
@@ -133,6 +304,7 @@ _method database_test.one_time_tear_down()
 	_if _self.database_opened? _orif
 	    _self.force_close?
 	_then 
+		_self.discard_clones()
 		gis_program_manager.reinitialise()
 	_endif
 _endmethod
@@ -150,6 +322,7 @@ _method database_test.set_up()
         _super.set_up()
 	.properties << property_list.new()
 	_self.given_writable_datasets( _self.writable_dataset_names )
+	_self.given_writable_dataset_clones()
 _endmethod
 $
 
@@ -179,7 +352,7 @@ _private _method database_test.check_correct_database_open()
                 ds_environment.concurrency_mode << _self.concurrency_mode
                 smallworld_product.set_startup_option(:authorisation, :singleuser)
                 smallworld_product.set_startup_option(:login, "root")
-
+		_self.clones_dataset_options()
                 gis_program_manager.reinitialise()
 
                 #
@@ -190,7 +363,6 @@ _private _method database_test.check_correct_database_open()
                 open_database({_self.database_path})
 		_self.database_opened? << _true
         _endif
-
         _self.open_other_datasets()
 _endmethod
 $
@@ -204,7 +376,7 @@ _method database_test.tear_down()
 
 	_super( test_case ).tear_down()
 	_self.close_datasets()
-	
+	_self.close_dataset_clones()
 _endmethod
 $
 
