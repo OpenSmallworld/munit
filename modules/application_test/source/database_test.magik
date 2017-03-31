@@ -193,6 +193,12 @@ _method database_test.run_with_clones(ds_name, meth_name, _gather parameters)
 	## Runs method METH_NAME for DS_NAME and all its clones in parallel
 	## The method METH_NAME is expected to have parameters view and PARAMETERS.
 	## Method is run in parallel on the view DS_VIEW and its clones.
+	_if _self.dataset_clones < 1 _orif
+	    (clones<< _self.clones[ds_name]) _is _unset
+	_then
+		_return _self.perform(meth_name, _self.dataset(ds_name), _scatter parameters)
+	_endif
+
 	_local aq<< atomic_queue.new(_self.dataset_clones + 1)
 	_local a_test<< _self 
 	_local run_for_dataset<< _proc @run_for_dataset(view, meth_name, _gather parameters)
@@ -208,7 +214,7 @@ _method database_test.run_with_clones(ds_name, meth_name, _gather parameters)
 	_protect
 		started+<< 1
 		run_for_dataset.fork(_self.dataset(ds_name), meth_name, _scatter parameters)
-		_for clone _over _self.clones[ds_name].fast_elements()
+		_for clone _over clones.fast_elements()
 		_loop
 			started+<< 1
 			run_for_dataset.fork(clone, meth_name, _scatter parameters)
