@@ -2,49 +2,15 @@
 _package sw
 $
 
-def_slotted_exemplar( :remote_test_runner,
+def_slotted_exemplar(:remote_test_runner,
 	{
-		{ :connection, _unset }
 	},
-	{ :xml_test_runner } )
+	{:xml_test_runner})
 $
 
 
-#_pragma(classify_level=debug)
-#_method remote_test_runner.run_remote( address, port )
-#	## 
-#	##
-#
-#	start << date_time_now()
-#	count << 0
-#
-#	_loop
-#		
-#		( module_name, test_name ) << _self.get_new_test( address, port )
-#		
-#		_if module_name _is :done _then _leave _endif
-#		_if module_name _is :no_response _then _continue _endif 
-#
-#		count +<< 1
-#
-#		_if _not sw_module_manager.module( module_name ).loaded?
-#		_then 
-#			sw_module_manager.load_module( module_name )
-#		_endif
-#		show( "Run: ", module_name, test_name )
-#		_self.run_in_foreground( !current_package![ test_name ].suite() )
-#		
-#	_endloop
-#
-#	show( "Ran ", count, " tests in ", date_time_now() - start )
-#	_self.close_connection()
-#	
-#_endmethod
-#$
-
-
 _pragma(classify_level=debug)
-_method remote_test_runner.run_remote( address, port )
+_method remote_test_runner.run_remote(address, port)
 	## 
 	##
 
@@ -54,25 +20,25 @@ _method remote_test_runner.run_remote( address, port )
 
 	_loop
 		
-		( module_name, test_name ) << _self.get_new_test( address, port )
+		(module_name, test_name) << _self.get_new_test(address, port)
 
 		_if module_name _is :done _then _leave _endif
 		_if module_name _is :no_response _then _continue _endif
 
 		count +<< 1
 
-		_if _not sw_module_manager.module( module_name ).loaded?
+		_if _not sw_module_manager.module(module_name).loaded?
 		_then 
-			sw_module_manager.load_module( module_name )
+			sw_module_manager.load_module(module_name)
 		_endif
 		
-		show( "Run: ", module_name, test_name )
+		show("Run: ", module_name, test_name)
 		
-		test << !current_package![ test_name ]
-		a_stream << _self.new_stream( test )
+		test << !current_package![test_name]
+		a_stream << _self.new_stream(test)
 		_protect
-			new_runner << _self.new( a_stream, _scatter _self.properties.for_scatter() )
-			new_runner.int!run( test )
+			new_runner << _self.new(a_stream, _scatter _self.properties.for_scatter())
+			new_runner.int!run(test)
 			a_stream.flush()
 		_protection
 			a_stream.close()
@@ -85,8 +51,7 @@ _method remote_test_runner.run_remote( address, port )
 				
 	_endloop
 
-	show( "Ran ", count, " tests in ", date_time_now() - start )
-	_self.close_connection()
+	show("Ran ", count, " tests in ", date_time_now() - start)
 	
 	>> tests_ok?
 	
@@ -95,91 +60,78 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_runner.connect( address, port )
+_private _method remote_test_runner.connect(address, port)
 	## 
 	##
 
-	connected? << _true 
-	_if .connection _is _unset
-	_then
-		connected? << _false
-		count << 0
-		_loop 
-			_try 
-				.connection << tcpip_connection.new( address, port )
-				connected? << _true
-				retry? << _false
-			_when sw_net_connection_failed
-				retry? << _true _andif count < 100
-			_endtry
-			_if retry? _isnt _true _then _leave _endif
-			_thisthread.sleep( 100 )
-			show( "Trying to connect... ", count )
-			count +<< 1
-		_endloop 
-	_endif
+	count << 0
+	_loop 
+		_try 
+			connection << tcpip_connection.new(address, port)
+			retry? << _false
+		_when sw_net_connection_failed
+			connection << _unset
+			retry? << _true _andif count < 100
+		_endtry
+		_if retry? _isnt _true _then _leave _endif
+		_thisthread.sleep(100)
+		show("Trying to connect... ", count)
+		count +<< 1
+	_endloop 
 
-	>> connected?
+	>> connection
 	
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
-_private _method remote_test_runner.get_new_test( address, port )
+_private _method remote_test_runner.get_new_test(address, port)
 	## 
 	##
 
 	_protect
 		
-		connected? << _self.connect( address, port )
+		connection  << _self.connect(address, port)
 		module_name << :done
 
-		_if connected?
+		_if connection _isnt _unset
 		_then 
-
-			# Ask for a test to run
-			message << "test_to_run"
-			
-			.connection.output.put_signed_int( message.size )
-			.connection.output.put_ascii_chars( message )
-			.connection.output.flush()
 			
 			# Get the module name
-			nchars << .connection.input.get_signed_int()
+			nchars << connection.input.get_signed_int()
 			_if nchars _isnt _unset
 			_then
-				module_name << .connection.input.get_ascii_chars( nchars ).as_symbol()
+				module_name << connection.input.get_ascii_chars(nchars).as_symbol()
 				
 				# Get the test name
 				_if module_name _isnt :done
 				_then 
-					nchars    << .connection.input.get_signed_int()
-					test_name << .connection.input.get_ascii_chars( nchars ).as_symbol()
+					nchars    << connection.input.get_signed_int()
+					test_name << connection.input.get_ascii_chars(nchars).as_symbol()
 				_endif
 			_endif
 			
 		_endif
 			
 	_protection
-		_self.close_connection()
+		_self.close_connection(connection)
 	_endprotect
 
-	>> ( module_name, test_name )
+	>> (module_name, test_name)
 	
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
-_private _method remote_test_runner.close_connection()
+_private _method remote_test_runner.close_connection(connection)
 	## 
 	##
 
-	_if .connection _isnt _unset
+	_if connection _isnt _unset
 	_then 
-		.connection.close()
-		.connection << _unset
+		connection.close()
 	_endif
 	
 _endmethod
