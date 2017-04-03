@@ -327,6 +327,8 @@ _method application_system_test_mixin.when_clicking_item_with_label( tag, label,
 	_if click_item _isnt _unset
 	_then
 		_self.click_item( click_item, new_frame_wait_time )
+	_else
+		condition.raise(:error, :string, write_string("Failed to find component with label ", label))
 	_endif
 
 	>> _self
