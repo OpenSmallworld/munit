@@ -124,6 +124,7 @@ _method test_suite.run(_optional a_test_result)
 			_leave
 		_else 
 			_self.run_test( a_test , a_test_result )
+			a_test_result.notify_listeners(:after_each_test_run, a_test)
 		_endif 
 	_endloop
 
