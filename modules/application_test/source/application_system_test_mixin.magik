@@ -287,7 +287,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_pulldown_menu_item( identifier,
+_method application_system_test_mixin.when_clicking_pulldown_menu_item_with_identifier( identifier,
 									_optional new_frame_wait_time )
 	## Clicks the sw_pulldown_menu_item with IDENTIFIER and adds
 	## its .pulldown_menu to .properties[:pulldown_menu]
