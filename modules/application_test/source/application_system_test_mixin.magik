@@ -287,9 +287,10 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_pulldown_menu_item( identifier,
+_method application_system_test_mixin.when_clicking_pulldown_menu_item_with_identifier( identifier,
 									_optional new_frame_wait_time )
-	## 
+	## Clicks the sw_pulldown_menu_item with IDENTIFIER and adds
+	## its .pulldown_menu to .properties[:pulldown_menu]
 	##
 
 	_self.when_clicking_item_with_identifier( :tag!sw_pulldown_menu_item, identifier,
@@ -297,6 +298,25 @@ _method application_system_test_mixin.when_clicking_pulldown_menu_item( identifi
 	
 	_self.properties[ :pulldown_menu ] << _self.properties[ :click_item ].pulldown_menu
 	
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_item_pulldown_menu( id_path,
+									_optional new_frame_wait_time )
+	## when_clicking_pulldown_menu_item assumes a tag of
+	## tag!sw_pulldown_menu_item and uses an identifier. This
+	## method uses an ID path. Adds the .pulldown_menu from the the
+	## ID_PATH container to .properties[:pulldown_menu]
+	## 
+
+	_self.when_clicking_item( id_path, new_frame_wait_time.default(250) )
+
+	_self.properties[ :pulldown_menu ] << _self.properties[ :click_item ].pulldown_menu
+
 	>> _self 
 	
 _endmethod
@@ -784,6 +804,68 @@ _method application_system_test_mixin.then_item_enabled?( id_path, expected_stat
 	>> _self
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_pulldown_menu_has_labels(include_labels)
+	##
+	## Checks if the pulldown menu in .properties[:pulldown_menu]
+	## has child items with the strings in INCLUDE_LABELS
+
+	fail_str << write_string("Pulldown menu missing items")
+
+	missing_labels? << _false
+	actual_labels << rope.new()
+
+	_for i_item _over _self.properties[:pulldown_menu].children.fast_elements()
+	_loop
+		actual_labels.add_last(i_item.label)
+	_endloop
+
+	_for i_label _over include_labels.fast_elements()
+	_loop
+		missing_labels? << _not actual_labels.includes_by_equality?(i_label)
+
+		_if missing_labels?
+		_then
+			_leave
+		_endif
+	_endloop 
+	
+	_self.assert_false(missing_labels?, fail_str)
+
+	>> _self
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_pulldown_menu_doesnt_have_labels(exclude_labels)
+	##
+	## Checks if the pulldown menu in .properties[:pulldown_menu]
+	## doesn't have child items with the strings in EXCLUDE_LABELS
+
+	fail_str << write_string("Pulldown menu has extra items")
+
+	has_labels? << _false
+	
+	_for i_item _over _self.properties[:pulldown_menu].children.fast_elements()
+	_loop
+		has_labels? << exclude_labels.includes_by_equality?(i_item.label)
+
+		_if has_labels?
+		_then
+			_leave
+		_endif 
+	_endloop 
+
+	_self.assert_false(has_labels?, fail_str)
+
+	>> _self
+	
+_endmethod
+$
+
+
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.scenario_insert_record( dataset_name, collection_name, proposed_values, expected_values )
