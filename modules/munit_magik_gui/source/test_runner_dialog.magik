@@ -646,6 +646,10 @@ _method test_runner_dialog.build_framework_gui( a_container )
 	##
 	## Build gui for work area
 	##
+
+	tf << a_container.top_frame
+	tf.width << 900
+	tf.height << 700
 	
 	rc << rowcol.new( a_container, _unset, 1, :pixel )
 	rc.resize? << _true
@@ -654,6 +658,7 @@ _method test_runner_dialog.build_framework_gui( a_container )
 	pw_1 << paned_window.new( rc, :side_by_side?, _true )
 	pw_1.col_alignment << :fill
 	pw_1.row_alignment << :fill
+	pw_1.col_resize_values << {2,3}
 	
 	.items[:hierarchy_tree_item] << tree_item.new( pw_1,
 						       :width, 375, :height, 500,
@@ -680,7 +685,7 @@ _method test_runner_dialog.build_framework_gui( a_container )
         separator_item.new( popup )
         _self.action(:view_traceback).place_control_on( popup, :menu )
 	.items[:failures_tree_item].popup_menu << popup
-	
+
 	.items[:failure_details_window] << text_window.new( pw_2, 25, 55, _unset )
 	.items[:failure_details_window].resize? << _true
 

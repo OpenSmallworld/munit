@@ -41,25 +41,30 @@ _pragma(classify_level=restricted,topic=MUnit)
 _private _method test_failure.init_traceback_text()
 	## Init slot .traceback_text.
 
-	_global !ts!
+	_global !traceback!
 
 	_try _with error_variable
 		a_stream << internal_text_output_stream.new()
-		_thisthread.traceback( a_stream , _true , _unset , _false   )
-		.traceback << !ts!
+		!traceback!( a_stream, _unset, _false )
 		a_traceback_text << a_stream.string
-		a_traceback_text << a_traceback_text.slice( a_traceback_text.index_of(%-) , a_traceback_text.size )
+		_if ( tb << .raised_condition[:traceback] ) _isnt _unset
+		_then
+			a_traceback_text << "".concatenation( tb, a_traceback_text )
+		_endif
+		a_traceback_text << a_traceback_text.slice( a_traceback_text.index_of(%-),
+							    a_traceback_text.size )
 		.traceback_text << a_traceback_text
 	_when error
 		_if .traceback_text _is _unset
 		_then
 			.traceback_text << write_string( "Error getting traceback text ",
-							 " running on the ", _thisthread.name, " thread", newline_char,
+							 " running on the ", _thisthread.name,
+							 " thread", newline_char,
 							 error_variable.report_contents_string,
 							 a_stream.string )
 		_endif
 	_endtry 
-
+	
 _endmethod
 $
 
