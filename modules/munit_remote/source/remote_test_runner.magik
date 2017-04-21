@@ -32,8 +32,6 @@ _method remote_test_runner.run_remote(address, port)
 			sw_module_manager.load_module(module_name)
 		_endif
 		
-		show("Run: ", module_name, test_name)
-		
 		test << !current_package![test_name]
 		a_stream << _self.new_stream(test)
 		_protect
@@ -51,7 +49,7 @@ _method remote_test_runner.run_remote(address, port)
 				
 	_endloop
 
-	show("Ran ", count, " tests in ", date_time_now() - start)
+	show(write_string("Ran ", count, " tests in ", date_time_now() - start))
 	
 	>> tests_ok?
 	
@@ -96,7 +94,7 @@ _private _method remote_test_runner.get_new_test(address, port)
 		module_name << :done
 
 		_if connection _isnt _unset
-		_then 
+		_then
 			
 			# Get the module name
 			nchars << connection.input.get_signed_int()
