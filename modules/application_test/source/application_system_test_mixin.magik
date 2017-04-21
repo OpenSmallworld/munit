@@ -150,6 +150,7 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_an_alternative(alt_name,_optional dataset)
+	##
 	## given_an_alternative() for Core based applications
 	## alt_name that is the name of the alternative should be
 	## provided by the user in a string e.g. "test_alternative".
@@ -329,6 +330,43 @@ _method application_system_test_mixin.when_clicking_item_with_label( tag, label,
 		_self.click_item( click_item, new_frame_wait_time )
 	_else
 		condition.raise(:error, :string, write_string("Failed to find component with label ", label))
+	_endif
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_item_containing_label( tag, label,
+									   _optional container, new_frame_wait_time )
+	## 
+	##	
+
+	_if container _is _unset
+	_then 
+		container << _self.properties[ :application ].top_frame.top_canvas_container
+	_endif
+
+	click_item << _unset
+	
+	_for item _over container.get_items_of_type( tag ).fast_elements()
+	_loop
+		label_item << item.get_items_with_text( label ).an_element()
+		_if label_item _isnt _unset
+		_then
+			click_item << item
+			_leave
+		_endif
+	_endloop
+
+	_if click_item _isnt _unset
+	_then
+		_self.click_item( click_item, new_frame_wait_time )
+	_else
+		condition.raise( :error, :string,
+				 write_string("Failed to find component with label ", label) )
 	_endif
 
 	>> _self
