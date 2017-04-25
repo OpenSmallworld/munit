@@ -631,6 +631,8 @@ _method application_system_test_mixin.when_going_to_inserted_record()
 	_else
 		condition.raise( :user_error, :string, "No record to go to" )
 	_endif
+
+	>> _self 
 	
 _endmethod
 $
