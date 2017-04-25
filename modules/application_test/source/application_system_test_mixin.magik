@@ -605,6 +605,38 @@ $
 
 
 _pragma(classify_level=debug)
+_method application_system_test_mixin.when_going_to_inserted_record()
+	## 
+	## In the current map view, go to the primary spatial context
+	## of the record stored in .properties[:new_record]
+	##
+	## Raise a condition if:
+	## - There is no record in .properties[ :new_record ]
+	## - The record does not have a primary spatial context name 
+	##
+
+	_if ( record << _self.properties[ :new_record ]) _isnt _unset
+	_then
+		manager << _self.map_manager
+		mv << manager.current_map_view
+		app << _self.properties[ :application ]
+		
+		_if ( sc_name << app.get_primary_spatial_context_name_for( record )) _isnt _unset
+		_then 
+			sc << app.get_spatial_context_for( record, sc_name )
+			mv.goto( sc )
+		_else
+			condition.raise( :user_error, :string, "No primary spatial context for " + record )
+		_endif
+	_else
+		condition.raise( :user_error, :string, "No record to go to" )
+	_endif
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method application_system_test_mixin.then_record_inserted( dataset_name, collection_name, field_name, value )
 	## 
 	## Find the record in the collection named COLLECTION_NAME with
@@ -914,6 +946,7 @@ _method application_system_test_mixin.scenario_insert_record( dataset_name, coll
 		given_proposed_editor_values( proposed_values ).
 		
 		when_inserting_record().
+		when_going_to_inserted_record().
 
 		then_record_is_shown_on_map( _self.parameter_new_record() ).
 		then_editor_label_is( _self.parameter_editor_label_inserted() ).
@@ -1059,6 +1092,14 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 	time << system.elapsed_seconds()
 	new_event << input_event.new_with( category, time, a_canvas.actual.id, id, x, y, func, modmask )
 	new_event.second_id << second_id
+
+	_if category _is :locator _andif
+	    id _is :move _andif 
+	    _not a_canvas.has_focus?
+	_then
+		a_canvas.top_frame.activate()
+		_self.wait_for_event_on_queue( :event_handled, :visible )
+	_endif
 
 	a_canvas.handle_event( new_event )
 
