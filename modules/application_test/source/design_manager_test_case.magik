@@ -817,6 +817,7 @@ _method design_manager_test_case.when_creating_child_design( child_design_name )
 	_self.given_a_design( _self.project_name, design_name )
 
 	.properties[ :child_design ] << swg_dsn_admin_engine.active_scheme
+	.properties[ child_design_name.as_symbol() ] << child_design_name
 
 	>> _self
 	
@@ -836,11 +837,12 @@ $
 
 
 _pragma(classify_level=restricted)
-_method design_manager_test_case.when_going_to_child_design()
+_method design_manager_test_case.when_going_to_child_design( _optional design_key )
 	## 
 	##
 
-	>> _self.when_going_to_design( .properties[ :child_design ], "child" )
+	_if design_key _is _unset _then design_key << :child_design _endif 
+	>> _self.when_going_to_design( .properties[ design_key ], "child" )
 	
 _endmethod
 $
@@ -871,6 +873,48 @@ _method design_manager_test_case.when_deleting_design( design )
 	##
 
 	swg_dsn_admin_engine.delete_scheme( design )
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_test_case.when_merging_design( _optional design )
+	## 
+	##
+
+	_if design _is _unset
+	_then
+		design << swg_dsn_admin_engine.active_scheme
+	_endif
+	
+	swg_dsn_admin_engine.merge_scheme( property_list.new(), design )
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_test_case.when_i_split_the_conductor_by_trail(id, coords)
+	##
+	## Splits the route of the conductors cached as ID by a "trail"
+	## defined by COORDS.
+	##
+	
+	_local wire << .properties[id]
+	_local geom << wire.route
+	
+	_local split_sr << sector_rope.new_with(sector.new_with(_scatter coords))
+	
+	_local rt << custom_record_transaction.new(geom.dataset, geom,
+						   :|split_with_sectors()|,
+						   {split_sr},
+						   "Test split by trail")
+	
+	rt.run()
+	
 	>> _self
 	
 _endmethod
