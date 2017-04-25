@@ -121,6 +121,7 @@ _method design_manager_test_case.init( a_name )
 	_super.init( a_name )
 
 	.bounds << _self.start_coord.bounds.extended_by( _self.data_bounds_size )
+	.properties << property_list.new()
 	
 	>> _self
 _endmethod
