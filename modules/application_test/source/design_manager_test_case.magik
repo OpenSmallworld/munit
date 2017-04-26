@@ -255,7 +255,21 @@ _method design_manager_test_case.tear_down()
 	## 
 	##
 	
-	_if ( child_design << .properties[ :child_design ]) _isnt _unset _andif
+	_self.delete_child_design()
+	_super.tear_down()
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_private _method design_manager_test_case.delete_child_design( _optional design_key )
+	## 
+	##
+
+	_if design_key _is _unset _then design_key << :child_design _endif
+
+	_if ( child_design << .properties[ design_key ]) _isnt _unset _andif
 	    child_design.is_valid?
 	_then
 		_if swg_dsn_admin_engine.active_scheme = child_design
@@ -263,10 +277,8 @@ _method design_manager_test_case.tear_down()
 			swg_dsn_admin_engine.activate_scheme( _unset )
 		_endif
 		swg_dsn_admin_engine.delete_scheme( child_design )
-		.properties[ :child_design ] << _unset 
+		.properties[ design_key ] << _unset 
 	_endif
-
-	_super.tear_down()
 	
 _endmethod
 $
@@ -817,7 +829,7 @@ _method design_manager_test_case.when_creating_child_design( child_design_name )
 	_self.given_a_design( _self.project_name, design_name )
 
 	.properties[ :child_design ] << swg_dsn_admin_engine.active_scheme
-	.properties[ child_design_name.as_symbol() ] << child_design_name
+	.properties[ child_design_name.as_symbol() ] << .properties[ :child_design ]
 
 	>> _self
 	
@@ -903,8 +915,11 @@ _method design_manager_test_case.when_i_split_the_conductor_by_trail(id, coords)
 	## defined by COORDS.
 	##
 	
+	_dynamic !current_coordinate_system!
+	
 	_local wire << .properties[id]
 	_local geom << wire.route
+	!current_coordinate_system! << wire.source_view.world.coordinate_system
 	
 	_local split_sr << sector_rope.new_with(sector.new_with(_scatter coords))
 	
