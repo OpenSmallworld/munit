@@ -238,6 +238,11 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 
 	_dynamic !current_application! << current_application
 
+	_if scheme = swg_dsn_admin_engine.active_scheme
+	_then 
+		swg_dsn_admin_engine.save_design_changes()
+	_endif
+
 	stub_method_helper.replace_method( swg_dsn_admin_engine, :|merge_to_build_plans()|,
 					   _proc()
 						   >> property_list.new_with( :result, _true )
