@@ -122,7 +122,7 @@ _method remote_test_server.listen()
 				_leave
 			_endif
 		_else
-			.clients.add(client.remote_address)
+			.clients.add(client.remote_address.join_as_strings("."))
 		_endif
 		
         _endloop
@@ -154,7 +154,7 @@ _private _method remote_test_server.send_test_to_client(client)
 
 		_else
 			_self.send_name_to_client("done", client)
-			.clients.remove(client.remote_address)
+			.clients.remove(client.remote_address.join_as_strings("."))
 			
 		_endif
 
