@@ -258,6 +258,7 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 
 	_protect
 		_handling swg_dsn_confirm_integrate_changes _with _proc() >> _true _endproc
+		_handling swg_dsn_confirm_clear_tables_for_integration _with _proc() >> _true _endproc
 		job_queue_view << _self.prepare_job_queue_view_for_transition_jobs()
 		
 		swg_dsn_admin_engine.activate_scheme( scheme )
