@@ -198,7 +198,7 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 		_if ( next_state << transitions[ status ] ) _is _unset _then _leave _endif
 		
 		_if visited_states.includes?( next_state ) _then _continue _endif
-			
+		
 		_self.when_transitioning_design_to_next_state( scheme, next_state, current_application )
 		
 	_endloop
@@ -260,6 +260,7 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 		_handling swg_dsn_confirm_integrate_changes _with _proc() >> _true _endproc
 		job_queue_view << _self.prepare_job_queue_view_for_transition_jobs()
 		
+		swg_dsn_admin_engine.activate_scheme( scheme )
 		swg_dsn_admin_engine.find_and_perform_transition( scheme, scheme.status, next_state )
 		
 		_loop 
