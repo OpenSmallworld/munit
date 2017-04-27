@@ -909,17 +909,17 @@ $
 
 
 _pragma(classify_level=debug)
-_method design_manager_test_case.when_i_split_the_conductor_by_trail(id, coords)
+_method design_manager_test_case.when_i_split_the_linear_rwo_by_trail(id, coords)
 	##
-	## Splits the route of the conductors cached as ID by a "trail"
-	## defined by COORDS.
+	## Splits the route of the linear rwo cached as ID by a "trail"
+	## defined by COORDS.  The rwo must have a route geometry field.
 	##
 	
 	_dynamic !current_coordinate_system!
 	
-	_local wire << .properties[id]
-	_local geom << wire.route
-	!current_coordinate_system! << wire.source_view.world.coordinate_system
+	_local rwo  << .properties[id]
+	_local geom << rwo.route
+	!current_coordinate_system! << rwo.source_view.world.coordinate_system
 	
 	_local split_sr << sector_rope.new_with(sector.new_with(_scatter coords))
 	
