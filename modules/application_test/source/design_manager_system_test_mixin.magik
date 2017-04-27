@@ -207,7 +207,13 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 				  scheme.status, ".  The job that failed had the following description: ", newline_char )
 	_if _self.properties[ :last_job ] _isnt _unset
 	_then
-		fail_str << write_string( fail_str, _self.properties[ :last_job ] )
+		_protect
+			job_queue_view << _self.go_to_job_queue_test_alternative()
+			fail_str << write_string( fail_str, _self.properties[ :last_job ].outcome_description )
+		_protection
+			job_queue_view.goto_top_alternative()
+		_endprotect
+			
 	_endif
 	_self.assert_equals( future_state, scheme.status, fail_str )
 
@@ -243,18 +249,13 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 								     >> _self.saved!run( _scatter args )
 					   _endproc )
 
-	_if (je << sw_job_engine.job_engine()) _is _unset 
-	_then
-		je << sw_job_engine.new()
-	_endif
-
-	job_queue_view << je.job_view
+	je << _self.job_engine()
 
 	_protect
-		_self.prepare_job_queue_view_for_transition_jobs( job_queue_view )
+		_handling swg_dsn_confirm_integrate_changes _with _proc() >> _true _endproc
+		job_queue_view << _self.prepare_job_queue_view_for_transition_jobs()
 		
-		state_model << scheme.state_model
-		state_model.find_and_perform_transition( scheme, scheme.status, next_state )
+		swg_dsn_admin_engine.find_and_perform_transition( scheme, scheme.status, next_state )
 		
 		_loop 
 			jobs << je.find_and_run_next_jobs()
@@ -408,10 +409,25 @@ $
 
 
 _pragma(classify_level=debug,topic={MUnit, Test})
-_private _method design_manager_system_test_mixin.prepare_job_queue_view_for_transition_jobs( job_queue_view )
+_private _method design_manager_system_test_mixin.prepare_job_queue_view_for_transition_jobs()
 	## 
 	##
 	
+	job_queue_view << _self.go_to_job_queue_test_alternative()
+	job_queue_view.switch( :write )
+
+	>> job_queue_view
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method design_manager_system_test_mixin.go_to_job_queue_test_alternative()
+	## 
+	##
+
+	job_queue_view   << _self.job_engine().job_view
 	alternative_name << system.host_name
 
 	_if _not job_queue_view.alternative_path.empty?
@@ -425,7 +441,24 @@ _private _method design_manager_system_test_mixin.prepare_job_queue_view_for_tra
 	_endif
 	
 	job_queue_view.go_to_alternative( alternative_name )
-	job_queue_view.switch( :write )
+
+	>> job_queue_view
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method design_manager_system_test_mixin.job_engine()
+	## 
+	##	
+
+	_if (je << sw_job_engine.job_engine()) _is _unset 
+	_then
+		je << sw_job_engine.new()
+	_endif
+		
+	>> je
 	
 _endmethod
 $
