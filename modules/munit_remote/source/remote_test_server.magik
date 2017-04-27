@@ -2,7 +2,7 @@
 _package sw
 $
 
-def_slotted_exemplar(:remote_test_suite,
+def_slotted_exemplar(:remote_test_server,
 	{
 		{:connection,   _unset},
 		{:thread,       _unset},
@@ -15,7 +15,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_suite.new(port, _gather test_product_names)
+_method remote_test_server.new(port, _gather test_product_names)
 	## 
 	##
 
@@ -26,7 +26,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_suite.init(port, test_product_names)
+_method remote_test_server.init(port, test_product_names)
 	##
 	##
 
@@ -46,10 +46,7 @@ _method remote_test_suite.init(port, test_product_names)
 	_loop
 		_self.add_product_test_suite(test_product_name.as_symbol())
 	_endloop
-        
-        .thread << _proc @remote_test_suite(me)
-                           me.listen()
-                   _endproc.fork_at(_thisthread.maximum_priority, _self)
+	
         >> _self
 	
 _endmethod
@@ -57,7 +54,21 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_suite.close_server()
+_method remote_test_server.run()
+	## 
+	## Listen for connections from clients and send tests to the
+	## clients.  This method will block until all tests have been
+	## send to the clients.
+	##
+	
+        _self.listen()
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_server.close_server()
         ## Closes down the server listener. Note that this does not
         ## shut down any client connections.
         
@@ -72,7 +83,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_suite.listen()
+_method remote_test_server.listen()
 	##
 	##
 	
@@ -94,7 +105,11 @@ _method remote_test_suite.listen()
                         _endif
                 _endtry
 
-                _if client _is _unset _then _leave _endif
+                _if client _is _unset
+		_then
+			show("No client found.  Current clients: ", .clients)
+			_leave
+		_endif
 
                 done? << _self.send_test_to_client(client)
 		_if done?
@@ -117,7 +132,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method remote_test_suite.send_test_to_client(client)
+_private _method remote_test_server.send_test_to_client(client)
 	## 
 	##
 
@@ -155,18 +170,16 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method remote_test_suite.get_test_to_run()
+_private _method remote_test_server.get_test_to_run()
 	## 
 	##
 
-	_lock .remote_tests
-	      _if .remote_tests.empty?
-	      _then
-		      test << :done
-	      _else 
-		      test << .remote_tests.remove_first()
-	      _endif
-	_endlock
+	_if .remote_tests.empty?
+	_then
+		test << :done
+	_else 
+		test << .remote_tests.remove_first()
+	_endif
 
 	>> test
 	
@@ -175,7 +188,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method remote_test_suite.send_name_to_client(name, client)
+_private _method remote_test_server.send_name_to_client(name, client)
 	## 
 	##
 	
@@ -188,34 +201,30 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method remote_test_suite.return_test_to_queue(test)
+_private _method remote_test_server.return_test_to_queue(test)
 	## 
 	##
 	
-	_lock .remote_tests
-	      .remote_tests.add_last(test)
-	_endlock 
+	.remote_tests.add_last(test)
 	
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
-_private _method remote_test_suite.add_product_test_suite(product_name)
+_private _method remote_test_server.add_product_test_suite(product_name)
 	## 
 	##
 
 	tests <<  product_test_suite.new(product_name)
 
-	_lock .remote_tests
-	      _for module_test _over tests.tests()
-	      _loop
-		      _for test_case _over module_test.tests()
-		      _loop
-			      .remote_tests.add_last(test_case)
-		      _endloop
-	      _endloop
-	_endlock
+	_for module_test _over tests.tests()
+	_loop
+		_for test_case _over module_test.tests()
+		_loop
+			.remote_tests.add_last(test_case)
+		_endloop
+	_endloop
 	
 _endmethod
 $

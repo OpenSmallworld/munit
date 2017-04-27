@@ -23,7 +23,6 @@ _method remote_test_runner.run_remote(address, port)
 		(module_name, test_name) << _self.get_new_test(address, port)
 
 		_if module_name _is :done _then _leave _endif
-		_if module_name _is :no_response _then _continue _endif
 
 		count +<< 1
 
@@ -97,17 +96,12 @@ _private _method remote_test_runner.get_new_test(address, port)
 		_then
 			
 			# Get the module name
-			nchars << connection.input.get_signed_int()
-			_if nchars _isnt _unset
-			_then
-				module_name << connection.input.get_ascii_chars(nchars).as_symbol()
+			module_name << _self.get_name_from_connection()
 				
-				# Get the test name
-				_if module_name _isnt :done
-				_then 
-					nchars    << connection.input.get_signed_int()
-					test_name << connection.input.get_ascii_chars(nchars).as_symbol()
-				_endif
+			# Get the test name
+			_if module_name _isnt :done
+			_then 
+				test_name << _self.get_name_from_connection()
 			_endif
 			
 		_endif
@@ -117,6 +111,25 @@ _private _method remote_test_runner.get_new_test(address, port)
 	_endprotect
 
 	>> (module_name, test_name)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method remote_test_runner.get_name_from_connection()
+	## 
+	##
+	
+	nchars << connection.input.get_signed_int()
+	_if nchars _isnt _unset
+	_then
+		name << connection.input.get_ascii_chars(nchars).as_symbol()
+	_else
+		name << :done
+	_endif
+
+	>> name
 	
 _endmethod
 $
