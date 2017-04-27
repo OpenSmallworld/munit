@@ -103,6 +103,8 @@ _method remote_test_server.listen()
                         _then
                                 cond.invoke()
                         _endif
+		_when error
+			show("Error getting client: ", cond.report_contents_string)
                 _endtry
 
                 _if client _is _unset

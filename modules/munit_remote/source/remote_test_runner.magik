@@ -96,12 +96,12 @@ _private _method remote_test_runner.get_new_test(address, port)
 		_then
 			
 			# Get the module name
-			module_name << _self.get_name_from_connection()
+			module_name << _self.get_name_from_connection(connection)
 				
 			# Get the test name
 			_if module_name _isnt :done
 			_then 
-				test_name << _self.get_name_from_connection()
+				test_name << _self.get_name_from_connection(connection)
 			_endif
 			
 		_endif
@@ -117,7 +117,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method remote_test_runner.get_name_from_connection()
+_private _method remote_test_runner.get_name_from_connection(connection)
 	## 
 	##
 	
