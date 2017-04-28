@@ -280,7 +280,7 @@ _method design_manager_test_case.delete_child_design( _optional design_key )
 		# In the case where this design and any of its sub designs has
 		# been published, the delete will fail, so state transition
 		# history is cleared out before any deletion
-		_for sub_scheme _over a_scheme.sub_schemes.fast_elements()
+		_for sub_scheme _over child_design.sub_schemes.fast_elements()
 		_loop
 			_self.int!delete_state_history_for(sub_scheme)
 		_endloop
