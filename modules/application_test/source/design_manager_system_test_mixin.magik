@@ -80,9 +80,21 @@ _endmethod
 $
 
 
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.given_a_top_level_design(project_name, design_name, _optional xmin, ymin, xmax, ymax)
+	## 
+	## 
+	design << _self.int!given_a_new_design(project_name, design_name)
+	_self.properties[design_name.as_symbol()] << design
+	_self.properties[:project] << design.project
+
+	_return _self 
+_endmethod
+$
+
 
 _pragma(classify_level=debug)
-_method design_manager_system_test_mixin.given_a_new_design( project_name, design_name, _optional xmin, ymin, xmax, ymax )
+_method design_manager_system_test_mixin.given_a_new_design(project_name, design_name, _optional xmin, ymin, xmax, ymax)
 	##
 	## Create a new design with name DESIGN_NAME in the project
 	## with name PROJECT_NAME  which can be either new or an
@@ -93,7 +105,21 @@ _method design_manager_system_test_mixin.given_a_new_design( project_name, desig
 	## See method get_or_create_project() for argument description
 	
 	parent_design << swg_dsn_admin_engine.active_scheme
+	
+	design << _self.int!given_a_new_design(project_name, design_name, parent_design, xmin, ymin, xmax, ymax)
+	_self.properties[:design] << design
+	_self.properties[:project] << design.project
 
+	_return _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method design_manager_system_test_mixin.int!given_a_new_design(project_name, design_name, _optional parent_design, xmin, ymin, xmax, ymax )
+	## 
+	## 
 	_try _with cond
 		
 		swg_dsn_admin_engine.clear_current_design()
@@ -104,7 +130,8 @@ _method design_manager_system_test_mixin.given_a_new_design( project_name, desig
 		design  << swg_dsn_admin_engine.create_scheme( project, parent_design, design_name, views, _unset )
 		
 		_self.activate_design( design )
-		
+
+		_return design
 	_when ds_write_switch_failed
 		# We ought to be able to use the :view parameter of the
 		# condition, but this doesn't get set :-(
@@ -113,11 +140,6 @@ _method design_manager_system_test_mixin.given_a_new_design( project_name, desig
 		cond.continue_handling()
 	_endtry
 
-	_self.properties[ :design  ] << design
-	_self.properties[ :project ] << design.project
-
-	>> _self
-	
 _endmethod
 $
 
