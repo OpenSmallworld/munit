@@ -15,6 +15,17 @@ $
 
 
 _pragma(classify_level=debug)
+_method remote_test_server.clients
+	## 
+	##
+
+	>> .clients
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method remote_test_server.new(port, _gather test_product_names)
 	## 
 	##
@@ -62,6 +73,17 @@ _method remote_test_server.run()
 	##
 	
         _self.listen()
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_server.running?
+	## 
+	##
+
+	>> .clients.size > 0
 	
 _endmethod
 $
