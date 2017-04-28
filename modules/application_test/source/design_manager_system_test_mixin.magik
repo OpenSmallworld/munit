@@ -236,7 +236,11 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 	## CURRENT_APPLICATION argument should be provided.
 	##
 
-	_dynamic !current_application! << current_application
+	_dynamic !current_application!
+	_if current_application _isnt _unset
+	_then
+		!current_application! << current_application
+	_endif
 
 	_if scheme = swg_dsn_admin_engine.active_scheme
 	_then 
