@@ -263,7 +263,7 @@ $
 
 
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
-_private _method design_manager_test_case.delete_child_design( _optional design_key )
+_method design_manager_test_case.delete_child_design( _optional design_key )
 	## 
 	##
 
@@ -276,6 +276,16 @@ _private _method design_manager_test_case.delete_child_design( _optional design_
 		_then
 			swg_dsn_admin_engine.activate_scheme( _unset )
 		_endif
+
+		# In the case where this design and any of its sub designs has
+		# been published, the delete will fail, so state transition
+		# history is cleared out before any deletion
+		_for sub_scheme _over child_design.sub_schemes.fast_elements()
+		_loop
+			_self.int!delete_state_history_for(sub_scheme)
+		_endloop
+
+		_self.int!delete_state_history_for(child_design)
 		swg_dsn_admin_engine.delete_scheme( child_design )
 		.properties[ design_key ] << _unset 
 	_endif
@@ -1030,5 +1040,57 @@ _private _method design_manager_test_case.rwo_associated_with_cost_object?( rwo_
 
 	>> found?
 	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={swg_design})
+_method design_manager_test_case.given_transition_history(_gather states)
+	##
+	## Add state history for the design to match STATES
+	##
+	scheme << _self.properties[ :design  ]
+
+	_for from, to _over _self.adjacent_pairs( states )
+	_loop
+		swg_dsn_state_history.insert_record( scheme, from, to )
+	_endloop
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _iter _method design_manager_test_case.adjacent_pairs(list)
+	##
+	## Yield adjacent pairs of elements from LIST.
+	##
+	## For example, if list is {:a, :b, :c, :d}, yield the pairs
+	##  :a, :b
+	##  :b, :c
+	##  :c, :d
+	##
+	first << list[1]
+	_for index _over range( 2, list.size )
+	_loop
+		second << list[index]
+		_loopbody( first, second )
+		first << second
+	_endloop
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method design_manager_test_case.int!delete_state_history_for(scheme)
+	## 
+	## 
+	_if (recs << swg_dsn_state_history.history_for( scheme )) _isnt _unset
+	_then
+		_for rec _over recs.fast_elements()
+		_loop
+			record_transaction.new_delete( rec ).run()
+		_endloop
+	_endif
+	 
 _endmethod
 $
