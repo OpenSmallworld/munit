@@ -83,7 +83,9 @@ $
 _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.given_a_top_level_design(project_name, design_name, _optional xmin, ymin, xmax, ymax)
 	## 
-	## 
+	## Create a new design named DESIGN_NAME in project named PROJECT_NAME
+	## The new design has no parent design.
+	##
 	design << _self.int!given_a_new_design(project_name, design_name)
 	_self.properties[design_name.as_symbol()] << design
 	_self.properties[:project] << design.project
@@ -96,14 +98,11 @@ $
 _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.given_a_new_design(project_name, design_name, _optional xmin, ymin, xmax, ymax)
 	##
-	## Create a new design with name DESIGN_NAME in the project
-	## with name PROJECT_NAME  which can be either new or an
-	## existing project.
-	## This method will fail if a design with DESIGN_NAME exists
-	## already.
-	##
+	## Create a new design named DESIGN_NAME in project named PROJECT_NAME
+	## If active scheme exists, it is used as the parent design of
+	## the newly created design.
 	## See method get_or_create_project() for argument description
-	
+	##
 	parent_design << swg_dsn_admin_engine.active_scheme
 	
 	design << _self.int!given_a_new_design(project_name, design_name, parent_design, xmin, ymin, xmax, ymax)
@@ -119,6 +118,11 @@ $
 _pragma(classify_level=debug)
 _private _method design_manager_system_test_mixin.int!given_a_new_design(project_name, design_name, _optional parent_design, xmin, ymin, xmax, ymax )
 	## 
+	## Create a new design with name DESIGN_NAME in the project
+	## with name PROJECT_NAME  which can be either new or an
+	## existing project.
+	## This method will fail if a design with DESIGN_NAME exists
+	## already.
 	## 
 	_try _with cond
 		
