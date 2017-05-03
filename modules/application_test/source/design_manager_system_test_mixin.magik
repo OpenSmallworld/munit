@@ -166,6 +166,9 @@ _method design_manager_system_test_mixin.when_changing_design_status( new_status
 	## Change the status of the current design to NEW_STATUS
 	## Ensure that the active scheme is still set to the current
 	## design set after transition
+	## NOTE: if you transition to Post Pending, the design will be
+	## auto transitioned to Posted and this will cause the assert
+	## to fail.
 
 	design << swg_dsn_admin_engine.active_scheme	
 
@@ -175,6 +178,21 @@ _method design_manager_system_test_mixin.when_changing_design_status( new_status
 		swg_dsn_admin_engine.activate_scheme( design )
 	_endif
 
+	fail_str << write_string( "The transition to ", new_status, " failed.  The design's current status is ",
+				  design.status, ".  The job that failed had the following description: ", newline_char )
+	_if _self.properties[ :last_job ] _isnt _unset
+	_then
+		_protect
+			job_queue_view << _self.go_to_job_queue_test_alternative()
+			fail_str << write_string( fail_str, _self.properties[ :last_job ].outcome_description )
+		_protection
+			job_queue_view.goto_top_alternative()
+		_endprotect
+			
+	_endif
+
+	_self.assert_equals( new_status, design.status, fail_str )
+	
 	>> _self
 	
 _endmethod
@@ -293,20 +311,6 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 	_endprotect
 
 	je.remove_dependent( _self )
-
-	fail_str << write_string( "The transition to ", next_state, " failed.  The design's current status is ",
-				  scheme.status, ".  The job that failed had the following description: ", newline_char )
-	_if _self.properties[ :last_job ] _isnt _unset
-	_then
-		_protect
-			job_queue_view << _self.go_to_job_queue_test_alternative()
-			fail_str << write_string( fail_str, _self.properties[ :last_job ].outcome_description )
-		_protection
-			job_queue_view.goto_top_alternative()
-		_endprotect
-			
-	_endif
-	_self.assert_equals( next_state, scheme.status, fail_str )
 
 	>> _self
 	
