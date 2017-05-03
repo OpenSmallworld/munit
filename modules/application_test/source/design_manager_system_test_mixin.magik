@@ -164,7 +164,7 @@ _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.when_changing_design_status( new_status )
 	## 
 	## Change the status of the current design to NEW_STATUS
-	## Ensure that the active scheme is still set tot he current
+	## Ensure that the active scheme is still set to the current
 	## design set after transition
 
 	design << swg_dsn_admin_engine.active_scheme	
