@@ -319,3 +319,17 @@ _method base_test_runner.kill_test_thread()
 	>> result?
 _endmethod
 $
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method base_test_runner.after_each_test_run(a_test_case)
+	## 
+	##
+	
+	_if (test_order_stream << .properties[:test_order_stream]) _isnt _unset 
+	_then
+		test_order_stream.write(a_test_case.module_name, tab_char,
+					a_test_case.class_name, tab_char,
+					a_test_case.get_name(), newline_char)
+	_endif
+_endmethod
+$
