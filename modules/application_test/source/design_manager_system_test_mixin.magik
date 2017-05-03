@@ -164,13 +164,15 @@ _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.when_changing_design_status( new_status )
 	## 
 	## Change the status of the current design to NEW_STATUS
-	##
+	## Ensure that the active scheme is still set tot he current
+	## design set after transition
 
 	design << swg_dsn_admin_engine.active_scheme	
 
 	_if (design.status <> new_status)
 	_then 	
 		_self.when_transitioning_design_to_next_state( design, new_status )
+		swg_dsn_admin_engine.activate_scheme( design )
 	_endif
 
 	>> _self
@@ -228,20 +230,6 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 		_self.when_transitioning_design_to_next_state( scheme, next_state, current_application )
 		
 	_endloop
-
-	fail_str << write_string( "The transition to ", future_state, " failed.  The design's current status is ",
-				  scheme.status, ".  The job that failed had the following description: ", newline_char )
-	_if _self.properties[ :last_job ] _isnt _unset
-	_then
-		_protect
-			job_queue_view << _self.go_to_job_queue_test_alternative()
-			fail_str << write_string( fail_str, _self.properties[ :last_job ].outcome_description )
-		_protection
-			job_queue_view.goto_top_alternative()
-		_endprotect
-			
-	_endif
-	_self.assert_equals( future_state, scheme.status, fail_str )
 
 	swg_dsn_admin_engine.activate_scheme( scheme )
 			
@@ -305,6 +293,20 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 	_endprotect
 
 	je.remove_dependent( _self )
+
+	fail_str << write_string( "The transition to ", next_state, " failed.  The design's current status is ",
+				  scheme.status, ".  The job that failed had the following description: ", newline_char )
+	_if _self.properties[ :last_job ] _isnt _unset
+	_then
+		_protect
+			job_queue_view << _self.go_to_job_queue_test_alternative()
+			fail_str << write_string( fail_str, _self.properties[ :last_job ].outcome_description )
+		_protection
+			job_queue_view.goto_top_alternative()
+		_endprotect
+			
+	_endif
+	_self.assert_equals( next_state, scheme.status, fail_str )
 
 	>> _self
 	
