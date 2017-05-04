@@ -99,9 +99,10 @@ $
 _pragma(classify_level=debug, usage={subclassable})
 _method database_test.dataset_clones
 	## Number of database clones on which test will run
-	## concurrently alongside when running on main dataset.
+	## concurrently alongside when running on main dataset followed
+	## by boolean indicating whether clones should be writable
 	## See also run_with_clones() API.
-	>> 0
+	>> 0, _false 
 _endmethod
 $
 database_test.define_shared_variable(:clones, property_list.new(), :private)
@@ -114,6 +115,13 @@ _private _method database_test.dataset_clones?
 	>> _self.dataset_clones > 0 _andif 
 		_not _self.writable_dataset_names.empty? _andif
 		_self.database_opened?
+_endmethod
+$
+_pragma(classify_level=restricted,topic=unit_testing)
+_private _method database_test.writable_dataset_clones?
+	## 
+	## 
+	_return _self.dataset_clones? _andif (_allresults _self.dataset_clones)[2]
 _endmethod
 $
 
@@ -129,7 +137,6 @@ _private _method database_test.make_dataset_clones()
 	_loop
 		worlds[i]<< ds_world.new(_self.clone_nslots)
 	_endloop
-	# Create a scratchpad for each dataset to hold any changes
 	_for ds_name _over _self.writable_dataset_names.fast_elements()
 	_loop
 		write("Clonning ",_self.dataset_clones," times database: ",ds_name)
@@ -139,9 +146,8 @@ _private _method database_test.make_dataset_clones()
 			_handling warning _with procedure
 			!error!<< !terminal!<< !output!<< internal_text_output_stream.new()
 			
-			_if (v << gis_program_manager.databases[ds_name]) _is _unset _then _continue _endif
-			_self.clones[ds_name]<< simple_vector.new(_self.dataset_clones)
-			v<< _self.dataset(ds_name)
+			_if (v<< _self.dataset(ds_name)) _is _unset _then _continue _endif
+			_self.clones[ds_name]<< simple_vector.new(_self.dataset_clones)			
 			_for i, a_world _over worlds.fast_keys_and_elements()
 			_loop
 				_self.clones[ds_name][i]<< clone<< gis_ds_view.new(:write, :searchpath, v.searchpath)
@@ -156,17 +162,19 @@ _private _method database_test.make_dataset_clones()
 	_endloop 
 _endmethod
 $
+
 _pragma(classify_level=restricted,topic=unit_testing)
 _private _method database_test.given_writable_dataset_clones()
 	## 
 	## 
-	_if _not _self.dataset_clones?	_then _return _endif
+	_if _not _self.writable_dataset_clones?	_then _return _endif
 	# Create a scratchpad for each dataset clone to hold any changes
 	_for ds_name _over _self.writable_dataset_names.fast_elements()
 	_loop
-		_for i,clone _over _self.clones[ds_name].fast_keys_and_elements()
+		_if (clones << _self.clones[ds_name]) _is _unset _then _continue _endif 
+		_for i,clone _over clones.fast_keys_and_elements()
 		_loop
-			clone.goto_top_alternative()
+			clone.goto_top_alternative(:readonly)
 			clone.create_scratchpad( write_string("memory::ds",i) )
 		_endloop
 	_endloop	
@@ -175,17 +183,17 @@ $
 _pragma(classify_level=restricted,topic=unit_testing)
 _private _method database_test.close_dataset_clones()
 	## 
-	## 
-	_if _not _self.dataset_clones?	_then _return _endif
-	# Create a scratchpad for each dataset clone to hold any changes
+	##
+	_if _not _self.writable_dataset_clones?	_then _return _endif
 	_for ds_name _over _self.writable_dataset_names.fast_elements()
 	_loop
-		_for clone _over _self.clones[ds_name].fast_elements()
+		_if (clones << _self.clones[ds_name]) _is _unset _then _continue _endif 
+		_for clone _over clones.fast_elements()
 		_loop
 			clone.rollback()
 			clone.up()
 		_endloop
-	_endloop		
+	_endloop
 _endmethod
 $
 _pragma(classify_level=restricted,topic=unit_testing)
@@ -196,13 +204,15 @@ _method database_test.run_with_clones(ds_name, meth_name, _gather parameters)
 	_if _self.dataset_clones < 1 _orif
 	    (clones<< _self.clones[ds_name]) _is _unset
 	_then
-		_return _self.perform(meth_name, _self.dataset(ds_name), _scatter parameters)
+		_self.perform(meth_name, _self.dataset(ds_name), _scatter parameters)
 	_endif
 
 	_local aq<< atomic_queue.new(_self.dataset_clones + 1)
 	_local a_test<< _self 
 	_local run_for_dataset<< _proc @run_for_dataset(view, meth_name, _gather parameters)
 					 _import aq, a_test
+					 _dynamic !current_dsview!
+					 !current_dsview!<< view
 					 _protect
 						 a_test.perform(meth_name, view, _scatter parameters)
 					 _protection
