@@ -1094,3 +1094,29 @@ _private _method design_manager_test_case.int!delete_state_history_for(scheme)
 	 
 _endmethod
 $
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.then_expected_number_of_work_points_is( number, _optional a_scheme, description )
+	##
+	## Validate that the count of workpoints equals NUMBER
+	## If a_scheme is provided, then validate the count of
+	## workpoints for that scheme equals NUMBER
+	## DESCRIPTION is a string appended to the error message if the
+	## assert fails - to help diagnose 
+
+	_local num_wps
+	
+	_if a_scheme _is _unset
+	_then
+		num_wps << dw!scheme_wp.table.size
+	_else
+		num_wps << cost_object_library.workpoint_get_for_scheme( a_scheme )
+	_endif
+
+	error_message << write_string( "Expected ", number, " workpoints, but found ", num_wps, " ", description.default(""))
+
+	_self.assert_equals( number, num_wps, error_message )
+	
+	>> _self 
+_endmethod
+$

@@ -164,13 +164,13 @@ _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.when_changing_design_status( new_status )
 	## 
 	## Change the status of the current design to NEW_STATUS
-	##
 
 	design << swg_dsn_admin_engine.active_scheme	
 
 	_if (design.status <> new_status)
 	_then 	
 		_self.when_transitioning_design_to_next_state( design, new_status )
+		swg_dsn_admin_engine.activate_scheme( design )
 	_endif
 
 	>> _self
@@ -202,6 +202,11 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 	## performing the transitions might have resulted in DM Top
 	## being the current alternative.
 	##
+	## Ensure that the active scheme is still set to the current
+	## design set after transition
+	## NOTE: if you transition to Post Pending, the design will be
+	## auto transitioned to Posted and this will cause the assert
+	## to fail.
 
 	# Always post only to the direct parent design
 	stub_method_helper.replace_method( swg_dsn_vmds_integrator, :|number_of_steps_to_post_active_scheme_to_design_top()|,
@@ -241,8 +246,9 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 		_endprotect
 			
 	_endif
-	_self.assert_equals( future_state, scheme.status, fail_str )
 
+	_self.assert_equals( future_state, scheme.status, fail_str )
+	
 	swg_dsn_admin_engine.activate_scheme( scheme )
 			
 	>> _self
