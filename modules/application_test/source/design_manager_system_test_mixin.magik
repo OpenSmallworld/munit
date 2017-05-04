@@ -164,11 +164,6 @@ _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.when_changing_design_status( new_status )
 	## 
 	## Change the status of the current design to NEW_STATUS
-	## Ensure that the active scheme is still set to the current
-	## design set after transition
-	## NOTE: if you transition to Post Pending, the design will be
-	## auto transitioned to Posted and this will cause the assert
-	## to fail.
 
 	design << swg_dsn_admin_engine.active_scheme	
 
@@ -207,6 +202,11 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 	## performing the transitions might have resulted in DM Top
 	## being the current alternative.
 	##
+	## Ensure that the active scheme is still set to the current
+	## design set after transition
+	## NOTE: if you transition to Post Pending, the design will be
+	## auto transitioned to Posted and this will cause the assert
+	## to fail.
 
 	# Always post only to the direct parent design
 	stub_method_helper.replace_method( swg_dsn_vmds_integrator, :|number_of_steps_to_post_active_scheme_to_design_top()|,
@@ -234,7 +234,7 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 		
 	_endloop
 
-	fail_str << write_string( "The transition to ", new_status, " failed.  The design's current status is ",
+	fail_str << write_string( "The transition to ", future_state, " failed.  The design's current status is ",
 				  scheme.status, ".  The job that failed had the following description: ", newline_char )
 	_if _self.properties[ :last_job ] _isnt _unset
 	_then
