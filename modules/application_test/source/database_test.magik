@@ -204,7 +204,7 @@ _method database_test.run_with_clones(ds_name, meth_name, _gather parameters)
 	_if _self.dataset_clones < 1 _orif
 	    (clones<< _self.clones[ds_name]) _is _unset
 	_then
-		_self.perform(meth_name, _self.dataset(ds_name), _scatter parameters)
+		_return _self.perform(meth_name, _self.dataset(ds_name), _scatter parameters)
 	_endif
 
 	_local aq<< atomic_queue.new(_self.dataset_clones + 1)
