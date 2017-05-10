@@ -972,20 +972,19 @@ _pragma(classify_level=debug)
 _private _method application_system_test_mixin.wait_for_application_to_be_active( app_name )
 	## 
 	##
-
-	_over 1.upto(6)
+	_for i _over 1.upto(10)
 	_loop
 		_if (app << smallworld_product.application(app_name)) _isnt _unset _andif
 		    app.active?
 		_then
+			write(write_string("Attempt ",i," successfull - application ",app_name, "is running. Starting test: ",_self.get_name()))
 			#We've started.
 			_self.properties[ :application ] << app
 			_self.wait_for_application_threads_to_finish()
 			_leave
 		_endif
-		_thisthread.sleep(30000)
-	_endloop
-	
+		_thisthread.sleep(5000)
+	_endloop	
 _endmethod
 $
 
