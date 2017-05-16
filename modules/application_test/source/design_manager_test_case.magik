@@ -731,24 +731,48 @@ _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.given_compatible_unit_definition_with_code( cu_code )
 	##
 	## Looks up CO with code CU_CODE and caches in .properties
-	## using key cu_code as a symbol. Can be retrieved by 
+	## using key cu_code as a symbol. 
 
-	cu_def <<  cost_object_library.get_for_code(cu_code,:compatible_unit)
+	>> _self.int!given_co_definition_with_code( cu_code, :compatible_unit )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.given_macro_assembly_definition_with_code( ma_code )
+	##
+	## Looks up MA with code MA_CODE and caches in .properties
+	## using key ma_code as a symbol.  
+
+	>> _self.int!given_co_definition_with_code( ma_code, :macro_assembly)
+
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method  design_manager_test_case.int!given_co_definition_with_code( co_code, type)
+	##
+	## CO_CODE is the code of the cost object definition
+	## TYPE is either :compatible_unit or :macro_assembly
+	## 
+
+	cu_def <<  cost_object_library.get_for_code(co_code,type)
 
 	_if cu_def _is _unset
 	_then
 		_self.load_required_cos()
 	_endif
 	
-	cu_def <<  cost_object_library.get_for_code(cu_code,:compatible_unit)
+	cu_def <<  cost_object_library.get_for_code(co_code,type)
 	
-	_self.assert_not_unset( cu_def , "CU not found: ", cu_code)
+	_self.assert_not_unset( cu_def , write_string( type.write_string.uppercase, " not found: ", co_code ) )
 
-	.properties[cu_code.as_symbol()] << cu_def
-
+	.properties[co_code.as_symbol()] << cu_def
+	
 	>> _self 
+	
 _endmethod
-$
 
 
 _pragma(classify_level=debug,topic={MUnit, Test})
