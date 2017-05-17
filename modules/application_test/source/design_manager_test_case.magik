@@ -731,24 +731,48 @@ _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.given_compatible_unit_definition_with_code( cu_code )
 	##
 	## Looks up CO with code CU_CODE and caches in .properties
-	## using key cu_code as a symbol. Can be retrieved by 
+	## using key cu_code as a symbol. 
 
-	cu_def <<  cost_object_library.get_for_code(cu_code,:compatible_unit)
+	>> _self.int!given_co_definition_with_code( cu_code, :compatible_unit )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.given_macro_assembly_definition_with_code( ma_code )
+	##
+	## Looks up MA with code MA_CODE and caches in .properties
+	## using key ma_code as a symbol.  
+
+	>> _self.int!given_co_definition_with_code( ma_code, :macro_assembly)
+
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method  design_manager_test_case.int!given_co_definition_with_code( co_code, type)
+	##
+	## CO_CODE is the code of the cost object definition
+	## TYPE is either :compatible_unit or :macro_assembly
+	## 
+
+	cu_def <<  cost_object_library.get_for_code(co_code,type)
 
 	_if cu_def _is _unset
 	_then
 		_self.load_required_cos()
 	_endif
 	
-	cu_def <<  cost_object_library.get_for_code(cu_code,:compatible_unit)
+	cu_def <<  cost_object_library.get_for_code(co_code,type)
 	
-	_self.assert_not_unset( cu_def , "CU not found: ", cu_code)
+	_self.assert_not_unset( cu_def , write_string( type.write_string.uppercase, " not found: ", co_code ) )
 
-	.properties[cu_code.as_symbol()] << cu_def
-
+	.properties[co_code.as_symbol()] << cu_def
+	
 	>> _self 
+	
 _endmethod
-$
 
 
 _pragma(classify_level=debug,topic={MUnit, Test})
@@ -775,6 +799,7 @@ _method design_manager_test_case.cu(cu_name)
 _endmethod
 $
 
+
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.when_cu_is_added_to_design( library_co_name, _optional rwo_name,
 							     point_span_rec, design_status, operation, overrides )
@@ -784,13 +809,15 @@ _method design_manager_test_case.when_cu_is_added_to_design( library_co_name, _o
 	## been cached in a previous test step and is looked up by
 	## name. It must refer to a 
 	## macro_assembly_definition, compatible_unit_definition or a
-	## dw!compaitble_unit_record that references a library_co
+	## dw!compatible_unit_record that references a library_co
 	##
 	## RWO_NAME is the name used to previously cache the rwo to
 	## which the CO will be associated
 	##
 	## See cost_object_library.add_to_design() for description of
 	## other arguments.
+	##
+	## The new created CO is cached in .properties[:last_added_co]
 	##
 	## Returns: self, arguments returned from cost_object_library.add_to_design()
 
@@ -807,9 +834,10 @@ _method design_manager_test_case.when_cu_is_added_to_design( library_co_name, _o
 	co_rec << co_rec << dw!compatible_unit_record.new( library_cu.code, 1,
 							   :work_record_name, "Munit WP") 
 	
-	(new_co,rwos) << cost_object_library.add_to_design( co_rec, l_rwo, _unset,
-							    _unset, 
-					     operation.default(:install))
+	(new_co,rwos) << cost_object_library.add_to_design( co_rec, l_rwo, point_span_rec, 
+							    design_status, operation.default(:install), overrides )
+	.properties[:last_added_co] << new_co
+
 	_return _self 
 	
 _endmethod
@@ -1120,3 +1148,94 @@ _method design_manager_test_case.then_expected_number_of_work_points_is( number,
 	>> _self 
 _endmethod
 $
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.given_a_new_co_added_to_design_from_definition( co_code, new_co_name, _optional wp_name )
+	##
+	## Create a new MA or CU froom the definition given by CO_CODE
+	## and cache it with name NEW_CO_NAME.
+	## WP_NAME defines the name of the work point to create
+
+	co_rec << co_rec << dw!compatible_unit_record.new( co_code, 1,
+							   :work_record_name, wp_name.default("Munit WP") ) 
+	
+	(new_co,rwos) << cost_object_library.add_to_design( co_rec )
+
+	.properties[new_co_name.as_symbol()] << new_co
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method design_manager_test_case.when_i_clone_last_added_co_onto_record( record_name )
+	##
+	## clone the CO given by CO_NAME onto RWO given by RECORD_NAME
+	## and cache the new cloned CO in properties[:cloned_co]
+
+	co << _self.last_added_co()
+	target << _self.rwo(record_name)
+
+	.properties[:cloned_co] << co.clone(target)
+	_self.assert_not_unset( .properties[:cloned_co], "Failed to Clone CO ", co, " onto ", target )
+
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method design_manager_test_case.then_cloned_co_work_point_is_same_as_last_added_co_work_point()
+
+	_self.assert_equals( .properties[:cloned_co].dw!scheme_wp,
+			     .properties[:last_added_co].dw!scheme_wp,
+			     "clone() on MA failed for the reason - cloned MA's work record is not same as the cloning MA's work record")
+
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_test_case.last_added_co()
+
+	co << .properties[:last_added_co]
+	_self.assert_not_unset( co, "Last added CO not found")
+
+	>> co
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method design_manager_test_case.cloned_co()
+
+	co << .properties[:cloned_co]
+	_self.assert_not_unset( co, "Cloned CO not found")
+
+	>> co
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method design_manager_test_case.then_rwo_has_cloned_co_in_current_scheme( record_name )
+
+	co_found? << _false 
+	clone_co << _self.cloned_co()
+	rwo << _self.rwo(record_name)
+	cos_of_pole_rwo << cost_object_library.scheme_cos_for_rwo(rwo, :active_scheme)
+	
+	_for co _over cos_of_pole_rwo.fast_elements()
+	_loop
+		_if co.id = clone_co.id
+		_then
+			co_found? << _true
+			_leave
+		_endif
+	_endloop
+
+	_self.assert_true( co_found?, "Clone() on CO failed - RWO should have the cloned CO")
+
+	>> _self 
+_endmethod
+$
+	
+
+	
