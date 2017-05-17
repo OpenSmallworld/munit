@@ -14,7 +14,8 @@ $
 
 _pragma(classify_level=debug)
 _method gui_framework_test_mixin.then_container_has_item_with_identifier_and_enabled( container, identifier,
-											   expected_enabled? )
+										      expected_enabled?,
+										      _optional expected_managed? )
 	## 
 	##
 
@@ -28,6 +29,11 @@ _method gui_framework_test_mixin.then_container_has_item_with_identifier_and_ena
 	_if ( item << items.an_element() ) _isnt _unset
 	_then
 		_self.then_item_is_enabled( item, expected_enabled? )
+	_endif
+
+	_if expected_managed? _isnt _unset
+	_then
+		_self.then_item_is_managed( item, expected_managed? )
 	_endif
 
 	>> _self
@@ -65,6 +71,28 @@ _method gui_framework_test_mixin.then_item_is_enabled( item, expected_enabled? )
 
 	>> _self
 	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_framework_test_mixin.then_item_is_managed( item, expected_managed? )
+        ## 
+        ## Verify the managed state of ITEM.
+        ##
+
+        managed? << item.managed?
+        
+        _if expected_managed?
+        _then 
+                fail_str << write_string( "Expected ", item, " to be managed, but it is not" )
+        _else
+                fail_str << write_string( "Expected ", item, " to not be managed, but it is" )
+        _endif
+        
+        _self.assert_equals( expected_managed?, managed?, fail_str )
+
+        >> _self
+        
 _endmethod
 $
 
