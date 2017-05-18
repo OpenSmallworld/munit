@@ -158,7 +158,8 @@ _method stub_method_helper_test.test_replacing_method_on_mixin()
 				  "stub_method_helper should be completely reset")	
 	_protection
 		remove_exemplar(:tc!stub_method_helper_test_class)
-		remove_mixin(:tc!stub_method_helper_test_mixin)
+		# remove_mixin is not defined in SW5
+		#remove_mixin(:tc!stub_method_helper_test_mixin)
 	_endprotect
 _endmethod
 $
@@ -188,11 +189,81 @@ _method stub_method_helper_test.test_defining_same_method_on_two_mixins()
 	_protection
 		remove_exemplar(:tc!stub_method_helper_test2_class)
 		remove_exemplar(:tc!stub_method_helper_test1_class)
-		remove_mixin(:tc!stub_method_helper_test2_mixin)
-		remove_mixin(:tc!stub_method_helper_test1_mixin)
+		# remove_mixin is not defined in SW5
+		#remove_mixin(:tc!stub_method_helper_test2_mixin)
+		#remove_mixin(:tc!stub_method_helper_test1_mixin)
 	_endprotect
 	_self.assert_true(stub_method_helper.replaced_method_data.empty? _and stub_method_helper.defined_method_data.empty?,
 			  "stub_method_helper should be completely reset")	
 _endmethod
 $
 
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.test_method_stubbed?_returns_true_for_stubbed_method()
+	## 
+	##
+
+	_self.given_a_stubbed_method(object, :|note_change()|).
+		then_method_stubbed?_returns(_true, object, :|note_change()|)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.test_method_stubbed?_returns_true_for_defined_method()
+	## 
+	## 
+
+	_self.given_a_stubbed_method(object, :|some_new_method()|).
+		then_method_stubbed?_returns(_true, object, :|some_new_method()|)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.test_method_stubbed?_returns_false_for_not_stubbed_method()
+	## 
+	##
+
+	_self.given_a_stubbed_method(object, :|some_new_method()|).
+		then_method_stubbed?_returns(_false, object, :|note_change()|)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.given_a_stubbed_method(class, method_name)
+	## 
+	##
+
+	stub_method_helper.replace_method(class, method_name, _proc() _endproc)
+	>> _self 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper_test.then_method_stubbed?_returns(expected_stubbed?, class, method_name)
+	## 
+	##
+
+	stubbed? << stub_method_helper.method_stubbed?(class, method_name)
+
+	_if expected_stubbed?
+	_then 
+		fail_str << write_string("Expected ", method_name, " on ", class, " to be stubbed, but it isn't")
+	_else 
+		fail_str << write_string("Expected ", method_name, " on ", class, " to not be stubbed, but it is")
+	_endif
+
+	_self.assert_equals(expected_stubbed?, stubbed?, fail_str)
+	
+	>> _self 
+	
+_endmethod
+$
