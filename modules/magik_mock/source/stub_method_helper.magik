@@ -104,3 +104,30 @@ _method stub_method_helper.restore_stubbed_methods()
 	_endloop
 _endmethod
 $
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper.method_stubbed?(stubbed_class, method_name)
+	## 
+	## Return true id CLASS_NAME.METHOD_NAME has been stubbed.
+	## Check in the replaced_method_data slot if the method is
+	## present.
+	##
+	
+	stubbed? << _false
+	
+	_for method_string, j_class _over _self.replaced_method_data.keys_and_elements()
+	_loop
+		_if j_class _isnt stubbed_class _then _continue _endif 
+		stubbed_method_name << i_method_string.split_by("$$$")[2].as_symbol()
+		_if method_name _is stubbed_method_name
+		_then
+			stubbed? << _true
+			_leave
+		_endif
+	_endloop
+	
+	>> stubbed?
+	
+_endmethod
+$
