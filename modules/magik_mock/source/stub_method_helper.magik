@@ -67,9 +67,7 @@ _method stub_method_helper.replace_method(class, method_name, method_proc)
 	## methods using this class.
 	##
 
-	c_name << class.define_method_target.meta_at(:class_name)
-	
-	method_key << write_string(c_name, "$$$", method_name)
+	method_key << _self.method_key(class, method_name)
 	_if class.define_method_target.local_method?(method_name)
 	_then
 		class.sys!save_and_replace_method(method_name, method_proc)
@@ -107,27 +105,27 @@ $
 
 
 _pragma(classify_level=debug, topic={MUnit})
-_method stub_method_helper.method_stubbed?(stubbed_class, method_name)
+_method stub_method_helper.method_stubbed?(class, method_name)
 	## 
-	## Return true id CLASS_NAME.METHOD_NAME has been stubbed.
+	## Return true id CLASS.METHOD_NAME has been stubbed.
 	## Check in the replaced_method_data slot if the method is
 	## present.
 	##
 	
-	stubbed? << _false
+	method_key << _self.method_key(class, method_name)
+	>> _self.replaced_method_data.includes_key?(method_key)
 	
-	_for method_string, j_class _over _self.replaced_method_data.keys_and_elements()
-	_loop
-		_if j_class _isnt stubbed_class _then _continue _endif 
-		stubbed_method_name << i_method_string.split_by("$$$")[2].as_symbol()
-		_if method_name _is stubbed_method_name
-		_then
-			stubbed? << _true
-			_leave
-		_endif
-	_endloop
-	
-	>> stubbed?
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method stub_method_helper.method_key(class, method_name)
+	## 
+	##
+
+	c_name << class.define_method_target.meta_at(:class_name)
+	>> write_string(c_name, "$$$", method_name)
 	
 _endmethod
 $
