@@ -33,6 +33,13 @@ _pragma(classify_level=debug, usage=subclassable)
 design_manager_system_test_mixin.define_shared_constant( :default_state_model_name, _unset, :public )
 $
 
+
+_pragma(classify_level=debug, usage=subclassable)
+## Defines the number of steps to post the active scheme to
+## "Design top".  The default is 1.
+design_manager_system_test_mixin.define_shared_constant( :number_of_steps_to_post_active_scheme_to_design_top, 1, :public )
+$
+
 _pragma(classify_level=debug)
 _method design_manager_system_test_mixin.given_no_active_design()
 	## 
@@ -209,8 +216,12 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 	## to fail.
 
 	# Always post only to the direct parent design
+	_local me << _self 
 	stub_method_helper.replace_method( swg_dsn_vmds_integrator, :|number_of_steps_to_post_active_scheme_to_design_top()|,
-					   _proc() >> 1 _endproc )
+					   _proc()
+						   _import me
+						   >> me.number_of_steps_to_post_active_scheme_to_design_top
+					   _endproc )
 
 	scheme << swg_dsn_admin_engine.active_scheme
 

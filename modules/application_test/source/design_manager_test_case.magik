@@ -277,14 +277,6 @@ _method design_manager_test_case.delete_child_design( _optional design_key )
 			swg_dsn_admin_engine.activate_scheme( _unset )
 		_endif
 
-		# In the case where this design and any of its sub designs has
-		# been published, the delete will fail, so state transition
-		# history is cleared out before any deletion
-		_for sub_scheme _over child_design.sub_schemes.fast_elements()
-		_loop
-			_self.int!delete_state_history_for(sub_scheme)
-		_endloop
-
 		_self.int!delete_state_history_for(child_design)
 		swg_dsn_admin_engine.delete_scheme( child_design )
 		.properties[ design_key ] << _unset 
@@ -1111,7 +1103,8 @@ $
 _pragma(classify_level=debug,topic={MUnit, Test})
 _private _method design_manager_test_case.int!delete_state_history_for(scheme)
 	## 
-	## 
+	##
+	
 	_if (recs << swg_dsn_state_history.history_for( scheme )) _isnt _unset
 	_then
 		_for rec _over recs.fast_elements()
@@ -1119,7 +1112,15 @@ _private _method design_manager_test_case.int!delete_state_history_for(scheme)
 			record_transaction.new_delete( rec ).run()
 		_endloop
 	_endif
-	 
+
+	# In the case where this design and any of its sub designs has
+	# been published, the delete will fail, so state transition
+	# history is cleared out before any deletion
+	_for sub_scheme _over scheme.sub_schemes.fast_elements()
+	_loop
+		_self.int!delete_state_history_for(sub_scheme)
+	_endloop
+	
 _endmethod
 $
 
