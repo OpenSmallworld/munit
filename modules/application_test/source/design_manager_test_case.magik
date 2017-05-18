@@ -930,8 +930,12 @@ _method design_manager_test_case.when_merging_design( _optional design )
 	_then
 		design << swg_dsn_admin_engine.active_scheme
 	_endif
+
+	fail_str << "The swg_dsn_admin_engine.merge_scheme() method is stubbed out to (most likely) do nothing"
+	_self.assert_false(stub_method_helper.method_stubbed?(swg_dsn_admin_engine, :|merge_scheme()|, fail_str))
 	
 	swg_dsn_admin_engine.merge_scheme( property_list.new(), design )
+	
 	>> _self
 	
 _endmethod
