@@ -40,7 +40,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method construction_pack_tool_test_mixin.then_cpack_tool_displays_doc( file_name )
+_method construction_pack_tool_test_mixin.then_cpack_tool_displays_doc( file_name, _optional expected_icon )
 	## 
 	## 
 
@@ -54,12 +54,51 @@ _method construction_pack_tool_test_mixin.then_cpack_tool_displays_doc( file_nam
 		a_label << an_item.get_items_with_text( name ).an_element()
 		_self.assert_not_unset( a_label,
 					"Expected item to have a label with '" + file_name + "'" )
+
+		_if expected_icon _isnt _unset
+		_then
+			_self.assert_deep_equals( expected_icon, an_item.image, "#1, document does not have the expected icon")
+		_endif
 	_endif
+
 
 	>> _self
 	
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method construction_pack_tool_test_mixin.then_cpack_tool_doesnt_display_doc(file_name)
+	## 
+	## 
+
+	an_item << _self.get_doc_item( file_name )
+	_self.assert_unset( an_item, 
+						"Did not expected to find an item representing the document '" + file_name + "'" ) 
+
+	>> _self
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method construction_pack_tool_test_mixin.then_cpack_tool_shows_default_file_gui()
+	## 
+	## verifies content of default gui
+	## 
+
+	_self.then_cpack_tool_has_item( "document_name_label", _true ).
+	
+	then_cpack_tool_has_item( "modified_time_label", _true ).
+	then_cpack_tool_has_item( "modified_time_value", _true ).
+
+	then_cpack_tool_has_item( "open_document_button", _true )
+
+	>> _self
+	
+_endmethod
+$
+
 
 _pragma(classify_level=debug)
 _private _method construction_pack_tool_test_mixin.get_doc_item( file_name )
