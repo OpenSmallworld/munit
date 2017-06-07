@@ -985,6 +985,39 @@ _method design_manager_test_case.then_rwo_has_co_in_current_design( rwo_name, cu
 _endmethod 	
 $
 
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method design_manager_test_case.then_all_rwos_with_name_have_co_in_current_design( rwo_name, co_name )
+	##
+	## Checks that all known rwos with rwo_name have the associated CO_NAME
+	## RWO must be known via self.rwo(rwo_name) - but in the case
+	## this has been replicated eg by splitting, will find ALL rwos
+	## with that name
+
+	rwo << _self.rwo( rwo_name )
+
+	all_rwos << rwo.source_collection.select( predicate.eq(:name,rwo_name.write_string) )
+
+	_for an_rwo _over all_rwos.fast_elements()
+	_loop
+		
+		found? << _false 
+		attached_cos << design_cost_item.get_for_record_and_scheme(an_rwo, swg_dsn_admin_engine.active_scheme, :co )
+		_for co _over attached_cos.fast_elements()
+		_loop
+			_if co.code = co_name
+			_then
+				found? << _true
+			_endif
+		_endloop
+
+		_self.assert_true( found?, write_string("CO ", co_id, " not found on ", an_rwo ) )
+	_endloop
+			
+	_return _self	
+
+_endmethod
+$
+
 
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.then_rwo_does_not_have_co_in_current_design( rwo_name, cu_name )
