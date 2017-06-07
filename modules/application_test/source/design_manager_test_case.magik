@@ -988,13 +988,14 @@ $
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.then_all_rwos_with_name_have_co_in_current_design( rwo_name, co_name )
 	##
-	## Assumes the rwo has a name field
+	## Checks that all known rwos with rwo_name have the associated CO_NAME
+	## RWO must be known via self.rwo(rwo_name) - but in the case
+	## this has been replicated eg by splitting, will find ALL rwos
+	## with that name
 
 	rwo << _self.rwo( rwo_name )
 
 	all_rwos << rwo.source_collection.select( predicate.eq(:name,rwo_name.write_string) )
-
-	write( "NUM RWOs called ", rwo_name, " ", all_rwos.size , " ", co_name )
 
 	_for an_rwo _over all_rwos.fast_elements()
 	_loop
