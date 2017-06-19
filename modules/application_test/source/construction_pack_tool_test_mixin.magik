@@ -1,0 +1,126 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+
+_pragma(classify_level=debug)
+## This class contains the unit tests for the
+## construction_pack_tool 
+def_mixin( :construction_pack_tool_test_mixin , { :gui_framework_test_mixin}  )
+$
+
+_pragma(classify_level=debug)
+_method construction_pack_tool_test_mixin.when_activating_construction_pack_tool()
+	## 
+	##
+
+	stub_method_helper.replace_method( sw_layout_series_tool, :|get_scale_info_for()|,
+					   _proc() >> {}, {} _endproc )
+	stub_method_helper.replace_method( sw_layout_series_tool, :|projection_choice_items|,
+					   _proc() >> {} _endproc )
+	stub_method_helper.replace_method( sw_layout_series_tool, :|length_unit|,
+					   _proc() >> :mm _endproc )
+	stub_method_helper.replace_method( sw_layout_series_tool, :|display_style_choice_items|,
+					   _proc() >> {} _endproc )
+	_self.properties[ :cpack_tool ].activate()
+	
+	>> _self 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method construction_pack_tool_test_mixin.then_cpack_tool_has_item( expected_element, expected_enabled? )
+	## 
+	##
+
+	top_con << _self.properties[ :cpack_tool ].top_frame.top_canvas_container
+	>> _self.then_container_has_item_with_identifier_and_enabled( top_con, expected_element, expected_enabled? )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method construction_pack_tool_test_mixin.then_cpack_tool_displays_doc( file_name, _optional expected_icon )
+	## 
+	## 
+
+	an_item << _self.get_doc_item( file_name )
+	_self.assert_not_unset( an_item,
+				"Expected to find an item representing the document '" + file_name + "'" ) 
+
+	_if an_item _isnt _unset
+	_then
+		name << system.split_filename( file_name )
+		a_label << an_item.get_items_with_text( name ).an_element()
+		_self.assert_not_unset( a_label,
+					"Expected item to have a label with '" + file_name + "'" )
+
+		_if expected_icon _isnt _unset
+		_then
+			_self.assert_deep_equals( expected_icon, an_item.image, "#1, document does not have the expected icon")
+		_endif
+	_endif
+
+
+	>> _self
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method construction_pack_tool_test_mixin.then_cpack_tool_doesnt_display_doc(file_name)
+	## 
+	## 
+
+	an_item << _self.get_doc_item( file_name )
+	_self.assert_unset( an_item, 
+						"Did not expected to find an item representing the document '" + file_name + "'" ) 
+
+	>> _self
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method construction_pack_tool_test_mixin.then_cpack_tool_shows_default_file_gui()
+	## 
+	## verifies content of default gui
+	## 
+
+	_self.then_cpack_tool_has_item( "document_name_label", _true ).
+	
+	then_cpack_tool_has_item( "modified_time_label", _true ).
+	then_cpack_tool_has_item( "modified_time_value", _true ).
+
+	then_cpack_tool_has_item( "open_document_button", _true )
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method construction_pack_tool_test_mixin.get_doc_item( file_name )
+	## 
+	## 
+
+	doc_path << _self.get_doc_path( file_name )
+	top_con << _self.properties[ :cpack_tool ].top_frame.top_canvas_container
+	>> top_con.get_items_with_data( :path, doc_path ).an_element()
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method construction_pack_tool_test_mixin.get_doc_path( file_name )
+	## 
+	## 
+
+	a_module << sw_module_manager.module( _self.module_name )
+	>> system.pathname_down( a_module.full_directory,
+				 "resources", "base", "data",
+				 file_name )
+	
+_endmethod
+$

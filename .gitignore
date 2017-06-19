@@ -1,0 +1,14 @@
+#syntax: glob
+
+# Backup files left by emacs
+*~
+
+# auto-save files used by emacs
+**/\#*\#
+# lock files used by emacs
+.\#*
+
+**.magikc
+**.old
+**.msgc
+
