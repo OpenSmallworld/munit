@@ -408,3 +408,21 @@ _method database_test.open_other_datasets()
                 _endif 
         _endloop 
 _endmethod 
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method database_test.wait_for_threads_to_finish( task_owner )
+	##
+	## Wait for all the tasks on TASK_OWNER to finish.
+	##
+	## Wait for 1 second and check if TASK_OWNER.thread_pool is
+	## empty.
+	##
+	## Implementation taken from application_system_test_mixin.
+
+	_loop
+		_if task_owner.task_runner().thread_pool.empty? _then _leave _endif
+		_thisthread.sleep( 1000 )
+	_endloop 
+	
+_endmethod
+$
