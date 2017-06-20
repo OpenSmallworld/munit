@@ -9,7 +9,7 @@ def_slotted_exemplar(:remote_test_server,
 		{:port,         _unset},
 		{:remote_tests, _unset}
 	},
-	{:test_suite})
+	{:test_suite, :sw_task_owner})
 $
 
 
@@ -58,8 +58,24 @@ _method remote_test_server.run()
 	## clients.  This method will block until all tests have been
 	## send to the clients.
 	##
-	
-        _self.listen()
+
+	queue << atomic_queue.new(1)
+        task  << _self.do_work(_self, :|listen()|, queue)
+
+	_loop
+		# Wait 30 minutes (for very slow tests) to make sure that some
+		# client requested a test
+		something << queue.get(30 * 60 * 1000)
+		
+		_if something _is _unset _orif # no client requested a test
+		    something _is :done        # all tests are done
+		_then
+			task.cancel()
+			_self.close_server()
+			_leave 
+		_endif
+		
+	_endloop
 	
 _endmethod
 $
@@ -81,7 +97,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_server.listen()
+_method remote_test_server.listen(queue)
 	##
 	##
 	
@@ -107,18 +123,20 @@ _method remote_test_server.listen()
 
                 _if client _is _unset
 		_then
+			queue.put(:done)
 			_leave
 		_endif
 
                 done? << _self.send_test_to_client(client)
 		_if done?
 		_then
+			queue.put(:done)
 			_leave 
 		_endif
+
+		queue.put(client)
 		
         _endloop
-
-	_self.close_server()
 	
 _endmethod
 $
