@@ -95,17 +95,20 @@ $
 _pragma(classify_level=debug)
 _private _method application_test.close_application()
 
-	app<< _self.application
-
-	_if app _is _unset _then _return _endif
+	_if .properties _is _unset _orif
+	    _self.force_close? _is _false _orif
+	    (app<< .properties[ :application ].default(.application)) _is _unset 
+	_then
+		_return
+	_endif
 	
 	# to prevent dialog 'Do you want to log of start another application?'
-	stub_method_helper.replace_method(application, :only_one_application_available?, _proc () >> _false _endproc)
-	stub_method_helper.replace_method(application, :anything_running?, _proc () >> _true _endproc)
+	stub_method_helper.replace_method(app, :only_one_application_available?, _proc () >> _false _endproc)
+	stub_method_helper.replace_method(app, :anything_running?, _proc () >> _true _endproc)
 	
 	app.simple_application_shutdown?<< _false 
 	app.close()
 	_self.wait_for_application_threads_to_finish()
-	_self.application<< _unset 	
+	.properties[ :application ]<< .application<< _unset
 _endmethod
 $
