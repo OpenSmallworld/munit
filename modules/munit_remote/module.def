@@ -1,0 +1,11 @@
+munit_remote 1
+
+description
+	MUnit Remote Support
+end
+
+requires
+	munit_xml
+end
+
+language en_gb

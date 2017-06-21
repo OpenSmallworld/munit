@@ -1,0 +1,239 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+def_slotted_exemplar(:remote_test_server,
+	{
+		{:connection,   _unset},
+		{:thread,       _unset},
+		{:port,         _unset},
+		{:remote_tests, _unset}
+	},
+	{:test_suite, :sw_task_owner})
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_server.new(port, _gather test_product_names)
+	## 
+	##
+
+	>> _clone.init(port, test_product_names)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_server.init(port, test_product_names)
+	##
+	##
+
+	_super.init()
+
+	.port << port
+        .connection << tcpip_connection_stream.new(port)
+	.remote_tests << rope.new()
+
+        _if .connection _is _unset
+        _then
+                condition.raise(:error, :string, "No connection stream created on " + port)
+        _endif
+
+	_for test_product_name _over test_product_names.fast_elements()
+	_loop
+		_self.add_product_test_suite(test_product_name.as_symbol())
+	_endloop
+	
+        >> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_server.run()
+	## 
+	## Listen for connections from clients and send tests to the
+	## clients.  This method will block until all tests have been
+	## send to the clients.
+	##
+
+	queue << atomic_queue.new(1)
+        task  << _self.do_work(_self, :|listen()|, queue)
+
+	_loop
+		# Wait 30 minutes (for very slow tests) to make sure that some
+		# client requested a test
+		something << queue.get(30 * 60 * 1000)
+		
+		_if something _is _unset _orif # no client requested a test
+		    something _is :done        # all tests are done
+		_then
+			task.cancel()
+			_self.close_server()
+			_leave 
+		_endif
+		
+	_endloop
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_server.close_server()
+        ## Closes down the server listener. Note that this does not
+        ## shut down any client connections.
+        
+        _if .connection _isnt _unset
+        _then
+                conn << .connection ^<< _unset
+                conn.close()
+        _endif
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_server.listen(queue)
+	##
+	##
+	
+        write(_self.class_name, " listening on ", .port)
+        conn << .connection
+        inc << system.incarnation
+        
+        _loop
+                _try _with cond
+                        # Ensure this loop terminates correctly on image restart with
+                        # active client
+                        client << _unset
+                        client << conn.get()
+                _when stream_is_closed
+                        # Generally occurs on image restart
+                        _if inc _is system.incarnation
+                        _then
+                                cond.invoke()
+                        _endif
+		_when error
+			show("Error getting client: ", cond.report_contents_string)
+                _endtry
+
+                _if client _is _unset
+		_then
+			queue.put(:done)
+			_leave
+		_endif
+
+                done? << _self.send_test_to_client(client)
+		_if done?
+		_then
+			queue.put(:done)
+			_leave 
+		_endif
+
+		queue.put(client)
+		
+        _endloop
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method remote_test_server.send_test_to_client(client)
+	## 
+	##
+
+	done? << _false
+	_try 
+		test  << _self.get_test_to_run()
+		done? << test _is :done
+		
+		_if test _isnt :done
+		_then
+			
+			module_name << test.module_name
+			test_name   << test.class_name
+			
+			_self.send_name_to_client(module_name, client)
+			_self.send_name_to_client(test_name, client)
+
+		_else
+			_self.send_name_to_client("done", client)
+		_endif
+
+	_when generic_prim_failure # Client died, return the test to the queue
+		_if test _isnt :done
+		_then 
+			_self.return_test_to_queue(test)
+		_endif
+	_endtry
+
+	>> done?
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method remote_test_server.get_test_to_run()
+	## 
+	##
+
+	_if .remote_tests.empty?
+	_then
+		test << :done
+	_else 
+		test << .remote_tests.remove_first()
+	_endif
+
+	>> test
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method remote_test_server.send_name_to_client(name, client)
+	## 
+	##
+	
+	client.output.put_signed_int(name.size)
+	client.output.put_ascii_chars(name)
+	client.output.flush()
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method remote_test_server.return_test_to_queue(test)
+	## 
+	##
+	
+	.remote_tests.add_last(test)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method remote_test_server.add_product_test_suite(product_name)
+	## 
+	##
+
+	tests <<  product_test_suite.new(product_name)
+
+	_for module_test _over tests.tests()
+	_loop
+		_for test_case _over module_test.tests()
+		_loop
+			.remote_tests.add_last(test_case)
+		_endloop
+	_endloop
+	
+_endmethod
+$
