@@ -32,6 +32,9 @@ _method remote_test_runner.run_remote(address, port)
 		_then 
 			sw_module_manager.load_module(module_name)
 		_endif
+
+		product_name << sw_module_manager.module(module_name).product.name
+		_self.properties[:output_identifier] << product_name
 		
 		test << !current_package![test_name]
 		a_stream << _self.new_stream(test)
@@ -45,6 +48,7 @@ _method remote_test_runner.run_remote(address, port)
 		
 		tests_ok? << tests_ok? _andif
 			     new_runner _isnt _unset _andif
+			     new_runner.test_result _isnt _unset _andif 
 			     new_runner.test_result.error_count() = 0 _andif
 			     new_runner.test_result.failure_count() = 0
 				
