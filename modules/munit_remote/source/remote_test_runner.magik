@@ -78,7 +78,12 @@ _private _method remote_test_runner.connect(address, port)
 		_endtry
 		_if .retry? _isnt _true _then _leave _endif
 		# The combination of sleeping for 150ms and 250 retries is
-		# roughly 5 minutes
+		# roughly 5 minutes.
+		# The connection << tcpip_connection.new(address, port) line
+		# takes some time as well. The 250 retries came from looking at
+		# the log file of an actual run where the client was trying to
+		# connect to a server that has gone away. 250 was more or less
+		# 5 minutes later than 1 
 		_thisthread.sleep(150)
 		show("Trying to connect... ", count)
 		count +<< 1
