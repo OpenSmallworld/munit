@@ -13,6 +13,10 @@ def_slotted_exemplar(:remote_test_server,
 $
 
 
+remote_test_server.method_table.resolve_conflicts(:test_suite)
+$
+
+
 _pragma(classify_level=debug)
 _method remote_test_server.new(port, _gather test_product_names)
 	## 
