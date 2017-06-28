@@ -74,9 +74,11 @@ _private _method remote_test_runner.connect(address, port)
 			.retry? << _false
 		_when sw_net_connection_failed
 			connection << _unset
-			.retry? << .retry? _andif count < 1000
+			.retry? << .retry? _andif count < 250
 		_endtry
 		_if .retry? _isnt _true _then _leave _endif
+		# The combination of sleeping for 150ms and 250 retries is
+		# roughly 5 minutes
 		_thisthread.sleep(150)
 		show("Trying to connect... ", count)
 		count +<< 1
