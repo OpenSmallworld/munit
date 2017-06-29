@@ -152,7 +152,8 @@ _private _method remote_test_runner.get_name_from_connection(connection)
 	_endif
 
 	# Acknowledge to the server that the message was read
-	connection.output.put(1)
+	connection.output.put_signed_int(1)
+	connection.output.flush()
 
 	>> name
 	
