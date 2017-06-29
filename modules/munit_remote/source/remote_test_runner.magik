@@ -18,7 +18,8 @@ _method remote_test_runner.run_remote(address, port)
 	start << date_time_now()
 	count << 0
 	tests_ok? << _true
-	.retry? << _true 
+	.retry? << _true
+	test_times << property_list.new()
 
 	_loop
 		
@@ -45,7 +46,7 @@ _method remote_test_runner.run_remote(address, port)
 			new_runner << _self.new(a_stream, _scatter _self.properties.for_scatter())
 			new_runner.int!run(test)
 			a_stream.flush()
-			show("Test ran in ", date_time_now() - test_start)
+			test_times[module_name + :|___| + test_name] << date_time_now() - test_start
 		_protection
 			a_stream.close()
 		_endprotect
@@ -59,6 +60,10 @@ _method remote_test_runner.run_remote(address, port)
 	_endloop
 
 	show(write_string("Ran ", count, " tests in ", date_time_now() - start))
+	_for test, time _over test_times.fast_keys_and_elements()
+	_loop
+		show(write_string("Test ", test, " ran in ", time))
+	_endloop 
 	
 	>> tests_ok?
 	
@@ -78,16 +83,16 @@ _private _method remote_test_runner.connect(address, port)
 			.retry? << _false
 		_when sw_net_connection_failed
 			connection << _unset
-			.retry? << .retry? _andif count < 250
+			.retry? << .retry? _andif count < 50
 		_endtry
 		_if .retry? _isnt _true _then _leave _endif
-		# The combination of sleeping for 150ms and 250 retries is
-		# roughly 5 minutes.
+		# The combination of sleeping for 150ms and 50 retries is
+		# roughly 1 minutes.
 		# The connection << tcpip_connection.new(address, port) line
-		# takes some time as well. The 250 retries came from looking at
+		# takes some time as well. The 50 retries came from looking at
 		# the log file of an actual run where the client was trying to
-		# connect to a server that has gone away. 250 was more or less
-		# 5 minutes later than 1 
+		# connect to a server that has gone away. 50 was more or less
+		# 1 minute later than 1 
 		_thisthread.sleep(150)
 		show("Trying to connect... ", count)
 		count +<< 1
@@ -122,8 +127,12 @@ _private _method remote_test_runner.get_new_test(address, port)
 					test_name << _self.get_name_from_connection(connection)
 				_endif
 			_when error
-				show("Error getting new test: ", error_variable.report_contents_string)
+				show("Problem getting new test: ", error_variable.report_contents_string)
 				show("Got: ", module_name, test_name)
+				_if module_name _isnt :done
+				_then
+					condition.raise(error_variable.name, _scatter error_variable.data)
+				_endif
 			_endtry
 			
 		_endif
