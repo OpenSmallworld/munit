@@ -21,7 +21,7 @@ _method construction_pack_tool_test_mixin.when_activating_construction_pack_tool
 	stub_method_helper.replace_method( sw_layout_series_tool, :|length_unit|,
 					   _proc() >> :mm _endproc )
 	stub_method_helper.replace_method( sw_layout_series_tool, :|display_style_choice_items|,
-					   _proc() >> {} _endproc )
+					   _proc() >> { "auto" } _endproc )
 	_self.properties[ :cpack_tool ].activate()
 	
 	>> _self 
