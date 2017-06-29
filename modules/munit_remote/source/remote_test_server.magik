@@ -232,15 +232,23 @@ _private _method remote_test_server.add_product_test_suite(product_name)
 	## 
 	##
 
-	tests <<  product_test_suite.new(product_name)
+	tests << product_test_suite.new(product_name)
+	ordered_tests << rope.new()
 
 	_for module_test _over tests.tests()
 	_loop
-		_for test_case _over module_test.tests()
+		_for test _over module_test.tests()
 		_loop
-			.remote_tests.add_last(test_case)
+			_if test.slow_test?
+			_then
+				ordered_tests.add_first(test)
+			_else
+				ordered_tests.add_last(test)
+			_endif 
 		_endloop
 	_endloop
+
+	.remote_tests.add_all_last(ordered_tests)
 	
 _endmethod
 $

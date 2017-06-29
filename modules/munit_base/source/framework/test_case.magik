@@ -89,6 +89,13 @@ test_case.define_shared_variable(:prev_test_class,
                                 _unset, :private)
 $
 
+_pragma(classify_level=restricted)
+## Subclass this shared constant if this is a slow test.  When
+## using the remote_test_server, slow tests are added first in
+## the list of tests to run.
+test_case.define_shared_constant(:slow_test?, _false, :public)
+$
+
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_case.new( a_name )
 	## Constructs a test case with the given A_NAME.
