@@ -208,6 +208,9 @@ _private _method remote_test_server.send_name_to_client(name, client)
 	client.output.put_signed_int(name.size)
 	client.output.put_ascii_chars(name)
 	client.output.flush()
+
+	# Wait for the client to acknowledge receipt of the message
+	client.input.get_signed_int()
 	
 _endmethod
 $

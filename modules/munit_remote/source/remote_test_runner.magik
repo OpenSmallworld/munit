@@ -107,15 +107,20 @@ _private _method remote_test_runner.get_new_test(address, port)
 
 		_if connection _isnt _unset
 		_then
-			
-			# Get the module name
-			module_name << _self.get_name_from_connection(connection)
+
+			_try _with error_variable
+				# Get the module name
+				module_name << _self.get_name_from_connection(connection)
 				
-			# Get the test name
-			_if module_name _isnt :done
-			_then 
-				test_name << _self.get_name_from_connection(connection)
-			_endif
+				# Get the test name
+				_if module_name _isnt :done
+				_then 
+					test_name << _self.get_name_from_connection(connection)
+				_endif
+			_when error
+				show("Error getting new test: ", error_variable.report_contents_string)
+				show("Got: ", module_name, test_name)
+			_endtry
 			
 		_endif
 			
@@ -141,6 +146,9 @@ _private _method remote_test_runner.get_name_from_connection(connection)
 	_else
 		name << :done
 	_endif
+
+	# Acknowledge to the server that the message was read
+	connection.output.put(1)
 
 	>> name
 	
