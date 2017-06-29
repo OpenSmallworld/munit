@@ -26,6 +26,8 @@ _method remote_test_runner.run_remote(address, port)
 
 		_if module_name _is :done _then _leave _endif
 
+		show("Running tests in class: ", module_name, test_name)
+
 		count +<< 1
 
 		_if _not sw_module_manager.module(module_name).loaded?
@@ -39,9 +41,11 @@ _method remote_test_runner.run_remote(address, port)
 		test << !current_package![test_name]
 		a_stream << _self.new_stream(test)
 		_protect
+			test_start << date_time_now()
 			new_runner << _self.new(a_stream, _scatter _self.properties.for_scatter())
 			new_runner.int!run(test)
 			a_stream.flush()
+			show("Test ran in ", date_time_now() - test_start)
 		_protection
 			a_stream.close()
 		_endprotect
@@ -107,15 +111,20 @@ _private _method remote_test_runner.get_new_test(address, port)
 
 		_if connection _isnt _unset
 		_then
-			
-			# Get the module name
-			module_name << _self.get_name_from_connection(connection)
+
+			_try _with error_variable
+				# Get the module name
+				module_name << _self.get_name_from_connection(connection)
 				
-			# Get the test name
-			_if module_name _isnt :done
-			_then 
-				test_name << _self.get_name_from_connection(connection)
-			_endif
+				# Get the test name
+				_if module_name _isnt :done
+				_then 
+					test_name << _self.get_name_from_connection(connection)
+				_endif
+			_when error
+				show("Error getting new test: ", error_variable.report_contents_string)
+				show("Got: ", module_name, test_name)
+			_endtry
 			
 		_endif
 			
@@ -141,6 +150,9 @@ _private _method remote_test_runner.get_name_from_connection(connection)
 	_else
 		name << :done
 	_endif
+
+	# Acknowledge to the server that the message was read
+	connection.output.put(1)
 
 	>> name
 	
