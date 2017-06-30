@@ -3,12 +3,14 @@ _package sw
 $
 
 _pragma(classify_level=debug, usage={subclassable})
+def_slotted_exemplar(:slow_tests_first_provider,
 	{},
 	{} )
 $
 
 
 _pragma(classify_level=debug, usage={subclassable})
+_method slow_tests_first_provider.get_list(test_product_names)
 	## 
 	## This method returns a rope of test cases.
 	##
@@ -35,6 +37,7 @@ $
 
 
 _pragma(classify_level=debug, usage={subclassable})
+_private _method slow_tests_first_provider.add_product_test_suite(remote_tests, product_name)
 	## 
 	##
 
