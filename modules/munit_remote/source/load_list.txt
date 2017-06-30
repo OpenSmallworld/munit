@@ -1,3 +1,3 @@
-remote_test_list_provider
+slow_tests_first_provider
 remote_test_server
 remote_test_runner

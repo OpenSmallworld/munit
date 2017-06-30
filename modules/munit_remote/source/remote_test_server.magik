@@ -29,7 +29,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_server.init(port, test_product_names)
+_method remote_test_server.init(port, test_product_names, _optional test_list_provider)
 	##
 	##
 
@@ -37,17 +37,14 @@ _method remote_test_server.init(port, test_product_names)
 
 	.port << port
         .connection << tcpip_connection_stream.new(port)
-	.remote_tests << rope.new()
 
         _if .connection _is _unset
         _then
                 condition.raise(:error, :string, "No connection stream created on " + port)
         _endif
 
-	_for test_product_name _over test_product_names.fast_elements()
-	_loop
-		_self.add_product_test_suite(test_product_name.as_symbol())
-	_endloop
+	test_list_provider << test_list_provider.default(remote_test_list_provider)
+	.remote_tests << test_list_provider.get_list(test_product_names)
 	
         >> _self
 	
@@ -222,33 +219,6 @@ _private _method remote_test_server.return_test_to_queue(test)
 	##
 	
 	.remote_tests.add_last(test)
-	
-_endmethod
-$
-
-
-_pragma(classify_level=debug)
-_private _method remote_test_server.add_product_test_suite(product_name)
-	## 
-	##
-
-	tests << product_test_suite.new(product_name)
-	ordered_tests << rope.new()
-
-	_for module_test _over tests.tests()
-	_loop
-		_for test _over module_test.tests()
-		_loop
-			_if test.slow_test?
-			_then
-				ordered_tests.add_first(test)
-			_else
-				ordered_tests.add_last(test)
-			_endif 
-		_endloop
-	_endloop
-
-	.remote_tests.add_all_last(ordered_tests)
 	
 _endmethod
 $

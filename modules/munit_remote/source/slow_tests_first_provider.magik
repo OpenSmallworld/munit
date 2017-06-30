@@ -3,14 +3,12 @@ _package sw
 $
 
 _pragma(classify_level=debug, usage={subclassable})
-def_slotted_exemplar(:remote_test_list_provider,
 	{},
 	{} )
 $
 
 
 _pragma(classify_level=debug, usage={subclassable})
-_method remote_test_list_provider.get_list(test_product_names)
 	## 
 	## This method returns a rope of test cases.
 	##
@@ -37,7 +35,6 @@ $
 
 
 _pragma(classify_level=debug, usage={subclassable})
-_private _method remote_test_list_provider.add_product_test_suite(remote_tests, product_name)
 	## 
 	##
 
