@@ -1,0 +1,63 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug, usage={subclassable})
+def_slotted_exemplar(:remote_test_list_provider,
+	{},
+	{} )
+$
+
+
+_pragma(classify_level=debug, usage={subclassable})
+_method remote_test_list_provider.get_list(test_product_names)
+	## 
+	## This method returns a rope of test cases.
+	##
+	## It loops over the PRODUCT_NAMES and for each one create a
+	## product_test_suite.  It then loops over all the module tests
+	## in the product test suite and for each module test loop over
+	## all the tests in the module.  It adds the test to the end of
+	## the rope of tests for the product, except if the test is a
+	## slow_test? in which case it is added first in the list of
+	## tests for that product.
+	##
+
+	remote_tests << rope.new()
+	
+	_for test_product_name _over test_product_names.fast_elements()
+	_loop
+		_self.add_product_test_suite(remote_tests, test_product_name.as_symbol())
+	_endloop
+
+	>> remote_tests
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, usage={subclassable})
+_private _method remote_test_list_provider.add_product_test_suite(remote_tests, product_name)
+	## 
+	##
+
+	tests << product_test_suite.new(product_name)
+	ordered_tests << rope.new()
+
+	_for module_test _over tests.tests()
+	_loop
+		_for test _over module_test.tests()
+		_loop
+			_if test.slow_test?
+			_then
+				ordered_tests.add_first(test)
+			_else
+				ordered_tests.add_last(test)
+			_endif 
+		_endloop
+	_endloop
+
+	remote_tests.add_all_last(ordered_tests)
+	
+_endmethod
+$

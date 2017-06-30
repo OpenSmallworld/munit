@@ -1,2 +1,3 @@
+remote_test_list_provider
 remote_test_server
 remote_test_runner
