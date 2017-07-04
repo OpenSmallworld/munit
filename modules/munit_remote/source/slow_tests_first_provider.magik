@@ -18,9 +18,8 @@ _method slow_tests_first_provider.get_list(test_product_names)
 	## product_test_suite.  It then loops over all the module tests
 	## in the product test suite and for each module test loop over
 	## all the tests in the module.  It adds the test to the end of
-	## the rope of tests for the product, except if the test is a
-	## slow_test? in which case it is added first in the list of
-	## tests for that product.
+	## the rope of tests, except if the test is a slow_test? in
+	## which case it is added first in the list of tests.
 	##
 
 	remote_tests << rope.new()
@@ -42,7 +41,6 @@ _private _method slow_tests_first_provider.add_product_test_suite(remote_tests, 
 	##
 
 	tests << product_test_suite.new(product_name)
-	ordered_tests << rope.new()
 
 	_for module_test _over tests.tests()
 	_loop
@@ -50,14 +48,12 @@ _private _method slow_tests_first_provider.add_product_test_suite(remote_tests, 
 		_loop
 			_if test.slow_test?
 			_then
-				ordered_tests.add_first(test)
+				remote_tests.add_first(test)
 			_else
-				ordered_tests.add_last(test)
+				remote_tests.add_last(test)
 			_endif 
 		_endloop
 	_endloop
-
-	remote_tests.add_all_last(ordered_tests)
 	
 _endmethod
 $
