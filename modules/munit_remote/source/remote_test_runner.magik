@@ -127,10 +127,10 @@ _private _method remote_test_runner.get_new_test(address, port)
 					test_name << _self.get_name_from_connection(connection)
 				_endif
 			_when error
-				show("Problem getting new test: ", error_variable.report_contents_string)
-				show("Got: ", module_name, test_name)
 				_if module_name _isnt :done
 				_then
+					show("Problem getting new test: ", error_variable.report_contents_string)
+					show("Got: ", module_name, test_name)
 					condition.raise(error_variable.name, _scatter error_variable.data)
 				_endif
 			_endtry
