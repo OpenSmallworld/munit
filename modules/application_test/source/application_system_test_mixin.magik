@@ -455,6 +455,134 @@ $
 
 
 _pragma(classify_level=debug)
+_method application_system_test_mixin.when_expanding_tree_element( tree_id_or_path, a_string )
+	## 
+	## Expands the element displaying a string matching A_STRING.
+	##
+	## TREE_ID_OR_PATH can be the tree_item id or its identifier
+	## path or the path of a container of the tree_item.
+
+	a_tree_item << _self.get_tree_item( tree_id_or_path )
+	_if a_tree_item _is _unset
+	_then
+		_return _self
+	_endif
+
+	dt << _self.get_display_tree( a_tree_item, a_string )
+	_if dt _isnt _unset
+	_then
+		dt.expanded? << _true
+	_endif
+	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_expanding_all_tree_elements( tree_id_or_path )
+	## 
+	## Expands all elements in the tree_item.
+	##
+	## TREE_ID_OR_PATH can be the tree_item id or its identifier
+	## path or the path of a container of the tree_item.
+	
+	a_tree_item << _self.get_tree_item( tree_id_or_path )
+	_if a_tree_item _is _unset
+	_then
+		_return _self
+	_endif
+
+	_for dt _over a_tree_item.tree_manager.fast_visible_trees()
+	_loop
+		dt.expand_fully()
+	_endloop
+	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_tree_contains_element( tree_id_or_path, a_string,
+								  _optional parent_string )
+	## 
+	## Asserts a tree_item contains an element displaying a string
+	## matching A_STRING.
+	## Optionally asserts the string displayed in the parent element.
+
+	a_tree_item << _self.get_tree_item( tree_id_or_path )
+	_if a_tree_item _is _unset
+	_then
+		_return _self
+	_endif
+
+	dt << _self.get_display_tree( a_tree_item, a_string )
+	
+	fail_str << write_string( "Expected to find display tree matching '", a_string, "'" )
+	_self.assert_not_unset( dt, fail_str )
+
+	_if dt _isnt _unset _andif
+	    parent_string _isnt _unset
+	_then
+		parent_dt << dt.parent
+		fail_str << write_string( "Expected parent display tree matching '", parent_string, "'" )
+		_self.assert_true( parent_dt.as_charvec().matches?( parent_string ), fail_str )
+	_endif
+	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.get_tree_item( tree_id_or_path )
+	## 
+	## Returns a tree_item with the specified id or identifier path. 
+
+	top_con << _self.properties[ :application ].top_frame.top_canvas_container
+	_for c _over top_con.all_canvases()
+	_loop
+		_if c.responds_to?( :get_identifier_path|()| ) _andif
+		    ( c.get_identifier_path() = tree_id_or_path _orif
+		      c.id = tree_id_or_path )
+		_then
+			_return c
+		_endif
+	_endloop
+
+	a_container << _self.get_item( tree_id_or_path )
+	_if a_container.responds_to?( :|tag!sw_container_base| )
+	_then
+		canvases << rope.new_from_iter( a_container, :all_canvases|()| )
+		_if canvases.size _is 1 _andif
+		    canvases.an_element().is_kind_of?( tree_item )
+		_then
+			_return canvases.an_element()
+		_endif
+	_endif
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.get_display_tree( a_tree_item, a_string )
+	## 
+	## Returns a display_tree showing a string matching A_STRING.
+
+	_for dt _over a_tree_item.tree_manager.fast_visible_trees()
+	_loop
+		_if dt.as_charvec().matches?( a_string )
+		_then
+			_return dt
+		_endif
+	_endloop
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method application_system_test_mixin.when_going_to_bounds( xmin, ymin, xmax, ymax )
 	## 
 	##
@@ -828,6 +956,36 @@ _method application_system_test_mixin.then_record_is_shown_on_map( rwo )
 
 	_self.assert_true( geoms.rwo_set().includes?( rwo ),
 			   "Expect current map to show " + rwo.description() )
+
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_map_contains( rwo_collection_name, expected_number ) 
+	## 
+	## Asserts the map contains the correct number of rwos from the
+	## specified collection.
+
+	manager << _self.map_manager
+	mv << manager.current_map_view
+	geoms << mv.get_visible_geometry_set()
+
+	actual_number << 0
+	_for a_rwo _over geoms.rwo_set().fast_elements()
+	_loop
+		col << a_rwo.source_collection
+		_if col.name = rwo_collection_name _orif
+		    col.external_name = rwo_collection_name
+		_then
+			actual_number +<< 1
+		_endif
+	_endloop
+
+	fail_str << write_string( "Expected ", expected_number,
+				  " from collection ", rwo_collection_name, ". #1" )
+	_self.assert_equals( expected_number, actual_number, fail_str )
 
 	>> _self
 _endmethod
