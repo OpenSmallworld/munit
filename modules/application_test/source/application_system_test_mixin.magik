@@ -468,7 +468,7 @@ _method application_system_test_mixin.when_expanding_tree_element( tree_id_or_pa
 		_return _self
 	_endif
 
-	dt << _self.get_display_tree( a_tree_item, a_string )
+	dt << _self.get_display_trees( a_tree_item, a_string ).an_element()
 	_if dt _isnt _unset
 	_then
 		dt.expanded? << _true
@@ -517,17 +517,22 @@ _method application_system_test_mixin.then_tree_contains_element( tree_id_or_pat
 		_return _self
 	_endif
 
-	dt << _self.get_display_tree( a_tree_item, a_string )
-	
-	fail_str << write_string( "Expected to find display tree matching '", a_string, "'" )
-	_self.assert_not_unset( dt, fail_str )
+	matches << _self.get_display_trees( a_tree_item, a_string )
 
-	_if dt _isnt _unset _andif
-	    parent_string _isnt _unset
+	_if parent_string _isnt _unset
 	_then
-		parent_dt << dt.parent
+		ok? << _false
+		_for dt _over matches.fast_elements()
+		_loop
+			parent_dt << dt.parent
+			_if parent_dt.as_charvec().matches?( parent_string )
+			_then
+				ok? << _true
+				_leave
+			_endif
+		_endloop
 		fail_str << write_string( "Expected parent display tree matching '", parent_string, "'" )
-		_self.assert_true( parent_dt.as_charvec().matches?( parent_string ), fail_str )
+		_self.assert_true( ok?, fail_str )
 	_endif
 	
 	>> _self
@@ -536,9 +541,11 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.get_tree_item( tree_id_or_path )
+_private _method application_system_test_mixin.get_tree_item( tree_id_or_path )
 	## 
 	## Returns a tree_item with the specified id or identifier path. 
+
+	a_tree_item << _unset
 
 	top_con << _self.properties[ :application ].top_frame.top_canvas_container
 	_for c _over top_con.all_canvases()
@@ -547,37 +554,52 @@ _method application_system_test_mixin.get_tree_item( tree_id_or_path )
 		    ( c.get_identifier_path() = tree_id_or_path _orif
 		      c.id = tree_id_or_path )
 		_then
-			_return c
+			a_tree_item << c
+			_leave
 		_endif
 	_endloop
 
-	a_container << _self.get_item( tree_id_or_path )
-	_if a_container.responds_to?( :|tag!sw_container_base| )
+	_if a_tree_item _is _unset
 	_then
-		canvases << rope.new_from_iter( a_container, :all_canvases|()| )
-		_if canvases.size _is 1 _andif
-		    canvases.an_element().is_kind_of?( tree_item )
+		a_container << _self.get_item( tree_id_or_path )
+		_if a_container.responds_to?( :|tag!sw_container_base| )
 		_then
-			_return canvases.an_element()
+			canvases << rope.new_from_iter( a_container, :all_canvases|()| )
+			_if canvases.size _is 1 _andif
+			    canvases.an_element().is_kind_of?( tree_item )
+			_then
+				a_tree_item << canvases.an_element()
+			_endif
 		_endif
 	_endif
-	
+
+	fail_str << write_string( "Expected to find tree_item '", tree_id_or_path, "'" )
+	_self.assert_not_unset( a_tree_item, fail_str )
+
+	>> a_tree_item
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.get_display_tree( a_tree_item, a_string )
+_private _method application_system_test_mixin.get_display_trees( a_tree_item, a_string )
 	## 
 	## Returns a display_tree showing a string matching A_STRING.
+
+	matches << rope.new()
 
 	_for dt _over a_tree_item.tree_manager.fast_visible_trees()
 	_loop
 		_if dt.as_charvec().matches?( a_string )
 		_then
-			_return dt
+			matches.add_last( dt )
 		_endif
 	_endloop
+
+	fail_str << write_string( "Expected to find display_tree matching '", a_string, "'" )
+	_self.assert_false( matches.empty?, fail_str )
+
+	>> matches
 _endmethod
 $
 
@@ -946,14 +968,24 @@ $
 
 
 _pragma(classify_level=debug)
+_private _method application_system_test_mixin.get_map_geoms()
+	## 
+	## 
+
+	manager << _self.map_manager
+	mv << manager.current_map_view
+	>> mv.get_visible_geometry_set()
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method application_system_test_mixin.then_record_is_shown_on_map( rwo )
 	## 
 	## Verify that the record inserted is available on the main map.
 
-	manager << _self.map_manager
-	mv << manager.current_map_view
-	geoms << mv.get_visible_geometry_set()
-
+	geoms << _self.get_map_geoms()
+	
 	_self.assert_true( geoms.rwo_set().includes?( rwo ),
 			   "Expect current map to show " + rwo.description() )
 
@@ -968,10 +1000,8 @@ _method application_system_test_mixin.then_map_contains( rwo_collection_name, ex
 	## Asserts the map contains the correct number of rwos from the
 	## specified collection.
 
-	manager << _self.map_manager
-	mv << manager.current_map_view
-	geoms << mv.get_visible_geometry_set()
-
+	geoms << _self.get_map_geoms()
+	
 	actual_number << 0
 	_for a_rwo _over geoms.rwo_set().fast_elements()
 	_loop
