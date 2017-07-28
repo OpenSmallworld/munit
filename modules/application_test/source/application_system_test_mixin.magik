@@ -538,7 +538,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.then_tree_rows_is( tree_id_or_path, expected_rows )
+_method application_system_test_mixin.then_number_of_rows_in_tree_is( tree_id_or_path, expected_rows )
 	## 
 	## Asserts the number of visible rows in a tree item.
 	##
