@@ -302,23 +302,11 @@ _method test_tree_builder.tests_for_suite(a_suite)
 _endmethod
 $
 
-# FIXME Find better way to handle this
 _pragma(classify_level=restricted)
-_method test_tree_builder.message(_gather args)
+_method test_tree_builder.message(message_id, _gather args)
 	## 
-	## 
-	>> test_runner_dialog.message(_scatter args)
-_endmethod
-$
-
-
-# Hook into test_runner_dialog
-
-_pragma(classify_level=restricted)
-_method test_runner_dialog.hierarchy_tree()
-	## 
-	## 
-	ttb << test_tree_builder.new(_true)
-	>> ttb.hierarchy_tree()
+	##
+	mh << message_handler.new(:test_runner_dialog)
+	>> mh.human_string( message_id, _unset,_scatter args )
 _endmethod
 $
