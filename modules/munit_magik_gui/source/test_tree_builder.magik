@@ -79,7 +79,7 @@ _method test_tree_builder.product_tree_list(a_product)
 	## 
 	## 
 
-	trd_mod_name << test_runner_dialog.module_name
+	trd_mod_name << _self.module_name
 
 	# Create a display tree for the product. This will only be
 	# added to the results if it contains test modules
@@ -106,7 +106,7 @@ _method test_tree_builder.module_tree_list(a_module)
 	## 
 	##
 	
-	trd_mod_name << test_runner_dialog.module_name
+	trd_mod_name << _self.module_name
 
 	module_name << a_module.name
 	a_colour << _if a_module.loaded?
@@ -146,7 +146,7 @@ _pragma(classify_level=restricted)
 _method test_tree_builder.unloaded_class_tree_list(a_module, module_display_tree)
 	## 
 	##
-	trd_mod_name << test_runner_dialog.module_name
+	trd_mod_name << _self.module_name
 	classes << _self.unsorted_unloaded_classes(a_module)
 	# For modules not yet loaded, use information in the module.def file
 	_for t _over classes.fast_elements()
@@ -179,7 +179,7 @@ _pragma(classify_level=restricted)
 _method test_tree_builder.orphaned_suite_tree_list()
 	## 
 	## 
-	trd_mod_name << test_runner_dialog.module_name
+	trd_mod_name << _self.module_name
 	
 	orphan_tree << display_tree.new( :undeclared )
 	orphan_tree.styled_string << {:image, { :hierarchy, trd_mod_name }, _self.message( :undeclared_tests ) }
@@ -207,7 +207,7 @@ _private _method test_tree_builder.suite_tree_list( a_suite, parent_display_tree
 	## or test_case.
 	##
 
-	trd_mod_name << test_runner_dialog.module_name
+	trd_mod_name << _self.module_name
 
 	_if _not .display_trees.includes?( a_suite )
 	_then 
