@@ -561,3 +561,18 @@ _method test_case.test_aspects_keys
 	
 _endmethod
 $
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.unsorted_tests()
+	##
+	## Return all runnable tests.
+	##
+	
+	>> _if .name _is _unset
+	   _then
+		   >> _self.suite().unsorted_tests()
+	   _else
+		   >> {_self}
+	   _endif 
+_endmethod
+$

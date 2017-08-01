@@ -1,0 +1,324 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=restricted)
+##
+## Build test tree for display in test_runner_dialog. 
+##
+def_slotted_exemplar(:test_tree_builder,
+{
+	{ :test_suite_finder,   _unset },
+	{ :sorted?,             _unset },
+	{ :display_trees,       _unset }
+},
+{} )
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.new(_optional sorted?)
+	## 
+	## 
+	>> _clone.init(sorted?)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.init(sorted?)
+	## 
+	## 
+	.test_suite_finder << test_suite_finder.new()
+	.sorted? << sorted?.default(_false)
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+test_tree_builder.define_slot_access(:test_suite_finder, :readable, :private)
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.hierarchy_tree()
+	##
+	## Return a rope of display trees to populate the test tree
+	##
+
+	.display_trees   << rope.new()
+
+	# Need to create a new test_suite_finder to make sure its cache
+	# is up-to-date
+	result       << rope.new_for( smallworld_product.products.size )
+
+	products << _self.products()
+	_for a_product _over products.fast_elements()
+	_loop
+		product_display_tree << _self.product_tree_list(a_product)
+		
+		# Only include the product if it had any test modules
+		_if product_display_tree.children?
+		_then 
+			result.add( product_display_tree )
+		_endif 
+	_endloop 
+
+	# Create a final orphan tree to display any tests in the image
+	# that do not belong in any modules
+
+	orphan_tree << _self.orphaned_suite_tree_list()
+	_if orphan_tree.children?
+	_then 
+		result.add( orphan_tree )
+	_endif 
+
+	>> result
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.product_tree_list(a_product)
+	## 
+	## 
+
+	trd_mod_name << test_runner_dialog.module_name
+
+	# Create a display tree for the product. This will only be
+	# added to the results if it contains test modules
+	product_display_tree << display_tree.new( a_product, _unset )
+	product_display_tree.styled_string << {:image, { :product, trd_mod_name }, a_product.name.write_string }
+
+	modules << _self.test_modules(a_product)
+	_for a_module _over modules.fast_elements()
+	_loop
+		module_display_tree << _self.module_tree_list(a_module)
+		
+		# Only include the module if it had any tests
+		_if module_display_tree.children?
+		_then
+			product_display_tree.add_child( module_display_tree )
+		_endif 
+	_endloop
+	>> product_display_tree 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.module_tree_list(a_module)
+	## 
+	##
+	
+	trd_mod_name << test_runner_dialog.module_name
+
+	module_name << a_module.name
+	a_colour << _if a_module.loaded?
+		    _then
+			    >> :blue
+		    _else
+			    >> :black
+		    _endif
+	# Create a display tree for the module. This will only be
+	# added to the product tree if it contains tests
+	module_display_tree << display_tree.new( a_module )
+	module_display_tree.styled_string << {:image, { :module, trd_mod_name }, a_colour, module_name.write_string }
+	_if a_module.loaded?
+	_then
+		_self.loaded_class_tree_list(a_module, module_display_tree)
+	_else
+		_self.unloaded_class_tree_list(a_module, module_display_tree)
+	_endif
+	
+	>> module_display_tree
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.loaded_class_tree_list(a_module, module_display_tree)
+	## 
+	##
+	classes << _self.loaded_classes(a_module.name)
+	_for a_suite _over classes.fast_elements()
+	_loop
+		_self.suite_tree_list( a_suite, module_display_tree )
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.unloaded_class_tree_list(a_module, module_display_tree)
+	## 
+	##
+	trd_mod_name << test_runner_dialog.module_name
+	classes << _self.unsorted_unloaded_classes(a_module)
+	# For modules not yet loaded, use information in the module.def file
+	_for t _over classes.fast_elements()
+	_loop
+		test_display_tree << display_tree.new( t, _unset, module_display_tree )
+		test_display_tree.styled_string << {:image, { :hierarchy, trd_mod_name }, t.name.write_string }
+		
+		_for elem  _over t.args.split_by( %space ).elements()
+		_loop
+			_if ( rt << get_global_value(elem.as_symbol() ) ) _isnt _unset
+			_then
+				_self.suite_tree_list( rt, test_display_tree )
+			_endif
+		_endloop
+		.display_trees.add( t )
+	_endloop	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.unsorted_unloaded_classes(a_module)
+	## 
+	## 
+	>> rope.new_from_iter(a_module, :|tests()|, :framework, :munit)
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.orphaned_suite_tree_list()
+	## 
+	## 
+	trd_mod_name << test_runner_dialog.module_name
+	
+	orphan_tree << display_tree.new( :undeclared )
+	orphan_tree.styled_string << {:image, { :hierarchy, trd_mod_name }, _self.message( :undeclared_tests ) }
+
+	tf << _self.test_suite_finder
+	_for suite_name _over tf.get_test_suite_owner_names().fast_elements()
+	_loop
+		_if ( suite << get_global_value(suite_name) ) _isnt _unset
+		_then 
+			_self.suite_tree_list( suite, orphan_tree )
+		_endif 
+	_endloop
+
+	>> orphan_tree
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method test_tree_builder.suite_tree_list( a_suite, parent_display_tree )
+	##
+	## Build display_trees for A_SUITE in PARENT_DISPLAY_TREE
+	## This will create a display_tree for the suite itself and for
+	## all its children.
+	## Both A_SUITE and its children may be instances of test_suite
+	## or test_case.
+	##
+
+	trd_mod_name << test_runner_dialog.module_name
+
+	_if _not .display_trees.includes?( a_suite )
+	_then 
+		.display_trees.add( a_suite )
+		suite_display_tree << display_tree.new( a_suite )
+		suite_display_tree.styled_string << {:image, { :hierarchy, trd_mod_name }, a_suite }
+		
+		_for a_test _over _self.tests_for_suite(a_suite).fast_elements()
+		_loop
+			_if a_test.is_kind_of?( test_suite )
+			_then
+				_self.suite_tree_list( a_test, suite_display_tree )
+			_else
+				_if _not .display_trees.includes?( a_test )
+				_then
+					.display_trees.add( a_test )
+					a_display_tree << display_tree.new( a_test, _unset, suite_display_tree )
+					a_display_tree.set_value_method( a_test, :|value_for_display_tree()| )
+					a_display_tree.styled_string << styled_string.new( :value, :icon, :value, :name )
+				_endif
+			_endif 
+		_endloop
+		_if suite_display_tree.children?
+		_then
+			parent_display_tree.add_child( suite_display_tree )
+		_endif 
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.products()
+	## 
+	##
+	unsorted_products << smallworld_product.products
+	>> _if .sorted?
+	   _then
+		   >> sorted_collection.new_from(unsorted_products, {:method_result, :name})
+	   _else
+		   >> unsorted_products
+	   _endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.test_modules(a_product)
+	## 
+	##
+
+	# a_product.defined_modules returns a sorted collection, so we
+	# don't need to sort them again if .sorted? is _true
+	all_modules << a_product.defined_modules
+	test_modules << rope.new()
+	_for a_module _over all_modules.fast_elements()
+	_loop
+		_if a_module.test_module?
+		_then
+			test_modules.add(a_module)
+		_endif
+	_endloop
+	>> test_modules
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.loaded_classes( module_name )
+	## 
+	## 
+	# Find all test_case classes in the image
+	loaded_classes << _self.test_suite_finder.find_classes_for_module( module_name )
+	>> _if .sorted?
+	   _then
+		   >> sorted_collection.new_from(loaded_classes, {:method_result, :write_string })		   
+	   _else
+		   >> loaded_classes
+	   _endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_tree_builder.tests_for_suite(a_suite)
+	## 
+	## 
+	unsorted_tests << a_suite.unsorted_tests()
+
+	>> _if .sorted?
+	   _then  
+		   >> sorted_collection.new_from(unsorted_tests, {:method_result, :write_string})
+	   _else
+		   >> unsorted_tests
+	   _endif
+_endmethod
+$
+
+# FIXME Find better way to handle this
+_pragma(classify_level=restricted)
+_method test_tree_builder.message(_gather args)
+	## 
+	## 
+	>> test_runner_dialog.message(_scatter args)
+_endmethod
+$
+
+
+# Hook into test_runner_dialog
+
+_pragma(classify_level=restricted)
+_method test_runner_dialog.hierarchy_tree()
+	## 
+	## 
+	ttb << test_tree_builder.new(_true)
+	>> ttb.hierarchy_tree()
+_endmethod
+$
