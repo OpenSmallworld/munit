@@ -52,7 +52,7 @@ _private _method slow_tests_first_provider.add_product_test_suite(remote_tests, 
 		_loop
 			_if test.slow_test?
 			_then
-				_if _not skip_slow_test?
+				_if _not skip_slow_tests?
 				_then 
 					remote_tests.add_first(test)
 				_endif 
