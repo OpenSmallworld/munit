@@ -45,6 +45,7 @@ _private _method slow_tests_first_provider.add_product_test_suite(remote_tests, 
 	# allows developer to skip slow tests in preflights by setting
 	# ant -f preflight.xml -Dskip.slow.tests="whatever"
 	skip_slow_tests? << system.getenv("SKIP_SLOW_TESTS") _isnt _unset
+	write( "Is Skipping Set: ", system.getenv("SKIP_SLOW_TESTS") )
 	_if skip_slow_tests?
 	_then
 		write( "Skipping slow tests" )
