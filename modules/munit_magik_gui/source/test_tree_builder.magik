@@ -75,7 +75,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.product_tree_list(a_product)
+_private _method test_tree_builder.product_tree_list(a_product)
 	## 
 	## 
 
@@ -102,7 +102,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.module_tree_list(a_module)
+_private _method test_tree_builder.module_tree_list(a_module)
 	## 
 	##
 	
@@ -131,7 +131,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.loaded_class_tree_list(a_module, module_display_tree)
+_private _method test_tree_builder.loaded_class_tree_list(a_module, module_display_tree)
 	## 
 	##
 	classes << _self.loaded_classes(a_module.name)
@@ -143,7 +143,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.unloaded_class_tree_list(a_module, module_display_tree)
+_private _method test_tree_builder.unloaded_class_tree_list(a_module, module_display_tree)
 	## 
 	##
 	trd_mod_name << _self.module_name
@@ -167,7 +167,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.unsorted_unloaded_classes(a_module)
+_private _method test_tree_builder.unsorted_unloaded_classes(a_module)
 	## 
 	## 
 	>> rope.new_from_iter(a_module, :|tests()|, :framework, :munit)
@@ -176,7 +176,7 @@ $
 
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.orphaned_suite_tree_list()
+_private _method test_tree_builder.orphaned_suite_tree_list()
 	## 
 	## 
 	trd_mod_name << _self.module_name
@@ -239,7 +239,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.products()
+_private _method test_tree_builder.products()
 	## 
 	##
 	unsorted_products << smallworld_product.products
@@ -253,7 +253,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.test_modules(a_product)
+_private _method test_tree_builder.test_modules(a_product)
 	## 
 	##
 
@@ -273,7 +273,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.loaded_classes( module_name )
+_private _method test_tree_builder.loaded_classes( module_name )
 	## 
 	## 
 	# Find all test_case classes in the image
@@ -288,7 +288,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.tests_for_suite(a_suite)
+_private _method test_tree_builder.tests_for_suite(a_suite)
 	## 
 	## 
 	unsorted_tests << a_suite.unsorted_tests()
@@ -303,7 +303,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method test_tree_builder.message(message_id, _gather args)
+_private _method test_tree_builder.message(message_id, _gather args)
 	## 
 	##
 	mh << message_handler.new(:test_runner_dialog)
