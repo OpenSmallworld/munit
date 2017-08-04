@@ -508,10 +508,30 @@ _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_pa
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
 	## path or the path of a container of the tree_item.
 
-	dt << _self.get_display_tree( tree_id_or_path, a_string, parent_string )
-	_if dt _isnt _unset
+	selected_dt << _self.get_display_tree( tree_id_or_path, a_string, parent_string )
+	_if selected_dt _isnt _unset
 	_then
-		dt.selected? << select?.default(_true)
+		a_tree_item << _self.get_tree_item( tree_id_or_path )
+		index << 1
+		_for dt _over a_tree_item.tree_manager.fast_visible_trees()
+		_loop
+			_if dt _is selected_dt
+			_then
+				renderer << a_tree_item.tree_renderer
+				x << renderer.headings_holder.row_headings_width + 10
+				_if _not renderer.style_holder.tabular_style?
+				_then
+					x +<< renderer.connect_lines_offset
+				_endif
+				y << a_tree_item.int!ypos_for( index ) + renderer.half_row_height
+				
+				_self.handle_event( a_tree_item, :button, :left, x, y, :press, 0 )
+				_self.handle_event( a_tree_item, :button, :left, x, y, :release, 0 )
+				
+				_leave
+			_endif
+			index +<< 1
+		_endloop
 	_endif
 	
 	>> _self
@@ -571,7 +591,29 @@ _private _method application_system_test_mixin.get_tree_item( tree_id_or_path )
 	## 
 	## Returns a tree_item with the specified id or identifier path. 
 
-	a_tree_item << _self.get_item( tree_id_or_path )
+	a_tree_item << _unset
+	
+	a_container << _self.get_item( tree_id_or_path )
+
+	_if a_container.responds_to?( :|tag!tree_item| )
+	_then
+		a_tree_item << a_container
+		
+	_elif a_container.responds_to?( :|tag!sw_container_base| )
+	_then
+		_for c _over a_container.all_canvases()
+		_loop
+			_if c.responds_to?( :|tag!tree_item| )
+			_then
+				_if a_tree_item _isnt _unset
+				_then
+					a_tree_item << _unset
+					_leave
+				_endif
+				a_tree_item << c
+			_endif
+		_endloop
+	_endif
 
 	_if a_tree_item _is _unset
 	_then
@@ -589,20 +631,6 @@ _private _method application_system_test_mixin.get_tree_item( tree_id_or_path )
 		_endloop
 	_endif
 	
-	_if a_tree_item _is _unset
-	_then
-		a_container << _self.get_item( tree_id_or_path )
-		_if a_container.responds_to?( :|tag!sw_container_base| )
-		_then
-			canvases << rope.new_from_iter( a_container, :all_canvases|()| )
-			_if canvases.size _is 1 _andif
-			    canvases.an_element().is_kind_of?( tree_item )
-			_then
-				a_tree_item << canvases.an_element()
-			_endif
-		_endif
-	_endif
-
 	fail_str << write_string( "Expected to find tree_item '", tree_id_or_path, "'" )
 	_self.assert_not_unset( a_tree_item, fail_str )
 
