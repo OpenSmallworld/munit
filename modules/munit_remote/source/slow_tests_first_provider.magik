@@ -42,13 +42,14 @@ _private _method slow_tests_first_provider.add_product_test_suite(remote_tests, 
 
 	tests << product_test_suite.new(product_name)
 
-	# By default don't run the slow tests unless they are
+	# By default run the slow tests unless they are
 	# specifically specified to run something like
 	# ant -f preflight.xml -Drun.slow.tests="true"
-	run_slow_tests? << system.getenv("RUN_SLOW_TESTS").default( _false )
-	write( "RUN_SLOW_TESTS: ", system.getenv("RUN_SLOW_TESTS") )
-	_if _not run_slow_tests?
+	run_slow_tests? << system.getenv("RUN_SLOW_TESTS").default( _true )
+	write("RUN_SLOW_TESTS: ", run_slow_tests?)
+	_if run_slow_tests? _isnt _true 
 	_then
+		run_slow_tests? << _false 
 		write( "Skipping slow tests" )
 	_endif 
 	
