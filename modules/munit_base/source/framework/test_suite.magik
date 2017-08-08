@@ -392,3 +392,11 @@ _method test_suite.test_aspects_keys
 _endmethod
 $
 
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_suite.unsorted_tests()
+	##
+	## Return all runnable tests.
+	## 
+	>> .tests.default({})
+_endmethod
+$

@@ -27,10 +27,13 @@ def_slotted_exemplar(:test_runner_dialog,
 	{ :current_test,  _unset },
 	{ :items,         _unset },
 	{ :thread,        _unset },
-	{ :run_status,    _unset },
-	{ :display_trees, _unset }
+	{ :run_status,    _unset }
 },
 { :gui_framework, :test_listener_interface } )
+$
+
+_pragma(classify_level=restricted)
+test_runner_dialog.define_shared_variable( :sort_display_tests?, _false, :public)
 $
 
 _pragma(classify_level=restricted)
@@ -473,143 +476,10 @@ $
 
 _pragma(classify_level=restricted)
 _method test_runner_dialog.hierarchy_tree()
-	##
-	## Return a rope of display trees to populate the test tree
-	##
-
-	.display_trees   << rope.new()
-
-	# Need to create a new test_suite_finder to make sure its cache
-	# is up-to-date
-	result       << rope.new_for( smallworld_product.products.size )
-	trd_mod_name << test_runner_dialog.module_name
-	tf           << test_suite_finder.new()
-	
-	_for a_product _over smallworld_product.products.fast_elements()
-	_loop
-		# Create a display tree for the product. This will only be
-		# added to the results if it contains test modules
-		product_display_tree << display_tree.new( a_product, _unset )
-		product_display_tree.styled_string << {:image, { :product, trd_mod_name }, a_product.name.write_string }
-
-		_for a_module _over a_product.defined_modules.elements()
-		_loop
-			_if a_module.test_module?
-			_then
-				module_name << a_module.name
-				a_colour << _if a_module.loaded?
-					    _then
-						    >> :blue
-					    _else
-						    >> :black
-					    _endif
-				# Create a display tree for the module. This will only be
-				# added to the product tree if it contains tests
-				module_display_tree << display_tree.new( a_module )
-				module_display_tree.styled_string << {:image, { :module, trd_mod_name }, a_colour, module_name.write_string }
-				_if a_module.loaded?
-				_then
-					# For loaded modules, find all test_case classes in the image
-					_for a_suite _over tf.find_classes_for_module( module_name ).fast_elements()
-					_loop
-						_self.suite_tree_list( a_suite, module_display_tree )
-					_endloop 
-					
-				_else 
-					# For modules not yet loaded, use information in the module.def file
-					_for t _over a_module.tests( :framework, :munit )
-					_loop
-						test_display_tree << display_tree.new( t, _unset, module_display_tree )
-						test_display_tree.styled_string << {:image, { :hierarchy, trd_mod_name }, t.name.write_string }
-						
-						_for elem  _over t.args.split_by( %space ).elements()
-						_loop
-							_if ( rt << get_global_value(elem.as_symbol() ) ) _isnt _unset
-							_then
-								_self.suite_tree_list( rt, test_display_tree )
-							_endif
-						_endloop
-						.display_trees.add( t )
-					_endloop
-				_endif 
-				# Only include the module if it had any tests
-				_if module_display_tree.children?
-				_then
-					product_display_tree.add_child( module_display_tree )
-				_endif 
-			_endif
-		_endloop
-
-		# Only include the product if it had any test modules
-		_if product_display_tree.children?
-		_then 
-			result.add( product_display_tree )
-		_endif 
-	_endloop 
-
-	# Create a final orphan tree to display any tests in the image
-	# that do not belong in any modules
-	orphan_tree << display_tree.new( :undeclared )
-	orphan_tree.styled_string << {:image, { :hierarchy, trd_mod_name }, _self.message( :undeclared_tests ) }
-
-	_for suite_name _over tf.get_test_suite_owner_names().fast_elements()
-	_loop
-		_if ( suite << get_global_value(suite_name) ) _isnt _unset
-		_then 
-			_self.suite_tree_list( suite, orphan_tree )
-		_endif 
-	_endloop 
-
-	_if orphan_tree.children?
-	_then 
-		result.add( orphan_tree )
-	_endif 
-
-	>> result
-	
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_private _method test_runner_dialog.suite_tree_list( a_suite, parent_display_tree )
-	##
-	## Build display_trees for A_SUITE in PARENT_DISPLAY_TREE
-	## This will create a display_tree for the suite itself and for
-	## all its children.
-	## Both A_SUITE and its children may be instances of test_suite
-	## or test_case.
-	##
-
-	trd_mod_name << test_runner_dialog.module_name
-
-	_if _not .display_trees.includes?( a_suite )
-	_then 
-		.display_trees.add( a_suite )
-		suite_display_tree << display_tree.new( a_suite )
-		suite_display_tree.styled_string << {:image, { :hierarchy, trd_mod_name }, a_suite }
-		
-		_for a_test _over a_suite.tests()
-		_loop
-			_if a_test.is_kind_of?( test_suite )
-			_then
-				_self.suite_tree_list( a_test, suite_display_tree )
-			_else
-				_if _not .display_trees.includes?( a_test )
-				_then
-					.display_trees.add( a_test )
-					a_display_tree << display_tree.new( a_test, _unset, suite_display_tree )
-					a_display_tree.set_value_method( a_test, :|value_for_display_tree()| )
-					a_display_tree.styled_string << styled_string.new( :value, :icon, :value, :name )
-				_endif
-			_endif 
-		_endloop
-	_endif
-
-	_if suite_display_tree _isnt _unset _andif suite_display_tree.children?
-	_then
-		parent_display_tree.add_child( suite_display_tree )
-	_endif 
-
+	## 
+	## 
+	ttb << test_tree_builder.new(_self.sort_display_tests?)
+	>> ttb.hierarchy_tree()
 _endmethod
 $
 
