@@ -231,6 +231,8 @@ _method application_system_test_mixin.when_clicking_item( id_path, _optional new
 	_if click_item _isnt _unset
 	_then
 		_self.click_item( click_item, new_frame_wait_time )
+	_else
+		write( "Clicking on [", id_path, "] failed - item not found" )
 	_endif
 	
 	>> _self
@@ -1374,7 +1376,8 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 
 	a_canvas.add_dependent( _self )
 
-	time << system.elapsed_seconds()
+	(s, m) << system.time_now()
+	time << s * 1000 + m
 	new_event << input_event.new_with( category, time, a_canvas.actual.id, id, x, y, func, modmask )
 	new_event.second_id << second_id
 
