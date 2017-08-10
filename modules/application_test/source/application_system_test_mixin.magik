@@ -655,7 +655,7 @@ _private _method application_system_test_mixin.get_display_trees( a_tree_item, a
 			matches.add_last( dt )
 		_endif
 	_endloop
-
+	
 	>> matches
 _endmethod
 $
@@ -801,7 +801,8 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_getting_records( dataset_name, collection_name, properties, id_path )
+_method application_system_test_mixin.when_populating_editor_by_getting_record( dataset_name, collection_name, properties,
+							    _optional id_path )
 	## 
 	## Get the record(s) based on PROPERTIES.
 	## In the Absence of selecting objects from the map, the
@@ -809,25 +810,34 @@ _method application_system_test_mixin.when_getting_records( dataset_name, collec
 	## Select Geometry button.
 	## Provide the search critieria as 'Properties'
 	##
-	## Example: when_getting_records(:electric,  :sub_substation,
-	##                              property_list.new_with(:asset_id, "sanity_substation"),
-	##                                "<ID Path>")
+	## ID_PATH is ID_Path for the Get button. If it is not supplied
+	## the button with identifier :get will be clicked.
+	##
+	## Example: when_populating_editor_by_getting_record(:electric,  :sub_substation,
+	##                              property_list.new_with(:asset_id, "sanity_substation"))
+	##                                
 	##
 	
 	_self.given_an_embbeded_editor( dataset_name,  collection_name ).
-		given_proposed_editor_values( properties ).
-		when_clicking_item( id_path )
+		given_proposed_editor_values( properties )
+	_self.remove_value_from_queue( :task_complete )
+	_if id_path _isnt _unset
+	_then			   
+		 _self.when_clicking_item( id_path )	
+	_else			  		  
+		
+	 	 _self.when_clicking_item_with_identifier(:tag!sw_button_item, :get)
+	_endif	
 
 	# Getting records happen in a separate thread. Wait for the
 	# task to complete. 
-	_self.remove_value_from_queue( :task_complete )
+	
 	_self.wait_for_task_to_complete( :|int!object_editor_get()| )
 	
 	>> _self
 	
 _endmethod
 $
-
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_selecting_objects_in_the_map( rwos )
