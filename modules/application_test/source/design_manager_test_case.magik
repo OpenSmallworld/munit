@@ -89,6 +89,28 @@ design_manager_test_case.define_shared_constant( :co_load_test_alternative_name,
 $
 
 
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+## Specifies whether the map should be rendered during the test.
+## Turning off map rendering speeds up the test and prevent
+## race conditions where the map is still rendering after the
+## database is closed at the end of the test.
+## Defaults to _false (i.e. the map won't render during the
+## test).
+design_manager_test_case.define_shared_constant(:map_rendering_required?, _false, :private)
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+## Specifies whether the design tab should respond to change
+## notification.
+## Turning off the design tab's change handling should speed up
+## the test.
+## Defaults to _false (i.e. the design tab won't update during
+## the test).
+design_manager_test_case.define_shared_constant(:design_tab_updates_required?, _false, :private)
+$
+
+
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 _method design_manager_test_case.properties
 	## 
@@ -106,6 +128,19 @@ _method design_manager_test_case.set_up()
 	##
 
 	.properties << property_list.new()
+	
+	_if _not _self.map_rendering_required?
+	_then
+		# Turn off map view rendering to speed up the test
+		stub_method_helper.replace_method(map_view, :|run_controlled_render()|, _proc() _endproc)
+		stub_method_helper.replace_method(render_controller, :|enqueue()|, _proc() _endproc)
+	_endif
+
+	_if _not _self.design_tab_updates_required?
+	_then
+		stub_method_helper.replace_method(dm!design_tab_framework, :|note_change()|, _proc() _endproc)
+	_endif
+	
 	_super.set_up()
 	
 _endmethod
