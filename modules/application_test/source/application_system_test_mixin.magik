@@ -45,9 +45,11 @@ _method application_system_test_mixin.given_an_application( application_name )
 		_endif
 	_endif
 
-	app.top_frame.maximized? << _self.properties[:frame_maximised?].default(_false)
-
-	app.top_frame.top_canvas_container.add_dependent(_self)
+	_if app.top_frame _isnt _unset
+	_then 
+		app.top_frame.maximized? << _self.properties[:frame_maximised?].default(_false)
+		app.top_frame.top_canvas_container.add_dependent(_self)
+	_endif 
 	app.add_dependent(_self)
   
 	_self.properties[ :application ] << app
