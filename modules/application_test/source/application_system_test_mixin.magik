@@ -1185,8 +1185,13 @@ _method application_system_test_mixin.then_pulldown_menu_has_labels(include_labe
 
 	missing_labels? << _false
 	actual_labels << rope.new()
-
-	_for i_item _over _self.properties[:pulldown_menu].children.fast_elements()
+	# The pulldown menu may contain extra controls in addition to the labels (each of
+	# which belongs to a sw_menu_button_item) for example extra buttons so we need
+	# to only look at sw_menu_button_items
+	# The pulldown_menu property is an instance of pulldown_menu so we need to look
+	# in its swift container for its child sw_menu_button_items.
+	pulldown_menu_container << _self.properties[:pulldown_menu].children_container
+	_for i_item _over pulldown_menu_container.get_items_of_type( :tag!sw_menu_button_item ).fast_elements()
 	_loop
 		actual_labels.add_last(i_item.label)
 	_endloop
