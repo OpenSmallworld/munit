@@ -129,6 +129,7 @@ _method base_test_runner.int!run( a_test, _optional suite_args )
 		# If exemplar run suite.
 		_if a_test.exemplar _is a_test _andif
 		    ( a_test.is_kind_of?( munit_test_suite ) _orif
+		      a_test.is_kind_of?( test_suite ) _orif
 		      a_test.is_kind_of?( test_case ) _orif
 		      a_test.is_kind_of?( munit_test_setup ) _orif
 		      a_test.is_kind_of?( munit_test_decorator ) )
