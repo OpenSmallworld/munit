@@ -34,7 +34,7 @@ _method database_system_test_mixin.given_writable_datasets( writable_dataset_nam
 	_loop
 		v << gis_program_manager.databases[ds_name]
 		v.goto_top_alternative()
-		v.create_scratchpad( "memory::ds" )
+		v.create_scratchpad( "memory::ds_"+ds_name )
 	_endloop
 
 	>> _self
@@ -65,7 +65,6 @@ _private _method database_system_test_mixin.close_datasets()
 		v << _self.dataset( ds_name )
 		v.rollback()
 		v.up()
-	_endloop
-	
+	_endloop	
 _endmethod
 $
