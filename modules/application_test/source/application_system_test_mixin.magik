@@ -1175,7 +1175,7 @@ _method application_system_test_mixin.then_item_enabled?( id_path, expected_stat
 	container << _self.container_for_frame( frame_title )
 	_if ( item << container.get_items( id_path ).an_element()) _is _unset
 	_then 
-		item << _self.get_item( id_path, frame_title )
+		item << _self.get_item( id_path )
 	_endif
 	
 	state << item.enabled?
