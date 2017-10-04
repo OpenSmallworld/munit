@@ -294,13 +294,14 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_pulldown_menu_item_with_identifier( identifier,
-									_optional new_frame_wait_time )
+											_optional new_frame_wait_time,
+											frame_title )
 	## Clicks the sw_pulldown_menu_item with IDENTIFIER and adds
 	## its .pulldown_menu to .properties[:pulldown_menu]
 	##
 
 	_self.when_clicking_item_with_identifier( :tag!sw_pulldown_menu_item, identifier,
-						  new_frame_wait_time.default(250) )
+						  new_frame_wait_time.default(250), frame_title )
 	
 	_self.properties[ :pulldown_menu ] << _self.properties[ :click_item ].pulldown_menu
 	
@@ -402,11 +403,16 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_item_with_identifier( tag, identifier,
-									  _optional new_frame_wait_time )
+									  _optional new_frame_wait_time, frame_title )
 	## 
+	## Click on the item of type TAG and with IDENTIFIER.  The item
+	## is found on the active frame with title FRAME_TITLE.
+	##
+	## If this is not supplied, find the item on the
+	## .properties[:application]'s top frame.
 	##
 	
-	container << _self.properties[ :application ].top_frame.top_canvas_container
+	container << _self.container_for_frame(frame_title)
 	
 	_for item _over container.get_items_of_type( tag ).fast_elements()
 	_loop
@@ -1154,11 +1160,11 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.then_item_enabled?( id_path, expected_state )
+_method application_system_test_mixin.then_item_enabled?( id_path, expected_state, _optional frame_title )
 	## 
 	## Verify the state of a Swift widget, identified by the 
 	## path string ID_PATH, is Enabled or Disabled.
-	##
+	## 
 	## ID_PATH can be found using get_identifier_path() and is
 	## displayed in the Object Spy for widgets with a unique
 	## identifier path.
@@ -1166,7 +1172,12 @@ _method application_system_test_mixin.then_item_enabled?( id_path, expected_stat
 	## EXPECTED_STATE is enabled? attribute of the Swift widget 
 	## which could either _true(Enable) or _false(Disable)
 
-	item << _self.get_item( id_path )
+	container << _self.container_for_frame( frame_title )
+	_if ( item << container.get_items( id_path ).an_element()) _is _unset
+	_then 
+		item << _self.get_item( id_path )
+	_endif
+	
 	state << item.enabled?
 	fail_string << write_string("Expected State of ", item, " is ", expected_state, " but it is ", state)
 	_self.assert_equals(expected_state, state, fail_string)
@@ -1841,3 +1852,31 @@ _method application_system_test_mixin.get_related_items( obj, _optional types )
 _endmethod
 $
 
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.container_for_frame(_optional frame_title)
+	## 
+	## Return the top_canvas_container of the active frame with
+	## title FRAME_TITLE. 
+	##
+	## If this is not supplied, return the
+	## .properties[:application]'s top frame's top_canvas_container.
+	##
+	
+	container << _self.properties[ :application ].top_frame.top_canvas_container
+	_if frame_title _isnt _unset
+	_then
+		_for top_container _over sw_swift_manager.active_top_containers().fast_elements()
+		_loop
+			_if top_container.top_frame.title = frame_title
+			_then
+				container << top_container
+				_leave
+			_endif
+		_endloop
+	_endif
+
+	>> container
+	
+_endmethod
+$
