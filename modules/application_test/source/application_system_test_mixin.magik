@@ -1880,3 +1880,115 @@ _private _method application_system_test_mixin.container_for_frame(_optional fra
 	
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_item_invoking_modal_dialog(modal_wait_id, tag, identifier, new_frame_wait_time, frame_title )
+	## 
+	## 
+	container << _self.container_for_frame(frame_title)
+	
+	_for item _over container.get_items_of_type( tag ).fast_elements()
+	_loop
+		_if item.identifier = identifier
+		_then
+			click_item << item
+			_leave
+		_endif
+	_endloop
+
+	_if click_item _isnt _unset
+	_then
+		_self.click_item_invoking_modal_dialog(modal_wait_id, click_item, new_frame_wait_time )
+	_endif
+
+	>> _self
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.click_item_invoking_modal_dialog(modal_wait_id, item, new_frame_wait_time, _optional x, y )
+	## 
+	## 
+	_self.properties[ :click_item ] << item
+
+	_if x _is _unset
+	_then
+		x << ( item.width  / 2.0 ).rounded
+	_endif
+	_if y _is _unset
+	_then
+		y << ( item.height / 2.0 ).rounded
+	_endif
+
+	top_container << item.top_container
+	(top_x, top_y) << item.location_in_window( top_container )
+	
+	x +<< top_x
+	y +<< top_y
+
+	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
+	_self.handle_event( top_container, :button, :left, x, y, :press, 0 )
+
+	_if new_frame_wait_time _isnt _unset
+	_then
+		_self.remove_value_from_queue( :frame_active )
+		frame.add_dependent( _self, :frame_active )
+	_endif
+	
+	_self.handle_event_invoking_modal_dialog( modal_wait_id, top_container, :button, :left, x, y, :release, 0 )
+
+	_if new_frame_wait_time _isnt _unset
+	_then
+		_self.wait_for_value_on_queue( :frame_active, _false, new_frame_wait_time )
+		frame.remove_dependent( _self )
+	_endif	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method application_system_test_mixin.handle_event_invoking_modal_dialog( modal_wait_id, a_canvas, category, id, x, y, func, modmask,
+										   _optional second_id )
+	## 
+	##
+
+	a_canvas.add_dependent( _self )
+
+	(s, m) << system.time_now()
+	time << s * 1000 + m
+	new_event << input_event.new_with( category, time, a_canvas.actual.id, id, x, y, func, modmask )
+	new_event.second_id << second_id
+
+	_if category _is :locator _andif
+	    id _is :move _andif 
+	    _not a_canvas.has_focus?
+	_then
+		a_canvas.top_frame.activate()
+		_self.wait_for_event_on_queue( :event_handled, :visible )
+	_endif
+
+	queue << _self.properties[ modal_wait_id ] << atomic_queue.new(1)
+	_proc(a_canvas, new_event, id, queue)
+		a_canvas.handle_event( new_event )
+		queue.put({a_canvas, id})
+	_endproc.fork(a_canvas, new_event, id, queue)
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_waiting_for_modal_dialog_invocation_to_complete( modal_wait_id, _optional wait_time )
+	## 
+	##
+	wait_time << wait_time.default(200)
+	queue << _self.properties[ modal_wait_id ]
+	datum << queue.get(wait_time)
+	_if datum _isnt _unset
+	_then
+		(a_canvas, id) << (_scatter datum)
+		_self.wait_for_event_on_queue( :event_handled, id )
+	_endif
+	a_canvas.remove_dependent( _self )
+	>> _self
+_endmethod
+$
