@@ -1930,19 +1930,13 @@ _private _method application_system_test_mixin.click_item_invoking_modal_dialog(
 	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
 	_self.handle_event( top_container, :button, :left, x, y, :press, 0 )
 
-	_if new_frame_wait_time _isnt _unset
-	_then
-		_self.remove_value_from_queue( :frame_active )
-		frame.add_dependent( _self, :frame_active )
-	_endif
+	_self.remove_value_from_queue( :frame_active )
+	frame.add_dependent( _self, :frame_active )
 	
 	_self.handle_event_invoking_modal_dialog( modal_wait_id, top_container, :button, :left, x, y, :release, 0 )
 
-	_if new_frame_wait_time _isnt _unset
-	_then
-		_self.wait_for_value_on_queue( :frame_active, _false, new_frame_wait_time )
-		frame.remove_dependent( _self )
-	_endif	
+	_self.wait_for_value_on_queue( :frame_active, _false, new_frame_wait_time )
+	frame.remove_dependent( _self )
 _endmethod
 $
 
@@ -1958,14 +1952,6 @@ _private _method application_system_test_mixin.handle_event_invoking_modal_dialo
 	time << s * 1000 + m
 	new_event << input_event.new_with( category, time, a_canvas.actual.id, id, x, y, func, modmask )
 	new_event.second_id << second_id
-
-	_if category _is :locator _andif
-	    id _is :move _andif 
-	    _not a_canvas.has_focus?
-	_then
-		a_canvas.top_frame.activate()
-		_self.wait_for_event_on_queue( :event_handled, :visible )
-	_endif
 
 	queue << _self.properties[ modal_wait_id ] << atomic_queue.new(1)
 	_proc(a_canvas, new_event, id, queue)
