@@ -1953,27 +1953,26 @@ _private _method application_system_test_mixin.handle_event_invoking_modal_dialo
 	new_event << input_event.new_with( category, time, a_canvas.actual.id, id, x, y, func, modmask )
 	new_event.second_id << second_id
 
-	queue << _self.properties[ modal_wait_id ] << atomic_queue.new(1)
-	_proc(a_canvas, new_event, id, queue)
-		a_canvas.handle_event( new_event )
-		queue.put({a_canvas, id})
-	_endproc.fork(a_canvas, new_event, id, queue)
+	app << _self.properties[ :application ]
+	task << app.do_work(a_canvas, :|handle_event()|, new_event)
 	
+	_self.properties[ modal_wait_id ] << {task, a_canvas, id}	
 _endmethod
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_waiting_for_modal_dialog_invocation_to_complete( modal_wait_id, _optional wait_time )
+_method application_system_test_mixin.when_waiting_for_modal_dialog_invocation_to_complete( modal_wait_id )
 	## 
 	##
-	wait_time << wait_time.default(200)
-	queue << _self.properties[ modal_wait_id ]
-	datum << queue.get(wait_time)
-	_if datum _isnt _unset
-	_then
-		(a_canvas, id) << (_scatter datum)
-		_self.wait_for_event_on_queue( :event_handled, id )
-	_endif
+	wait_data << _self.properties[ modal_wait_id ]
+
+	# TODO Handle wait_data being _unset
+	(task, a_canvas, id) << (_scatter wait_data)
+
+	task.get_results()
+	
+	_self.wait_for_event_on_queue( :event_handled, id )
+	
 	a_canvas.remove_dependent( _self )
 	>> _self
 _endmethod
