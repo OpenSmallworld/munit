@@ -403,7 +403,7 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_item_with_identifier( tag, identifier,
-									  _optional new_frame_wait_time, frame_title )
+									  _optional new_frame_wait_time, frame_title, modal_wait_id )
 	## 
 	## Click on the item of type TAG and with IDENTIFIER.  The item
 	## is found on the active frame with title FRAME_TITLE.
@@ -425,7 +425,7 @@ _method application_system_test_mixin.when_clicking_item_with_identifier( tag, i
 
 	_if click_item _isnt _unset
 	_then
-		_self.click_item( click_item, new_frame_wait_time )
+		_self.click_item( click_item, new_frame_wait_time, _unset, _unset, modal_wait_id )
 	_endif
 
 	>> _self
@@ -1352,7 +1352,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.click_item( item, _optional new_frame_wait_time, x, y )
+_private _method application_system_test_mixin.click_item( item, _optional new_frame_wait_time, x, y, modal_wait_id )
 	## 
 	##
 	
@@ -1376,15 +1376,15 @@ _private _method application_system_test_mixin.click_item( item, _optional new_f
 	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
 	_self.handle_event( top_container, :button, :left, x, y, :press, 0 )
 
-	_if new_frame_wait_time _isnt _unset
+	_if new_frame_wait_time _isnt _unset _orif modal_wait_id _isnt _unset
 	_then
 		_self.remove_value_from_queue( :frame_active )
 		frame.add_dependent( _self, :frame_active )
 	_endif
 	
-	_self.handle_event( top_container, :button, :left, x, y, :release, 0 )
+	_self.handle_event( top_container, :button, :left, x, y, :release, 0, _unset, modal_wait_id )
 
-	_if new_frame_wait_time _isnt _unset
+	_if new_frame_wait_time _isnt _unset _orif modal_wait_id _isnt _unset
 	_then
 		_self.wait_for_value_on_queue( :frame_active, _false, new_frame_wait_time )
 		frame.remove_dependent( _self )
@@ -1398,7 +1398,7 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.handle_event( a_canvas, category, id, x, y, func, modmask,
-							     _optional second_id )
+							     _optional second_id, modal_wait_id )
 	## 
 	##
 
@@ -1417,12 +1417,18 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 		_self.wait_for_event_on_queue( :event_handled, :visible )
 	_endif
 
-	a_canvas.handle_event( new_event )
+	_if modal_wait_id _is _unset
+	_then
+		a_canvas.handle_event( new_event )
 
-	_self.wait_for_event_on_queue( :event_handled, id )
+		_self.wait_for_event_on_queue( :event_handled, id )
 
-	a_canvas.remove_dependent( _self )
-	
+		a_canvas.remove_dependent( _self )
+	_else
+		app << _self.properties[ :application ]
+		task << app.do_work(a_canvas, :|handle_event()|, new_event)
+		_self.properties[ modal_wait_id ] << {task, a_canvas, id}
+	_endif
 _endmethod
 $
 
@@ -1882,98 +1888,24 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_item_invoking_modal_dialog(modal_wait_id, tag, identifier, new_frame_wait_time, frame_title )
-	## 
-	## 
-	container << _self.container_for_frame(frame_title)
-	
-	_for item _over container.get_items_of_type( tag ).fast_elements()
-	_loop
-		_if item.identifier = identifier
-		_then
-			click_item << item
-			_leave
-		_endif
-	_endloop
-
-	_if click_item _isnt _unset
-	_then
-		_self.click_item_invoking_modal_dialog(modal_wait_id, click_item, new_frame_wait_time )
-	_endif
-
-	>> _self
-	
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_private _method application_system_test_mixin.click_item_invoking_modal_dialog(modal_wait_id, item, new_frame_wait_time, _optional x, y )
-	## 
-	## 
-	_self.properties[ :click_item ] << item
-
-	_if x _is _unset
-	_then
-		x << ( item.width  / 2.0 ).rounded
-	_endif
-	_if y _is _unset
-	_then
-		y << ( item.height / 2.0 ).rounded
-	_endif
-
-	top_container << item.top_container
-	(top_x, top_y) << item.location_in_window( top_container )
-	
-	x +<< top_x
-	y +<< top_y
-
-	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
-	_self.handle_event( top_container, :button, :left, x, y, :press, 0 )
-
-	_self.remove_value_from_queue( :frame_active )
-	frame.add_dependent( _self, :frame_active )
-	
-	_self.handle_event_invoking_modal_dialog( modal_wait_id, top_container, :button, :left, x, y, :release, 0 )
-
-	_self.wait_for_value_on_queue( :frame_active, _false, new_frame_wait_time )
-	frame.remove_dependent( _self )
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_private _method application_system_test_mixin.handle_event_invoking_modal_dialog( modal_wait_id, a_canvas, category, id, x, y, func, modmask,
-										   _optional second_id )
-	## 
-	##
-
-	a_canvas.add_dependent( _self )
-
-	(s, m) << system.time_now()
-	time << s * 1000 + m
-	new_event << input_event.new_with( category, time, a_canvas.actual.id, id, x, y, func, modmask )
-	new_event.second_id << second_id
-
-	app << _self.properties[ :application ]
-	task << app.do_work(a_canvas, :|handle_event()|, new_event)
-	
-	_self.properties[ modal_wait_id ] << {task, a_canvas, id}	
-_endmethod
-$
-
-_pragma(classify_level=debug)
 _method application_system_test_mixin.when_waiting_for_modal_dialog_invocation_to_complete( modal_wait_id )
 	## 
 	##
 	wait_data << _self.properties[ modal_wait_id ]
 
-	# TODO Handle wait_data being _unset
-	(task, a_canvas, id) << (_scatter wait_data)
-
-	task.get_results()
+	_if wait_data _isnt _unset
+	_then
+		(task, a_canvas, id) << (_scatter wait_data)
+		
+		task.get_results()
+		
+		_self.wait_for_event_on_queue( :event_handled, id )
+		
+		a_canvas.remove_dependent( _self )
+	_else
+		write("No data stored for modal_wait_id: ", modal_wait_id)
+	_endif
 	
-	_self.wait_for_event_on_queue( :event_handled, id )
-	
-	a_canvas.remove_dependent( _self )
 	>> _self
 _endmethod
 $
