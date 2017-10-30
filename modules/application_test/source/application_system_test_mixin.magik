@@ -222,8 +222,8 @@ _method application_system_test_mixin.when_clicking_item( id_path, _optional new
 	##
 	## Note: Where possible please use when_clicking_item_with_identifier() instead.
 	## That method finds GUI items in a more robust manner. That method also
-	## provides support for clicking items which invoke modal dialogs. Using this
-	## method to invoke a modal dialog may block the test thread and require manual
+	## provides support for clicking items which invoke message dialogs. Using this
+	## method to invoke a message dialog may block the test thread and require manual
 	## intervention for the test to continue.
 	##
 	## Click on the Swift widget identified by the path string ID_PATH.
@@ -425,10 +425,10 @@ _method application_system_test_mixin.when_clicking_item_with_identifier( tag, i
 	## :frame_title - the title of an active frame in which to search for the item
 	## to click
 	##
-	## :modal_wait_id - this must be specified if clicking on the item will invoke a
-	## modal dialog. It ensures that activating the dialog will not block the test
+	## :message_dialog_wait_id - this must be specified if clicking on the item will invoke a
+	## message dialog. It ensures that activating the dialog will not block the test
 	## thread. The value should be a symbol. It should be passed to
-	## when_waiting_for_modal_dialog_invocation_to_complete() after the test closes
+	## when_waiting_for_message_dialog_invocation_to_complete() after the test closes
 	## the dialog so the test will wait for the frame to deactivate.
 	##
 	
@@ -1387,8 +1387,9 @@ _private _method application_system_test_mixin.click_item( item, _optional props
 	## clicking the item is expected to activate a new frame)
 	## :x - click location x coord - defaults to middle of ITEM
 	## :y - click location y coord - defaults to middle of ITEM
-	## :modal_wait_id - indicates clicking item will invoke modal dialog. Identifier
-	##                  can be used later to wait for dialog to be closed.
+	## :message_dialog_wait_id - indicates clicking item will invoke a message
+	##                  dialog. Identifier can be used later to wait for dialog to
+	##                  be closed. 
 	##
 
 	_if props _isnt _unset
@@ -1396,7 +1397,7 @@ _private _method application_system_test_mixin.click_item( item, _optional props
 		new_frame_wait_time << props[:new_frame_wait_time]
 		x << props[:x]
 		y << props[:y]
-		modal_wait_id << props[:modal_wait_id]
+		message_dialog_wait_id << props[:message_dialog_wait_id]
 	_endif
 
 	_self.properties[ :click_item ] << item
@@ -1419,15 +1420,15 @@ _private _method application_system_test_mixin.click_item( item, _optional props
 	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
 	_self.handle_event( top_container, :button, :left, x, y, :press, 0 )
 
-	_if new_frame_wait_time _isnt _unset _orif modal_wait_id _isnt _unset
+	_if new_frame_wait_time _isnt _unset _orif message_dialog_wait_id _isnt _unset
 	_then
 		_self.remove_value_from_queue( :frame_active )
 		frame.add_dependent( _self, :frame_active )
 	_endif
 	
-	_self.handle_event( top_container, :button, :left, x, y, :release, 0, _unset, modal_wait_id )
+	_self.handle_event( top_container, :button, :left, x, y, :release, 0, _unset, message_dialog_wait_id )
 
-	_if new_frame_wait_time _isnt _unset _orif modal_wait_id _isnt _unset
+	_if new_frame_wait_time _isnt _unset _orif message_dialog_wait_id _isnt _unset
 	_then
 		_self.wait_for_value_on_queue( :frame_active, _false, new_frame_wait_time )
 		frame.remove_dependent( _self )
@@ -1441,7 +1442,7 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.handle_event( a_canvas, category, id, x, y, func, modmask,
-							     _optional second_id, modal_wait_id )
+							     _optional second_id, message_dialog_wait_id )
 	## 
 	##
 
@@ -1460,7 +1461,7 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 		_self.wait_for_event_on_queue( :event_handled, :visible )
 	_endif
 
-	_if modal_wait_id _is _unset
+	_if message_dialog_wait_id _is _unset
 	_then
 		a_canvas.handle_event( new_event )
 
@@ -1470,7 +1471,7 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 	_else
 		app << _self.properties[ :application ]
 		task << app.do_work(a_canvas, :|handle_event()|, new_event)
-		_self.properties[ modal_wait_id ] << {task, a_canvas, id}
+		_self.properties[ message_dialog_wait_id ] << {task, a_canvas, id}
 	_endif
 _endmethod
 $
@@ -1931,10 +1932,10 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_waiting_for_modal_dialog_invocation_to_complete( modal_wait_id )
+_method application_system_test_mixin.when_waiting_for_message_dialog_invocation_to_complete( message_dialog_wait_id )
 	## 
 	##
-	wait_data << _self.properties[ modal_wait_id ]
+	wait_data << _self.properties[ message_dialog_wait_id ]
 
 	_if wait_data _isnt _unset
 	_then
@@ -1946,7 +1947,7 @@ _method application_system_test_mixin.when_waiting_for_modal_dialog_invocation_t
 		
 		a_canvas.remove_dependent( _self )
 	_else
-		write("No data stored for modal_wait_id: ", modal_wait_id)
+		write("No data stored for message_dialog_wait_id: ", message_dialog_wait_id)
 	_endif
 	
 	>> _self
