@@ -1377,7 +1377,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.click_item( item, props )
+_private _method application_system_test_mixin.click_item( item, _optional props )
 	##
 	## Click on ITEM
 	##
@@ -1391,10 +1391,13 @@ _private _method application_system_test_mixin.click_item( item, props )
 	##                  can be used later to wait for dialog to be closed.
 	##
 
-	new_frame_wait_time << props[:new_frame_wait_time]
-	x << props[:x]
-	y << props[:y]
-	modal_wait_id << props[:modal_wait_id]
+	_if props _isnt _unset
+	_then	
+		new_frame_wait_time << props[:new_frame_wait_time]
+		x << props[:x]
+		y << props[:y]
+		modal_wait_id << props[:modal_wait_id]
+	_endif
 
 	_self.properties[ :click_item ] << item
 
