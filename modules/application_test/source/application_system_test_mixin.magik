@@ -219,7 +219,13 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_item( id_path, _optional new_frame_wait_time )
-	## 
+	##
+	## Note: Where possible please use when_clicking_item_with_identifier() instead.
+	## That method finds GUI items in a more robust manner. That method also
+	## provides support for clicking items which invoke message dialogs. Using this
+	## method to invoke a message dialog may block the test thread and require manual
+	## intervention for the test to continue.
+	##
 	## Click on the Swift widget identified by the path string ID_PATH.
 	##
 	## ID_PATH can be found using get_identifier_path() and is
@@ -232,7 +238,7 @@ _method application_system_test_mixin.when_clicking_item( id_path, _optional new
 	click_item << _self.get_item( id_path )
 	_if click_item _isnt _unset
 	_then
-		_self.click_item( click_item, new_frame_wait_time )
+		_self.click_item( click_item, property_list.new_with(:new_frame_wait_time, new_frame_wait_time) )
 	_else
 		write( "Clicking on [", id_path, "] failed - item not found" )
 	_endif
@@ -301,7 +307,8 @@ _method application_system_test_mixin.when_clicking_pulldown_menu_item_with_iden
 	##
 
 	_self.when_clicking_item_with_identifier( :tag!sw_pulldown_menu_item, identifier,
-						  new_frame_wait_time.default(250), frame_title )
+						  :new_frame_wait_time, new_frame_wait_time.default(250),
+						  :frame_title, frame_title )
 	
 	_self.properties[ :pulldown_menu ] << _self.properties[ :click_item ].pulldown_menu
 	
@@ -353,7 +360,7 @@ _method application_system_test_mixin.when_clicking_item_with_label( tag, label,
 
 	_if click_item _isnt _unset
 	_then
-		_self.click_item( click_item, new_frame_wait_time )
+		_self.click_item( click_item, property_list.new_with(:new_frame_wait_time, new_frame_wait_time) )
 	_else
 		condition.raise(:error, :string, write_string("Failed to find component with label ", label))
 	_endif
@@ -389,7 +396,7 @@ _method application_system_test_mixin.when_clicking_item_containing_label( tag, 
 
 	_if click_item _isnt _unset
 	_then
-		_self.click_item( click_item, new_frame_wait_time )
+		_self.click_item( click_item, property_list.new_with(:new_frame_wait_time, new_frame_wait_time) )
 	_else
 		condition.raise( :error, :string,
 				 write_string("Failed to find component with label ", label) )
@@ -403,16 +410,31 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_item_with_identifier( tag, identifier,
-									  _optional new_frame_wait_time, frame_title )
+									  _gather keys_and_values)
 	## 
-	## Click on the item of type TAG and with IDENTIFIER.  The item
-	## is found on the active frame with title FRAME_TITLE.
+	## Click on the item of type TAG and with IDENTIFIER.
+	## The item is found on .properties[:application]'s top frame, unless the
+	## :frame_title is specified, in which case the item is found on the active
+	## frame with the specified title.
 	##
-	## If this is not supplied, find the item on the
-	## .properties[:application]'s top frame.
+	## KEYS_AND_VALUES are additional optional properties. Valid properties are:
+	##
+	## :new_frame_wait_time - if the click will activate a new frame, this specifies
+	## the time to wait for the new frame to activate.
+	##
+	## :frame_title - the title of an active frame in which to search for the item
+	## to click
+	##
+	## :message_dialog_wait_id - this must be specified if clicking on the item will invoke a
+	## message dialog. It ensures that activating the dialog will not block the test
+	## thread. The value should be a symbol. It should be passed to
+	## when_waiting_for_message_dialog_invocation_to_complete() after the test closes
+	## the dialog so the test will wait for the frame to deactivate.
 	##
 	
-	container << _self.container_for_frame(frame_title)
+	props << property_list.new_from_gathered(keys_and_values)
+	container << _self.container_for_frame(props[:frame_title])
+	props.remove_key(:frame_title)
 	
 	_for item _over container.get_items_of_type( tag ).fast_elements()
 	_loop
@@ -425,7 +447,10 @@ _method application_system_test_mixin.when_clicking_item_with_identifier( tag, i
 
 	_if click_item _isnt _unset
 	_then
-		_self.click_item( click_item, new_frame_wait_time )
+		_self.click_item( click_item, props )
+	_else
+		condition.raise( :error, :string,
+				 write_string("Failed to find component with identifier ", identifier) )
 	_endif
 
 	>> _self
@@ -1343,7 +1368,7 @@ _private _method application_system_test_mixin.click_action_button( action,
 	_endloop
 
 	_self.properties[ :action_button ] << button
-	_self.click_item( button, new_frame_wait_time )
+	_self.click_item( button, property_list.new_with(:new_frame_wait_time, new_frame_wait_time) )
 
 	>> _self
 	
@@ -1352,10 +1377,29 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.click_item( item, _optional new_frame_wait_time, x, y )
-	## 
+_private _method application_system_test_mixin.click_item( item, _optional props )
 	##
-	
+	## Click on ITEM
+	##
+	## PROPS is a property list of optional properties. Valid keys are:
+	##
+	## :new_frame_wait_time - time to wait for new frame to be activated (if
+	## clicking the item is expected to activate a new frame)
+	## :x - click location x coord - defaults to middle of ITEM
+	## :y - click location y coord - defaults to middle of ITEM
+	## :message_dialog_wait_id - indicates clicking item will invoke a message
+	##                  dialog. Identifier can be used later to wait for dialog to
+	##                  be closed. 
+	##
+
+	_if props _isnt _unset
+	_then	
+		new_frame_wait_time << props[:new_frame_wait_time]
+		x << props[:x]
+		y << props[:y]
+		message_dialog_wait_id << props[:message_dialog_wait_id]
+	_endif
+
 	_self.properties[ :click_item ] << item
 
 	_if x _is _unset
@@ -1376,15 +1420,15 @@ _private _method application_system_test_mixin.click_item( item, _optional new_f
 	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
 	_self.handle_event( top_container, :button, :left, x, y, :press, 0 )
 
-	_if new_frame_wait_time _isnt _unset
+	_if new_frame_wait_time _isnt _unset _orif message_dialog_wait_id _isnt _unset
 	_then
 		_self.remove_value_from_queue( :frame_active )
 		frame.add_dependent( _self, :frame_active )
 	_endif
 	
-	_self.handle_event( top_container, :button, :left, x, y, :release, 0 )
+	_self.handle_event( top_container, :button, :left, x, y, :release, 0, _unset, message_dialog_wait_id )
 
-	_if new_frame_wait_time _isnt _unset
+	_if new_frame_wait_time _isnt _unset _orif message_dialog_wait_id _isnt _unset
 	_then
 		_self.wait_for_value_on_queue( :frame_active, _false, new_frame_wait_time )
 		frame.remove_dependent( _self )
@@ -1398,7 +1442,7 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.handle_event( a_canvas, category, id, x, y, func, modmask,
-							     _optional second_id )
+							     _optional second_id, message_dialog_wait_id )
 	## 
 	##
 
@@ -1417,12 +1461,18 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 		_self.wait_for_event_on_queue( :event_handled, :visible )
 	_endif
 
-	a_canvas.handle_event( new_event )
+	_if message_dialog_wait_id _is _unset
+	_then
+		a_canvas.handle_event( new_event )
 
-	_self.wait_for_event_on_queue( :event_handled, id )
+		_self.wait_for_event_on_queue( :event_handled, id )
 
-	a_canvas.remove_dependent( _self )
-	
+		a_canvas.remove_dependent( _self )
+	_else
+		app << _self.properties[ :application ]
+		task << app.do_work(a_canvas, :|handle_event()|, new_event)
+		_self.properties[ message_dialog_wait_id ] << {task, a_canvas, id}
+	_endif
 _endmethod
 $
 
@@ -1878,5 +1928,28 @@ _private _method application_system_test_mixin.container_for_frame(_optional fra
 
 	>> container
 	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_waiting_for_message_dialog_invocation_to_complete( message_dialog_wait_id )
+	## 
+	##
+	wait_data << _self.properties[ message_dialog_wait_id ]
+
+	_if wait_data _isnt _unset
+	_then
+		(task, a_canvas, id) << (_scatter wait_data)
+		
+		task.get_results()
+		
+		_self.wait_for_event_on_queue( :event_handled, id )
+		
+		a_canvas.remove_dependent( _self )
+	_else
+		write("No data stored for message_dialog_wait_id: ", message_dialog_wait_id)
+	_endif
+	
+	>> _self
 _endmethod
 $
