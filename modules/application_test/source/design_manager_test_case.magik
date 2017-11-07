@@ -1311,4 +1311,142 @@ _endmethod
 $
 	
 
+
+_pragma(classify_level=debug, topic={Munit})
+_private _method design_manager_test_case.get_records_when_running_qm()
+	## 
+	## This method does not really run QM.  It creates an instance
+	## of the eo_qm_design_source.  The
+	## then_change_detector_engine_returns_all_records_in_design()
+	## will check the records on this class to ensure that all
+	## expected records are included.
+	##
+
+	# swg_dsn_scheme.changes_between_views() returns the
+	# differences between current_view and base_view.  The tests
+	# try to use a child design and the parent design as "DM Top".
+	# To simulate this, make sure that the base_view's path is just
+	# one level up from the current path
+	stub_method_helper.replace_method(swg_dsn_user_alternative_control, :|request_replicate_view_for_scheme()|,
+					  _proc(top_scheme, dataset_name, _gather args)
+						  base_view << _self.saved!request_replicate_view_for_scheme(top_scheme,
+													     dataset_name,
+													     _scatter args)
+						  datasets     << swg_dsn_admin_engine.active_scheme_dataset_names
+						  inx          << datasets.index_of(dataset_name)
+						  current_view << swg_dsn_admin_engine.active_scheme_datasets[inx]
+						  alt_path     << current_view.alternative_path
+						  current_path << write_string("|", alt_path.join_as_strings("|"))
+						  
+						  base_view.go_to_alternative(current_path)
+						  base_view.up()
+						  
+						  >> base_view
+						  
+					  _endproc)
+
+	_return eo_qm_design_source.new(_self.ds_views[:electric]).records
 	
+_endmethod
+$
+
+
+
+_pragma(classify_level=debug, topic={Munit})
+_method design_manager_test_case.then_the_records_include_all_the_expected_ones(label, actual_records, expected_ids)
+	##
+	## ACTUAL_RECORDS are modified by this method.  All records
+	## from EXPECTED_IDS found in ACTUAL_RECORDS are removed from
+	## ACTUAL_RECORDS.
+	##
+	## When this method terminates, ACTUAL_RECORDS contains
+	## additional records that were not specified in EXPECTED_IDS.
+	##
+
+	_for expected_id _over expected_ids.fast_elements()
+	_loop
+		expected_record << .properties[expected_id]
+		fail_str << write_string("Expected detected changed records for ", label,
+					 " to include ", expected_id)
+		_self.assert_true(actual_records.includes?(expected_record), fail_str)
+
+		_if actual_records.includes?(expected_record)
+		_then
+			actual_records.remove(expected_record)
+		_endif
+	_endloop
+	
+	>> _self
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={Munit})
+_method design_manager_test_case.then_the_records_do_not_include_unexpected_ones(label, actual_records)
+	## 
+	## then_the_records_include_all_the_expected_ones() should be
+	## called first to remove the expected records from
+	## ACTUAL_RECORDS
+	##
+	
+	fail_str << write_string("Detected changed records for ", label,
+				 " unexpectedly included ",
+				 _self.format_record_list(actual_records))
+	
+	_self.assert_true(actual_records.empty?, fail_str)
+
+	>> _self 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method design_manager_test_case.format_record_list(records)
+	##
+	## Format records into a comma separated list.
+	##
+	## If a record is one that we have stored in the properties
+	## slot, show the key for the record rather than the key itself.
+	##
+	_local me << _self
+	>> simple_vector.new_from(records).
+		map(_proc(value)
+			    _import me
+			    >> _if (key << me.key_for_record(value)) _isnt _unset
+			       _then
+				       >> key
+			       _else
+				       >> value
+			       _endif
+		    _endproc).
+		join_as_strings(", ")
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_test_case.key_for_record(rec)
+	##
+	## IF REC is stored in .properties, return its key.
+	## Otherwise return _unset.
+	##
+	## Finding the key is slow, but this should only be called when
+	## the test has failed, so shouldn't matter.
+	## 
+	_for key, value _over .properties.fast_keys_and_elements()
+	_loop
+		_if key _is :last_element _orif # Ignore the generic key
+		    _not value.responds_to?(:is_valid?) _orif # Not a record
+		    _not value.is_valid? # Deleted record
+		_then
+			_continue
+		_endif
+		
+		_if value = rec
+		_then
+			_return key
+		_endif
+	_endloop
+	
+_endmethod
+$
