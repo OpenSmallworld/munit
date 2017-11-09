@@ -1313,7 +1313,7 @@ $
 
 
 _pragma(classify_level=debug, topic={Munit})
-_private _method design_manager_test_case.get_records_when_running_qm(design_source)
+_private _method design_manager_test_case.get_records_when_running_qm(design_source_class, _gather args)
 	## 
 	## This method does not really run QM.  It creates an instance
 	## of the eo_qm_design_source.  The
@@ -1345,6 +1345,7 @@ _private _method design_manager_test_case.get_records_when_running_qm(design_sou
 						  
 					  _endproc)
 
+	design_source << design_source_class.new(_scatter args)
 	_return design_source.records
 	
 _endmethod
