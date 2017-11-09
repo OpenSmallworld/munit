@@ -1345,7 +1345,7 @@ _private _method design_manager_test_case.get_records_when_running_qm(design_sou
 						  
 					  _endproc)
 
-	_return design_source.new(_self.ds_views[:electric]).records
+	_return design_source.records
 	
 _endmethod
 $
