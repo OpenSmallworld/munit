@@ -180,3 +180,53 @@ _private _method gui_framework_test_mixin.correct_parent?( item, _optional gui_t
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_private _method gui_framework_test_mixin.get_top_container_of_frame_with_title(frame_title)
+	##
+	## Returns the top container of a frame with title FRAME_TITLE.
+	##
+	## If no such frame exists, returns _unset.
+	##
+	## If mulitple frames with title FRAME_TITLE exist, the first one found will be
+	## returned.
+	## 
+	_for top_container _over sw_swift_manager.active_top_containers().fast_elements()
+	_loop
+		_if top_container.top_frame.title = frame_title
+		_then
+			_return top_container
+		_endif
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method gui_framework_test_mixin.wait_for_frame_to_be_active(frame_title, _optional timeout)
+	##
+	## Wait for a frame with title FRAME_TITLE to be active.
+	##
+	## TIMEOUT specified the maximum time to wait in milliseconds. It defaults to
+	## 60000 (i.e. 1 minute).
+	##
+
+	timeout << timeout.default(60000)
+	
+	start_time << date_time.now(:milliseconds)
+	_loop
+		container << _self.get_top_container_of_frame_with_title(frame_title)
+		_if container _isnt _unset _andif container.active?
+		_then
+			_leave
+		_endif
+
+		current_time << date_time.now(:milliseconds)
+		elapsed_time << (current_time - start_time).milliseconds
+		_if elapsed_time > timeout
+		_then
+			condition.raise(:error, :string, write_string("Timeout: Waited ", elapsed_time, " milliseconds for frame with title ", frame_title, " to be active."))
+		_endif
+		
+		_thisthread.sleep( 10 )
+	_endloop
+_endmethod
+$
