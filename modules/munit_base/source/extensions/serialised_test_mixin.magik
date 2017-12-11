@@ -108,14 +108,20 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, expected_id )
+_private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, expected_id _optional wait_time)
 	## 
 	## 
 
 	other_values   << rope.new()
+	timed_out?     << _false 
+	wait_time      << wait_time.default( 500 )
 
 	_loop 
-		value << _self.properties[:queue].get()
+		value << _self.properties[:queue].get( wait_time )
+		timed_out? << value _is _unset
+		_if timed_out?
+		_then
+			_leave 
 		_if value.is_kind_of?( {} ) _andif
 		    value[1] _is :event_handled _andif 
 		    value[2] _isnt _unset _andif 
@@ -136,7 +142,12 @@ _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, 
 	_endloop
 
 	_self.add_values_to_queue( other_values )
-	
+
+	_if timed_out?
+	_then _self.fail(write_sting("Time out after ",wait_time," ms when waiting for ", expected_value, " / ",expected_id))
+	_endif 
+
+	>> timed_out?
 _endmethod
 $
 
