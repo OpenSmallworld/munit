@@ -122,7 +122,7 @@ _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, 
 		_if timed_out?
 		_then
 			_leave 
-		_if value.is_kind_of?( {} ) _andif
+		_elif value.is_kind_of?( {} ) _andif
 		    value[1] _is :event_handled _andif 
 		    value[2] _isnt _unset _andif 
 		    value[2].id _is expected_id
