@@ -144,7 +144,7 @@ _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, 
 	_self.add_values_to_queue( other_values )
 
 	_if timed_out?
-	_then _self.fail(write_sting("Time out after ",wait_time," ms when waiting for ", expected_value, " / ",expected_id))
+	_then _self.fail(write_string("Time out after ",wait_time," ms when waiting for ", expected_value, " / ",expected_id))
 	_endif 
 
 	>> timed_out?
