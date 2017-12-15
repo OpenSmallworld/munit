@@ -1,0 +1,197 @@
+#% text_encoding = iso8859_15
+_package sw
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+def_slotted_exemplar(:product_test_runner,
+{},
+{})
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method product_test_runner.add_products(test_product_dirs)
+	## 
+	## 
+
+	dirs << test_product_dirs.split_by(",")
+	_for test_product_dir _over dirs.fast_elements()
+	_loop
+		smallworld_product.add_product(test_product_dir)
+	_endloop
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method product_test_runner.get_product_specific_runner(test_runner_class_name)
+	##
+	## If TEST_RUNNER_CLASS_NAME is given, load the module with that name and then
+	## return the class with that name.
+	##
+	## If TEST_RUNNER_CLASS_NAME is not given, or is an empty string, return _self.
+	## 
+	runner_class_name << _self.parameter_as_symbol(test_runner_class_name)
+
+	>> _if runner_class_name _isnt _unset
+	   _then
+		   sw_module_manager.load_module(runner_class_name)
+		   runner << !current_package!.global_at(runner_class_name)
+		   _if runner _is _unset
+		   _then
+			   condition.raise(:error, :string,
+					   write_string("Exemplar ", runner_class_name, " does not exist"))
+		   _endif
+		   >> runner.value
+	   _else
+		   >> _self
+	   _endif
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage={subclassable})
+_method product_test_runner.pre_run_setup(test_product)
+	##
+	## Run any setup required before running the tests of the test product named
+	## TEST_PRODUCT. TEST_PRODUCT is a symbol.
+	##
+	## Default implementation does nothing.
+	## 
+	# Do nothing
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method product_test_runner.run(test_output, test_product, _optional test_module, test_class)
+	## 
+	##
+
+	test_product << _self.parameter_as_symbol(test_product)
+	test_module  << _self.parameter_as_symbol(test_module)
+	test_class   << _self.parameter_as_symbol(test_class)
+
+	_self.pre_run_setup(test_product)
+	
+	test_case.ignore_aspects? << _true
+	
+	tests_ok? << _true
+	
+	runner << sw:xml_test_runner.new(_unset,
+					 :output_dir, test_output,
+					 :traceback_errors?, _true,
+					 :traceback_failures?, _true)
+
+	tests << product_test_suite.new(test_product)
+
+	_for module_tests _over tests.tests()
+	_loop
+		_if test_module _isnt _unset _andif
+		    module_tests.module_name _isnt test_module
+		_then
+			_continue 
+		_endif
+		
+		_for suite _over module_tests.tests()
+		_loop
+			_if test_class _isnt _unset _andif
+			    suite.class_name _isnt test_class
+			_then
+				_continue 
+			_endif
+
+			a_stream << runner.new_stream(suite)
+			_protect
+				new_runner << runner.new(a_stream, _scatter runner.properties.for_scatter())
+				new_runner.int!run(suite)
+				a_stream.flush()
+			_protection
+				a_stream.close()
+			_endprotect
+			
+			_if new_runner.test_result _is _unset
+			_then
+				show("No test results for: ", suite)
+			_else 
+				tests_ok? << tests_ok? _andif
+					     new_runner.test_result.error_count() = 0 _andif
+					     new_runner.test_result.failure_count() = 0
+			_endif			
+		_endloop
+	_endloop
+
+	>> tests_ok?
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method product_test_runner.parameter_as_symbol(obj)
+	##
+	## If OBJ is _unset or an empty string, return _unset.
+	## Otherwise return obj.as_symbol()
+	## 
+	>> _if obj _isnt _unset _and obj <> ""
+	   _then
+		   >> obj.as_symbol()
+	   _endif
+_endmethod
+$
+
+
+
+
+# FIXME Temporarily add these 2 methods until Core is up to date
+
+_pragma(classify_level=restricted, topic={geometry})
+_method sector_rope.points_in_line
+        ##
+        ## This reports the number of (control)points in the rope,
+        ## counting points of continuity between sectors only once.
+        ##
+        
+        _if _self.size = 1 _andif _self[1].size = 1
+        _then
+                # Single point trail
+                s << 1
+        _elif _self.size = 1 _andif _self[1].is_class_of?(circle)
+              _then s << 2
+        _else
+                s << 0
+                _for i,e _over _self.keys_and_elements()
+                _loop
+                        s +<< e.size
+                        _if _self.continuous_at?(i) _andif
+                            i < _self.size
+                        _then
+                                s -<< 1
+                        _endif
+                _endloop
+        _endif 
+        >> s
+_endmethod 
+$
+
+_pragma(classify_level=restricted, topic={geometry})
+_method sector_rope.as_coords_vec()
+        ##
+        ## Convert self to coords_vector format
+        ##
+        
+        coords_v << coords_vector.new(_self.points_in_line)
+        
+        s << 0
+        _for i,e _over _self.keys_and_elements()
+        _loop
+                _for c _over e.coords.fast_elements()
+                _loop
+                        s +<< 1
+                        coords_v[s] << coordinate(c[1],c[2])
+                _endloop 
+                _if _self.continuous_at?(i) _andif
+                    i < _self.size
+                _then
+                        s -<< 1
+                _endif
+        _endloop
+
+        _return coords_v
+_endmethod
+$
