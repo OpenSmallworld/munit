@@ -1,0 +1,11 @@
+munit_product 1
+
+description
+	MUnit Run product tests
+end
+
+requires
+	munit_xml
+end
+
+language en_gb
