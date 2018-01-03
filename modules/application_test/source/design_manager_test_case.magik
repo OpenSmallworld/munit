@@ -747,9 +747,32 @@ _private _method  design_manager_test_case.load_co_dump()
 
 	write("Loading COs from: ", co_dump_path )
 	
-        dw!cu_config_loader_engine.do(co_dump_path)
-        system.unlink(co_load_errors,_true, _true)
+	dw!cu_config_loader_engine.do(co_dump_path)
+	_self.write_cu_loader_error_log_to_console(co_load_errors)
+	system.unlink(co_load_errors,_true, _true)
         
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method design_manager_test_case.write_cu_loader_error_log_to_console(fname)
+	## 
+	## 
+	write("dw!cu_config_loader_engine error log file:")
+	f << external_text_input_stream.new(fname)
+	_protect
+		write("-START")
+		_loop
+			_if (l << f.get_line()) _is _unset
+			_then
+				_leave
+			_endif
+			write("- ", l)
+		_endloop
+	_protection
+		f.close()
+		write("-END")
+	_endprotect
 _endmethod
 $
 
