@@ -392,6 +392,8 @@ _private _method design_manager_test_case.setup_design()
 				# to the correct checkpoint - we go there readonly
 				_self.goto_test_checkpoints( "", _true )
 			_endif
+		_else 
+			.properties[:design] << sub_design
 		_endif
 	_else
 		#debug write(_self, ": create design")
