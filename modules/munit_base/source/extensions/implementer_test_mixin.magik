@@ -91,7 +91,8 @@ _method implementer_test_mixin.test_implementer()
 		gis_program_manager.ace_view.commit()
 		implementer_module << _self.implementer_module()
 
-		_if implementer_module _isnt _unset _then
+		_if implementer_module _isnt _unset
+		_then
 			
 			_for implementer _over _self.datamodel_implementers_to_test(implementer_module)
 			_loop

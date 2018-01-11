@@ -787,6 +787,11 @@ _method design_manager_test_case.given_a_design_phase(phase_id, _gather attrs)
 	## ATTRS is a list of key/value pairs that is passed to the
 	## engine.
 	##
+	## The phase's name will be PHASE_ID.  If the
+	## .properties[:design] already have a phase with this name,
+	## this one is used, else a new phase is inserted into the
+	## database. 
+	##
 
 	name << phase_id.write_string
 	pred << predicate.eq(:name, name)
