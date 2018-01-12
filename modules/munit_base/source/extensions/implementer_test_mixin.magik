@@ -256,17 +256,23 @@ $
 
 
 _pragma(classify_level=debug, topic={MUnit})
-_method implementer_test_mixin.target_views_proc()
+_method implementer_test_mixin.target_views_proc(_optional case_view_name, user_view_name)
 	## 
 	## Return a procedure that stubs the target_views() method to
 	## only return the electric dataset.
 	##
 
 	target_views_proc << _proc()
-				     ds_view << gis_program_manager.cached_dataset(:electric)
+				     _import case_view_name, user_view_name
+				     user_view << gis_program_manager.cached_dataset(user_view_name.default(:electric))
+				     case_view << gis_program_manager.cached_dataset(case_view_name.default(:electric_case))
 				     implementer_view << pseudo_slotted_list.new_with(:|target_user_view()|,
-										      ds_view,
+										      user_view,
+										      :|target_case_view()|,
+										      case_view,
 										      :targets_user_view?,
+										      _true,
+										      :targets_case_view?,
 										      _true)
 				     >> property_list.new_with(implementer_view, implementer_view)
 			     _endproc
