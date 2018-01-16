@@ -392,6 +392,8 @@ _private _method design_manager_test_case.setup_design()
 				# to the correct checkpoint - we go there readonly
 				_self.goto_test_checkpoints( "", _true )
 			_endif
+		_else 
+			.properties[:design] << sub_design
 		_endif
 	_else
 		#debug write(_self, ": create design")
@@ -777,6 +779,36 @@ _endmethod
 $
 
 
+_pragma(classify_level=debug, topic={munit})
+_method design_manager_test_case.given_a_design_phase(phase_id, _gather attrs)
+	## 
+	## See swg_dsn_admin_engine.create_build_phase()
+	##
+	## ATTRS is a list of key/value pairs that is passed to the
+	## engine.
+	##
+	## The phase's name will be PHASE_ID.  If the
+	## .properties[:design] already have a phase with this name,
+	## this one is used, else a new phase is inserted into the
+	## database. 
+	##
+
+	name << phase_id.write_string
+	pred << predicate.eq(:name, name)
+	
+	_if (design_phase << .properties[:design].build_phases.select(pred).an_element()) _is _unset
+	_then 
+		attrs << property_list.new_from_gathered(attrs)
+		design_phase << swg_dsn_admin_engine.create_build_phase(.properties[:design], name, attrs)
+	_endif
+	.properties[phase_id] << design_phase
+
+	>> _self
+	
+_endmethod
+$
+
+
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.given_compatible_unit_definition_with_code( cu_code )
 	##
@@ -1022,6 +1054,19 @@ _method design_manager_test_case.when_i_split_the_linear_rwo_by_trail(id, coords
 	
 	rt.run()
 	
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_test_case.when_activating_design_phase(phase_id)
+	## 
+	##
+
+	design_phase << .properties[phase_id]
+	swg_dsn_admin_engine.activate_design(design_phase)
 	>> _self
 	
 _endmethod

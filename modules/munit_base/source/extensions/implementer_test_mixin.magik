@@ -1,0 +1,283 @@
+#% text_encoding = iso8859_1
+_package sw
+
+def_mixin(:implementer_test_mixin)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+implementer_test_mixin.define_shared_constant(:disabled_implementer_tests,
+	## Defines a set of implementer tests that are no longer valid
+	## in the stream. This should be subclassed by individual
+	## tests.
+	##
+	## Each entry is a property list of method/value pairs. If all
+	## match the implementer, it is disabled. In general this
+	## should include datamodel_name, sub_datamodel_name and
+	## version.
+	##
+	## E.g. property_list.new_with(:datamodel_name, "eo_cs_config",
+	##			       :sub_datamodel_name, "eo_ape",
+	##			       :version, 2)
+	{
+	},
+	:private)
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_abstract _method implementer_test_mixin.implementer_module()
+	##
+	## Return the module for which the implementers should be
+	## tested,
+	## e.g. sw_module_manager.module(:co_datamodel_implementer)
+	##
+
+_endmethod
+$	
+
+
+_pragma(classify_level=debug, topic={MUnit}, usage={subclassable})
+_private _method implementer_test_mixin.set_up_implementer(implementer)
+	##
+	## Set up any specific configuration for running the user and
+	## case implementer tests defined on the given
+	## datamodel_implementer.
+	## 
+	## This is intended for use on older implementer versions where
+	## certain behaviour and/or data is not valid in the current
+	## system. The standard test set_up() method should be used for
+	## generic test behaviour.
+	##
+
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit}, usage={subclassable})
+_private _method implementer_test_mixin.tear_down_implementer(implementer)
+	##
+	## Discard any specific configuration for running the user and
+	## case implementer tests defined on the given
+	## datamodel_implementer.
+	## 
+	## This is intended for use on older implementer versions where
+	## certain behaviour and/or data is not valid in the current
+	## system. The standard test tear_down() method should be used
+	## for generic test behaviour.
+	##
+
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method implementer_test_mixin.test_implementer()
+	##
+	## Run the post_test methods on the implementer
+	##
+	
+	_local me << _self
+	_block
+		
+                _handling implementer_warning _with _proc(warning)
+							    _import me
+							    me.assert_true(_false, warning.report_contents_string)
+                _endproc
+		
+		
+                _handling datamodel_test_failed _with _proc(warning)
+							       _import me
+							       me.assert_true(_false, warning.report_contents_string)
+                _endproc
+
+		gis_program_manager.ace_view.commit()
+		implementer_module << _self.implementer_module()
+
+		_if implementer_module _isnt _unset
+		_then
+			
+			_for implementer _over _self.datamodel_implementers_to_test(implementer_module)
+			_loop
+				_self.int!test_implementer(implementer)
+			_endloop
+
+		_endif
+			
+	_endblock
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method implementer_test_mixin.int!test_implementer(implementer)
+	##
+	## Run the post_test methods for a single implementer IMPLEMENTER
+	##
+	
+	_self.set_up_implementer(implementer)
+
+	(user_views, case_views) << _self.views_for(implementer)
+	
+	_if (case_test_method << implementer.properties[:case_post_test_method]) _isnt _unset
+	_then
+		_self.int!test_implementer_on_views(implementer, case_views, case_test_method)
+	_endif
+
+	_if (user_test_method << implementer.properties[:user_post_test_method]) _isnt _unset
+	_then
+		_self.int!test_implementer_on_views(implementer, user_views, user_test_method)
+	_endif	
+	
+	_self.tear_down_implementer(implementer)
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method implementer_test_mixin.int!test_implementer_on_views(implementer, views, test_method)
+	##
+	## Assert that there's at least one view and then
+	## run TEST_METHOD on IMPLEMENTER for each view in VIEWS.
+	##
+	
+	_local me << _self
+	_block
+		_handling implementer_warning _with _proc(warning)
+							    _import me, implementer, test_method
+							    contents << warning.report_contents_string
+							    me.assert_true(_false, write_string(implementer, newline_char,
+												me.class_name, %.,
+												test_method, newline_char,
+												contents))
+		_endproc
+		
+		
+		_handling datamodel_test_failed _with _proc(warning)
+							      _import me, implementer, test_method
+							      contents << warning.report_contents_string
+							      me.assert_true(_false, write_string(implementer, newline_char, 
+												  me.class_name, %.,
+												  test_method, newline_char,
+												  contents))
+		_endproc
+		
+		_self.assert_false(views.empty?)
+		_for view _over views.fast_elements()
+		_loop
+			_if view.alternative_level > 0
+			_then
+				view.goto_top_alternative()
+			_endif
+			implementer.perform(test_method, view)
+		_endloop
+	_endblock
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method implementer_test_mixin.can_test_implementer?(implementer)
+	## Returns true if the given implementer is still valid to
+	## test.
+	##
+	## Disabled implementers are as defined by
+	## self.disabled_implementer_tests
+
+	_for data _over _self.disabled_implementer_tests.fast_elements()
+	_loop @outer
+		_for k, e _over data.fast_keys_and_elements()
+		_loop
+			_if k.send_to(implementer) ~= e
+			_then
+				_continue @outer
+			_endif
+		_endloop
+
+		# Found a match so can't run this
+		_return _false
+	_endloop
+
+	# datamodel_prerequisite objects can't be tested
+	_if implementer.prerequisite?
+	_then
+		_return _false
+	_endif
+
+	_return _true
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_iter _method implementer_test_mixin.datamodel_implementers_to_test(implementer_module)
+	## 
+	## Return the implementers to test
+	##
+	## This is all the datamodel implementers for
+	## IMPLEMENTER_MODULE
+	##
+
+	_for implementer _over implementer_module.datamodel_implementers().fast_elements()
+	_loop
+		_if _self.can_test_implementer?(implementer)
+		_then
+			_loopbody(implementer)
+		_endif
+	_endloop
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method implementer_test_mixin.views_for(implementer)
+	##
+	## Returns two ropes of views for IMPLEMENTER.
+	## The first rope contains target user views, the second
+	## contains target case views.
+	##
+	
+	user_views << rope.new()
+	case_views << rope.new()
+	_for target_view _over implementer.target_views().fast_keys()
+	_loop
+		_if  target_view.targets_user_view? _is _true
+		_then
+			view << target_view.target_user_view()
+			user_views.add(view)
+		_endif
+		_if  target_view.targets_case_view? _is _true
+		_then
+			view << target_view.target_case_view()
+			case_views.add(view)
+		_endif
+	_endloop
+	_return user_views, case_views
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
+_method implementer_test_mixin.target_views_proc(_optional case_view_name, user_view_name)
+	## 
+	## Return a procedure that stubs the target_views() method to
+	## only return the electric dataset.
+	##
+
+	target_views_proc << _proc()
+				     _import case_view_name, user_view_name
+				     user_view << gis_program_manager.cached_dataset(user_view_name.default(:electric))
+				     case_view << gis_program_manager.cached_dataset(case_view_name.default(:electric_case))
+				     implementer_view << pseudo_slotted_list.new_with(:|target_user_view()|,
+										      user_view,
+										      :|target_case_view()|,
+										      case_view,
+										      :targets_user_view?,
+										      _true,
+										      :targets_case_view?,
+										      _true)
+				     >> property_list.new_with(implementer_view, implementer_view)
+			     _endproc
+
+	>> target_views_proc
+	
+_endmethod
+$
