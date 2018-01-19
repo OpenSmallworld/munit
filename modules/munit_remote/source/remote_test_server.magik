@@ -29,7 +29,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_server.init(port, test_product_names, _optional test_list_provider)
+_private _method remote_test_server.init(port, test_product_names)
 	##
 	## TEST_LIST_PROVIDER should be slow_tests_first_provider or a
 	## subclass.  It defaults to slow_tests_first_provider
@@ -44,11 +44,20 @@ _method remote_test_server.init(port, test_product_names, _optional test_list_pr
         _then
                 condition.raise(:error, :string, "No connection stream created on " + port)
         _endif
+	
+        >> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_server.init_tests(test_list_provider)
+	## 
+	##
 
 	test_list_provider << test_list_provider.default(slow_tests_first_provider)
 	.remote_tests << test_list_provider.get_list(test_product_names)
-	
-        >> _self
 	
 _endmethod
 $
