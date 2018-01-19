@@ -2019,3 +2019,76 @@ _method application_system_test_mixin.when_waiting_for_message_dialog_invocation
 	>> _self
 _endmethod
 $
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_label_item_with_identifier_has_value(identifier, expected_value,
+									       _optional frame_title)
+	## 
+	## Check a Swift widget's VALUE.
+	##
+	## IDENTIFIER is the identifier of the widget to check.
+	##
+	## EXPECTED_TEXT is the expected string value for the Swift
+	## widget.
+	##
+	## FRAME_TITLE if supplied is the title of the frame on which
+	## to look for the widget.
+	##
+	
+	>> _self.then_item_with_identifier_has_value(:tag!sw_label_item, identifier, expected_value, frame_title)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_text_item_with_identifier_has_value(identifier, expected_value,
+									       _optional frame_title)
+	## 
+	## Check a Swift widget's VALUE.
+	##
+	## IDENTIFIER is the identifier of the widget to check.
+	##
+	## EXPECTED_TEXT is the expected string value for the Swift
+	## widget.
+	##
+	## FRAME_TITLE if supplied is the title of the frame on which
+	## to look for the widget.
+	##
+	
+	>> _self.then_item_with_identifier_has_value(:tag!sw_text_item, identifier, expected_value, frame_title)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_item_with_identifier_has_value(tag, identifier, expected_value,
+									  _optional frame_title)
+	## 
+	## Check a Swift widget's VALUE.
+	##
+	## IDENTIFIER is the identifier of the widget to check.
+	##
+	## EXPECTED_TEXT is the expected string value for the Swift
+	## widget.
+	##
+	## FRAME_TITLE if supplied is the title of the frame on which
+	## to look for the widget.
+	##
+	
+	item << _self.get_item_with_identifier(tag, identifier, :frame_title, frame_title)
+
+	_self.assert_not_unset(item, write_string("Failed to find component with identifier ", identifier))
+	_if item _isnt _unset
+	_then
+		fail_str << write_string("Expected the value of the text item ", identifier, " to be ", expected_value,
+					 ", but it is ", item.value)
+		_self.assert_equals(expected_value, item.value, fail_str)
+	_endif
+	
+	>> _self
+	
+_endmethod
+$
