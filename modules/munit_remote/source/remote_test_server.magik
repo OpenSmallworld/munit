@@ -20,7 +20,7 @@ $
 _pragma(classify_level=debug)
 _method remote_test_server.new(port, _gather test_product_names)
 	## 
-	##
+	## 
 
 	>> _clone.init(port, test_product_names)
 	
@@ -42,6 +42,9 @@ _private _method remote_test_server.init(port, test_product_names)
         _then
                 condition.raise(:error, :string, "No connection stream created on " + port)
         _endif
+
+	test_list_provider << test_list_provider.default(slow_tests_first_provider)
+	.remote_tests << test_list_provider.get_list(test_product_names)
 	
         >> _self
 	
@@ -50,10 +53,13 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_server.init_tests(test_list_provider)
+_method remote_test_server.init_tests(test_list_provider, _gather test_product_names)
 	## 
 	## TEST_LIST_PROVIDER should be slow_tests_first_provider or a
-	## subclass.  It defaults to slow_tests_first_provider
+	## subclass.  It defaults to slow_tests_first_provider.
+	##
+	## TEST_PRODUCT_NAMES is a list of test products to run tests
+	## for.
 	##
 
 	test_list_provider << test_list_provider.default(slow_tests_first_provider)
