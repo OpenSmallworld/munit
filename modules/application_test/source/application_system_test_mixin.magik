@@ -616,6 +616,32 @@ _endmethod
 $
 
 
+_pragma(classify_level=restricted)
+_method application_system_test_mixin.then_tree_contains_elements( tree_id_or_path, strings )
+	## 
+	## Asserts a tree_item contains a hierarchy of strings
+	##
+	## TREE_ID_OR_PATH can be the tree_item id or its identifier
+	## path or the path of a container of the tree_item.
+	##
+	## For example:
+	## then_tree_contains( :am_tree, { "Grandparent", "Parent", "Child" } )
+	## will check that the tree looks like
+	## Grandparent
+	## - Parent
+	##   - Child
+	##
+
+	_for i _over 1.upto( strings.size - 1 )
+	_loop
+		_self.then_tree_contains_element( tree_id_or_path, strings[i+1], strings[i] )
+	_endloop 
+
+	>> _self
+_endmethod
+$
+
+
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_number_of_rows_in_tree_is( tree_id_or_path, expected_rows )
 	## 
