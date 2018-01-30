@@ -2,6 +2,9 @@
 _package sw
 $
 
+remex( :design_manager_test_case )
+$
+
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ##
 ## A class that sets up a Design and Project to perform Munit testing.
@@ -40,10 +43,6 @@ def_slotted_exemplar( :design_manager_test_case,
 		{:properties, _unset}
 	},
 	{ :test_case, :design_manager_system_test_mixin })
-$
-
-
-design_manager_test_case.method_table.resolve_conflicts( :test_case )
 $
 
 
@@ -1516,6 +1515,18 @@ _method design_manager_test_case.key_for_record(rec)
 			_return key
 		_endif
 	_endloop
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method design_manager_test_case.note_change( who, what, data )
+	##
+	## Conflict resolution method
+	##
+	
+	_super( design_manager_system_test_mixin ).note_change( who, what, data )
 	
 _endmethod
 $
