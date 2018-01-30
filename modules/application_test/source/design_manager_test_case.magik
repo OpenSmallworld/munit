@@ -2,9 +2,6 @@
 _package sw
 $
 
-remex( :design_manager_test_case )
-$
-
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ##
 ## A class that sets up a Design and Project to perform Munit testing.
@@ -1524,6 +1521,9 @@ _pragma(classify_level=debug)
 _method design_manager_test_case.note_change( who, what, data )
 	##
 	## Conflict resolution method
+	## Use design_manager_system_test_mixin.note_change() so that
+	## serialised_test_mixin.note_change() is called.  This is needed so that events
+	## are passed on; failure to do so may cause tree_items to not update correctly.
 	##
 	
 	_super( design_manager_system_test_mixin ).note_change( who, what, data )
