@@ -433,6 +433,7 @@ _method design_manager_test_case.setup_sub_design()
 		swg_dsn_admin_engine.activate_design( sub_design )
 		# go to state test run
 		_self.goto_test_checkpoints()
+		_self.properties[ :design  ] << sub_design		
 	_else
 		_self.given_a_new_design( _self.project_name, sub_design_name )
 		sub_design << .properties[ :design ]
@@ -794,16 +795,48 @@ _method design_manager_test_case.given_a_design_phase(phase_id, _gather attrs)
 	
 	_if (design_phase << .properties[:design].build_phases.select(pred).an_element()) _is _unset
 	_then 
+		write( "Creating design_phase ", name )
 		attrs << property_list.new_from_gathered(attrs)
 		design_phase << swg_dsn_admin_engine.create_build_phase(.properties[:design], name, attrs)
+	_else 
+		write( "Use existing design_phase ", name )
 	_endif
 	.properties[phase_id] << design_phase
 
+	_if .properties[:phases] _is _unset
+	_then
+		.properties[:phases] << set.new()
+	_endif
+	.properties[:phases].add( design_phase )
+	
 	>> _self
 	
 _endmethod
 $
 
+
+_pragma(classify_level=debug, topic={munit})
+_method design_manager_test_case.delete_design_phases( _gather phases )
+	## 
+	## Delete design phases in PHASES
+	## If empty, delete all design phases
+	##
+
+	phases_to_delete << _if phases.empty?
+			    _then
+				    >> .properties[:phases].default( {} )
+			    _else
+				    >> phases
+			    _endif 
+
+	_for a_phase _over phases_to_delete.fast_elements()
+	_loop
+		write( "Deleting design_phase ", a_phase.name )
+		swg_dsn_admin_engine.delete_build_phase( a_phase )
+	_endloop 
+	
+_endmethod
+$
 
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method design_manager_test_case.given_compatible_unit_definition_with_code( cu_code )
