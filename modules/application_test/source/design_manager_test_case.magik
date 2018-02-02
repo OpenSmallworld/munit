@@ -816,7 +816,7 @@ $
 
 
 _pragma(classify_level=debug, topic={munit})
-_method design_manager_test_case.delete_design_phases( _gather phases )
+_private _method design_manager_test_case.delete_design_phases( _gather phases )
 	## 
 	## Delete design phases in PHASES
 	## If empty, delete all design phases
@@ -831,7 +831,6 @@ _method design_manager_test_case.delete_design_phases( _gather phases )
 
 	_for a_phase _over phases_to_delete.fast_elements()
 	_loop
-		write( "Deleting design_phase ", a_phase.name )
 		swg_dsn_admin_engine.delete_build_phase( a_phase )
 	_endloop 
 	
