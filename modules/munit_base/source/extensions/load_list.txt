@@ -9,4 +9,6 @@ message_tests
 
 serialised_test_mixin
 implementer_test_mixin
+
 deep_comparator
+json_assert_mixin
