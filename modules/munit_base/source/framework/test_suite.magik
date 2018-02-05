@@ -26,6 +26,13 @@ def_slotted_exemplar(:test_suite,
 {:test_interface})
 $
 
+_pragma(classify_level=restricted)
+## Subclass this shared constant if this is a slow test.  When
+## using the remote_test_server, slow tests are added first in
+## the list of tests to run.
+test_suite.define_shared_constant(:slow_test?, _false, :public)
+$
+
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_suite.new( _optional a_test_case , a_name, method_names)
 

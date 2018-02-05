@@ -43,20 +43,7 @@ _private _method slow_tests_first_provider.add_product_test_suite(remote_tests, 
 	tests << product_test_suite.new(product_name)
 
 	# Allows ant tests/build.xml calls to turn off the slow tests.
-	skip_slow_tests_var << system.getenv("SKIP_SLOW_TESTS").default("FALSE")
-	write("skip_slow_tests_var: ", skip_slow_tests_var)
-	
-	skip_slow_tests? << _if skip_slow_tests_var = "FALSE"
-			    _then
-				    >> _false
-			    _elif skip_slow_tests_var = "TRUE"
-			    _then
-				    write("Skipping slow tests")
-				    >> _true
-			    _else
-				    # incorrect value passed from ant
-				    >> _false 
-			    _endif 
+	skip_slow_tests? << _self.skip_slow_tests?()
 		
 	_for module_test _over tests.tests()
 	_loop
@@ -73,6 +60,32 @@ _private _method slow_tests_first_provider.add_product_test_suite(remote_tests, 
 			_endif 
 		_endloop
 	_endloop
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug, usage={subclassable})
+_private _method slow_tests_first_provider.skip_slow_tests?()
+	## 
+	##
+	
+	skip_slow_tests_var << system.getenv("SKIP_SLOW_TESTS").default("FALSE")
+	write("skip_slow_tests_var: ", skip_slow_tests_var)
+	
+	skip_slow_tests? << _if skip_slow_tests_var = "FALSE"
+			    _then
+				    >> _false
+			    _elif skip_slow_tests_var = "TRUE"
+			    _then
+				    write("Skipping slow tests")
+				    >> _true
+			    _else
+				    # incorrect value passed from ant
+				    >> _false 
+			    _endif
+
+	>> skip_slow_tests?
 	
 _endmethod
 $
