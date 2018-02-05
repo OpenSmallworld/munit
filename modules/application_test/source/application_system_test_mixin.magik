@@ -602,9 +602,11 @@ _pragma(classify_level=debug)
 _method application_system_test_mixin.then_tree_contains_element( tree_id_or_path, a_string,
 								  _optional parent_string, selected? )
 	## 
-	## Asserts a tree_item contains an element displaying a string
-	## matching A_STRING.
+	## Asserts a tree_item contains an element displaying a string matching A_STRING.
 	## Optionally asserts the string displayed in the parent element.
+	## If SELECTED? is true assert that the element IS selected.
+	## If SELECTED? is false assert that the element IS NOT selected.
+	## If SELECTED? is not provided don't care whether it is selected.
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
 	## path or the path of a container of the tree_item.
@@ -655,7 +657,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_number_of_rows_in_tree_is( tree_id_or_path, expected_rows )
 	## 
-	## Asserts the number of visible rows in a tree item.
+	## Asserts the number of visible rows in a tree item is EXPECTED_ROWS
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
 	## path or the path of a container of the tree_item.
@@ -707,6 +709,7 @@ _method application_system_test_mixin.then_number_of_selected_rows_in_tree_is( t
 	_self.assert_equals( expected_selected, selected_trees,
 			     write_string( "Expected tree '", tree_id_or_path,
 					   "' to have ", expected_selected, " rows selected. #1" ) )
+	
 	>> _self
 _endmethod
 $
