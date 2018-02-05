@@ -106,7 +106,9 @@ _pragma(classify_level=debug)
 _private _method json_assert_mixin.assert_json_decoded(expected, actual, msg)
 	## 
 	##
-	_self.assert_deep_equals( expected, actual, msg.default("Json assertion failed. Run this test again alone and then check last_failed_json_assertion"))
+	_self.assert_deep_equals( expected, actual, msg.default("Json assertion failed. Run "+_self.get_name()+" again alone and then check "+
+								_self.class_name+".last_failed_json_assertion, or call "+
+								_self.class_name+".print_last_failed_json_assertion()"))
 	_if _not _self.compare(expected, actual).empty?
 	_then
 		_self.last_failed_json_assertion[:expected]<< expected
