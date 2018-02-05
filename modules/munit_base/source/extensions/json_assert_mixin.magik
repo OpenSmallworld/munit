@@ -82,7 +82,7 @@ _method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gathe
 	_try
 		actual<< decoder.parse_string(actual_json)
 	_when error
-		_self.fail( write_string(msg," Cannot parse string: " , actual_json))
+		_self.fail( write_string(msg," Cannot parse JSON string: " , actual_json))
 		_return _self 
 	_endtry
 	_if exp_json.is_kind_of?(handler)
@@ -127,7 +127,7 @@ _private _method json_assert_mixin.sort_in_json(json, sort_proc _gather keys)
 			myjson<< myjson[keys[k]]
 			_if myjson _is _unset
 			_then
-				_self.fail(write_string("Key '",keys[k],"' not found in json. Not possible to sort json before asserting."))
+				_self.fail(write_string("Key '",keys[k],"' not found in JSON. Not possible to sort json before asserting."))
 				_return 
 			_endif 
 		_endloop
