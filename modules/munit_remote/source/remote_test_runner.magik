@@ -28,7 +28,7 @@ _method remote_test_runner.run_remote(address, port)
 
 		_if module_name _is :done _then _leave _endif
 
-		show("Running tests in class: ", module_name, test_name, tf.additional_test_suites)
+		show("Running tests in class: ", module_name, test_name)
 
 		count +<< 1
 
