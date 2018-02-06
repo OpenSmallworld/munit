@@ -8,6 +8,16 @@ def_slotted_exemplar(:test_suite_finder,
 })
 $
 
+
+_pragma(classify_level=restricted)
+## This shared constant keeps track of all the additional
+## test suites that are created that are not stored as a
+## global, e.g. the way in which the PNI conflict tests are
+## created 
+test_suite_finder.define_shared_constant(:additional_test_suites, hash_table.new(), :public)
+$
+
+
 _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.new()
 
