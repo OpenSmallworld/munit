@@ -175,7 +175,6 @@ _private _method remote_test_server.send_test_to_client(client)
 			
 			module_name << test.module_name
 			test_name   << test.class_name
-			show(:send_test_to_client, module_name, test_name, .remote_tests)
 			_if test.class_name _is :test_suite _andif
 			    (suite_name << test.get_name()) _isnt _unset
 			_then

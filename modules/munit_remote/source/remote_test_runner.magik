@@ -46,7 +46,6 @@ _method remote_test_runner.run_remote(address, port)
 			identifier << tf.additional_test_suites[test_name][:module_name]
 		_endif
 
-		show(:test, test, identifier, test_name)
 		_self.properties[:output_identifier] << identifier
 		a_stream << _self.new_stream(identifier, test_name)
 		
