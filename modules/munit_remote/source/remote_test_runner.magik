@@ -37,13 +37,13 @@ _method remote_test_runner.run_remote(address, port)
 			sw_module_manager.load_module(module_name)
 		_endif
 		
-		identifier << sw_module_manager.module(module_name).product.name
-		test       << !current_package![test_name]
-		
-		_if test _is _unset 
+		_if tf.additional_test_suites[test_name] _isnt _unset 
 		_then
 			test       << tf.additional_test_suites[test_name][:test_suite]
 			identifier << tf.additional_test_suites[test_name][:module_name]
+		_else
+			test       << !current_package![test_name]
+			identifier << sw_module_manager.module(module_name).product.name
 		_endif
 
 		_self.properties[:output_identifier] << identifier
