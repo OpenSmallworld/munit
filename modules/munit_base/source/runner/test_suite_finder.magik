@@ -97,3 +97,22 @@ _method test_suite_finder.find_classes_for_module( module_name )
 _endmethod
 $
 
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_suite_finder.test_and_identifier(module_name, test_name)
+	## 
+	##
+
+	_if _self.additional_test_suites[test_name] _isnt _unset 
+	_then
+		test       << _self.additional_test_suites[test_name][:test_suite]
+		identifier << _self.additional_test_suites[test_name][:module_name]
+	_else
+		test       << !current_package![test_name]
+		identifier << sw_module_manager.module(module_name).product.name
+	_endif
+
+	>> (test, identifier)
+	
+_endmethod
+$
