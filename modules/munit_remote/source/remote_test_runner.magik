@@ -20,6 +20,7 @@ _method remote_test_runner.run_remote(address, port)
 	tests_ok? << _true
 	.retry? << _true
 	test_times << property_list.new()
+	tf << test_suite_finder.new()
 
 	_loop
 		
@@ -35,12 +36,12 @@ _method remote_test_runner.run_remote(address, port)
 		_then 
 			sw_module_manager.load_module(module_name)
 		_endif
-
-		product_name << sw_module_manager.module(module_name).product.name
-		_self.properties[:output_identifier] << product_name
 		
-		test << !current_package![test_name]
-		a_stream << _self.new_stream(test)
+		(test, identifier) << tf.test_and_identifier(module_name, test_name)
+
+		_self.properties[:output_identifier] << identifier
+		a_stream << _self.new_stream(identifier, test_name)
+		
 		_protect
 			test_start << date_time_now()
 			new_runner << _self.new(a_stream, _scatter _self.properties.for_scatter())
@@ -180,5 +181,21 @@ _private _method remote_test_runner.close_connection(connection)
 		connection.close()
 	_endif
 	
+_endmethod
+$
+
+
+_pragma(classify_level=advanced,topic=MUnit)
+_method remote_test_runner.new_stream(identifier, test_name)
+	##returns a new stream to output xml results
+
+	fname << write_string("test__", identifier, "__", test_name, "__", system.host_name, ".", .properties[:output_format])
+	
+	a_file << system.name_new_file(
+			  system.pathname_from_components(fname, .properties[:output_dir]))
+
+	show(a_file)
+	
+	_return external_text_output_stream.new(a_file)
 _endmethod
 $

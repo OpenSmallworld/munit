@@ -1,0 +1,184 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug)
+## This mixin provides the methods to compare json strings
+## inherit your test from it to use assert_json_file() etc.
+def_mixin( :json_assert_mixin )
+$
+
+_pragma(classify_level=debug)
+## property list with keys :actual and :expected holding last
+## :actual json which was different than :expected
+json_assert_mixin.define_shared_constant(:last_failed_json_assertion, property_list.new_with(:expected, _unset, :actual, _unset), :public)
+$
+_pragma(classify_level=debug)
+## rounding of floats before comparing json expected vs. actual 
+json_assert_mixin.define_shared_constant(:round_mantissa_decimals, 8, :public)
+$
+_pragma(classify_level=debug)
+_method json_assert_mixin.print_last_failed_json_assertion(_optional stream)
+	## prints :actual and :expected last_failed_json_assertion as a
+	## string to STREAM (defaults to !output!)
+	## 
+	enc<< json_encoder.new()
+	str<< stream.default(!output!)
+	str.write("expected",newline_char)
+	str.write(enc.generate_string(_self.last_failed_json_assertion[:expected]))
+	str.write(newline_char,"actual",newline_char)
+	str.write(enc.generate_string(_self.last_failed_json_assertion[:actual]),newline_char)
+_endmethod
+$
+_pragma(classify_level=debug)
+_method json_assert_mixin.resource_file_as_string(fname)
+	## reads resource file fname and returns its content as a string
+	## 
+	full_fname<< smallworld_product.get_resource_file(fname, :data, _self.module_name)
+	in<< external_text_input_stream.new(full_fname)
+	_protect
+		out<< internal_text_output_stream.new()
+		_loop
+			_if (ln<< in.get_line()) _is _unset _then _leave _endif
+			out.write(ln, newline_char)
+		_endloop		
+	_protection
+		_if in _isnt _unset _then in.close() _endif 
+	_endprotect
+	>> out.string
+_endmethod
+$
+_pragma(classify_level=debug)
+_method json_assert_mixin.assert_json_file(exp_json_fname, actual_json _optional msg _gather sort_data)
+	## Compares json in resource file EXP_JSON_FNAME with json
+	## string ACTUAL_JSON.
+	## MSG is a failure message.
+	##
+	## SORT_DATA are expected to be vectors containing sort_proc
+	## followed by sequence of keys leading to element in json
+	## which should be sorted before comparison 
+	## e.g. {_proc (a,b) >> a[:id] > b[:id] _endproc, :features}
+	## Last key can be "*" e.g. {sort_proc, :contexts, :internals, "*"}
+	## which means that values of all keys will be sorted by sort_proc
+	str<< _self.resource_file_as_string(exp_json_fname)
+	>> _self.assert_json(str, actual_json, msg, _scatter sort_data)
+_endmethod
+$
+_pragma(classify_level=debug)
+_method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gather sort_data)
+	## Compares EXP_JSON with json string ACTUAL_JSON.
+	## EXP_JSON is either a string or a handler which returns a string
+	## when invoked.
+	## MSG is a failure message.
+	## 
+	## SORT_DATA are expected to be vectors containing sort_proc
+	## followed by sequence of keys leading to element in json
+	## which should be sorted before comparison 
+	## e.g. {_proc (a,b) >> a[:id] > b[:id] _endproc, :features}
+	## Last key can be "*" e.g. {sort_proc, :contexts, :internals, "*"}
+	## which means that values of all keys will be sorted by sort_proc
+	##
+	decoder<< json_decoder.new()
+	_try
+		actual<< decoder.parse_string(actual_json)
+	_when error
+		_self.fail( write_string(msg," Cannot parse JSON string: " , actual_json))
+		_return _self 
+	_endtry
+	_if exp_json.is_kind_of?(handler)
+	_then
+		exp_json<< exp_json()
+	_endif 
+	expected<< decoder.parse_string(exp_json)
+	
+	_for sort_data_el _over sort_data.fast_elements()
+	_loop
+		_self.sort_in_json(actual, _scatter sort_data_el)
+		_self.sort_in_json(expected, _scatter sort_data_el)
+	_endloop
+	_self.round_floats(actual)
+	_self.round_floats(expected)
+	_self.assert_json_decoded(expected, actual, msg)
+	>> _self 
+_endmethod
+$
+_pragma(classify_level=debug)
+_private _method json_assert_mixin.assert_json_decoded(expected, actual, msg)
+	## 
+	##
+	_self.assert_deep_equals( expected, actual, msg.default("Json assertion failed. Run "+_self.get_name()+" again alone and then check "+
+								_self.class_name+".last_failed_json_assertion, or call "+
+								_self.class_name+".print_last_failed_json_assertion()"))
+	_if _not _self.compare(expected, actual).empty?
+	_then
+		_self.last_failed_json_assertion[:expected]<< expected
+		_self.last_failed_json_assertion[:actual]<< actual
+	_endif 	
+_endmethod
+$
+_pragma(classify_level=debug)
+_private _method json_assert_mixin.sort_in_json(json, sort_proc _gather keys)
+	##
+	myjson<< json
+	_if keys.size > 1
+	_then 
+		_for k _over 1.upto(keys.size - 1)
+		_loop
+			myjson<< myjson[keys[k]]
+			_if myjson _is _unset
+			_then
+				_self.fail(write_string("Key '",keys[k],"' not found in JSON. Not possible to sort json before asserting."))
+				_return 
+			_endif 
+		_endloop
+	_endif
+	_if keys.last = "*"
+	_then
+		_for key _over myjson.keys()
+		_loop
+			_self.sort_collection(myjson, key, sort_proc)
+		_endloop
+	_else
+		_self.sort_collection(myjson, keys.last, sort_proc)
+	_endif 
+_endmethod
+$
+_pragma(classify_level=debug)
+_private _method json_assert_mixin.sort_collection(parent, key, sort_proc)
+	##
+	 _if (v<< parent[key]) _isnt _unset _andif v.is_kind_of?(ro_indexed_collection_mixin)
+	 _then
+		 parent[key]<< simple_vector.new_from(sorted_collection.new_from(v, sort_proc))
+	 _endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method json_assert_mixin.round_floats(json)
+	## 
+	## 
+	_for k, el _over json.keys_and_elements()
+	_loop
+		_if el.is_kind_of?(float)
+		_then
+			json[k]<< _self.round_float(el)
+		_elif el.is_kind_of?(integral_number_mixin)
+		_then
+			json[k]<< _self.round_float(el.as_float)
+		_elif el.is_kind_of?(basic_collection_mixin)
+		_then
+			_self.round_floats(el)
+		_endif 
+	_endloop	
+_endmethod
+$
+_pragma(classify_level=debug)
+_private _method json_assert_mixin.round_float(num)
+	## 
+	##
+	(man, exp)<< num.mantissa_and_exponent10()
+	mult<< 10.to_power(_self.round_mantissa_decimals)
+	man<< (man * mult).rounded / mult * 1.0
+	>> man  * 10.to_power(exp)
+_endmethod
+$
