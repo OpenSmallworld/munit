@@ -580,7 +580,16 @@ _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_pa
 				x << renderer.headings_holder.row_headings_width + 10
 				_if _not renderer.style_holder.tabular_style?
 				_then
-					x +<< renderer.connect_lines_offset
+					# Indent for each level down in the tree
+					current_dt  << dt
+					box_spacing << renderer.style_holder.box_spacing
+					_loop
+						_if ( current_dt << current_dt.parent ) _is _unset
+						_then
+							_leave
+						_endif
+						x +<< box_spacing
+					_endloop
 				_endif
 				y << a_tree_item.int!ypos_for( index ) + renderer.half_row_height
 				
