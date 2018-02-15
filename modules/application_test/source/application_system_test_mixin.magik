@@ -2214,20 +2214,12 @@ _method application_system_test_mixin.then_styled_string_is( tree_id_or_path, a_
 	_if dt _is _unset
 	_then
 		_return
-	_endif 
+	_endif
+
+	actual   << rope.new_from_iter( dt.styled_string, :|fast_elements()| )
 	expected << rope.new_from_iter( expected_ss, :|fast_elements()| )
-	ind      << 0
-	_for actual_val _over dt.styled_string.fast_elements()
-	_loop
-		ind +<< 1
-		fail_str << write_string( "styled_string element mismatch at ", ind, " - #1" )
-		_if actual_val.responds_to?( :|fast_elements()| )
-		_then 
-			_self.assert_deep_equals( actual_val, expected[ind], fail_str )
-		_else 
-			_self.assert_equals( actual_val, expected[ind], fail_str )
-		_endif 
-	_endloop 
+	fail_str << "styled_string element mismatch at"
+	_self.assert_deep_equals( expected, actual, fail_str )
 	
 	>> _self
 	
