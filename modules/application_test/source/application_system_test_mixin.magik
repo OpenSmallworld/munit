@@ -2201,7 +2201,7 @@ _method application_system_test_mixin.then_styled_string_is( tree_id_or_path, a_
 							     expected_ss )
 	##
 	## Assert that the styled string for a display_tree represented by A_STRING in a
-	## tree_item is as expected
+	## tree_item matches EXPECTED_SS
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
 	## path or the path of a container of the tree_item.
