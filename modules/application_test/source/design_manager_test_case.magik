@@ -1141,7 +1141,7 @@ _method design_manager_test_case.then_all_rwos_with_name_have_co_in_current_desi
 			_endif
 		_endloop
 
-		_self.assert_true( found?, write_string("CO ", co_id, " not found on ", an_rwo ) )
+		_self.assert_true( found?, write_string("CO ", co_name, " not found on ", an_rwo ) )
 	_endloop
 			
 	_return _self	
