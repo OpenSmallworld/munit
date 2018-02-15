@@ -2195,3 +2195,34 @@ _method application_system_test_mixin.then_item_with_identifier_has_value(tag, i
 	
 _endmethod
 $
+
+_pragma(classify_level=restricted, topic={munit})
+_method application_system_test_mixin.then_styled_string_is( tree_id_or_path, a_string,
+							     expected_ss )
+	##
+	## Assert that the styled string for a display_tree represented by A_STRING in a
+	## tree_item is as expected
+	##
+	## TREE_ID_OR_PATH can be the tree_item id or its identifier
+	## path or the path of a container of the tree_item.
+
+
+	dt       << _self.get_display_tree( tree_id_or_path, a_string )
+	expected << rope.new_from_iter( expected_ss, :|fast_elements()| )
+	ind      << 0
+	_for actual_val _over dt.styled_string.fast_elements()
+	_loop
+		ind +<< 1
+		fail_str << write_string( "styled_string element mismatch at ", ind, " - #1" )
+		_if actual_val.responds_to?( :|fast_elements()| )
+		_then 
+			_self.assert_deep_equals( actual_val, expected[ind], fail_str )
+		_else 
+			_self.assert_equals( actual_val, expected[ind], fail_str )
+		_endif 
+	_endloop 
+	
+	>> _self
+	
+_endmethod
+$
