@@ -165,6 +165,21 @@ _private _method remote_test_server.send_test_to_client(client)
 	## 
 	##
 
+	# TODO: The server should know what its job number is.  It
+	# should send it to the client with the module and test name.
+	# The client should also know what its job number is.  If the
+	# client receives a test for a different job number, 
+	# - the client should reject it and notify the server
+	# - the client should terminate
+	# - the server should return the test to the queue
+	#
+	# We have seen an example where a client continued running
+	# after its server finished. A new server was started on the
+	# same VM for a different test job. The client was able to
+	# contact the new server and receive a test from it, but was
+	# unable to run it as the test job was for a different
+	# product. This resulted in a confusing error message. 
+
 	done? << _false
 	_try 
 		test  << _self.get_test_to_run()
