@@ -560,7 +560,7 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_path, a_string,
-								   _optional parent_string, select? )
+								   _optional parent_string, modmask )
 	## 
 	## Selects the element displaying a string matching A_STRING.
 	##
@@ -584,8 +584,8 @@ _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_pa
 				_endif
 				y << a_tree_item.int!ypos_for( index ) + renderer.half_row_height
 				
-				_self.handle_event( a_tree_item, :button, :left, x, y, :press, 0 )
-				_self.handle_event( a_tree_item, :button, :left, x, y, :release, 0 )
+				_self.handle_event(a_tree_item, :button, :left, x, y, :press, modmask.default(0))
+				_self.handle_event(a_tree_item, :button, :left, x, y, :release, modmask.default(0))
 				
 				_leave
 			_endif
@@ -600,17 +600,55 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_tree_contains_element( tree_id_or_path, a_string,
-								  _optional parent_string )
+								  _optional parent_string, selected? )
 	## 
-	## Asserts a tree_item contains an element displaying a string
-	## matching A_STRING.
+	## Asserts a tree_item contains an element displaying a string matching A_STRING.
 	## Optionally asserts the string displayed in the parent element.
+	## If SELECTED? is true assert that the element IS selected.
+	## If SELECTED? is false assert that the element IS NOT selected.
+	## If SELECTED? is not provided don't care whether it is selected.
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
 	## path or the path of a container of the tree_item.
 
-	_self.get_display_tree( tree_id_or_path, a_string, parent_string )
+	a_tree << _self.get_display_tree( tree_id_or_path, a_string, parent_string )
+
+	_if selected? _is _true 
+	_then
+		fail_str << write_string( "Tree element ", tree_id_or_path, " should be selected but isn't" )
+		_self.assert_true( a_tree.selected?, fail_str )
+	_elif selected? _is _false
+	_then
+		fail_str << write_string( "Tree element ", tree_id_or_path, " should not be selected but is" )
+		_self.assert_false( a_tree.selected?, fail_str )
+	_endif
 	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method application_system_test_mixin.then_tree_contains_elements( tree_id_or_path, strings )
+	## 
+	## Asserts a tree_item contains a hierarchy of strings
+	##
+	## TREE_ID_OR_PATH can be the tree_item id or its identifier
+	## path or the path of a container of the tree_item.
+	##
+	## For example:
+	## then_tree_contains( :am_tree, { "Grandparent", "Parent", "Child" } )
+	## will check that the tree looks like
+	## Grandparent
+	## - Parent
+	##   - Child
+	##
+
+	_for i _over 1.upto( strings.size - 1 )
+	_loop
+		_self.then_tree_contains_element( tree_id_or_path, strings[i+1], strings[i] )
+	_endloop 
+
 	>> _self
 _endmethod
 $
@@ -619,7 +657,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_number_of_rows_in_tree_is( tree_id_or_path, expected_rows )
 	## 
-	## Asserts the number of visible rows in a tree item.
+	## Asserts the number of visible rows in a tree item is EXPECTED_ROWS
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
 	## path or the path of a container of the tree_item.
@@ -630,7 +668,7 @@ _method application_system_test_mixin.then_number_of_rows_in_tree_is( tree_id_or
 		_return _self
 	_endif
 
-	visible_trees << 0
+	visible_trees  << 0
 	_for dt _over a_tree_item.tree_manager.fast_visible_trees()
 	_loop
 		visible_trees +<< 1
@@ -639,6 +677,38 @@ _method application_system_test_mixin.then_number_of_rows_in_tree_is( tree_id_or
 	_self.assert_equals( expected_rows, visible_trees,
 			     write_string( "Expected tree '", tree_id_or_path,
 					   "' to have ", expected_rows, " rows. #1" ) )
+	
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_number_of_selected_rows_in_tree_is( tree_id_or_path, expected_selected )
+	## 
+	## Asserts the number of selected rows in a tree item is EXPECTED_SELECTED
+	##
+	## TREE_ID_OR_PATH can be the tree_item id or its identifier
+	## path or the path of a container of the tree_item.
+	
+	a_tree_item << _self.get_tree_item( tree_id_or_path )
+	_if a_tree_item _is _unset
+	_then
+		_return _self
+	_endif
+
+	selected_trees << 0
+	_for dt _over a_tree_item.tree_manager.fast_visible_trees()
+	_loop
+		_if dt.selected?
+		_then
+			selected_trees +<< 1
+		_endif 
+	_endloop
+	
+	_self.assert_equals( expected_selected, selected_trees,
+			     write_string( "Expected tree '", tree_id_or_path,
+					   "' to have ", expected_selected, " rows selected. #1" ) )
 	
 	>> _self
 _endmethod
