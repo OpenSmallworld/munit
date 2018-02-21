@@ -76,7 +76,8 @@ _private _method product_test_suite.add_module_test_suites()
 			_continue
 		_endif
 		
-		_if _not sw_module_manager.module( module_name ).loaded?
+		_if _not sw_module_manager.module( module_name ).loaded? _andif
+		    sw_module_manager.module( module_name ).test_module?
 		_then 
 			_try
 				sw_module_manager.load_module( module_name )
