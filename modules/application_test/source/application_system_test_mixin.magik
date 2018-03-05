@@ -1479,7 +1479,7 @@ _private _method application_system_test_mixin.wait_for_application_to_be_active
 		_if (app << smallworld_product.application(app_name)) _isnt _unset _andif
 		    app.active?
 		_then
-			write(write_string("Attempt ",i," successfull - application ",app_name, "is running. Starting test: ",_self.get_name()))
+			write(write_string("Attempt ",i," successful - application ",app_name, " is running. Starting test: ",_self.get_name()))
 			#We've started.
 			_self.properties[ :application ] << app
 			_self.wait_for_application_threads_to_finish()
