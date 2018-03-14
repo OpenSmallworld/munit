@@ -83,7 +83,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.given_an_embbeded_editor( dataset_name, collection_name )
+_method application_system_test_mixin.given_an_embedded_editor( dataset_name, collection_name )
 	## 
 	##
 
@@ -98,11 +98,11 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.given_an_embbeded_editor_with_default_values( dataset_name, collection_name )
+_method application_system_test_mixin.given_an_embedded_editor_with_default_values( dataset_name, collection_name )
 	## 
 	##
 
-	_self.given_an_embbeded_editor( dataset_name, collection_name ).
+	_self.given_an_embedded_editor( dataset_name, collection_name ).
 		 when_clicking_set_defaults_button()
 	
 	>> _self 
@@ -931,6 +931,129 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_place_with_assets(new_id)
+	## 
+	## 
+
+	_self.properties[:editor].plugin(:swo_action_editor).action_framework.action(:place_with_assets).invoke()
+
+	_self.properties[new_id] << _self.properties[:editor].current_object
+	
+	>> _self
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_update_in_editor()
+	## 
+	## 
+
+	>> _self.when_clicking_action_in_editor(:update)
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_browse_in_editor()
+	## 
+	## 
+
+	_local props << _self.properties
+
+	stub_method_helper.replace_method(explorer_rwo_set_output_view, :|working?<<|,
+					  _proc(is_working?)
+						  _import props
+
+						  _self.action(:interrupt_work).enabled? << is_working?
+						  _self.sys!slot(:working?) << is_working?
+
+						  _if is_working? _is _true
+						  _then 
+							  props[:browse_queue] << atomic_queue.new(1)
+							  props[:explorer_queue].put(_unset)
+							  
+						  _elif is_working? _is _false
+						  _then
+							  _if props[:browse_queue] _isnt _unset
+							  _then
+								  props[:browse_queue].put(_unset)
+							  _endif 
+						  _endif 
+					  _endproc)
+
+	_self.properties[:explorer_queue] << atomic_queue.new(1)
+	
+	_self.when_clicking_action_in_editor(:browse)
+
+	_self.properties[:explorer_queue].get(10000)
+	_self.properties[:browse_queue].get(10000)
+
+	_self.properties[:explorer] << _self.properties[:application].plugin(:explorer)
+	
+	>> _self
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_get_in_editor()
+	##
+	##
+
+	_local props << _self.properties
+	
+	stub_method_helper.replace_method(object_editor, :|int!object_editor_get()|,
+					  _proc(a_set, a_predicate, a_mode)
+						  _import props
+
+						  _self.application.background_busy? << _true
+						  _self.action( :interrupt_work ).enabled? << _true
+
+						  _protect
+							  (finished?, count, first) <<  _self.int!get( a_set, a_predicate )
+							  _self.display_fetched( finished?, count, first, a_set, a_mode )
+						  _protection 
+							  _self.application.background_busy? << _false
+							  _self.action( :interrupt_work ).enabled? << _false
+							  props[:queue].put(_unset)
+						  _endprotect 
+					  _endproc)
+	
+	_self.properties[:queue] << atomic_queue.new(1)
+	
+	_self.when_clicking_action_in_editor(:get)
+
+	_self.properties[:queue].get(5000)
+	
+	>> _self
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_clear_in_editor()
+	## 
+	## 
+
+	>> _self.when_clicking_action_in_editor(:clear)
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clicking_action_in_editor(action_name)
+	## 
+	## 
+
+	_self.properties[:editor].action(action_name).invoke()
+
+	>> _self
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method application_system_test_mixin.when_setting_value_in_text_item( id_path, new_text )
        ## 
        ## Set up Swift widget's VALUE to the NEW_TEXT.
@@ -1014,7 +1137,7 @@ _method application_system_test_mixin.when_populating_editor_by_getting_record( 
 	##                                
 	##
 	
-	_self.given_an_embbeded_editor( dataset_name,  collection_name ).
+	_self.given_an_embedded_editor( dataset_name,  collection_name ).
 		given_proposed_editor_values( properties )
 	_self.remove_value_from_queue( :task_complete )
 	_if id_path _isnt _unset
@@ -1446,7 +1569,7 @@ _method application_system_test_mixin.scenario_insert_record( dataset_name, coll
 	## 
 	##
 	
-	>> _self.given_an_embbeded_editor_with_default_values( dataset_name, collection_name ).
+	>> _self.given_an_embedded_editor_with_default_values( dataset_name, collection_name ).
 		given_proposed_editor_values( proposed_values ).
 		
 		when_inserting_record().
