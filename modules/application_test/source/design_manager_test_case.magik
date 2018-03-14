@@ -1353,6 +1353,31 @@ _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
+_method design_manager_test_case.when_i_split_rwo(record_name, fname)
+	##
+	## Splits the geometry FNAME on RECORD_NAME through its midpoint
+	##
+
+	target << _self.rwo(record_name).perform(fname)
+
+	(split_coord, split_theta) << target.midpoint_coord_and_theta
+	
+	first_coord << coordinate.new(split_coord.x - (sin(split_theta) * 10),
+				      split_coord.y + (cos(split_theta) * 10))
+	last_coord << coordinate.new(split_coord.x + (sin(split_theta) * 10),
+				     split_coord.y - (cos(split_theta) * 10))
+	
+	a_sector_rope << sector_rope.new_from(sector.new_with_xy(first_coord.x, first_coord.y,
+								 last_coord.x, last_coord.y))
+	
+	target.split_with_sectors(a_sector_rope)
+	
+	>> _self
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
 _method design_manager_test_case.then_cloned_co_work_point_is_same_as_last_added_co_work_point()
 
 	_self.assert_equals( .properties[:cloned_co].dw!scheme_wp,
