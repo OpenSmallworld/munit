@@ -96,6 +96,15 @@ _pragma(classify_level=restricted)
 test_case.define_shared_constant(:slow_test?, _false, :public)
 $
 
+_pragma(classify_level=restricted)
+## Subclass this shared constant if you want to suppress alerts
+test_case.define_shared_constant(:stub_alerts?, _false, :private)
+$
+
+_pragma(classify_level=restricted)
+test_case.define_shared_variable( :stubbed_alerts, rope.new(), :private )
+$
+
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_case.new( a_name )
 	## Constructs a test case with the given A_NAME.
@@ -223,6 +232,35 @@ $
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_case.set_up()
 	## Sets up the fixture, for example, open a CORBA connection
+
+	_if _self.stub_alerts?
+	_then
+		_self.int!stub_alerts()
+	_endif
+
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_case.int!stub_alerts()
+	## 
+	## 
+
+	_local alerts << _self.stubbed_alerts
+	alerts.empty()
+	write( "Stubbing calls to alert() and show_alert()" )
+	stub_method_helper.replace_method( frame, :|show_alert()|,
+					   _proc( message, _optional yes_message, no_message, default, mode )
+						   _import alerts
+						   write( "Suppressed show_alert() - ", message )
+						   alerts.add( message )
+					   _endproc )
+	stub_method_helper.replace_method( basic_window, :|alert()|,
+					   _proc( message, button_labels _optional button_values,default_value,mode)
+						   _import alerts
+						   write( "Suppressed alert() - ", message )
+						   alerts.add( message )
+					   _endproc )
 	
 _endmethod
 $
@@ -256,7 +294,18 @@ _method test_case.tear_down()
 	## up methods replaced by calling stub_method_helper.replace_method()
 	##
 
+	_if _self.stub_alerts? _andif _not _self.stubbed_alerts.empty?
+	_then
+		write( "The following alerts were suppressed while running this test:" )
+		_for an_alert _over _self.stubbed_alerts.fast_elements()
+		_loop
+			write( tab_char, an_alert )
+		_endloop 
+	_endif
+	_self.stubbed_alerts.empty()
+	
 	stub_method_helper.restore_stubbed_methods()
+	
 _endmethod
 $
 
