@@ -987,7 +987,11 @@ _method application_system_test_mixin.when_clicking_browse_in_editor()
 	_self.when_clicking_action_in_editor(:browse)
 
 	_self.properties[:explorer_queue].get(10000)
-	_self.properties[:browse_queue].get(10000)
+
+	_if props[:browse_queue] _isnt _unset
+	_then
+		_self.properties[:browse_queue].get(10000)
+	_endif 
 
 	_self.properties[:explorer] << _self.properties[:application].plugin(:explorer)
 	
