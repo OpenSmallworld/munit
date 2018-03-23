@@ -188,7 +188,7 @@ $
 
 _pragma(classify_level=debug, topic={Munit})
 _method design_manager_system_test_mixin.when_transitioning_active_design_to_future_state( transitions, future_state,
-											   _optional current_application )
+											   _optional current_application, ignore_posted_transition_assert? )
 	## 
 	## Transition the current design from the current state to
 	## a future state.  TRANSITIONS is an equality hash table keyed
@@ -213,7 +213,9 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 	## design set after transition
 	## NOTE: if you transition to Post Pending, the design will be
 	## auto transitioned to Posted and this will cause the assert
-	## to fail.
+	## to fail, but when IGNORE_POSTED_TRANSITION_ASSERT? is true (default false)
+	## then assert is not call 
+	## 
 
 	# Always post only to the direct parent design
 	_local me << _self 
@@ -258,7 +260,10 @@ _method design_manager_system_test_mixin.when_transitioning_active_design_to_fut
 			
 	_endif
 
-	_self.assert_equals( future_state, scheme.status, fail_str )
+	_if _not ignore_posted_transition_assert?.default(_false)
+	_then 	
+		_self.assert_equals( future_state, scheme.status, fail_str )
+	_endif 
 	
 	swg_dsn_admin_engine.activate_scheme( scheme )
 			
