@@ -40,7 +40,7 @@ _method remote_test_runner.run_remote(address, port)
 		(test, identifier) << tf.test_and_identifier(module_name, test_name)
 
 		_self.properties[:output_identifier] << identifier
-		a_stream << _self.new_stream(identifier, test_name)
+		a_stream << _self.new_stream(identifier, test_name + "_" + system.host_name)
 		
 		_protect
 			test_start << date_time_now()
@@ -95,7 +95,7 @@ _private _method remote_test_runner.connect(address, port)
 		# connect to a server that has gone away. 50 was more or less
 		# 1 minute later than 1 
 		_thisthread.sleep(150)
-		show("Trying to connect... ", count)
+		show("Trying to connect on... ", address, port, count)
 		count +<< 1
 	_endloop 
 
