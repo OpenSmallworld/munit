@@ -1151,7 +1151,7 @@ _method application_system_test_mixin.when_populating_editor_by_getting_record( 
 	# Getting records happen in a separate thread. Wait for the
 	# task to complete. 
 	
-	_self.wait_for_task_to_complete( :|int!object_editor_get()| )
+	_self.wait_for_task_to_complete( :|int!object_editor_get()|, 500 )
 	
 	>> _self
 	

@@ -153,7 +153,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method serialised_test_mixin.wait_for_task_to_complete( method_name )
+_private _method serialised_test_mixin.wait_for_task_to_complete( method_name, _optional wait_time )
 	## 
 	## Wait for the task executing METHOD_NAME to complete
 	##
@@ -161,8 +161,12 @@ _private _method serialised_test_mixin.wait_for_task_to_complete( method_name )
 	other_values << rope.new()
 	
 	_loop 
-		value << _self.properties[:queue].get()
-		_if value.is_kind_of?( {} ) _andif
+		value << _self.properties[:queue].get( wait_time )
+		timed_out? << value _is _unset
+		_if timed_out?
+		_then
+			_leave 
+		_elif value.is_kind_of?( {} ) _andif
 		    value[1] _is :task_complete _andif 
 		    value[2] _is method_name
 		_then
