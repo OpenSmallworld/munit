@@ -300,11 +300,11 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_clicking_tab( tab_name )
+_method application_system_test_mixin.when_clicking_tab( tab_name _optional frame_title )
 	## 
 	## 
 
-	container << _self.properties[ :application ].top_frame.top_canvas_container
+	container << _self.container_for_frame( frame_title )
 	
 	_for item _over container.get_items_of_type( :tag!sw_tab_container ).fast_elements()
 	_loop @item
