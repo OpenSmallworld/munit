@@ -1345,6 +1345,17 @@ _method application_system_test_mixin.then_editor_label_is( expected_string )
 				 >> a_label_item.label
 			 _endif
 	actual_string << write_string( collection_string, " ", status_string )
+
+	# Repeat a couple of times in case there is a timing issue
+	_for i _over 1.upto( 10 )
+	_loop 
+		_if expected_string = actual_string
+		_then
+			_leave
+		_endif
+		write( "then_editor_label_is(", expected_string, ") failed. Trying again" )
+		_thisthread.sleep( 500 )
+	_endloop
 	
 	_self.assert_equals( expected_string, actual_string )
 	
