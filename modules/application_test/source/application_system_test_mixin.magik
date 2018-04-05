@@ -11,6 +11,13 @@ _pragma(classify_level=debug)
 def_mixin( :application_system_test_mixin, { :serialised_test_mixin, :gui_framework_test_mixin } )
 $
 
+_pragma(classify_level=debug)
+application_system_test_mixin.define_shared_constant(:wait_for_application_threads?,
+	## Wait for all the tasks on applicaton to finish when starting application
+	## You can redefine it to _false on your test speed up application start
+	_true,
+	_false )
+$
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_an_application( application_name )
@@ -1613,10 +1620,13 @@ _private _method application_system_test_mixin.wait_for_application_to_be_active
 		_if (app << smallworld_product.application(app_name)) _isnt _unset _andif
 		    app.active?
 		_then
-			write(write_string("Attempt ",i," successful - application ",app_name, " is running. Starting test: ",_self.get_name()))
 			#We've started.
 			_self.properties[ :application ] << app
-			_self.wait_for_application_threads_to_finish()
+			_if _self.wait_for_application_threads? _isnt _false
+			_then 
+				_self.wait_for_application_threads_to_finish()
+			_endif 
+			write(write_string("Attempt ",i," successful - application ",app_name, " is running. Starting test: ",_self.get_name()))
 			_leave
 		_endif
 		_thisthread.sleep(5000)

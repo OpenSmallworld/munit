@@ -1,0 +1,119 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+def_slotted_exemplar(:fake_channel,
+	{
+		{:channel_closed, _true, :readable},
+		{:acked, _unset, :readable},
+		{:nacked, _unset, :readable},
+		{:exchange, _unset, :readable},
+		{:queues, _unset, :readable},
+		{:bound_queues, _unset, :readable},
+		{:qos, _unset, :readable},
+		{:receive_queue, _unset, :readable},
+		{:receive_func, _unset, :readable},
+		{:published, _unset, :readable}
+	}, {} )
+$
+
+_pragma(classify_level=debug)
+_method fake_channel.new()
+	.queues << rope.new()
+	.bound_queues << rope.new()
+	_return _clone
+_endmethod
+
+
+_pragma(classify_level=debug)
+_method fake_channel.basic_ack(message)
+	.acked << message
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_channel.basic_nack(_gather params)
+	.nacked << params
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_channel.exchange_declare(_gather params)
+	.exchange << params
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_channel.queue_declare(_gather params)
+	.queues.add(params)
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_channel.queue_bind(_gather params)
+	.bound_queues.add(params)
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_channel.basic_qos(_gather params)
+	.qos << params
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_channel.basic_consume(class, func, queue_key, queue_name)
+	.receive_queue << queue_name
+	.receive_func << func
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_channel.basic_publish(_gather params)
+	.published << params
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_channel.close()
+	.channel_closed << _true
+_endmethod
+
+def_slotted_exemplar(:fake_connection, {
+	{:connection_closed, _false, :readable},
+	{:channels, _unset, :readable}
+	}, {} )
+$
+
+_pragma(classify_level=debug)
+_method fake_connection.new()
+	.channels << rope.new()
+	_return _clone
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_connection.create_channel()
+	.channels.add(fake_channel.new())
+	_return .channels[.channels.size]
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_connection.close()
+	.connection_closed << _true
+_endmethod
+$
+
+def_slotted_exemplar(:fake_factory, {{:connection, _unset, :readable}}, {} )
+$
+
+_pragma(classify_level=debug)
+_method fake_factory.new()
+	_return _clone
+_endmethod
+	
+_pragma(classify_level=debug)
+_method fake_factory.new_connection()
+	.connection << fake_connection.new()
+	_return .connection
+_endmethod
+
+def_slotted_exemplar(:fake_envelope, {{:delivery_tag, _unset, :writable}}, {} )
+$
+
+_pragma(classify_level=debug)
+_method fake_envelope.new()
+	_return _clone
+_endmethod
+$
