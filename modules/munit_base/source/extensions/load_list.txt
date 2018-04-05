@@ -12,3 +12,4 @@ implementer_test_mixin
 
 deep_comparator
 json_assert_mixin
+stub_dm_api_mixin
