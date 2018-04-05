@@ -1,0 +1,2 @@
+fake_amqp
+fake_amqp_test_mixin
