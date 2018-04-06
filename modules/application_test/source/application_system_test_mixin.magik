@@ -1125,9 +1125,15 @@ _method application_system_test_mixin.when_setting_value_in_text_item_with_ident
 _endmethod
 $
 
-_pragma(classify_level=debug)
-_method application_system_test_mixin.when_populating_editor_by_getting_record( dataset_name, collection_name, properties,
-							    _optional id_path )
+_pragma(classify_level=deprecated)
+_method application_system_test_mixin.when_populating_editor_by_getting_record( dataset_name, collection_name,
+										properties, _optional id_path )
+	## -------Deprecated------
+	## Reason     : Tends to suffer from threading issues which result in timeouts
+	## Use instead: given_an_embedded_editor_populated_with()
+	## Action     : Use given_an_embedded_editor_populated_with() instead
+	## Deprecated : 06 April 2018
+	## -----------------------
 	## 
 	## Get the record(s) based on PROPERTIES.
 	## In the Absence of selecting objects from the map, the
@@ -2366,5 +2372,35 @@ _method application_system_test_mixin.then_styled_string_is( tree_id_or_path, a_
 	
 	>> _self
 	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method application_system_test_mixin.given_an_embedded_editor_populated_with( ds_name, table_name, field_values )
+        ## 
+        ## Populate the embedded editor with a record in table TABLE_NAME in
+        ## dataset DS_NAME using field values in FIELD_VALUES.
+        ##
+        ## Example: given_an_embedded_editor_populated_with(:electric, :sub_substation,
+        ## property_list.new_with(:asset_id, "sanity_substation"))
+        ##                                
+
+        _self.given_an_embedded_editor( ds_name,  table_name )
+	
+	app << _self.properties[:application]
+	db  << app.database
+	col << db.collection( ds_name, table_name )
+	pred << predicate
+	_for field_name, value _over field_values.fast_keys_and_elements()
+	_loop
+		pred << pred.and( predicate.eq( field_name, vale ) )
+	_endloop
+	rec << col.select( pred ).an_element()
+
+	edman << app.get_service_provider( :editor_manager )
+	edman.edit_object( rec )
+	        
+        >> _self
+        
 _endmethod
 $
