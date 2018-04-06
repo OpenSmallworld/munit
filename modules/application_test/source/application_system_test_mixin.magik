@@ -1001,30 +1001,11 @@ _method application_system_test_mixin.when_clicking_get_in_editor()
 	##
 	##
 
-	_local props << _self.properties
-	
-	stub_method_helper.replace_method(object_editor, :|int!object_editor_get()|,
-					  _proc(a_set, a_predicate, a_mode)
-						  _import props
-
-						  _self.application.background_busy? << _true
-						  _self.action( :interrupt_work ).enabled? << _true
-
-						  _protect
-							  (finished?, count, first) <<  _self.int!get( a_set, a_predicate )
-							  _self.display_fetched( finished?, count, first, a_set, a_mode )
-						  _protection 
-							  _self.application.background_busy? << _false
-							  _self.action( :interrupt_work ).enabled? << _false
-							  props[:queue].put(_unset)
-						  _endprotect 
-					  _endproc)
-	
-	_self.properties[:queue] << atomic_queue.new(1)
+	_self.queue << atomic_queue.new(1)
 	
 	_self.when_clicking_action_in_editor(:get)
 
-	_self.properties[:queue].get(5000)
+	_self.wait_for_task_to_complete(:|int!object_editor_get()|, 5000)
 	
 	>> _self
 	
