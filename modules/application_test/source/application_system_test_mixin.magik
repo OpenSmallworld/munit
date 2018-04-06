@@ -42,8 +42,14 @@ _method application_system_test_mixin.given_an_application( application_name )
 	_then
 		_if ( app_def << smallworld_product.application_definition( application_name ) ) _isnt _unset
 		_then
-			write( "*** Starting application: ", application_name )
 			# Application exists but is not yet running, start it
+			write( "*** Starting application: ", application_name )
+			# Don't check for licences without database
+			_if app_def.properties[:requires_database?] _is _false _andif
+			    ds_environment.c_is_initialised? _is _false
+			_then
+				stub_method_helper.replace_method(licence_manager, :|check_licence_and_expiry()|, _proc () _endproc)
+			_endif 
 			app << app_def.int!start()
 			_self.wait_for_application_to_be_active( application_name )
 		_else
