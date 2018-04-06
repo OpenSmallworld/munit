@@ -18,6 +18,12 @@ application_system_test_mixin.define_shared_constant(:wait_for_application_threa
 	_true,
 	_false )
 $
+_pragma(classify_level=debug)
+application_system_test_mixin.define_shared_constant(:smooth_app_termination?,
+	## no dialogs when closing application
+	_true,
+	_false )
+$
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_an_application( application_name )
@@ -30,6 +36,12 @@ _method application_system_test_mixin.given_an_application( application_name )
 	##       started and the test will run 
 	##     * If it is not available, the test will fail.
 	##
+
+	_if _self.smooth_app_termination? _is _true 
+	_then
+		stub_method_helper.replace_method(application, :only_one_application_available?, _proc () >> _false _endproc)
+		stub_method_helper.replace_method(application, :anything_running?, _proc () >> _true _endproc)
+	_endif 
 
 	# Make sure there is a queue for events
 	_if _self.properties[ :queue ] _is _unset
