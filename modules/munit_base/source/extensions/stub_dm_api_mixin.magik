@@ -33,11 +33,17 @@ _method stub_dm_api_mixin.stub_dm_api()
 	##	_self.assert_deep_equals(exp_operations, _self.design_operations,
 	##				 "Design was not updated and transitioned as expected.")
 
-	
+	_global swg_dsn_admin_engine
 	_local pr<< _self.properties
 	pr[:design_operations]<< rope.new()
 	pr[:design]<< _unset
-	pr[:designs]<< rope.new()	
+	pr[:designs]<< rope.new()
+
+	_if swg_dsn_admin_engine _is _unset
+	_then
+		def_slotted_exemplar( :swg_dsn_admin_engine, {} )
+	_endif
+	
 	stub_method_helper.replace_method(swg_dsn_admin_engine, :|find_and_perform_transition()|,
 					  _proc (design, from_state, to_state)
 						  _import pr
@@ -80,11 +86,25 @@ _method stub_dm_api_mixin.stub_dm_api()
 						     _else >> pr[:designs].an_element()
 						     _endif 
 					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|merge_scheme()|,
+					  _proc (merge_props, design)
+						  _import pr
+						  pr[:design_operations].add({:merge_scheme, merge_props, design})
+						  ret_pr<< property_list.new()
+						  _if design.test!with_conflicts? _andif merge_props[:handle_conflicts?] _is _false
+						  _then
+							  ret_pr[:result]<< _false
+							  ret_pr[:error_reason]<< :conflict_not_handled
+						  _else
+							  ret_pr[:result]<< _true 
+						  _endif
+						  >> ret_pr
+					  _endproc )
 	>> _self 
 _endmethod
 $
 _pragma(classify_level=debug)
-_method stub_dm_api_mixin.given_a_scheme(pr, dn, init_state)
+_method stub_dm_api_mixin.given_a_scheme(pr, dn, init_state _optional with_conflicts?)
 	##  
 	##
 	design<< mock( "design" , swg_dsn_scheme)
@@ -92,6 +112,7 @@ _method stub_dm_api_mixin.given_a_scheme(pr, dn, init_state)
 	stub( design ).status.then_return( init_state )
 	stub( design ).inf_project.then_return(pr)
 	stub( design ).name.then_return(dn)
+	stub( design ).test!with_conflicts?.then_return(with_conflicts? _is _true)
 	_self.properties[:designs].add(design)
 	>> _self 
 _endmethod
