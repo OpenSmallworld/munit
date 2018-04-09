@@ -19,11 +19,16 @@ $
 
 _pragma(classify_level=debug)
 _method fake_channel.new()
-	.queues << rope.new()
-	.bound_queues << rope.new()
-	_return _clone
+	_return _clone.init()
 _endmethod
 
+_pragma(classify_level=debug)
+_method fake_channel.init()
+	.queues << rope.new()
+	.bound_queues << rope.new()
+	.published << rope.new()
+	>> _self 
+_endmethod
 
 _pragma(classify_level=debug)
 _method fake_channel.basic_ack(message)
@@ -63,7 +68,7 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_channel.basic_publish(_gather params)
-	.published << params
+	.published.add_last(params)
 _endmethod
 
 _pragma(classify_level=debug)
@@ -79,8 +84,13 @@ $
 
 _pragma(classify_level=debug)
 _method fake_connection.new()
+	_return _clone.init()
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_connection.init()
 	.channels << rope.new()
-	_return _clone
+	>> _self 	
 _endmethod
 
 _pragma(classify_level=debug)
