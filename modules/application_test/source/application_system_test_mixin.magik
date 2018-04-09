@@ -2393,7 +2393,7 @@ _method application_system_test_mixin.given_an_embedded_editor_populated_with( d
 	pred << predicate
 	_for field_name, value _over field_values.fast_keys_and_elements()
 	_loop
-		pred << pred.and( predicate.eq( field_name, vale ) )
+		pred << pred.and( predicate.eq( field_name, value ) )
 	_endloop
 	rec << col.select( pred ).an_element()
 
