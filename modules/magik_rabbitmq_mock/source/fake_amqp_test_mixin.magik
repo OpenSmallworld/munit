@@ -97,7 +97,7 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_connection_is_closed()
-	_self.assert_true(fake_factory.connection.connection_closed)
+	_self.assert_true(_self.current_factory.connection.connection_closed)
 	_return _self 
 _endmethod
 
