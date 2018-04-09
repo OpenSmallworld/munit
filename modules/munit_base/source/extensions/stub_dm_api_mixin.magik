@@ -42,7 +42,17 @@ _method stub_dm_api_mixin.stub_dm_api()
 	_if swg_dsn_admin_engine _is _unset
 	_then
 		def_slotted_exemplar( :swg_dsn_admin_engine, {} )
+	        def_slotted_exemplar( :swg_dsn_scheme, {}, :ds_record )
 	_endif
+	stub_method_helper.replace_method(swg_dsn_scheme, :|message()|,
+					  _proc (id, val _gather params)
+						  >> _if id _is :project_and_scheme_name
+						     _then >> params[1]  + " - " + params[2]
+						     _elif val _isnt _unset
+						     _then >> val
+						     _else >> id
+						     _endif
+					  _endproc )
 	
 	stub_method_helper.replace_method(swg_dsn_admin_engine, :|find_and_perform_transition()|,
 					  _proc (design, from_state, to_state)
@@ -65,17 +75,31 @@ _method stub_dm_api_mixin.stub_dm_api()
 					  _endproc )
 	stub_method_helper.replace_method(swg_dsn_admin_engine, :|find_scheme()|,
 					  _proc (dn, pn)
-						  _import pr
+ 						  _import pr
 						  pr[:design_operations].add({:find_scheme, dn, pn})
-						  _for scheme _over pr[:designs].fast_elements()
-						  _loop
+ 						  _for scheme _over pr[:designs].fast_elements()
+ 						  _loop
 							  _if scheme.inf_project = pn _andif
 							      scheme.name = dn
-							  _then
+ 							  _then
 								  pr[:design]<< scheme
 								  _return scheme
+ 							  _endif 
+ 						  _endloop
+ 					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|find_projects_or_schemes()|,
+					  _proc (pred, pr_or_sch)
+						  _import pr
+						  pr[:design_operations].add({:find_projects_or_schemes, pred.write_string, pr_or_sch})
+						  ret<< rope.new()
+						  _for scheme _over pr[:designs].fast_elements()
+						  _loop
+							  _if pred.test?(scheme)
+							  _then
+								  ret.add(scheme)
 							  _endif 
 						  _endloop
+						  >> ret
 					  _endproc )
 	stub_method_helper.replace_method(swg_dsn_admin_engine, :|get_current_job()|,
 					  _proc ()
