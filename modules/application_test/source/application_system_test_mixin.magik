@@ -11,6 +11,19 @@ _pragma(classify_level=debug)
 def_mixin( :application_system_test_mixin, { :serialised_test_mixin, :gui_framework_test_mixin } )
 $
 
+_pragma(classify_level=debug)
+application_system_test_mixin.define_shared_constant(:wait_for_application_threads?,
+	## Wait for all the tasks on applicaton to finish when starting application
+	## You can redefine it to _false on your test speed up application start
+	_true,
+	_false )
+$
+_pragma(classify_level=debug)
+application_system_test_mixin.define_shared_constant(:smooth_app_termination?,
+	## no dialogs when closing application
+	_true,
+	_false )
+$
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_an_application( application_name )
@@ -24,6 +37,12 @@ _method application_system_test_mixin.given_an_application( application_name )
 	##     * If it is not available, the test will fail.
 	##
 
+	_if _self.smooth_app_termination? _is _true 
+	_then
+		stub_method_helper.replace_method(application, :only_one_application_available?, _proc () >> _false _endproc)
+		stub_method_helper.replace_method(application, :anything_running?, _proc () >> _true _endproc)
+	_endif 
+
 	# Make sure there is a queue for events
 	_if _self.properties[ :queue ] _is _unset
 	_then
@@ -35,8 +54,14 @@ _method application_system_test_mixin.given_an_application( application_name )
 	_then
 		_if ( app_def << smallworld_product.application_definition( application_name ) ) _isnt _unset
 		_then
-			write( "*** Starting application: ", application_name )
 			# Application exists but is not yet running, start it
+			write( "*** Starting application: ", application_name )
+			# Don't check for licences without database
+			_if app_def.properties[:requires_database?] _is _false _andif
+			    ds_environment.c_is_initialised? _is _false
+			_then
+				stub_method_helper.replace_method(licence_manager, :|check_licence_and_expiry()|, _proc () _endproc)
+			_endif 
 			app << app_def.int!start()
 			_self.wait_for_application_to_be_active( application_name )
 		_else
@@ -987,7 +1012,11 @@ _method application_system_test_mixin.when_clicking_browse_in_editor()
 	_self.when_clicking_action_in_editor(:browse)
 
 	_self.properties[:explorer_queue].get(10000)
-	_self.properties[:browse_queue].get(10000)
+
+	_if props[:browse_queue] _isnt _unset
+	_then
+		_self.properties[:browse_queue].get(10000)
+	_endif 
 
 	_self.properties[:explorer] << _self.properties[:application].plugin(:explorer)
 	
@@ -1001,30 +1030,11 @@ _method application_system_test_mixin.when_clicking_get_in_editor()
 	##
 	##
 
-	_local props << _self.properties
-	
-	stub_method_helper.replace_method(object_editor, :|int!object_editor_get()|,
-					  _proc(a_set, a_predicate, a_mode)
-						  _import props
-
-						  _self.application.background_busy? << _true
-						  _self.action( :interrupt_work ).enabled? << _true
-
-						  _protect
-							  (finished?, count, first) <<  _self.int!get( a_set, a_predicate )
-							  _self.display_fetched( finished?, count, first, a_set, a_mode )
-						  _protection 
-							  _self.application.background_busy? << _false
-							  _self.action( :interrupt_work ).enabled? << _false
-							  props[:queue].put(_unset)
-						  _endprotect 
-					  _endproc)
-	
-	_self.properties[:queue] << atomic_queue.new(1)
+	_self.queue << atomic_queue.new(1)
 	
 	_self.when_clicking_action_in_editor(:get)
 
-	_self.properties[:queue].get(5000)
+	_self.wait_for_task_to_complete(:|int!object_editor_get()|, 5000)
 	
 	>> _self
 	
@@ -1119,9 +1129,15 @@ _method application_system_test_mixin.when_setting_value_in_text_item_with_ident
 _endmethod
 $
 
-_pragma(classify_level=debug)
-_method application_system_test_mixin.when_populating_editor_by_getting_record( dataset_name, collection_name, properties,
-							    _optional id_path )
+_pragma(classify_level=deprecated)
+_method application_system_test_mixin.when_populating_editor_by_getting_record( dataset_name, collection_name,
+										properties, _optional id_path )
+	## -------Deprecated------
+	## Reason     : Tends to suffer from threading issues which result in timeouts
+	## Use instead: given_an_embedded_editor_populated_with()
+	## Action     : Use given_an_embedded_editor_populated_with() instead
+	## Deprecated : 06 April 2018
+	## -----------------------
 	## 
 	## Get the record(s) based on PROPERTIES.
 	## In the Absence of selecting objects from the map, the
@@ -1345,6 +1361,17 @@ _method application_system_test_mixin.then_editor_label_is( expected_string )
 				 >> a_label_item.label
 			 _endif
 	actual_string << write_string( collection_string, " ", status_string )
+
+	# Repeat a couple of times in case there is a timing issue
+	_for i _over 1.upto( 10 )
+	_loop 
+		_if expected_string = actual_string
+		_then
+			_leave
+		_endif
+		write( "then_editor_label_is(", expected_string, ") failed. Trying again" )
+		_thisthread.sleep( 500 )
+	_endloop
 	
 	_self.assert_equals( expected_string, actual_string )
 	
@@ -1602,10 +1629,13 @@ _private _method application_system_test_mixin.wait_for_application_to_be_active
 		_if (app << smallworld_product.application(app_name)) _isnt _unset _andif
 		    app.active?
 		_then
-			write(write_string("Attempt ",i," successful - application ",app_name, " is running. Starting test: ",_self.get_name()))
 			#We've started.
 			_self.properties[ :application ] << app
-			_self.wait_for_application_threads_to_finish()
+			_if _self.wait_for_application_threads? _isnt _false
+			_then 
+				_self.wait_for_application_threads_to_finish()
+			_endif 
+			write(write_string("Attempt ",i," successful - application ",app_name, " is running. Starting test: ",_self.get_name()))
 			_leave
 		_endif
 		_thisthread.sleep(5000)
@@ -2346,5 +2376,35 @@ _method application_system_test_mixin.then_styled_string_is( tree_id_or_path, a_
 	
 	>> _self
 	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method application_system_test_mixin.given_an_embedded_editor_populated_with( ds_name, table_name, field_values )
+        ## 
+        ## Populate the embedded editor with a record in table TABLE_NAME in
+        ## dataset DS_NAME using field values in FIELD_VALUES.
+        ##
+        ## Example: given_an_embedded_editor_populated_with(:electric, :sub_substation,
+        ## property_list.new_with(:asset_id, "sanity_substation"))
+        ##                                
+
+        _self.given_an_embedded_editor( ds_name,  table_name )
+	
+	app << _self.properties[:application]
+	db  << app.database
+	col << db.collection( ds_name, table_name )
+	pred << predicate
+	_for field_name, value _over field_values.fast_keys_and_elements()
+	_loop
+		pred << pred.and( predicate.eq( field_name, value ) )
+	_endloop
+	rec << col.select( pred ).an_element()
+
+	edman << app.get_service_provider( :editor_manager )
+	edman.edit_object( rec )
+	        
+        >> _self
+        
 _endmethod
 $

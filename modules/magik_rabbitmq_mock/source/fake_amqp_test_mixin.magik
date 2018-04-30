@@ -1,0 +1,152 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:fake_amqp_test_mixin,
+	{{:current_channel, _unset, :readable}},
+	{})
+$
+_pragma(classify_level=debug)
+fake_amqp_test_mixin.define_shared_variable(:current_factory,
+	## shared variable so it can be shared between test runs when
+	## application is not reopened
+	_unset,
+	:public	)
+$
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.find_channel(_optional queue_name, reset_messages?)
+	## queue_name: only applicable to channels which are 
+	## receiving messages on a queue receive_queue
+	## if channel_name is not set, the last channel is set as current
+	## if RESET_MESSAGES? is true then remove all messages
+	## published on the channel so far
+	channels << _self.current_factory.connection.channels
+	_if queue_name _is _unset
+	_then
+		.current_channel << channels[channels.size]
+		_if reset_messages? _is _true
+		_then
+			.current_channel.published.empty()
+		_endif 
+		_return _self
+	_endif
+	
+	_for channel _over channels.elements()
+	_loop
+		_if channel.receive_queue = queue_name
+		_then
+			.current_channel << channel
+			_if reset_messages? _is _true
+			_then
+				.current_channel.published.empty()
+			_endif 
+			_return _self
+		_endif
+	_endloop
+	.current_channel << _unset
+
+	_return _self
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_connection_is_opened() 
+	_self.assert_true(_self.current_factory.connection _isnt _unset)
+	_return _self
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_channel_is_opened()
+	_self.assert_true(.current_channel _isnt _unset)
+	_return _self
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_qos_is_declared(qos)
+	_self.assert_deep_equals(.current_channel.qos, qos)
+	_return _self
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_queues_are_bound(bound_queues)
+	_self.assert_deep_equals(.current_channel.bound_queues, bound_queues)
+	_return _self
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_queues_are_declared(queues)
+	_self.assert_deep_equals(.current_channel.queues, queues)
+	_return _self 
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_exchange_is_declared(exchange)
+	_self.assert_deep_equals(.current_channel.exchange, exchange)
+	_return _self 
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_channel_is_closed()
+	_if .current_channel _isnt _unset
+	_then 
+		_self.assert_true(.current_channel.channel_closed)
+	_endif 
+	_return _self 
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_connection_is_closed()
+	_self.assert_true(_self.current_factory.connection.connection_closed)
+	_return _self 
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_message_is_published(message)
+	_self.assert_deep_equals(.current_channel.published.last, message)
+	_return _self
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_messages_are_published(messages)
+	sort_proc<< _proc @sort_message( a, b)
+			    ap<< property_list.new_with( _scatter a )
+			    bp<< property_list.new_with( _scatter b )
+			    >> _if ap[:exchange] <> bp[:exchange]
+			       _then
+				       >> ap[:exchange] > bp[:exchange]
+			       _elif ap[:routing_key] <> bp[:routing_key]
+			       _then
+				       >> ap[:routing_key] > bp[:routing_key]
+			       _else
+				       >> ap[:body] > bp[:body]
+			       _endif 	    
+		    _endproc
+	exp<< rope.new_from(sorted_collection.new_from(messages, sort_proc))
+	act<< rope.new_from(sorted_collection.new_from(.current_channel.published, sort_proc))
+	_self.assert_deep_equals(exp, act)
+	_return _self
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_message_is_acked(ack)
+	_self.assert_deep_equals(.current_channel.acked, ack)
+	_return _self
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_message_is_nacked(nack)
+	_self.assert_deep_equals(.current_channel.nacked, nack)
+	_return _self
+_endmethod
+$
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.given_a_fake_rabbit()
+	_local me<< _self
+	stub_method_helper.replace_method(rabbitmq_connection_factory, :|new()|,
+		_proc @new(uri_key, uri_name)
+			_import me
+			>> me.current_factory<< fake_factory.new()
+		_endproc )
+	_return _self
+_endmethod

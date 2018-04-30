@@ -1,0 +1,12 @@
+magik_rabbitmq_mock	1
+
+description
+	RabbitMQ stub 
+end
+
+requires
+	munit_base
+  magik_mock
+end
+
+language en_gb

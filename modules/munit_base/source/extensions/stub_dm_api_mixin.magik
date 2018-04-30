@@ -1,0 +1,157 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug)
+def_mixin(:stub_dm_api_mixin
+	## Stubs swg_dsn_admin_engine common methods (see stub_dm_api())
+	## Provides given_a_scheme(pr, dn, state) to create design
+	## which can be the referred to via method design.
+	## Expects that class inheriting from the mixin has accessor
+	## properties returning property list where this mixin creates
+	## keys :design and :design_operations
+	)
+$
+_pragma(classify_level=debug)
+_method stub_dm_api_mixin.stub_dm_api()
+	## stubs swg_dsn_admin_engine methods:
+	##  find_and_perform_transition()
+	##  activate_design()
+	##  rollforward()
+	##  find_scheme()
+	## adds stamp to rope .properties[:design_operations] when
+	## they are invoked (which can be get via method design_operations
+	## they can be asserted like:
+	##      pn_dn<< _self.design.project_and_scheme_name.split_by(" - ")
+	##	exp_operations<< rope.new()
+	##	exp_operations.add({:rollforward})
+	##      exp_operations.add({:find_scheme, pn_dn[2], pn_dn[1]})
+	##	exp_operations.add({:activate_design, _self.design, _true})
+	##	exp_operations.add({:transition, _self.design, "new", "as build"})
+	##	exp_operations.add({:activate_design, _unset,_unset})
+	##
+	##	_self.assert_deep_equals(exp_operations, _self.design_operations,
+	##				 "Design was not updated and transitioned as expected.")
+
+	_global swg_dsn_admin_engine
+	_local pr<< _self.properties
+	pr[:design_operations]<< rope.new()
+	pr[:design]<< _unset
+	pr[:designs]<< rope.new()
+
+	_if swg_dsn_admin_engine _is _unset
+	_then
+		def_slotted_exemplar( :swg_dsn_admin_engine, {} )
+	        def_slotted_exemplar( :swg_dsn_scheme, {}, :ds_record )
+	_endif
+	stub_method_helper.replace_method(swg_dsn_scheme, :|message()|,
+					  _proc (id, val _gather params)
+						  >> _if id _is :project_and_scheme_name
+						     _then >> params[1]  + " - " + params[2]
+						     _elif val _isnt _unset
+						     _then >> val
+						     _else >> id
+						     _endif
+					  _endproc )
+	
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|find_and_perform_transition()|,
+					  _proc (design, from_state, to_state)
+						  _import pr
+						  _if design.status = from_state
+						  _then
+							  pr[:design_operations].add({:transition, design, from_state, to_state})
+							  stub(design).status.then_return( to_state )
+						  _endif 
+					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|activate_design()|,
+					  _proc (design _optional write?)
+						  _import pr
+						  pr[:design_operations].add({:activate_design, design, write?})
+					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|rollforward()|,
+					  _proc ()
+						  _import pr
+						  pr[:design_operations].add({:rollforward})
+					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|find_scheme()|,
+					  _proc (dn, pn)
+ 						  _import pr
+						  pr[:design_operations].add({:find_scheme, dn, pn})
+ 						  _for scheme _over pr[:designs].fast_elements()
+ 						  _loop
+							  _if scheme.inf_project = pn _andif
+							      scheme.name = dn
+ 							  _then
+								  pr[:design]<< scheme
+								  _return scheme
+ 							  _endif 
+ 						  _endloop
+ 					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|find_projects_or_schemes()|,
+					  _proc (pred, pr_or_sch)
+						  _import pr
+						  pr[:design_operations].add({:find_projects_or_schemes, pred.write_string, pr_or_sch})
+						  ret<< rope.new()
+						  _for scheme _over pr[:designs].fast_elements()
+						  _loop
+							  _if pred.test?(scheme)
+							  _then
+								  ret.add(scheme)
+							  _endif 
+						  _endloop
+						  >> ret
+					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|get_current_job()|,
+					  _proc ()
+						  _import pr
+						  pr[:design_operations].add({:get_current_job})
+						  >> _if pr[:design] _isnt _unset
+						     _then >> pr[:design]
+						     _else >> pr[:designs].an_element()
+						     _endif 
+					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|merge_scheme()|,
+					  _proc (merge_props, design)
+						  _import pr
+						  pr[:design_operations].add({:merge_scheme, merge_props, design})
+						  ret_pr<< property_list.new()
+						  _if design.test!with_conflicts? _andif merge_props[:handle_conflicts?] _is _false
+						  _then
+							  ret_pr[:result]<< _false
+							  ret_pr[:error_reason]<< :conflict_not_handled
+						  _else
+							  ret_pr[:result]<< _true 
+						  _endif
+						  >> ret_pr
+					  _endproc )
+	>> _self 
+_endmethod
+$
+_pragma(classify_level=debug)
+_method stub_dm_api_mixin.given_a_scheme(pr, dn, init_state _optional with_conflicts?)
+	##  
+	##
+	design<< mock( "design" , swg_dsn_scheme)
+	stub( design ).project_and_scheme_name.then_return(pr + " - " + dn)
+	stub( design ).status.then_return( init_state )
+	stub( design ).inf_project.then_return(pr)
+	stub( design ).name.then_return(dn)
+	stub( design ).test!with_conflicts?.then_return(with_conflicts? _is _true)
+	_self.properties[:designs].add(design)
+	>> _self 
+_endmethod
+$
+_pragma(classify_level=debug)
+_method stub_dm_api_mixin.design
+	## 
+	## 
+	>> _self.properties[:design]
+_endmethod
+$
+_pragma(classify_level=debug)
+_method stub_dm_api_mixin.design_operations
+	## 
+	## 
+	>> _self.properties[:design_operations]
+_endmethod
+$
