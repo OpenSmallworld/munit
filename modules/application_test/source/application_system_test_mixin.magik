@@ -26,16 +26,21 @@ application_system_test_mixin.define_shared_constant(:smooth_app_termination?,
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.given_an_application( application_name )
+_method application_system_test_mixin.given_an_application( application_name _optional width, height )
 	## 
 	## Ensure that the required application (as specified by
 	## APPLICATION_NAME) is running.
+	## If WIDTH and HEIGHT are specified, the application's top frame will be set to
+	## this size. If not specified, it will be maximised if the :frame_maximised?
+	## property is true.
 	##
 	##     * If it is already running, the test will run
 	##     * If it is available but not yet running, it will be
 	##       started and the test will run 
 	##     * If it is not available, the test will fail.
 	##
+
+	start << date_time.now()
 
 	_if _self.smooth_app_termination? _is _true 
 	_then
@@ -70,14 +75,34 @@ _method application_system_test_mixin.given_an_application( application_name )
 		_endif
 	_endif
 
-	_if app.top_frame _isnt _unset
-	_then 
-		app.top_frame.maximized? << _self.properties[:frame_maximised?].default(_false)
-		app.top_frame.top_canvas_container.add_dependent(_self)
+	_if ( top_frame << app.top_frame ) _isnt _unset
+	_then
+		_if width _is _unset _andif height _is _unset
+		_then
+			top_frame.maximized? << _self.properties[:frame_maximised?].default(_false)
+		_else 
+			_if width _isnt _unset
+			_then
+				top_frame.width << width
+			_endif 
+			_if height _isnt _unset
+			_then
+				top_frame.height << height
+			_endif
+		_endif 
+		top_frame.top_canvas_container.add_dependent(_self)
 	_endif 
+
 	app.add_dependent(_self)
   
 	_self.properties[ :application ] << app
+
+	write( "Completed: application startup. Duration: ", date_time.now() - start )
+	_if top_frame _isnt _unset
+	_then
+		write( tab_char, "Application size: ", top_frame.width, " x ", top_frame.height )
+	_endif 
+	write( "Starting test: ", _self.get_name() )
 
 	>> _self 
 	
@@ -1480,6 +1505,8 @@ _pragma(classify_level=debug)
 _method application_system_test_mixin.then_dialog_activated( plugin_name, dialog_name )
 	## 
 	## Verify whether a dialog is active/available on the screen.
+	## This also caches the dialog in .properties[:dialogs]
+	##
 	
 	a_plugin << _self.properties[ :application ].plugin( plugin_name )
 	_if a_plugin _isnt _unset
@@ -1487,7 +1514,10 @@ _method application_system_test_mixin.then_dialog_activated( plugin_name, dialog
 		a_dialog << a_plugin.dialogs[ dialog_name ]
 	_endif
 
-	_self.add_dialog( a_dialog )
+	_if a_dialog _isnt _unset
+	_then
+		_self.add_dialog(plugin_name, dialog_name, a_dialog )
+	_endif 
 	
 	fail_string << write_string( "Dialog: ", dialog_name, " Not found from Plugin: ", plugin_name )
 	_self.assert_not_unset( a_dialog, fail_string )
@@ -1516,10 +1546,15 @@ _method application_system_test_mixin.then_item_enabled?( id_path, expected_stat
 		item << _self.get_item( id_path )
 	_endif
 	
-	state << item.enabled?
-	fail_string << write_string("Expected State of ", item, " is ", expected_state, " but it is ", state)
-	_self.assert_equals(expected_state, state, fail_string)
-
+	# If item could not be found get_item() will have raised an assert error
+	_if item _isnt _unset
+	_then 
+		state << item.enabled?
+		fail_string << write_string("Expected state of ", item, " is ", expected_state,
+					    ". Actual is ", state)
+		_self.assert_equals(expected_state, state, fail_string)
+	_endif
+	
 	>> _self
 _endmethod
 $
@@ -1624,6 +1659,8 @@ _pragma(classify_level=debug)
 _private _method application_system_test_mixin.wait_for_application_to_be_active( app_name )
 	## 
 	##
+
+	start << date_time.now()
 	_for i _over 1.upto(10)
 	_loop
 		_if (app << smallworld_product.application(app_name)) _isnt _unset _andif
@@ -1635,7 +1672,8 @@ _private _method application_system_test_mixin.wait_for_application_to_be_active
 			_then 
 				_self.wait_for_application_threads_to_finish()
 			_endif 
-			write(write_string("Attempt ",i," successful - application ",app_name, " is running. Starting test: ",_self.get_name()))
+			write( "Attempt ", i, " successful after ", date_time.now() - start )
+			write( "Application ", app_name, " is running." )
 			_leave
 		_endif
 		_thisthread.sleep(5000)
@@ -1770,11 +1808,20 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 	new_event.second_id << second_id
 
 	_if category _is :locator _andif
-	    id _is :move _andif 
-	    _not a_canvas.has_focus?
+	    id _is :move
 	_then
-		a_canvas.top_frame.activate()
-		_self.wait_for_event_on_queue( :event_handled, :visible )
+		_if _not a_canvas.has_focus?
+		_then
+			write( "SET_FOCUS on ", a_canvas, " for ", category, " ", id , " event at ", x, %,, y,
+			       " item: ", a_canvas.get_item_at( x,y) )
+			a_canvas.top_frame.set_focus()
+		_elif _not a_canvas.active?
+		_then 
+			write( "ACTIVATE ", a_canvas, " for ", category, " ", id , " event at ", x, %,, y,
+			       " item: ", a_canvas.get_item_at( x,y) )
+			a_canvas.top_frame.activate()
+			_self.wait_for_event_on_queue( :event_handled, :visible )
+		_endif
 	_endif
 
 	_if message_dialog_wait_id _is _unset
@@ -1924,7 +1971,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_private _method application_system_test_mixin.add_dialog( a_dialog )
+_private _method application_system_test_mixin.add_dialog( plugin_name, dialog_name, a_dialog )
 	## 
 	## Add A_DIALOG to the properties
 	## [:dialogs ] slot
@@ -1932,13 +1979,10 @@ _private _method application_system_test_mixin.add_dialog( a_dialog )
 
 	_if _self.properties[ :dialogs ] _is _unset
 	_then 
-		_self.properties[ :dialogs ] << rope.new()
+		_self.properties[ :dialogs ] << dual_key_a_table.new()
 	_endif 
 
-	_if a_dialog _isnt _unset
-	_then 
-		_self.properties[ :dialogs ].add( a_dialog )
-	_endif 
+	_self.properties[ :dialogs ][plugin_name, dialog_name] << a_dialog
 	
 _endmethod
 $
