@@ -77,18 +77,11 @@ _method application_system_test_mixin.given_an_application( application_name _op
 
 	_if ( top_frame << app.top_frame ) _isnt _unset
 	_then
-		_if width _is _unset _andif height _is _unset
+		_if width _isnt _unset _orif height _isnt _unset
 		_then
-			top_frame.maximized? << _self.properties[:frame_maximised?].default(_false)
+			top_frame.set_size( width, height )
 		_else 
-			_if width _isnt _unset
-			_then
-				top_frame.width << width
-			_endif 
-			_if height _isnt _unset
-			_then
-				top_frame.height << height
-			_endif
+			top_frame.maximized? << _self.properties[:frame_maximised?].default(_false)
 		_endif 
 		top_frame.top_canvas_container.add_dependent(_self)
 	_endif 
