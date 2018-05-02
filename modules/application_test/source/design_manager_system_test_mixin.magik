@@ -311,22 +311,19 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 	_protect
 		_handling swg_dsn_confirm_integrate_changes _with _proc() >> _true _endproc
 		_handling swg_dsn_confirm_clear_tables_for_integration _with _proc() >> _true _endproc
-		job_queue_view << _self.prepare_job_queue_view_for_transition_jobs()
+		job_queue_view << _self.go_to_writable_job_view_test_alternative()
 		
 		swg_dsn_admin_engine.activate_scheme( scheme )
 		swg_dsn_admin_engine.find_and_perform_transition( scheme, scheme.status, next_state )
 		
-		_loop 
-			jobs << je.find_and_run_next_jobs()
-			_if scheme.status = next_state _then _leave _endif
-			_if jobs.empty? _then _leave _endif
-		_endloop
+		done_proc << _proc()
+				     _import scheme, next_state
+				     >>scheme.status = next_state
+			     _endproc
+		_self.run_job_manager_jobs(done_proc)
 	_protection
-		job_queue_view.commit()
-		job_queue_view.goto_top_alternative()
+		_self.ensure_job_view_is_in_top_alternative()
 	_endprotect
-
-	je.remove_dependent( _self )
 
 	>> _self
 	
@@ -359,6 +356,37 @@ _method design_manager_system_test_mixin.scenario_create_design( xmin, ymin, xma
 		then_masthead_title_is( _self.parameter_masthead_title ).
 		then_dataset_light_is( dataset_light )
 	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.run_job_manager_jobs(_optional done_proc)
+	##
+	##
+
+	je << _self.job_engine()
+	_loop
+		jobs << je.find_and_run_next_jobs()
+		_if done_proc _isnt _unset
+		_then
+			_if done_proc() _then _leave _endif
+		_endif
+		_if jobs.empty? _then _leave _endif
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.ensure_job_view_is_in_top_alternative()
+                ##
+                ## If not already in top, commit and move to top
+                ##
+                job_queue_view << sw_job_engine.job_view
+                _if job_queue_view.alternative_path.size _isnt 0
+                _then
+                                job_queue_view.commit()
+                                job_queue_view.goto_top_alternative()
+                _endif
 _endmethod
 $
 
@@ -468,7 +496,7 @@ $
 
 
 _pragma(classify_level=debug,topic={MUnit, Test})
-_private _method design_manager_system_test_mixin.prepare_job_queue_view_for_transition_jobs()
+_private _method design_manager_system_test_mixin.go_to_writable_job_view_test_alternative()
 	## 
 	##
 	
@@ -521,3 +549,5 @@ _private _method design_manager_system_test_mixin.job_engine()
 	
 _endmethod
 $
+
+
