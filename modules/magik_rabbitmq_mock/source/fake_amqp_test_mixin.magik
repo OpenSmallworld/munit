@@ -41,7 +41,7 @@ _method fake_amqp_test_mixin.find_channel(_optional queue_name, reset_messages?)
 			_if reset_messages? _is _true
 			_then
 				.current_channel.published.empty()
-			_endif 
+			_endif
 			_return _self
 		_endif
 	_endloop
@@ -103,8 +103,28 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_message_is_published(message)
-	_self.assert_deep_equals(.current_channel.published.last, message)
+	_if _not .current_channel.published.empty?
+	_then
+		_self.assert_deep_equals(.current_channel.published.last, message)
+	_else
+		_self.fail("No published messages")
+	_endif
 	_return _self
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_error_is_published(message, regexp)
+	_if _not .current_channel.published.empty?
+	_then
+		published << .current_channel.published.last
+		err_msg << published[6]
+		new_published << simple_vector.concatenation(published.slice(1,5), published.slice(7,8))
+		err_msg << err_msg.replace_all_instances_of(""+%newline, " ")
+		_self.assert_true(regexp.matches?(err_msg))
+		_self.assert_deep_equals(new_published, message)
+	_else
+		_self.fail("No published messages")
+	_endif
 _endmethod
 
 _pragma(classify_level=debug)
