@@ -94,7 +94,6 @@ _endmethod
 $
 _pragma(classify_level=debug)
 _private _method application_test.close_application()
-
 	_if .properties _is _unset _orif
 	    _self.force_close? _is _false _orif
 	    (app<< .properties[ :application ].default(.application)) _is _unset 
@@ -102,13 +101,19 @@ _private _method application_test.close_application()
 		_return
 	_endif
 	
-	# to prevent dialog 'Do you want to log of start another application?'
-	stub_method_helper.replace_method(app, :only_one_application_available?, _proc () >> _false _endproc)
-	stub_method_helper.replace_method(app, :anything_running?, _proc () >> _true _endproc)
-	
-	app.simple_application_shutdown?<< _false 
+	app?<< app.is_kind_of?(application)
+	_if app?
+	_then 
+		# to prevent dialog 'Do you want to log of start another application?'
+		stub_method_helper.replace_method(app, :only_one_application_available?, _proc () >> _false _endproc)
+		stub_method_helper.replace_method(app, :anything_running?, _proc () >> _true _endproc)
+		app.simple_application_shutdown?<< _false
+	_endif 
 	app.close()
-	_self.wait_for_application_threads_to_finish()
+	_if app?
+	_then 
+		_self.wait_for_application_threads_to_finish()
+	_endif 
 	.properties[ :application ]<< .application<< _unset
 _endmethod
 $
