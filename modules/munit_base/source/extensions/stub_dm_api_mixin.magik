@@ -54,6 +54,8 @@ _method stub_dm_api_mixin.stub_dm_api()
 						     _endif
 					  _endproc )
 	
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|init()|, _proc (_gather params) >> _self _endproc )
+	
 	stub_method_helper.replace_method(swg_dsn_admin_engine, :|find_and_perform_transition()|,
 					  _proc (design, from_state, to_state)
 						  _import pr
