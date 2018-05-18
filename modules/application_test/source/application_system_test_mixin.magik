@@ -1134,6 +1134,12 @@ _method application_system_test_mixin.when_setting_value_in_text_item_with_ident
 		_if item.enabled? _is _true
 		_then	
 			item.value << new_text
+			_if (sel << item.activate_selector) _isnt _unset
+			_then
+				sel << rope.new_from(sel)
+				sel.add_last(item.value)
+				sel.as_simple_vector().send_to(item.model)
+			_endif
 		_else
 			condition.raise( :error, :string, write_string( "Unable to set the text because the item ", item, " is not enabled." ))
 		_endif
