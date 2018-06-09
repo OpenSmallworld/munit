@@ -116,7 +116,7 @@ _method fake_amqp_test_mixin.then_error_is_published(message, body)
 	_if _not .current_channel.published.empty?
 	_then
 		published << .current_channel.published.last.deep_copy()
-		_self.assert_true(published[:body].matches?(body))
+		_self.assert_true(published[:body].matches?(body), "published result '"+published[:body]+"' doesn't match: "+body)
 		published.remove_key(:body)
 		_self.assert_deep_equals(published, message)
 	_else
@@ -147,13 +147,13 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_message_is_acked(ack)
-	_self.assert_deep_equals(.current_channel.acked, ack)
+	_self.assert_deep_equals(.current_channel.acked, ack, "then_message_is_acked")
 	_return _self
 _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_message_is_nacked(nack)
-	_self.assert_deep_equals(.current_channel.nacked, nack)
+	_self.assert_deep_equals(.current_channel.nacked, nack, "then_message_is_nacked")
 	_return _self
 _endmethod
 $
