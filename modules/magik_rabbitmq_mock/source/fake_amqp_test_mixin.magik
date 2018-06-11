@@ -22,6 +22,7 @@ _method fake_amqp_test_mixin.find_channel(_optional queue_name, reset_messages?)
 	## if channel_name is not set, the last channel is set as current
 	## if RESET_MESSAGES? is true then remove all messages
 	## published on the channel so far
+	
 	channels << _self.current_factory.connection.channels
 	_if queue_name _is _unset
 	_then
@@ -41,7 +42,7 @@ _method fake_amqp_test_mixin.find_channel(_optional queue_name, reset_messages?)
 			_if reset_messages? _is _true
 			_then
 				.current_channel.published.empty()
-			_endif 
+			_endif
 			_return _self
 		_endif
 	_endloop
@@ -103,8 +104,24 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_message_is_published(message)
-	_self.assert_deep_equals(.current_channel.published.last, message)
+	_if _not .current_channel.published.empty?
+	_then _self.assert_deep_equals(.current_channel.published.last, message)
+	_else _self.fail("No published messages")
+	_endif
 	_return _self
+_endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_error_is_published(message, body)
+	_if _not .current_channel.published.empty?
+	_then
+		published << .current_channel.published.last.deep_copy()
+		_self.assert_true(published[:body].matches?(body), "published result '"+published[:body]+"' doesn't match: "+body)
+		published.remove_key(:body)
+		_self.assert_deep_equals(published, message)
+	_else
+		_self.fail("No published messages")
+	_endif
 _endmethod
 
 _pragma(classify_level=debug)
@@ -130,13 +147,13 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_message_is_acked(ack)
-	_self.assert_deep_equals(.current_channel.acked, ack)
+	_self.assert_deep_equals(.current_channel.acked, ack, "then_message_is_acked")
 	_return _self
 _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_message_is_nacked(nack)
-	_self.assert_deep_equals(.current_channel.nacked, nack)
+	_self.assert_deep_equals(.current_channel.nacked, nack, "then_message_is_nacked")
 	_return _self
 _endmethod
 $

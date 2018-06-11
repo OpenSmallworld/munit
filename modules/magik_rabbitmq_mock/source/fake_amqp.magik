@@ -68,7 +68,7 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_channel.basic_publish(_gather params)
-	.published.add_last(params)
+	.published.add_last(property_list.new_from_gathered(params))
 _endmethod
 
 _pragma(classify_level=debug)
