@@ -1082,11 +1082,12 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_setting_value_in_text_item( id_path, new_text )
+_method application_system_test_mixin.when_setting_value_in_text_item(id_path, new_text)
        ## 
        ## Set up Swift widget's VALUE to the NEW_TEXT.
        ## This method can be used to set values in the text fields.
        ## Text field should be ENABLED.
+       ## Please note, that activate_selector will be fired if set.
        ##
        ## ID_PATH can be found using get_identifier_path() and is
        ## displayed in the Swift Explorer for widgets with a unique
@@ -1095,14 +1096,14 @@ _method application_system_test_mixin.when_setting_value_in_text_item( id_path, 
        ## NEW_TEXT is string value provided to the Swift widget, 
        ## the widget should be enabled.
        
-       item << _self.get_item( id_path )
+       item << _self.get_item(id_path)
 
-       # set the NEW_TEXT when ITEM is enabled.       
-       _if item.enabled? _is _true
-       _then 
-              item.value << new_text
+       _if item _isnt _unset
+       _then
+	       _self.int!set_text_item_value_with_callback(item, new_text)
        _else
-              condition.raise( :error, :string, write_string( "Unable to set the text because the item ", item, " is not enabled." ))
+	       condition.raise(:error, :string,
+				write_string("Failed to find component with id path ", id_path))
        _endif
 
        >> _self
@@ -1111,11 +1112,12 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_setting_value_in_text_item_with_identifier( identifier, new_text, _optional frame_title )
+_method application_system_test_mixin.when_setting_value_in_text_item_with_identifier(identifier, new_text, _optional frame_title)
 	## 
 	## Set up Swift widget's VALUE to the NEW_TEXT.
 	## This method can be used to set values in the text fields.
 	## Text field should be ENABLED.
+	## Please note, that activate_selector will be fired if set.
 	##
 	## IDENTIFIER is the identifier of the widget to set the value for.
 	##
@@ -1129,17 +1131,11 @@ _method application_system_test_mixin.when_setting_value_in_text_item_with_ident
 	item << _self.get_item_with_identifier(:tag!sw_text_item, identifier, :frame_title, frame_title)
 
 	_if item _isnt _unset
-	_then 
-		# set the NEW_TEXT when ITEM is enabled.       
-		_if item.enabled? _is _true
-		_then	
-			item.value << new_text
-		_else
-			condition.raise( :error, :string, write_string( "Unable to set the text because the item ", item, " is not enabled." ))
-		_endif
+	_then
+		_self.int!set_text_item_value_with_callback(item, new_text)
 	_else
-		condition.raise( :error, :string,
-				 write_string("Failed to find component with identifier ", identifier ))
+		condition.raise(:error, :string,
+				write_string("Failed to find component with identifier ", identifier))
 	_endif
 	
 	>> _self
@@ -2443,5 +2439,24 @@ _method application_system_test_mixin.given_an_embedded_editor_populated_with( d
 	        
         >> _self
         
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method application_system_test_mixin.int!set_text_item_value_with_callback(item, new_text)
+	## 
+	## 
+
+	# set the NEW_TEXT when ITEM is enabled.
+	_if item.enabled? _is _true
+	_then
+		item.value << new_text
+		_if item.activate_selector _isnt _unset
+		_then
+			item.activate_selector.send_to(item.model, item.value, item)
+		_endif
+	_else
+		condition.raise(:error, :string, write_string("Unable to set the text because the item ", item, " is not enabled."))
+	_endif
 _endmethod
 $
