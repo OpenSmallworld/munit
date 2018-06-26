@@ -103,6 +103,15 @@ _private _method test_runner_dialog.init_actions()
                                          :image, {:traceback_viewer, traceback_viewer.module_name},
 					 :enabled?, _false,
 					 :action_message, :view_traceback|()|
+				    ) )
+
+	_self.add_action( sw_action.new( :sort_tests,
+					 :engine, _self,
+					 :image, {:sort_a_z, :ui_resources},
+					 :toolbar_control, :image_toggle_item,
+					 :value_change_message, :|toggle_sort_display_tests()|,
+					 :enabled?, _true,
+					 :value, _self.sort_display_tests?
 				    ) )	
 				     
 _endmethod
@@ -828,6 +837,15 @@ _method test_runner_dialog.view_traceback()
 	a_failure << .items[:failures_tree_item].selection.an_element().key
 	d.show_traceback( a_failure.traceback )
 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method test_runner_dialog.toggle_sort_display_tests(value)
+	## 
+	## 
+	_self.sort_display_tests? << value
+	_self.refresh()
 _endmethod
 $
 

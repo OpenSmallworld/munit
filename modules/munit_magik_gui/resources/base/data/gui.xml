@@ -11,6 +11,7 @@
 	<action name="reset"/>
 	<action name="edit_method"/>
 	<action name="view_traceback"/>
+	<action name="sort_tests"/>
     </toolbar>
     <toolbar name="results">
 	<action name="clear"/>
