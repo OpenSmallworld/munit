@@ -42,6 +42,22 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method gui_framework_test_mixin.then_no_container_item_with_identifier_exists(container, identifier)
+	## 
+	## 
+	items << container.get_items(identifier)
+
+	fail_str << write_string("The container ", container, " should not have a GUI element with identifier ")
+	fail_str << write_string(fail_str, identifier, ", but it does")
+
+	_self.assert_true(items.empty?, fail_str)
+
+	>> _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method gui_framework_test_mixin.then_item_is_enabled( item, expected_enabled? )
 	## 
 	## Verify the enabled state of ITEM.

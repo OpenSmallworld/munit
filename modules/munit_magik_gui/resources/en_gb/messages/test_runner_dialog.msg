@@ -39,3 +39,4 @@
 :run_test_tooltip     Run the Selected Tests
 :view_traceback_tooltip  View the Selected Traceback
 :view_traceback          View Traceback
+:sort_tests           Sort tests
