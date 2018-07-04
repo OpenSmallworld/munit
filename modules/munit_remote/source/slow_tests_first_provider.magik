@@ -54,6 +54,8 @@ _private _method slow_tests_first_provider.add_product_test_suite(remote_tests, 
 				_if _not skip_slow_tests?
 				_then 
 					remote_tests.add_first(test)
+				_else
+					show(write_string("Skip slow test: ", test.class_name)
 				_endif 
 			_else
 				remote_tests.add_last(test)
