@@ -4,10 +4,11 @@ $
 
 def_slotted_exemplar(:remote_test_server,
 	{
-		{:connection,   _unset},
-		{:thread,       _unset},
-		{:port,         _unset},
-		{:remote_tests, _unset}
+		{:connection,      _unset},
+		{:thread,          _unset},
+		{:port,            _unset},
+		{:remote_tests,    _unset},
+		{:machine_mapping, _unset}
 	},
 	{:test_suite, :sw_task_owner})
 $
@@ -45,6 +46,12 @@ _private _method remote_test_server.init(port, test_product_names)
 
 	test_list_provider << test_list_provider.default(slow_tests_first_provider)
 	.remote_tests << test_list_provider.get_list(test_product_names)
+
+	.machine_mapping << hash_table.new()
+	_for test _over .remote_tests.fast_elements()
+	_loop
+		.machine_mapping[test.class_name] << ""
+	_endloop
 	
         >> _self
 	
@@ -78,6 +85,8 @@ _method remote_test_server.run()
 	##
 
 	queue << atomic_queue.new(1)
+	_self.report_tests_to_run()
+	
         task  << _self.do_work(_self, :|listen()|, queue)
 
 	_loop
@@ -94,6 +103,8 @@ _method remote_test_server.run()
 		_endif
 		
 	_endloop
+
+	_self.report_machines()
 	
 _endmethod
 $
@@ -199,6 +210,8 @@ _private _method remote_test_server.send_test_to_client(client)
 			_self.send_name_to_client(module_name, client)
 			_self.send_name_to_client(test_name, client)
 
+			.machine_mapping[test_name] << system.get_host_by_addr(client.remote_address).an_element()
+
 		_else
 			_self.send_name_to_client("done", client)
 		_endif
@@ -256,6 +269,35 @@ _private _method remote_test_server.return_test_to_queue(test)
 	##
 	
 	.remote_tests.add_last(test)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_server.report_tests_to_run()
+	## 
+	##
+
+	show("Remote tests to run:")
+	_for test _over .remote_tests.fast_elements()
+	_loop
+		show(test)
+	_endloop
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method remote_test_server.report_machines()
+	## 
+	##
+
+	_for test_name, client _over .machine_mapping.fast_keys_and_elements()
+	_loop
+		show(write_string("Ran ", test_name, " on ", client))
+	_endloop 
 	
 _endmethod
 $
