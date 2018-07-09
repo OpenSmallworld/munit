@@ -1002,40 +1002,10 @@ _method application_system_test_mixin.when_clicking_browse_in_editor()
 	## 
 	## 
 
-	_local props << _self.properties
-
-	stub_method_helper.replace_method(explorer_rwo_set_output_view, :|working?<<|,
-					  _proc(is_working?)
-						  _import props
-
-						  _self.action(:interrupt_work).enabled? << is_working?
-						  _self.sys!slot(:working?) << is_working?
-
-						  _if is_working? _is _true
-						  _then 
-							  props[:browse_queue] << atomic_queue.new(1)
-							  props[:explorer_queue].put(_unset)
-							  
-						  _elif is_working? _is _false
-						  _then
-							  _if props[:browse_queue] _isnt _unset
-							  _then
-								  props[:browse_queue].put(_unset)
-							  _endif 
-						  _endif 
-					  _endproc)
-
-	_self.properties[:explorer_queue] << atomic_queue.new(1)
-	
 	_self.when_clicking_action_in_editor(:browse)
 
-	_self.properties[:explorer_queue].get(10000)
-
-	_if props[:browse_queue] _isnt _unset
-	_then
-		_self.properties[:browse_queue].get(10000)
-	_endif 
-
+	_self.wait_for_task_to_complete(:|int!explorer_model_set_rwo_set()|, 10000)
+	
 	_self.properties[:explorer] << _self.properties[:application].plugin(:explorer)
 	
 	>> _self
