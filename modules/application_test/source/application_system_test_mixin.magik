@@ -1730,6 +1730,10 @@ _private _method application_system_test_mixin.click_item( item, _optional props
 	x +<< top_x
 	y +<< top_y
 
+	_self.remove_event_from_queue( :move )
+	_self.remove_event_from_queue( :press )
+	_self.remove_event_from_queue( :release )
+
 	_self.handle_event( top_container, :locator, :move, x, y, _unset, _unset )
 	_self.handle_event( top_container, :button, :left, x, y, :press, 0 )
 
@@ -1774,6 +1778,7 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 			write( "SET_FOCUS on ", a_canvas, " for ", category, " ", id , " event at ", x, %,, y,
 			       " item: ", a_canvas.get_item_at( x,y) )
 			a_canvas.top_frame.set_focus()
+			a_canvas.has_focus? << _true
 		_elif _not a_canvas.active?
 		_then 
 			write( "ACTIVATE ", a_canvas, " for ", category, " ", id , " event at ", x, %,, y,

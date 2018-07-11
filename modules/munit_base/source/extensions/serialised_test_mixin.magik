@@ -294,7 +294,8 @@ _private _method serialised_test_mixin.remove_event_from_queue( remove_event_id 
 		value << _self.properties[:queue].get()
 		
 		_if _not value.is_kind_of?( {} ) _orif
-		    value[2].id ~= remove_event_id
+		    ( value[2].responds_to?( :id ) _andif 
+		      value[2].id ~= remove_event_id )
 		_then
 			other_values.add_last( value )
 		_endif
