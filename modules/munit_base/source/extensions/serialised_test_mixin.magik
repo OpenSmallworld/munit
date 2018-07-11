@@ -287,22 +287,25 @@ _private _method serialised_test_mixin.remove_event_from_queue( remove_event_id 
 	## 
 	
 	other_values << rope.new()
-	
-	_loop
-		
-		_if _self.properties[:queue].reads_possible = 0 _then _leave _endif
-		value << _self.properties[:queue].get()
-		
-		_if _not value.is_kind_of?( {} ) _orif
-		    ( value[2].responds_to?( :id ) _andif 
-		      value[2].id ~= remove_event_id )
-		_then
-			other_values.add_last( value )
-		_endif
 
-	_endloop
+	_if _self.properties[:queue] _isnt _unset
+	_then 
+		_loop
+			
+			_if _self.properties[:queue].reads_possible = 0 _then _leave _endif
+			value << _self.properties[:queue].get()
+			
+			_if _not value.is_kind_of?( {} ) _orif
+			    ( value[2].responds_to?( :id ) _andif 
+			      value[2].id ~= remove_event_id )
+			_then
+				other_values.add_last( value )
+			_endif
+			
+		_endloop
 
-	_self.add_values_to_queue( other_values )
+		_self.add_values_to_queue( other_values )
+	_endif
 	
 _endmethod
 $
