@@ -204,7 +204,7 @@ _private _method serialised_test_mixin.wait_for_task_to_complete( method_name, _
 		    value[1] _is :task_complete _andif 
 		    value[3] _is method_name
 		_then
-			# Wait to make sure that the taks's status is set to complete
+			# Wait to make sure that the task's status is set to complete
 			# as well.
 			_loop
 				_if value[2].completed? _then _leave _endif
