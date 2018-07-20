@@ -26,7 +26,7 @@ application_system_test_mixin.define_shared_constant(:smooth_app_termination?,
 $
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.given_an_application( application_name _optional width, height )
+_method application_system_test_mixin.given_an_application( application_name _optional width, height, stub_alerts? )
 	## 
 	## Ensure that the required application (as specified by
 	## APPLICATION_NAME) is running.
@@ -39,6 +39,11 @@ _method application_system_test_mixin.given_an_application( application_name _op
 	##       started and the test will run 
 	##     * If it is not available, the test will fail.
 	##
+
+	_if stub_alerts? _isnt _false
+	_then 
+		_self.int!stub_alerts()
+	_endif
 
 	start << date_time.now()
 
