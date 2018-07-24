@@ -202,8 +202,14 @@ _private _method serialised_test_mixin.wait_for_task_to_complete( method_name, _
 			_leave 
 		_elif value.is_kind_of?( {} ) _andif
 		    value[1] _is :task_complete _andif 
-		    value[2] _is method_name
+		    value[3] _is method_name
 		_then
+			# Wait to make sure that the task's status is set to complete
+			# as well.
+			_loop
+				_if value[2].completed? _then _leave _endif
+				_thisthread.sleep(1)
+			_endloop
 			write( "Found ", method_name, " Duration: ", date_time.now() - start )
 			_leave
 		_else
@@ -287,21 +293,25 @@ _private _method serialised_test_mixin.remove_event_from_queue( remove_event_id 
 	## 
 	
 	other_values << rope.new()
-	
-	_loop
-		
-		_if _self.properties[:queue].reads_possible = 0 _then _leave _endif
-		value << _self.properties[:queue].get()
-		
-		_if _not value.is_kind_of?( {} ) _orif
-		    value[2].id ~= remove_event_id
-		_then
-			other_values.add_last( value )
-		_endif
 
-	_endloop
+	_if _self.properties[:queue] _isnt _unset
+	_then 
+		_loop
+			
+			_if _self.properties[:queue].reads_possible = 0 _then _leave _endif
+			value << _self.properties[:queue].get()
+			
+			_if _not value.is_kind_of?( {} ) _orif
+			    ( value[2].responds_to?( :id ) _andif 
+			      value[2].id ~= remove_event_id )
+			_then
+				other_values.add_last( value )
+			_endif
+			
+		_endloop
 
-	_self.add_values_to_queue( other_values )
+		_self.add_values_to_queue( other_values )
+	_endif
 	
 _endmethod
 $
@@ -321,7 +331,7 @@ _method serialised_test_mixin.note_change( who, what, data )
 		_elif what _is :task_complete
 		_then
 			# data[1] = task, data[2] = method_name
-			test_queue.put( {what, data[2]}, _true )
+			test_queue.put( {what, data[1], data[2]}, _true )
 		_else 
 			test_queue.put( what, _true )
 		_endif

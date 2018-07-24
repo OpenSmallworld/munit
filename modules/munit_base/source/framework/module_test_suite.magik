@@ -66,10 +66,13 @@ _private _method module_test_suite.init( test_module )
 
 	.module_name  << test_module.name
 	
-	_for module_test_case _over test_module.test_cases()
-	_loop
-		_self.add_test( module_test_case )
-	_endloop
+	_if test_module.test_module?
+	_then 	
+		_for module_test_case _over test_module.test_cases()
+		_loop
+			_self.add_test( module_test_case )
+		_endloop
+	_endif
 
 	>> _self
 	

@@ -112,8 +112,8 @@ _private _method remote_test_runner.get_new_test(address, port)
 
 	_protect
 		
-		connection  << _self.connect(address, port)
 		module_name << :done
+		connection  << _self.connect(address, port)
 
 		_if connection _isnt _unset
 		_then
