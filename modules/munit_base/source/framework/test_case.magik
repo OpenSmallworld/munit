@@ -254,12 +254,14 @@ _method test_case.int!stub_alerts()
 						   _import alerts
 						   write( "**** Warning: Suppressed show_alert() - ", message )
 						   alerts.add( message )
+						   >> _true
 					   _endproc )
 	stub_method_helper.replace_method( basic_window, :|alert()|,
 					   _proc( message, button_labels _optional button_values,default_value,mode)
 						   _import alerts
 						   write( "**** Warning: Suppressed alert() - ", message )
 						   alerts.add( message )
+						   >> _true
 					   _endproc )
 	
 _endmethod
