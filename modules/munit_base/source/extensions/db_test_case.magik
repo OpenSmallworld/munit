@@ -142,6 +142,8 @@ _method db_test_case.run_bare()
 	# set_up(), tear_down() but this would require big refactoring
 	# (mainly in PNI tests)
 
+	_self.stub_map_rendering_if_required()
+
         _self.one_time_behaviour()
 
 	_self.setup_db() 
