@@ -196,7 +196,8 @@ _private _method remote_test_server.send_test_to_client(client)
 	done? << _false
 	_try
 
-		client_step_id << client.input.get_signed_int()
+		nchars         << client.input.get_signed_int()
+		client_step_id << client.input.get_ascii_chars(nchars)
 		_if client_step_id = .step_id
 		_then 
 			test  << _self.get_test_to_run()

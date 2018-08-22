@@ -122,7 +122,8 @@ _private _method remote_test_runner.get_new_test(address, port, step_id)
 		_if connection _isnt _unset
 		_then
 
-			connection.output.put_signed_int(step_id)
+			connection.output.put_signed_int(step_id.size)
+			connection.output.put_ascii_chars(step_id)
 			connection.output.flush()
 
 			_try _with error_variable
