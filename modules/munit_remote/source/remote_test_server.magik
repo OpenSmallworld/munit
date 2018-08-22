@@ -291,6 +291,10 @@ _method remote_test_server.report_machines()
 
 	_for test_name, client _over .machine_mapping.fast_keys_and_elements()
 	_loop
+		# On the machine that runs the server, a client is running in a
+		# different thread.  This lock is to ensure that the server and
+		# client write a complete line to the !output! without
+		# interfering with one another.
 		_lock !output!
 		      show(write_string("Ran ", test_name, " on ", client))
 		_endlock

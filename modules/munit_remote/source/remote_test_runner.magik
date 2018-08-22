@@ -60,6 +60,10 @@ _method remote_test_runner.run_remote(address, port, step_id)
 				
 	_endloop
 
+	# On the machine that runs the server, a client is running in a
+	# different thread.  This lock is to ensure that the server and
+	# client write a complete line to the !output! without
+	# interfering with one another.
 	_lock !output!
 	      show(write_string("Ran ", count, " tests in ", date_time_now() - start))
 	_endlock
