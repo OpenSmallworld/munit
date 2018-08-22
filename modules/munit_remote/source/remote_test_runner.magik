@@ -11,7 +11,7 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_runner.run_remote(address, port)
+_method remote_test_runner.run_remote(address, port, step_id)
 	## 
 	##
 
@@ -24,7 +24,7 @@ _method remote_test_runner.run_remote(address, port)
 
 	_loop
 		
-		(module_name, test_name) << _self.get_new_test(address, port)
+		(module_name, test_name) << _self.get_new_test(address, port, step_id)
 
 		_if module_name _is :done _then _leave _endif
 
@@ -60,10 +60,18 @@ _method remote_test_runner.run_remote(address, port)
 				
 	_endloop
 
-	show(write_string("Ran ", count, " tests in ", date_time_now() - start))
+	# On the machine that runs the server, a client is running in a
+	# different thread.  This lock is to ensure that the server and
+	# client write a complete line to the !output! without
+	# interfering with one another.
+	_lock !output!
+	      show(write_string("Ran ", count, " tests in ", date_time_now() - start))
+	_endlock
 	_for test, time _over test_times.fast_keys_and_elements()
 	_loop
-		show(write_string("Test ", test, " ran in ", time))
+		_lock !output!
+		      show(write_string("Test ", test, " ran in ", time))
+		_endlock
 	_endloop 
 	
 	>> tests_ok?
@@ -106,7 +114,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method remote_test_runner.get_new_test(address, port)
+_private _method remote_test_runner.get_new_test(address, port, step_id)
 	## 
 	##
 
@@ -117,6 +125,10 @@ _private _method remote_test_runner.get_new_test(address, port)
 
 		_if connection _isnt _unset
 		_then
+
+			connection.output.put_signed_int(step_id.size)
+			connection.output.put_ascii_chars(step_id)
+			connection.output.flush()
 
 			_try _with error_variable
 				# Get the module name
