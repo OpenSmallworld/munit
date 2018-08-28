@@ -104,9 +104,12 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_message_is_published(message)
+	_thisthread.sleep(50)
 	_if _not .current_channel.published.empty?
-	_then _self.assert_deep_equals(.current_channel.published.last, message)
-	_else _self.fail("No published messages")
+	_then
+		_self.assert_deep_equals(.current_channel.published.last, message)
+	_else
+		_self.fail("No published messages")
 	_endif
 	_return _self
 _endmethod
