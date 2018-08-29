@@ -150,6 +150,7 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_message_is_acked(ack)
+	_thisthread.sleep(50)
 	_self.assert_deep_equals(.current_channel.acked, ack, "then_message_is_acked")
 	_return _self
 _endmethod
