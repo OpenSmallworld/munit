@@ -5,7 +5,7 @@ $
 _pragma(classify_level=debug)
 ## This mixin provides the methods to compare xml strings
 ## inherit your test from it to use assert_xml_file() etc.
-def_mixin( :xml_assert_mixin )
+def_mixin( :xml_assert_mixin, { :assert_helper_mixin } )
 $
 
 _pragma(classify_level=debug)
@@ -13,10 +13,7 @@ _pragma(classify_level=debug)
 ## :actual xml which was different than :expected
 xml_assert_mixin.define_shared_constant(:last_failed_xml_assertion, property_list.new_with(:expected, _unset, :actual, _unset), :public)
 $
-_pragma(classify_level=debug)
-## rounding of floats before comparing xml expected vs. actual 
-xml_assert_mixin.define_shared_constant(:round_mantissa_decimals, 8, :public)
-$
+
 _pragma(classify_level=debug)
 _method xml_assert_mixin.print_last_failed_xml_assertion(_optional stream)
 	## prints :actual and :expected last_failed_xml_assertion as a
@@ -31,25 +28,7 @@ _method xml_assert_mixin.print_last_failed_xml_assertion(_optional stream)
 	str.write(newline_char)
 _endmethod
 $
-_pragma(classify_level=debug)
-_method xml_assert_mixin.resource_file_as_string(fname)
-	## reads resource file fname and returns its content as a string
-	## Note that the resource file is expected to be in :utf8 encoding
-	full_fname<< smallworld_product.get_resource_file(fname, :data, _self.module_name)
-	in<< external_text_input_stream.new(full_fname, :utf8)
-	_protect
-		out<< internal_text_output_stream.new()
-		_loop
-			vec<< in.get_n(10000)
-			out.write(vec)
-			_if vec.size < 10000 _then _leave _endif 
-		_endloop	
-	_protection
-		_if in _isnt _unset _then in.close() _endif 
-	_endprotect
-	>> out.string
-_endmethod
-$
+
 _pragma(classify_level=debug)
 _method xml_assert_mixin.assert_xml_file(exp_xml_fname, actual_xml _optional msg _gather sort_data)
 	## Compares xml in resource file EXP_XML_FNAME with xml
@@ -60,6 +39,8 @@ _method xml_assert_mixin.assert_xml_file(exp_xml_fname, actual_xml _optional msg
 	##
 	## Note that the resource file is expected to be in :utf8
 	## encoding (https://tools.ietf.org/html/rfc8259#section-8.1).
+	## reads resource file fname and returns its content as a string
+	## Note that the resource file is expected to be in :utf8 encoding
 	str<< _self.resource_file_as_string(exp_xml_fname)
 	>> _self.assert_xml(str, actual_xml, msg, _scatter sort_data)
 _endmethod
@@ -85,8 +66,6 @@ _method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg _gather so
 	_endif 
 	expected<< simple_xml.read_element_string(exp_xml)
 	
-	_self.round_floats(actual)
-	_self.round_floats(expected)
 	_self.assert_xml_decoded(expected, actual, msg)
 	>> _self 
 _endmethod
@@ -105,35 +84,5 @@ _private _method xml_assert_mixin.assert_xml_decoded(expected, actual, msg)
 		_self.last_failed_xml_assertion[:expected]<< expected
 		_self.last_failed_xml_assertion[:actual]<< actual
 	_endif 	
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_private _method xml_assert_mixin.round_floats(xml)
-	## 
-	##
-	_for k, el _over xml.xml_keys_and_elements()
-	_loop
-		_if el.is_kind_of?(float)
-		_then
-			xml[k]<< _self.round_float(el)
-		_elif el.is_kind_of?(integral_number_mixin)
-		_then
-			xml[k]<< _self.round_float(el.as_float)
-		_elif el.is_kind_of?(basic_collection_mixin)
-		_then
-			_self.round_floats(el)
-		_endif 
-	_endloop	
-_endmethod
-$
-_pragma(classify_level=debug)
-_private _method xml_assert_mixin.round_float(num)
-	## 
-	##
-	(man, exp)<< num.mantissa_and_exponent10()
-	mult<< 10.to_power(_self.round_mantissa_decimals)
-	man<< (man * mult).rounded / mult * 1.0
-	>> man  * 10.to_power(exp)
 _endmethod
 $
