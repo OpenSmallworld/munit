@@ -601,6 +601,7 @@ _method assert.compare_xml( an_xml_thing, other_xml_thing )
 	##
 	## Compares two chunks of xml and make sure they're the same.
 	##
+
 	# Check the types
 	_if (type<< an_xml_thing.type) _isnt other_xml_thing.type _then
 		_self.assert_true(
@@ -645,15 +646,34 @@ _method assert.compare_xml( an_xml_thing, other_xml_thing )
 				      " in element ",type ))
 		_return _false
 	_endif
+
 	_for index _over 1.upto(elements.size)
 	_loop
-		_if _not _self.compare_xml(elements[index], other_elements[index])
+		_if elements[index].class_name <> other_elements[index].class_name
 		_then
-		_self.assert_true(
-			_false,
-			write_string( "Expected ", elements[index],
-				      " to match ", other_elements[index],
-				      "." ))
+			_self.assert_true(
+				_false,
+				write_string( "Expected ", elements[index],
+					      " to be of same type as ", other_elements[index],
+					      "." ))
+			_return _false
+		_elif elements[index].is_kind_of?(char16_vector) _andif
+		      other_elements[index].is_kind_of?(char16_vector)
+		_then
+			_self.assert_equals(
+				elements[index], other_elements[index],
+				write_string( "Expected ", elements[index],
+					      " to equal ", other_elements[index],
+					      "." ))
+			_return elements[index] = other_elements[index]
+
+		_elif _not _self.compare_xml(elements[index], other_elements[index])
+		_then
+			_self.assert_true(
+				_false,
+				write_string( "Expected ", elements[index],
+					      " to match ", other_elements[index],
+					      "." ))
 			_return _false
 		_endif
 	_endloop
