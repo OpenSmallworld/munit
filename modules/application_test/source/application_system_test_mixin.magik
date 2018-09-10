@@ -421,7 +421,8 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_item_with_label( tag, label,
-								     _optional container, new_frame_wait_time )
+								     _optional container, new_frame_wait_time ,
+								     set_focus?)
 	## 
 	##	
 
@@ -436,6 +437,10 @@ _method application_system_test_mixin.when_clicking_item_with_label( tag, label,
 		    item.label = label
 		_then
 			click_item << item
+			_if set_focus? _is _true
+			_then
+				click_item.set_focus()
+			_endif
 			_leave
 		_endif
 	_endloop
