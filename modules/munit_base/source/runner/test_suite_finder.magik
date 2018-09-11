@@ -79,17 +79,26 @@ _method test_suite_finder.find_classes_for_module( module_name )
 	## Return a rope containing all the test_suite owners in the
 	## module MODULE_NAME
 	##
-
+	
+	write("[DV]  ", _self, ".find_classes_for_module(", module_name, ") -- ", !current_package!)
 	result << rope.new()
 		
 	_for a_test_suite_owner_name _over .test_suites.keys()
 	_loop
-		a_class << get_global_value( a_test_suite_owner_name )
-		_if a_class _isnt _unset _andif
-		    a_class.module_name _is module_name
-		_then 
-			result.add( a_class )
-		_endif 
+		write(%tab, "a_test_suite_owner_name: ", a_test_suite_owner_name)
+		
+		a_class << _self.find_class(a_test_suite_owner_name)
+		
+		write(%tab, "a_class: ", a_class)
+		_if a_class _isnt _unset
+		_then
+			write(%tab, %tab, "module_name: ", a_class.module_name)
+			_if a_class.module_name _is module_name
+			_then
+				write(%tab, %tab, %tab, "adding a_class")
+				result.add( a_class )
+			_endif
+		_endif
 	_endloop 
 
 	>> result
@@ -97,18 +106,39 @@ _method test_suite_finder.find_classes_for_module( module_name )
 _endmethod
 $
 
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_suite_finder.find_class(class_name)
+
+	_local the_class
+	_if (the_class << get_global_value(class_name)) _is _unset
+	_then
+		_for i_pkg_name _over {"user", "sw"}.fast_elements()
+		_loop
+			_if (the_class << get_global_value( write_string(i_pkg_name, ":", class_name) ) ) _isnt _unset
+			_then _leave _endif
+		_endloop
+	_endif
+	
+	>> the_class
+	
+_endmethod
+$
 
 _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.test_and_identifier(module_name, test_name)
 	## 
 	##
 
+	write("[DV]  ", _self, ".test_and_identifier(", module_name, ", ", test_name, ")")
 	_if _self.additional_test_suites[test_name] _isnt _unset 
 	_then
 		test       << _self.additional_test_suites[test_name][:test_suite]
 		identifier << _self.additional_test_suites[test_name][:module_name]
 	_else
-		test       << !current_package![test_name]
+		write(%tab, "current package: ", !current_package!)
+		test       << _self.find_class(test_name)
+			#!current_package![test_name]
+		write(%tab, "test: ", test, " (", test.class_name, ")")
 		identifier << sw_module_manager.module(module_name).product.name
 	_endif
 
