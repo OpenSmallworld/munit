@@ -1,0 +1,88 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug)
+## This mixin provides the methods to compare xml strings
+## inherit your test from it to use assert_xml_file() etc.
+def_mixin( :xml_assert_mixin, { :assert_helper_mixin } )
+$
+
+_pragma(classify_level=debug)
+## property list with keys :actual and :expected holding last
+## :actual xml which was different than :expected
+xml_assert_mixin.define_shared_constant(:last_failed_xml_assertion, property_list.new_with(:expected, _unset, :actual, _unset), :public)
+$
+
+_pragma(classify_level=debug)
+_method xml_assert_mixin.print_last_failed_xml_assertion(_optional stream)
+	## prints :actual and :expected last_failed_xml_assertion as a
+	## string to STREAM (defaults to !output!)
+	##
+	enc << simple_xml
+	str<< stream.default(!output!)
+	str.write("expected",newline_char)
+	enc.write_element_on(str,_self.last_failed_xml_assertion[:expected])
+	str.write(newline_char,"actual",newline_char)
+	enc.write_element_on(str,_self.last_failed_xml_assertion[:actual])
+	str.write(newline_char)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_assert_mixin.assert_xml_file(exp_xml_fname, actual_xml _optional msg _gather sort_data)
+	## Compares xml in resource file EXP_XML_FNAME with xml
+	## string ACTUAL_XML.
+	## MSG is a failure message.
+	##
+	## SORT_DATA is ignored.
+	##
+	## Note that the resource file is expected to be in :utf8
+	## encoding (https://tools.ietf.org/html/rfc8259#section-8.1).
+	## reads resource file fname and returns its content as a string
+	## Note that the resource file is expected to be in :utf8 encoding
+	str<< _self.resource_file_as_string(exp_xml_fname)
+	>> _self.assert_xml(str, actual_xml, msg, _scatter sort_data)
+_endmethod
+$
+_pragma(classify_level=debug)
+_method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg _gather sort_data)
+	## Compares EXP_XML with xml string ACTUAL_XML.
+	## EXP_XML is either a string or a handler which returns a string
+	## when invoked.
+	## MSG is a failure message.
+	## 
+	## SORT_DATA is ignored.
+	##
+	_try
+		actual<< simple_xml.read_element_string(actual_xml)
+	_when error
+		_self.fail( write_string(msg," Cannot parse XML string: " , actual_xml))
+		_return _self 
+	_endtry
+	_if exp_xml.is_kind_of?(handler)
+	_then
+		exp_xml<< exp_xml()
+	_endif 
+	expected<< simple_xml.read_element_string(exp_xml)
+	
+	_self.assert_xml_decoded(expected, actual, msg)
+	>> _self 
+_endmethod
+$
+_pragma(classify_level=debug)
+_private _method xml_assert_mixin.assert_xml_decoded(expected, actual, msg)
+	## 
+	##
+	_if _not _self.compare_xml(expected, actual)
+	_then
+		_self.assert_true(
+			_false,
+			msg.default("XML assertion failed. Run "+_self.get_name()+" again alone and then check "+
+				    _self.class_name+".last_failed_xml_assertion, or call "+
+				    _self.class_name+".print_last_failed_xml_assertion()"))
+		_self.last_failed_xml_assertion[:expected]<< expected
+		_self.last_failed_xml_assertion[:actual]<< actual
+	_endif 	
+_endmethod
+$

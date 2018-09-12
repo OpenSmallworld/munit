@@ -1,0 +1,28 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug)
+def_mixin( :assert_helper_mixin )
+$
+
+_pragma(classify_level=debug)
+_method assert_helper_mixin.resource_file_as_string(fname)
+	## reads resource file fname and returns its content as a string
+	## Note that the resource file is expected to be in :utf8 encoding
+	full_fname<< smallworld_product.get_resource_file(fname, :data, _self.module_name)
+	in<< external_text_input_stream.new(full_fname, :utf8)
+	_protect
+		out<< internal_text_output_stream.new()
+		_loop
+			vec<< in.get_n(10000)
+			out.write(vec)
+			_if vec.size < 10000 _then _leave _endif 
+		_endloop	
+	_protection
+		_if in _isnt _unset _then in.close() _endif 
+	_endprotect
+	>> out.string
+_endmethod
+$
+

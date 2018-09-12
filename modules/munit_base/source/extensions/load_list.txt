@@ -11,5 +11,7 @@ serialised_test_mixin
 implementer_test_mixin
 
 deep_comparator
+assert_helper_mixin
 json_assert_mixin
+xml_assert_mixin
 stub_dm_api_mixin
