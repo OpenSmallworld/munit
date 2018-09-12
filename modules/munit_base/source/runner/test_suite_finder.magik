@@ -17,14 +17,6 @@ _pragma(classify_level=restricted)
 test_suite_finder.define_shared_constant(:additional_test_suites, hash_table.new(), :public)
 $
 
-_pragma(classify_level=restricted,usage=redefinable)
-## This shared constant defines additional magik packages that
-## should be checked when looking for test classes.  This can
-## be set if, for example, test cases are defined in the user
-## package.
-test_suite_finder.define_shared_constant(:additional_magik_packages, {}, :public)
-$
-
 _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.new()
 
@@ -108,20 +100,10 @@ $
 _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.find_class(class_name)
 	## Returns the class named CLASS_NAME.  The current Magik
-	## package is searched first.  self.additional_magik_packages
-	## are searched if not found.
+	## package is searched first.  The user package is searched if
+	## not found.
 	
-	_local the_class
-	_if (the_class << get_global_value(class_name)) _is _unset
-	_then
-		_for i_pkg_name _over _self.additional_magik_packages.fast_elements()
-		_loop
-			_if (the_class << get_global_value( write_string(i_pkg_name, ":", class_name) ) ) _isnt _unset
-			_then _leave _endif
-		_endloop
-	_endif
-	
-	>> the_class
+	>> get_global_value( write_string("user:", class_name) )
 	
 _endmethod
 $
