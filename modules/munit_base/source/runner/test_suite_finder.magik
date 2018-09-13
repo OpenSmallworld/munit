@@ -98,10 +98,10 @@ _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
-_method test_suite_finder.find_class(class_name)
+_private _method test_suite_finder.find_class(class_name)
 	## Returns the class named CLASS_NAME.
 	
-	>> get_global_value( write_string("user:", class_name) )
+	>> get_global_value(write_string("user:", class_name))
 	
 _endmethod
 $
