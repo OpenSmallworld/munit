@@ -337,6 +337,11 @@ _method database_test.set_up()
 	##
         _super.set_up()
 	.properties << property_list.new()
+	#
+	# The Cambridge DB exemplars are declared in the user package,
+	# so this must be current when we open the database
+	#
+	_dynamic !current_package! << !current_package!.all_packages[:user]
 	_self.given_writable_datasets( _self.writable_dataset_names )
 	_self.given_writable_dataset_clones()
 _endmethod
@@ -371,11 +376,6 @@ _private _method database_test.check_correct_database_open()
 		_self.clones_dataset_options()
                 gis_program_manager.reinitialise()
 
-                #
-                # The Cambridge DB exemplars are declared in the user package,
-                # so this must be current when we open the database
-                #
-                _dynamic !current_package! << !current_package!.all_packages[:user]
                 open_database({_self.database_path})
 		_self.database_opened? << _true
         _endif
