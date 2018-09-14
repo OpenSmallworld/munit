@@ -337,13 +337,20 @@ _method database_test.set_up()
 	##
         _super.set_up()
 	.properties << property_list.new()
+	_self.given_writable_datasets( _self.writable_dataset_names )
+	_self.given_writable_dataset_clones()
+_endmethod
+$
+_pragma(classify_level=debug)
+_method database_test.run_bare()
+	## 
+	## 
 	#
 	# The Cambridge DB exemplars are declared in the user package,
 	# so this must be current when we open the database
 	#
 	_dynamic !current_package! << !current_package!.all_packages[:user]
-	_self.given_writable_datasets( _self.writable_dataset_names )
-	_self.given_writable_dataset_clones()
+	_super.run_bare()
 _endmethod
 $
 
