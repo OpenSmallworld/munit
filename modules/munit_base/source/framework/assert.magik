@@ -597,9 +597,11 @@ _private _method assert.compare_sets( object1, object2, location, errors)
 _endmethod
 $
 _pragma(classify_level=advanced,topic=MUnit)
-_method assert.compare_xml( an_xml_thing, other_xml_thing )
+_method assert.compare_xml( an_xml_thing, other_xml_thing, _optional sort_elements? )
 	##
 	## Compares two chunks of xml and make sure they're the same.
+	## If SORT_ELEMENTS? is true then don't compare elements in
+	## order as parsed but sorts them first
 	##
 
 	# Check the types
@@ -647,6 +649,12 @@ _method assert.compare_xml( an_xml_thing, other_xml_thing )
 		_return _false
 	_endif
 
+	_if sort_elements? _is _true
+	_then
+		elements<< sorted_collection.new_from(elements, _self.xml_element_sort_proc)
+		other_elements << sorted_collection.new_from(other_elements, _self.xml_element_sort_proc)
+	_endif
+	
 	_for index _over 1.upto(elements.size)
 	_loop
 		_if elements[index].class_name <> other_elements[index].class_name
@@ -667,7 +675,7 @@ _method assert.compare_xml( an_xml_thing, other_xml_thing )
 					      "." ))
 			_return elements[index] = other_elements[index]
 
-		_elif _not _self.compare_xml(elements[index], other_elements[index])
+		_elif _not _self.compare_xml(elements[index], other_elements[index], sort_elements?)
 		_then
 			_self.assert_true(
 				_false,
@@ -679,6 +687,51 @@ _method assert.compare_xml( an_xml_thing, other_xml_thing )
 	_endloop
 
 	_return _true
+_endmethod
+$
+_pragma(classify_level=advanced,topic=MUnit)
+_private _method assert.xml_element_sort_proc
+	## 
+	##
+	>> _proc @xml_element_sort_proc(xml_el1, xml_el2)
+		   _if xml_el1.type <> xml_el2.type
+		   _then
+			   _return xml_el1.type < xml_el2.type
+		   _endif
+		   _if xml_el1.xml_contents <> xml_el2.xml_contents
+		   _then
+			   _return xml_el1.xml_contents < xml_el2.xml_contents
+		   _endif
+
+		   e1a<< xml_el1.attributes
+		   e2a<< xml_el2.attributes
+		   e1s<< write_string( _scatter sorted_collection.new_from(e1a.keys) )
+		   e2s<< write_string( _scatter sorted_collection.new_from(e2a.keys) )
+		   _if e1s <> e2s
+		   _then
+			   _return e1s < e2s
+		   _endif
+		   e1s<< write_string( _scatter sorted_collection.new_from(e1a.elements) )
+		   e2s<< write_string( _scatter sorted_collection.new_from(e2a.elements) )
+		   _if e1s <> e2s
+		   _then
+			   _return e1s < e2s
+		   _endif	
+
+		   e1a<< xml_el1.elements.map(_proc (el) >> el.type _endproc)
+		   e2a<< xml_el2.elements.map(_proc (el) >> el.type _endproc)
+		   e1s<< write_string( _scatter sorted_collection.new_from(e1a) )
+		   e2s<< write_string( _scatter sorted_collection.new_from(e2a) )
+		   _if e1s <> e2s
+		   _then
+			   _return e1s < e2s
+		   _endif
+		   e1a<< xml_el1.elements.map(_proc (el) >> el.xml_contents _endproc)
+		   e2a<< xml_el2.elements.map(_proc (el) >> el.xml_contents _endproc)
+		   e1s<< write_string( _scatter sorted_collection.new_from(e1a) )
+		   e2s<< write_string( _scatter sorted_collection.new_from(e2a) )
+		   _return e1s < e2s
+	   _endproc 
 _endmethod
 $
 

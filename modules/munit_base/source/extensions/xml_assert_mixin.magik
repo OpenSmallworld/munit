@@ -30,29 +30,31 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method xml_assert_mixin.assert_xml_file(exp_xml_fname, actual_xml _optional msg _gather sort_data)
+_method xml_assert_mixin.assert_xml_file(exp_xml_fname, actual_xml _optional msg, sort?)
 	## Compares xml in resource file EXP_XML_FNAME with xml
 	## string ACTUAL_XML.
 	## MSG is a failure message.
 	##
-	## SORT_DATA is ignored.
+	## SORT? defaults to true, if true then elements in xml are
+	## sorted before they are asserted
 	##
 	## Note that the resource file is expected to be in :utf8
 	## encoding (https://tools.ietf.org/html/rfc8259#section-8.1).
 	## reads resource file fname and returns its content as a string
 	## Note that the resource file is expected to be in :utf8 encoding
 	str<< _self.resource_file_as_string(exp_xml_fname)
-	>> _self.assert_xml(str, actual_xml, msg, _scatter sort_data)
+	>> _self.assert_xml(str, actual_xml, msg, sort?)
 _endmethod
 $
 _pragma(classify_level=debug)
-_method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg _gather sort_data)
+_method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg, sort?)
 	## Compares EXP_XML with xml string ACTUAL_XML.
 	## EXP_XML is either a string or a handler which returns a string
 	## when invoked.
 	## MSG is a failure message.
 	## 
-	## SORT_DATA is ignored.
+	## SORT? defaults to true, if true then elements in xml are
+	## sorted before they are asserted
 	##
 	_try
 		actual<< simple_xml.read_element_string(actual_xml)
@@ -66,15 +68,15 @@ _method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg _gather so
 	_endif 
 	expected<< simple_xml.read_element_string(exp_xml)
 	
-	_self.assert_xml_decoded(expected, actual, msg)
+	_self.assert_xml_decoded(expected, actual, msg, sort?.default(_true))
 	>> _self 
 _endmethod
 $
 _pragma(classify_level=debug)
-_private _method xml_assert_mixin.assert_xml_decoded(expected, actual, msg)
+_private _method xml_assert_mixin.assert_xml_decoded(expected, actual, msg, sort?)
 	## 
 	##
-	_if _not _self.compare_xml(expected, actual)
+	_if _not _self.compare_xml(expected, actual, sort?)
 	_then
 		_self.assert_true(
 			_false,
