@@ -597,13 +597,21 @@ _private _method assert.compare_sets( object1, object2, location, errors)
 _endmethod
 $
 _pragma(classify_level=advanced,topic=MUnit)
-_method assert.compare_xml( an_xml_thing, other_xml_thing, _optional sort_elements? )
+_method assert.compare_xml( an_xml_thing, other_xml_thing, _gather sort_paths )
 	##
 	## Compares two chunks of xml and make sure they're the same.
-	## If SORT_ELEMENTS? is true then don't compare elements in
-	## order as parsed but sorts them first
+	## SORT_PATHS are XPath like strings which can contain
+	## metacharacters * and ?. Elements of path which matches to
+	## one of them are sorted before they are compared.
+	## E.g. /bookstore/book/title or /bookstore/b*/title
 	##
-
+	>> _self.int!compare_xml(an_xml_thing, other_xml_thing, "", _scatter sort_paths )
+_endmethod
+$
+_pragma(classify_level=advanced,topic=MUnit)
+_private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _gather sort_paths )
+	## 
+	##
 	# Check the types
 	_if (type<< an_xml_thing.type) _isnt other_xml_thing.type _then
 		_self.assert_true(
@@ -649,10 +657,22 @@ _method assert.compare_xml( an_xml_thing, other_xml_thing, _optional sort_elemen
 		_return _false
 	_endif
 
-	_if sort_elements? _is _true
+	path+<<  "/"+an_xml_thing.type
+	_if _not sort_paths.empty?
 	_then
-		elements<< sorted_collection.new_from(elements, _self.xml_element_sort_proc)
-		other_elements << sorted_collection.new_from(other_elements, _self.xml_element_sort_proc)
+		sort?<< _for p _over sort_paths.fast_elements()
+		_loop
+			_if path.matches?(p)
+			_then _leave _with _true 
+			_endif
+		_finally
+			>> _false 
+		_endloop
+		_if sort?
+		_then 
+			elements<< sorted_collection.new_from(elements, _self.xml_element_sort_proc)
+			other_elements << sorted_collection.new_from(other_elements, _self.xml_element_sort_proc)
+		_endif 
 	_endif
 	
 	_for index _over 1.upto(elements.size)
@@ -675,7 +695,7 @@ _method assert.compare_xml( an_xml_thing, other_xml_thing, _optional sort_elemen
 					      "." ))
 			_return elements[index] = other_elements[index]
 
-		_elif _not _self.compare_xml(elements[index], other_elements[index], sort_elements?)
+		_elif _not _self.int!compare_xml(elements[index], other_elements[index], path, _scatter sort_paths)
 		_then
 			_self.assert_true(
 				_false,
