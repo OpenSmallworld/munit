@@ -30,29 +30,35 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method xml_assert_mixin.assert_xml_file(exp_xml_fname, actual_xml _optional msg _gather sort_data)
+_method xml_assert_mixin.assert_xml_file(exp_xml_fname, actual_xml _optional msg, _gather sort_paths)
 	## Compares xml in resource file EXP_XML_FNAME with xml
 	## string ACTUAL_XML.
 	## MSG is a failure message.
 	##
-	## SORT_DATA is ignored.
+	## SORT_PATHS are XPath like strings which can contain
+	## metacharacters * and ?. Elements of path which matches to
+	## one of them are sorted before they are compared.
+	## E.g. /bookstore/book/title or /bookstore/b*/title
 	##
 	## Note that the resource file is expected to be in :utf8
 	## encoding (https://tools.ietf.org/html/rfc8259#section-8.1).
 	## reads resource file fname and returns its content as a string
 	## Note that the resource file is expected to be in :utf8 encoding
 	str<< _self.resource_file_as_string(exp_xml_fname)
-	>> _self.assert_xml(str, actual_xml, msg, _scatter sort_data)
+	>> _self.assert_xml(str, actual_xml, msg, _scatter sort_paths)
 _endmethod
 $
 _pragma(classify_level=debug)
-_method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg _gather sort_data)
+_method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg _gather sort_paths)
 	## Compares EXP_XML with xml string ACTUAL_XML.
 	## EXP_XML is either a string or a handler which returns a string
 	## when invoked.
 	## MSG is a failure message.
 	## 
-	## SORT_DATA is ignored.
+	## SORT_PATHS are XPath like strings which can contain
+	## metacharacters * and ?. Elements of path which matches to
+	## one of them are sorted before they are compared.
+	## E.g. /bookstore/book/title or /bookstore/b*/title
 	##
 	_try
 		actual<< simple_xml.read_element_string(actual_xml)
@@ -66,15 +72,15 @@ _method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg _gather so
 	_endif 
 	expected<< simple_xml.read_element_string(exp_xml)
 	
-	_self.assert_xml_decoded(expected, actual, msg)
+	_self.assert_xml_decoded(expected, actual, msg, _scatter sort_paths)
 	>> _self 
 _endmethod
 $
 _pragma(classify_level=debug)
-_private _method xml_assert_mixin.assert_xml_decoded(expected, actual, msg)
+_private _method xml_assert_mixin.assert_xml_decoded(expected, actual, msg, _gather sort_paths)
 	## 
 	##
-	_if _not _self.compare_xml(expected, actual)
+	_if _not _self.compare_xml(expected, actual, _scatter sort_paths)
 	_then
 		_self.assert_true(
 			_false,
