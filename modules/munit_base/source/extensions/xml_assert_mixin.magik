@@ -49,7 +49,7 @@ _method xml_assert_mixin.assert_xml_file(exp_xml_fname, actual_xml _optional msg
 _endmethod
 $
 _pragma(classify_level=debug)
-_method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg, _gather sort_paths)
+_method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg _gather sort_paths)
 	## Compares EXP_XML with xml string ACTUAL_XML.
 	## EXP_XML is either a string or a handler which returns a string
 	## when invoked.
