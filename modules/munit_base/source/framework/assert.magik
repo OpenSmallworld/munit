@@ -597,9 +597,20 @@ _private _method assert.compare_sets( object1, object2, location, errors)
 _endmethod
 $
 _pragma(classify_level=advanced,topic=MUnit)
-_method assert.compare_xml( an_xml_thing, other_xml_thing )
+_method assert.compare_xml( an_xml_thing, other_xml_thing, _gather sort_paths )
 	##
 	## Compares two chunks of xml and make sure they're the same.
+	## SORT_PATHS are XPath like strings which can contain
+	## metacharacters * and ?. Elements of path which matches to
+	## one of them are sorted before they are compared.
+	## E.g. /bookstore/book/title or /bookstore/b*/title
+	##
+	>> _self.int!compare_xml(an_xml_thing, other_xml_thing, "", _scatter sort_paths )
+_endmethod
+$
+_pragma(classify_level=advanced,topic=MUnit)
+_private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _gather sort_paths )
+	## 
 	##
 	# Check the types
 	_if (type<< an_xml_thing.type) _isnt other_xml_thing.type _then
@@ -645,20 +656,102 @@ _method assert.compare_xml( an_xml_thing, other_xml_thing )
 				      " in element ",type ))
 		_return _false
 	_endif
+
+	path+<<  "/"+an_xml_thing.type
+	_if _not sort_paths.empty?
+	_then
+		sort?<< _for p _over sort_paths.fast_elements()
+		_loop
+			_if path.matches?(p)
+			_then _leave _with _true 
+			_endif
+		_finally
+			>> _false 
+		_endloop
+		_if sort?
+		_then 
+			elements<< sorted_collection.new_from(elements, _self.xml_element_sort_proc)
+			other_elements << sorted_collection.new_from(other_elements, _self.xml_element_sort_proc)
+		_endif 
+	_endif
+	
 	_for index _over 1.upto(elements.size)
 	_loop
-		_if _not _self.compare_xml(elements[index], other_elements[index])
+		_if elements[index].class_name <> other_elements[index].class_name
 		_then
-		_self.assert_true(
-			_false,
-			write_string( "Expected ", elements[index],
-				      " to match ", other_elements[index],
-				      "." ))
+			_self.assert_true(
+				_false,
+				write_string( "Expected ", elements[index],
+					      " to be of same type as ", other_elements[index],
+					      "." ))
+			_return _false
+		_elif elements[index].is_kind_of?(char16_vector) _andif
+		      other_elements[index].is_kind_of?(char16_vector)
+		_then
+			_self.assert_equals(
+				elements[index], other_elements[index],
+				write_string( "Expected ", elements[index],
+					      " to equal ", other_elements[index],
+					      "." ))
+			_return elements[index] = other_elements[index]
+
+		_elif _not _self.int!compare_xml(elements[index], other_elements[index], path, _scatter sort_paths)
+		_then
+			_self.assert_true(
+				_false,
+				write_string( "Expected ", elements[index],
+					      " to match ", other_elements[index],
+					      "." ))
 			_return _false
 		_endif
 	_endloop
 
 	_return _true
+_endmethod
+$
+_pragma(classify_level=advanced,topic=MUnit)
+_private _method assert.xml_element_sort_proc
+	## 
+	##
+	>> _proc @xml_element_sort_proc(xml_el1, xml_el2)
+		   _if xml_el1.type <> xml_el2.type
+		   _then
+			   _return xml_el1.type < xml_el2.type
+		   _endif
+		   _if xml_el1.xml_contents <> xml_el2.xml_contents
+		   _then
+			   _return xml_el1.xml_contents < xml_el2.xml_contents
+		   _endif
+
+		   e1a<< xml_el1.attributes
+		   e2a<< xml_el2.attributes
+		   e1s<< write_string( _scatter sorted_collection.new_from(e1a.keys) )
+		   e2s<< write_string( _scatter sorted_collection.new_from(e2a.keys) )
+		   _if e1s <> e2s
+		   _then
+			   _return e1s < e2s
+		   _endif
+		   e1s<< write_string( _scatter sorted_collection.new_from(e1a.elements) )
+		   e2s<< write_string( _scatter sorted_collection.new_from(e2a.elements) )
+		   _if e1s <> e2s
+		   _then
+			   _return e1s < e2s
+		   _endif	
+
+		   e1a<< xml_el1.elements.map(_proc (el) >> el.type _endproc)
+		   e2a<< xml_el2.elements.map(_proc (el) >> el.type _endproc)
+		   e1s<< write_string( _scatter sorted_collection.new_from(e1a) )
+		   e2s<< write_string( _scatter sorted_collection.new_from(e2a) )
+		   _if e1s <> e2s
+		   _then
+			   _return e1s < e2s
+		   _endif
+		   e1a<< xml_el1.elements.map(_proc (el) >> el.xml_contents _endproc)
+		   e2a<< xml_el2.elements.map(_proc (el) >> el.xml_contents _endproc)
+		   e1s<< write_string( _scatter sorted_collection.new_from(e1a) )
+		   e2s<< write_string( _scatter sorted_collection.new_from(e2a) )
+		   _return e1s < e2s
+	   _endproc 
 _endmethod
 $
 

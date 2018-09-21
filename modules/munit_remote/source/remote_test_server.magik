@@ -8,7 +8,8 @@ def_slotted_exemplar(:remote_test_server,
 		{:thread,          _unset},
 		{:port,            _unset},
 		{:remote_tests,    _unset},
-		{:machine_mapping, _unset}
+		{:machine_mapping, _unset},
+		{:step_id,          _unset}
 	},
 	{:test_suite, :sw_task_owner})
 $
@@ -19,24 +20,25 @@ $
 
 
 _pragma(classify_level=debug)
-_method remote_test_server.new(port, _gather test_product_names)
+_method remote_test_server.new(port, step_id, _gather test_product_names)
 	## 
 	## 
 
-	>> _clone.init(port, test_product_names)
+	>> _clone.init(port, step_id, test_product_names)
 	
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
-_private _method remote_test_server.init(port, test_product_names)
+_private _method remote_test_server.init(port, step_id, test_product_names)
 	##
 	## 
 
 	_super.init()
 
-	.port << port
+	.step_id << step_id
+	.port    << port
         .connection << tcpip_connection_stream.new(port)
 
         _if .connection _is _unset
@@ -176,42 +178,35 @@ _private _method remote_test_server.send_test_to_client(client)
 	## 
 	##
 
-	# TODO: The server should know what its job number is.  It
-	# should send it to the client with the module and test name.
-	# The client should also know what its job number is.  If the
-	# client receives a test for a different job number, 
-	# - the client should reject it and notify the server
-	# - the client should terminate
-	# - the server should return the test to the queue
-	#
-	# We have seen an example where a client continued running
-	# after its server finished. A new server was started on the
-	# same VM for a different test job. The client was able to
-	# contact the new server and receive a test from it, but was
-	# unable to run it as the test job was for a different
-	# product. This resulted in a confusing error message. 
-
 	done? << _false
-	_try 
-		test  << _self.get_test_to_run()
-		done? << test _is :done
+	_try
+
+		nchars         << client.input.get_signed_int()
+		client_step_id << client.input.get_ascii_chars(nchars)
+		_if client_step_id = .step_id
+		_then 
+			test  << _self.get_test_to_run()
+			done? << test _is :done
 		
-		_if test _isnt :done
-		_then
-			
-			module_name << test.module_name
-			test_name   << test.class_name
-			_if test.class_name _is :test_suite _andif
-			    (suite_name << test.get_name()) _isnt _unset
+			_if test _isnt :done
 			_then
-				test_name << suite_name
+				
+				module_name << test.module_name
+				test_name   << test.class_name
+				_if test.class_name _is :test_suite _andif
+				    (suite_name << test.get_name()) _isnt _unset
+				_then
+					test_name << suite_name
+				_endif
+				
+				_self.send_name_to_client(module_name, client)
+				_self.send_name_to_client(test_name, client)
+				
+				.machine_mapping[test_name] << system.get_host_by_addr(client.remote_address).an_element()
+				
+			_else
+				_self.send_name_to_client("done", client)
 			_endif
-			
-			_self.send_name_to_client(module_name, client)
-			_self.send_name_to_client(test_name, client)
-
-			.machine_mapping[test_name] << system.get_host_by_addr(client.remote_address).an_element()
-
 		_else
 			_self.send_name_to_client("done", client)
 		_endif
@@ -296,7 +291,13 @@ _method remote_test_server.report_machines()
 
 	_for test_name, client _over .machine_mapping.fast_keys_and_elements()
 	_loop
-		show(write_string("Ran ", test_name, " on ", client))
+		# On the machine that runs the server, a client is running in a
+		# different thread.  This lock is to ensure that the server and
+		# client write a complete line to the !output! without
+		# interfering with one another.
+		_lock !output!
+		      show(write_string("Ran ", test_name, " on ", client))
+		_endlock
 	_endloop 
 	
 _endmethod

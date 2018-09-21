@@ -17,7 +17,6 @@ _pragma(classify_level=restricted)
 test_suite_finder.define_shared_constant(:additional_test_suites, hash_table.new(), :public)
 $
 
-
 _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.new()
 
@@ -79,17 +78,18 @@ _method test_suite_finder.find_classes_for_module( module_name )
 	## Return a rope containing all the test_suite owners in the
 	## module MODULE_NAME
 	##
-
+	
 	result << rope.new()
 		
 	_for a_test_suite_owner_name _over .test_suites.keys()
 	_loop
-		a_class << get_global_value( a_test_suite_owner_name )
+		a_class << _self.find_class(a_test_suite_owner_name)
+		
 		_if a_class _isnt _unset _andif
 		    a_class.module_name _is module_name
-		_then 
+		_then
 			result.add( a_class )
-		_endif 
+		_endif
 	_endloop 
 
 	>> result
@@ -97,18 +97,26 @@ _method test_suite_finder.find_classes_for_module( module_name )
 _endmethod
 $
 
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method test_suite_finder.find_class(class_name)
+	## Returns the class named CLASS_NAME.
+	
+	>> get_global_value(write_string("user:", class_name))
+	
+_endmethod
+$
 
 _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.test_and_identifier(module_name, test_name)
 	## 
 	##
-
+	
 	_if _self.additional_test_suites[test_name] _isnt _unset 
 	_then
 		test       << _self.additional_test_suites[test_name][:test_suite]
 		identifier << _self.additional_test_suites[test_name][:module_name]
 	_else
-		test       << !current_package![test_name]
+		test       << _self.find_class(test_name)
 		identifier << sw_module_manager.module(module_name).product.name
 	_endif
 
