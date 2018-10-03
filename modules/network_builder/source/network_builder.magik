@@ -1,0 +1,287 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+## A generic engine to build a network to test 
+## network_follower
+## It is product independent.
+## 
+## Usasge example:
+## nb << network_builder.new(:gis)
+## nb.build_linear_simple_network(:min_road, :centre_line, property_list.new_with(:name, "Road"))
+##
+## nb.build_linear_with_rwo_points_simple_network(:min_road, :roundabout, :centre_line, :location, property_list.new_with(:name, "Road"), property_list.new_with(:name, "Roundabout", :cost_penalty, 1))
+##
+## nb.build_linear_simple_network_with_non_splitted_link(:min_road, :centre_line, property_list.new_with(:name, "Road"))
+## 
+def_slotted_exemplar( :network_builder,
+	{
+		{:ds_view, _unset},
+		{:all_network_elements, _unset},
+		{:network_tree, _unset},
+		{:network_tree_list, _unset},
+		{:world, _unset}
+	},
+	{})
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.new(p_view_name, _optional p_world)
+	## 
+	## Return a new instance of the network_builder.
+	##
+
+	>> _clone.init(p_view_name, p_world)
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.init(p_view_name, p_world)
+	## 
+	## Inits the new network_builder instance.
+	##
+
+	.ds_view << gis_program_manager.cached_dataset ( p_view_name )
+	.all_network_elements << rope.new()
+	.network_tree << display_tree.new(:root_tree)
+	.network_tree_list << equality_hash_table.new()
+	.world << p_world.default(.ds_view.world( 0, 0 ))
+	
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.network_tree_list
+	## 
+	## Return the value of the .network_tree_list slot
+	##
+
+	>> .network_tree_list
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.all_network_elements
+	## 
+	## Return the value of the .all_network_elements slot
+	##
+
+	>> .all_network_elements
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.network_tree
+	## 
+	## Return the value of the .network_tree slot
+	##
+
+	>> .network_tree
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.ds_view
+	## 
+	## Return the value of the .ds_view slot
+	##
+
+	>> .ds_view
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_private _method network_builder.add_to_network_tree(chain)
+	##
+	## 
+	##
+
+	link << chain.link(1) # assumed we have only one link per chain
+	first_node << chain.first_node
+	last_node << chain.last_node
+		
+	_if .network_tree _is _unset 
+	_then
+		.network_tree << display_tree.new(:root_tree)
+		.network_tree_list << equality_hash_table.new()
+	_endif
+
+	_if (parent_tree << .network_tree_list[first_node]) _is _unset 
+	_then
+		parent_tree << display_tree.new(first_node, _unset, .network_tree)
+		.network_tree_list[first_node] << parent_tree
+	_endif 
+
+	link_tree << display_tree.new(last_node, link, parent_tree)
+	.network_tree_list[last_node] << link_tree
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.build_link_with_rwo_point(linear_table_name, point_table_name, linear_geometry_field_name, point_geometry_field_name, 
+		linear_xy_xy_coordinates, point_xy_coordinate, linear_attributes, point_attributes)
+	## 
+	## 
+	##
+
+	linear_record << _self.build_link(linear_table_name, linear_geometry_field_name, linear_xy_xy_coordinates, linear_attributes)
+	point_record << _self.insert_rwo_point(point_table_name, point_geometry_field_name, point_xy_coordinate, point_attributes)
+	
+	>> linear_record, point_record
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.insert_rwo_point(point_table_name, geometry_field_name, xy_coordinate, attributes)
+	## 
+	## 
+	##
+
+	collection << _self.ds_view.collection(point_table_name)
+	ps_point << pseudo_point.new_for_world( coordinate.new_from( xy_coordinate ), .world )
+	attributes[geometry_field_name] << ps_point
+	trans << record_transaction.new_insert( collection, attributes)
+	record << trans.run()
+	
+	.all_network_elements.add(record)
+
+	>> record
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.build_link(table_name, geometry_field_name, coordinates, attributes)
+	## 
+	## 
+	##
+
+	collection << _self.ds_view.collection(table_name)
+	pc << pseudo_chain.new_for_world( sector.new_with_xy_vector(coordinates), .world )
+	attributes[geometry_field_name] << pc
+	trans << record_transaction.new_insert( collection, attributes)
+	record << trans.run()
+	
+	.all_network_elements.add(record)
+	
+	chain << record.perform(geometry_field_name)
+	_self.add_to_network_tree(chain)
+
+	>> record
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.build_linear_with_rwo_points_simple_network(linear_table_name, point_table_name, linear_geometry_field_name, point_geometry_field_name, linear_attributes, point_attributes)
+	##
+	##    *    *
+	##    |    |
+	## *--* -- *
+	##    |    |
+	##    *    *__*
+	## 
+	
+	coords << {
+		{{0,0, 100000,0}, {100000,0}},
+		{{100000,0, 100000,100000}, {100000,100000}},
+		{{100000,0, 100000,-100000}, {100000,-100000}},
+		{{100000,0, 200000,0}, {200000,0}},
+		{{200000,0, 200000,100000}, {200000,100000}},
+		{{200000,0, 200000,-100000}, {200000,-100000}}, 
+		{{200000,-100000, 300000,-100000}, {300000,-100000}}
+	}
+	
+	_self.insert_rwo_point(point_table_name, point_geometry_field_name, coordinate.new(0,0), point_attributes)
+	
+	_for i_coords _over coords.fast_elements()
+	_loop
+		_self.build_link_with_rwo_point(linear_table_name, point_table_name, linear_geometry_field_name, point_geometry_field_name, 
+			i_coords[1], coordinate.new(i_coords[2][1], i_coords[2][2]), linear_attributes, point_attributes)
+	_endloop 
+
+	_self.insert_rwo_point(point_table_name, point_geometry_field_name, coordinate.new(coords.last.last[1], coords.last.last[2]), point_attributes)
+	
+	>> .network_tree
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.build_linear_simple_network(linear_table_name, linear_geometry_name, linear_attributes)
+	##
+	##   |   |
+	## --  --
+	##   |   |__
+	## 
+	
+	linear_collection << _self.ds_view.collection(linear_table_name)
+
+	# (0,0) - (100000,0)
+	_self.build_link(linear_table_name, linear_geometry_name, {0,0, 100000,0}, linear_attributes)
+	
+	# (100000,0) - (100000,100000)
+	_self.build_link(linear_table_name, linear_geometry_name, {100000,0, 100000,100000}, linear_attributes)
+	
+	# (100000,0) - (100000,-100000)
+	_self.build_link(linear_table_name, linear_geometry_name, {100000,0, 100000,-100000}, linear_attributes)
+	
+	# (100000,0) - (200000,0)
+	_self.build_link(linear_table_name, linear_geometry_name, {100000,0, 200000,0}, linear_attributes)
+	
+	# (200000,0) - (200000,100000)
+	_self.build_link(linear_table_name, linear_geometry_name, {200000,0, 200000,100000}, linear_attributes)
+	
+	# (200000,0) - (200000,-100000)
+	_self.build_link(linear_table_name, linear_geometry_name, {200000,0, 200000,-100000}, linear_attributes)
+	
+	# (200000,-100000) - (300000,-100000)
+	_self.build_link(linear_table_name, linear_geometry_name, {200000,-100000, 300000,-100000}, linear_attributes)
+	
+	
+	>> .network_tree
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.build_linear_simple_network_with_non_splitted_link(linear_table_name, linear_geometry_name, linear_attributes)
+	##
+	## Network with connected links to the not splitted link
+	##   |   |
+	## __________
+	##   |   |__
+	## 
+	
+	linear_collection << _self.ds_view.collection(linear_table_name)
+
+	# (0,0) - (300000,0)
+	_self.build_link(linear_table_name, linear_geometry_name, {0,0, 300000,0}, linear_attributes)
+	
+	# (100000,0) - (100000,100000)
+	_self.build_link(linear_table_name, linear_geometry_name, {100000,0, 100000,100000}, linear_attributes)
+	
+	# (100000,0) - (100000,-100000)
+	_self.build_link(linear_table_name, linear_geometry_name, {100000,0, 100000,-100000}, linear_attributes)
+	
+	# (100000,0) - (200000,0)
+	_self.build_link(linear_table_name, linear_geometry_name, {100000,0, 200000,0}, linear_attributes)
+	
+	# (200000,0) - (200000,100000)
+	_self.build_link(linear_table_name, linear_geometry_name, {200000,0, 200000,100000}, linear_attributes)
+	
+	# (200000,0) - (200000,-100000)
+	_self.build_link(linear_table_name, linear_geometry_name, {200000,0, 200000,-100000}, linear_attributes)
+	
+	# (200000,-100000) - (300000,-100000)
+	_self.build_link(linear_table_name, linear_geometry_name, {200000,-100000, 300000,-100000}, linear_attributes)
+	
+	
+	>> .network_tree
+_endmethod
+$
+
+
+
+
+
