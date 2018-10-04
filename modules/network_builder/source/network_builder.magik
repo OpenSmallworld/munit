@@ -15,7 +15,7 @@ _pragma(classify_level=restricted)
 ##
 ## nb.build_linear_simple_network_with_non_splitted_link(:min_road, :centre_line, property_list.new_with(:name, "Road"))
 ## 
-def_slotted_exemplar( :network_builder,
+def_slotted_exemplar(:network_builder,
 	{
 		{:ds_view, _unset},
 		{:all_network_elements, _unset},
@@ -42,11 +42,11 @@ _private _method network_builder.init(view_name, world)
 	## Inits the new network_builder instance.
 	##
 
-	.ds_view << gis_program_manager.cached_dataset (view_name)
+	.ds_view << gis_program_manager.cached_dataset(view_name)
 	.all_network_elements << rope.new()
 	.network_tree << display_tree.new(:root_tree)
 	.network_tree_list << equality_hash_table.new()
-	.world << world.default(.ds_view.world( 0, 0 ))
+	.world << world.default(.ds_view.world(0,0))
 	
 	>> _self 
 _endmethod
@@ -175,10 +175,10 @@ _method network_builder.build_linear_with_rwo_points_simple_network(linear_table
 	
 	_self.insert_rwo_point(point_table_name, point_geometry_field_name, coordinate.new(0,0), point_attributes)
 	
-	_for coords _over coords.fast_elements()
+	_for crds _over coords.fast_elements()
 	_loop
 		_self.build_link_with_rwo_point(linear_table_name, point_table_name, linear_geometry_field_name, point_geometry_field_name, 
-			ioords[1], coordinate.new(coords[2][1], coords[2][2]), linear_attributes, point_attributes)
+			crds[1], coordinate.new(crds[2][1], crds[2][2]), linear_attributes, point_attributes)
 	_endloop 
 
 	_self.insert_rwo_point(point_table_name, point_geometry_field_name, coordinate.new(coords.last.last[1], coords.last.last[2]), point_attributes)
