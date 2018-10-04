@@ -27,38 +27,28 @@ def_slotted_exemplar( :network_builder,
 $
 
 _pragma(classify_level=debug, topic={munit})
-_method network_builder.new(p_view_name, _optional p_world)
+_method network_builder.new(view_name, _optional world)
 	## 
 	## Return a new instance of the network_builder.
 	##
 
-	>> _clone.init(p_view_name, p_world)
+	>> _clone.init(view_name, world)
 _endmethod
 $
 
 _pragma(classify_level=debug, topic={munit})
-_method network_builder.init(p_view_name, p_world)
+_private _method network_builder.init(view_name, world)
 	## 
 	## Inits the new network_builder instance.
 	##
 
-	.ds_view << gis_program_manager.cached_dataset ( p_view_name )
+	.ds_view << gis_program_manager.cached_dataset (view_name)
 	.all_network_elements << rope.new()
 	.network_tree << display_tree.new(:root_tree)
 	.network_tree_list << equality_hash_table.new()
-	.world << p_world.default(.ds_view.world( 0, 0 ))
+	.world << world.default(.ds_view.world( 0, 0 ))
 	
 	>> _self 
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={munit})
-_method network_builder.network_tree_list
-	## 
-	## Return the value of the .network_tree_list slot
-	##
-
-	>> .network_tree_list
 _endmethod
 $
 
@@ -79,16 +69,6 @@ _method network_builder.network_tree
 	##
 
 	>> .network_tree
-_endmethod
-$
-
-_pragma(classify_level=debug, topic={munit})
-_method network_builder.ds_view
-	## 
-	## Return the value of the .ds_view slot
-	##
-
-	>> .ds_view
 _endmethod
 $
 
@@ -121,7 +101,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug, topic={munit})
-_method network_builder.build_link_with_rwo_point(linear_table_name, point_table_name, linear_geometry_field_name, point_geometry_field_name, 
+_private _method network_builder.build_link_with_rwo_point(linear_table_name, point_table_name, linear_geometry_field_name, point_geometry_field_name, 
 		linear_xy_xy_coordinates, point_xy_coordinate, linear_attributes, point_attributes)
 	## 
 	## 
@@ -135,15 +115,15 @@ _endmethod
 $
 
 _pragma(classify_level=debug, topic={munit})
-_method network_builder.insert_rwo_point(point_table_name, geometry_field_name, xy_coordinate, attributes)
+_private _method network_builder.insert_rwo_point(point_table_name, geometry_field_name, xy_coordinate, attributes)
 	## 
 	## 
 	##
 
-	collection << _self.ds_view.collection(point_table_name)
-	ps_point << pseudo_point.new_for_world( coordinate.new_from( xy_coordinate ), .world )
+	collection << .ds_view.collection(point_table_name)
+	ps_point << pseudo_point.new_for_world(coordinate.new_from(xy_coordinate), .world)
 	attributes[geometry_field_name] << ps_point
-	trans << record_transaction.new_insert( collection, attributes)
+	trans << record_transaction.new_insert(collection, attributes)
 	record << trans.run()
 	
 	.all_network_elements.add(record)
@@ -153,21 +133,21 @@ _endmethod
 $
 
 _pragma(classify_level=debug, topic={munit})
-_method network_builder.build_link(table_name, geometry_field_name, coordinates, attributes)
+_private _method network_builder.build_link(table_name, geometry_field_name, coordinates, attributes)
 	## 
 	## 
 	##
 
 	collection << _self.ds_view.collection(table_name)
-	pc << pseudo_chain.new_for_world( sector.new_with_xy_vector(coordinates), .world )
+	pc << pseudo_chain.new_for_world(sector.new_with_xy_vector(coordinates), .world)
 	attributes[geometry_field_name] << pc
-	trans << record_transaction.new_insert( collection, attributes)
+	trans << record_transaction.new_insert(collection, attributes)
 	record << trans.run()
 	
 	.all_network_elements.add(record)
 	
-	chain << record.perform(geometry_field_name)
-	_self.add_to_network_tree(chain)
+	linear_geometry << record.perform(geometry_field_name)
+	_self.add_to_network_tree(linear_geometry)
 
 	>> record
 _endmethod
@@ -195,10 +175,10 @@ _method network_builder.build_linear_with_rwo_points_simple_network(linear_table
 	
 	_self.insert_rwo_point(point_table_name, point_geometry_field_name, coordinate.new(0,0), point_attributes)
 	
-	_for i_coords _over coords.fast_elements()
+	_for coords _over coords.fast_elements()
 	_loop
 		_self.build_link_with_rwo_point(linear_table_name, point_table_name, linear_geometry_field_name, point_geometry_field_name, 
-			i_coords[1], coordinate.new(i_coords[2][1], i_coords[2][2]), linear_attributes, point_attributes)
+			ioords[1], coordinate.new(coords[2][1], coords[2][2]), linear_attributes, point_attributes)
 	_endloop 
 
 	_self.insert_rwo_point(point_table_name, point_geometry_field_name, coordinate.new(coords.last.last[1], coords.last.last[2]), point_attributes)
