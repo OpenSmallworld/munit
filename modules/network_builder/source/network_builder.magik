@@ -138,7 +138,7 @@ _private _method network_builder.build_link(table_name, geometry_field_name, coo
 	## 
 	##
 
-	collection << _self.ds_view.collection(table_name)
+	collection << .ds_view.collection(table_name)
 	pc << pseudo_chain.new_for_world(sector.new_with_xy_vector(coordinates), .world)
 	attributes[geometry_field_name] << pc
 	trans << record_transaction.new_insert(collection, attributes)
@@ -195,7 +195,7 @@ _method network_builder.build_linear_simple_network(linear_table_name, linear_ge
 	##   |   |__
 	## 
 	
-	linear_collection << _self.ds_view.collection(linear_table_name)
+	linear_collection << .ds_view.collection(linear_table_name)
 
 	# (0,0) - (100000,0)
 	_self.build_link(linear_table_name, linear_geometry_name, {0,0, 100000,0}, linear_attributes)
@@ -233,7 +233,7 @@ _method network_builder.build_linear_simple_network_with_non_splitted_link(linea
 	##   |   |__
 	## 
 	
-	linear_collection << _self.ds_view.collection(linear_table_name)
+	linear_collection << .ds_view.collection(linear_table_name)
 
 	# (0,0) - (300000,0)
 	_self.build_link(linear_table_name, linear_geometry_name, {0,0, 300000,0}, linear_attributes)
