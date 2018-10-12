@@ -116,7 +116,7 @@ _method stub_method_helper.method_stubbed?(class, method_name)
 	##
 	_lock _self
 	      method_key << _self.method_key(class, method_name)
-	      >> _self.replaced_method_data.includes_key?(method_key) _orif
+	      _return _self.replaced_method_data.includes_key?(method_key) _orif
 		      _self.defined_method_data.includes_key?(method_key)
 	_endlock
 _endmethod
