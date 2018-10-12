@@ -693,8 +693,7 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _g
 				write_string( "Expected ", elements[index],
 					      " to equal ", other_elements[index],
 					      "." ))
-			_return elements[index] = other_elements[index]
-
+			_continue 
 		_elif _not _self.int!compare_xml(elements[index], other_elements[index], path, _scatter sort_paths)
 		_then
 			_self.assert_true(
