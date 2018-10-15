@@ -614,11 +614,8 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _g
 	##
 	# Check the types
 	_if (type<< an_xml_thing.type) _isnt other_xml_thing.type _then
-		_self.assert_true(
-			_false,
-			write_string( "Expected element <", type,
-				      "> but found element <", other_xml_thing.type,
-				      ">." ))
+		_self.fail(write_string( "Expected element <", type,
+					 "> but found element <", other_xml_thing.type, ">." ))
 		_return _false
 	_endif
 
@@ -626,21 +623,17 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _g
 	other_attrib_list << other_xml_thing.attributes
 
 	_if an_attrib_list.size _isnt other_attrib_list.size _then
-		_self.assert_true(
-			_false,
-			write_string( "Expected ", an_attrib_list.size,
-				      " attributes but found ", other_attrib_list.size,
-				      " in element ",type ))
+		_self.fail(write_string( "Expected ", an_attrib_list.size,
+					 " attributes but found ", other_attrib_list.size,
+					 " in element ",type ))
 		_return _false
 	_endif
 	_for k,e _over an_attrib_list.fast_keys_and_elements()
 	_loop
 		_if _not ( other_attrib_list[k.as_symbol()] = e.as_symbol() ) _then
-		_self.assert_true(
-			_false,
-			write_string( "Expected attribute ", k, " to be ", e,
-				      " but found ", other_attrib_list[k],
-				      " in element ",type ))
+		_self.fail(write_string( "Expected attribute ", k, " to be ", e,
+					 " but found ", other_attrib_list[k],
+					 " in element ",type ))
 			_return _false
 		_endif
 	_endloop
@@ -649,11 +642,9 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _g
 	other_elements << other_xml_thing.elements
 	_if elements.size _isnt other_elements.size
 	_then
-		_self.assert_true(
-			_false,
-			write_string( "Expected ", elements.size,
-				      " child elements but found ", other_elements.size,
-				      " in element ",type ))
+		_self.fail(write_string( "Expected ", elements.size,
+					 " child elements but found ", other_elements.size,
+					 " in element ",type ))
 		_return _false
 	_endif
 
@@ -679,29 +670,19 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _g
 	_loop
 		_if elements[index].class_name <> other_elements[index].class_name
 		_then
-			_self.assert_true(
-				_false,
-				write_string( "Expected ", elements[index],
-					      " to be of same type as ", other_elements[index],
-					      "." ))
+			_self.fail(write_string( "Expected ", elements[index], " to be of same type as ", other_elements[index], "." ))
 			_return _false
+			
 		_elif elements[index].is_kind_of?(char16_vector) _andif
 		      other_elements[index].is_kind_of?(char16_vector)
 		_then
-			_self.assert_equals(
-				elements[index], other_elements[index],
-				write_string( "Expected ", elements[index],
-					      " to equal ", other_elements[index],
-					      "." ))
-			_return elements[index] = other_elements[index]
+			eq?<< _self.assert_equals(elements[index], other_elements[index],
+						  write_string( "Expected ", elements[index], " to equal ", other_elements[index], "." ))
+			_if _not eq? _then _return _false _endif
 
 		_elif _not _self.int!compare_xml(elements[index], other_elements[index], path, _scatter sort_paths)
 		_then
-			_self.assert_true(
-				_false,
-				write_string( "Expected ", elements[index],
-					      " to match ", other_elements[index],
-					      "." ))
+			_self.fail(write_string( "Expected ", elements[index], " to match ", other_elements[index], "." ))
 			_return _false
 		_endif
 	_endloop
