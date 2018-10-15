@@ -66,16 +66,17 @@ _method stub_method_helper.replace_method(class, method_name, method_proc)
 	## Use :|restore_stubbed_methods()| to undo any changes made to
 	## methods using this class.
 	##
-
-	method_key << _self.method_key(class, method_name)
-	_if class.define_method_target.local_method?(method_name)
-	_then
-		class.sys!save_and_replace_method(method_name, method_proc)
-		_self.replaced_method_data[ method_key ] << class
-	_else
-		class.define_method(method_name, method_proc, _false)
-		_self.defined_method_data[ method_key ] << class
-	_endif
+	_lock _self
+	      method_key << _self.method_key(class, method_name)
+	      _if class.define_method_target.local_method?(method_name)
+	      _then
+		      class.sys!save_and_replace_method(method_name, method_proc)
+		      _self.replaced_method_data[ method_key ] << class
+	      _else
+		      class.define_method(method_name, method_proc, _false)
+		      _self.defined_method_data[ method_key ] << class
+	      _endif
+	_endlock
 _endmethod
 $
 
@@ -87,19 +88,21 @@ _method stub_method_helper.restore_stubbed_methods()
 	##
 	## This method restores ALL method tables
 	##
-	_for i_method_string, j_class _over _self.replaced_method_data.keys_and_elements()
-	_loop
-		method_name << i_method_string.split_by("$$$")[2].as_symbol()
-		j_class.sys!restore_saved_method(method_name)
-		_self.replaced_method_data.remove_key(i_method_string)
-	_endloop
-
-	_for i_method_string, j_class _over _self.defined_method_data.keys_and_elements()
-	_loop
-		method_name << i_method_string.split_by("$$$")[2].as_symbol()
-		j_class.remove_method( method_name )
-		_self.defined_method_data.remove_key(i_method_string)
-	_endloop
+	_lock _self
+	      _for i_method_string, j_class _over _self.replaced_method_data.keys_and_elements()
+	      _loop
+		      method_name << i_method_string.split_by("$$$")[2].as_symbol()
+		      j_class.sys!restore_saved_method(method_name)
+		      _self.replaced_method_data.remove_key(i_method_string)
+	      _endloop
+	      
+	      _for i_method_string, j_class _over _self.defined_method_data.keys_and_elements()
+	      _loop
+		      method_name << i_method_string.split_by("$$$")[2].as_symbol()
+		      j_class.remove_method( method_name )
+		      _self.defined_method_data.remove_key(i_method_string)
+	      _endloop
+	_endlock
 _endmethod
 $
 
@@ -111,11 +114,11 @@ _method stub_method_helper.method_stubbed?(class, method_name)
 	## Check in the replaced_method_data slot if the method is
 	## present.
 	##
-	
-	method_key << _self.method_key(class, method_name)
-	>> _self.replaced_method_data.includes_key?(method_key) _orif
-		_self.defined_method_data.includes_key?(method_key)
-	
+	_lock _self
+	      method_key << _self.method_key(class, method_name)
+	      _return _self.replaced_method_data.includes_key?(method_key) _orif
+		      _self.defined_method_data.includes_key?(method_key)
+	_endlock
 _endmethod
 $
 
