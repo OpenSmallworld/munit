@@ -1451,7 +1451,7 @@ _method application_system_test_mixin.then_map_contains( rwo_collection_name, ex
 	geoms << _self.get_map_geoms()
 	
 	actual_number << 0
-	_for a_rwo _over geoms.rwo_set().fast_elements()
+	_for a_rwo _over equality_set.new_from(geoms.rwo_set()).fast_elements()
 	_loop
 		col << a_rwo.source_collection
 		_if col.name = rwo_collection_name _orif
