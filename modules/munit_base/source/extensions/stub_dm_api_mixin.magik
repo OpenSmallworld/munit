@@ -35,6 +35,7 @@ _method stub_dm_api_mixin.stub_dm_api()
 
 	_global swg_dsn_admin_engine
 	_local pr<< _self.properties
+	_local me << _self
 	pr[:design_operations]<< rope.new()
 	pr[:design]<< _unset
 	pr[:designs]<< rope.new()
