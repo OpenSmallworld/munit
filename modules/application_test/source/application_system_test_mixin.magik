@@ -1422,7 +1422,14 @@ _private _method application_system_test_mixin.get_map_geoms()
 
 	manager << _self.map_manager
 	mv << manager.current_map_view
-	>> mv.get_visible_geometry_set()
+	# The map view returns a composite geometry set that may have
+	# the same rwo present in multiple sets.  Converting a
+	# composite geometry set to an rwo set, creates a composite
+	# rwo set that may have the same rwo present more than
+	# once.  Return a standard geometry set to ensure that when it
+	# is converted to an rwo_set, the rwos in the set are unique.
+	gs << geometry_set.new_from(mv.get_visible_geometry_set())
+	>> gs
 _endmethod
 $
 

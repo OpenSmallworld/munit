@@ -35,6 +35,7 @@ _method stub_dm_api_mixin.stub_dm_api()
 
 	_global swg_dsn_admin_engine
 	_local pr<< _self.properties
+	_local me << _self
 	pr[:design_operations]<< rope.new()
 	pr[:design]<< _unset
 	pr[:designs]<< rope.new()
@@ -126,6 +127,24 @@ _method stub_dm_api_mixin.stub_dm_api()
 						  _endif
 						  >> ret_pr
 					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|create_project()|,
+					  _proc (name, _optional datasets, area_sr, attrs)
+						  _import pr
+						  pr[:project_name] << name
+						  pr[:design_operations].add({:create_project, name})
+					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|create_scheme()|,
+					  _proc (a_project, parent, name, datasets, as_partition?, _optional attrs)
+						  _import pr, me
+						  pr[:scheme_name] << name
+						  pr[:design_operations].add({:create_scheme, name})
+						  _if attrs _isnt _unset
+						  _then
+							  st << attrs[:status]
+						  _endif
+						  me.given_a_scheme( pr[:project_name], pr[:scheme_name], st.default("New Job"))
+					  _endproc )
+
 	>> _self 
 _endmethod
 $
