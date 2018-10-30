@@ -104,6 +104,23 @@ _method stub_dm_api_mixin.stub_dm_api()
 						  _endloop
 						  >> ret
 					  _endproc )
+	stub_method_helper.replace_method(swg_dsn_admin_engine, :|find_project_or_scheme()|,
+					  _proc (name, type _optional raise_errors?)
+						  _import pr
+						  pr[:design_operations].add({:find_project_or_scheme, name, type})
+						  _for scheme _over pr[:designs].fast_elements()
+ 						  _loop							  
+							  _if type _is :project _andif scheme.inf_project = name
+							  _then
+								  project<< mock( "project" , swg_dsn_project)
+								  stub( project ).name.then_return( name )
+								  _return project 
+							  _elif type _is :scheme _andif scheme.name = name
+ 							  _then
+								  _return scheme
+ 							  _endif 
+ 						  _endloop
+					  _endproc )
 	stub_method_helper.replace_method(swg_dsn_admin_engine, :|get_current_job()|,
 					  _proc ()
 						  _import pr
