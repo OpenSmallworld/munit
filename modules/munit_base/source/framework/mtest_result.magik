@@ -128,38 +128,43 @@ $
 _pragma(classify_level=advanced,topic=MUnit)
 _method mtest_result.run_protected( a_test , a_protectable )
 	## Performs A_PROTECTABLE on A_TEST with errors handling.
-
+	_dynamic !output!
 	_local me << _self
 	_local tag << "run".copy()
 	_local outer_tag << "escape".copy()
         _local final?, ok?
-        
-        _for i _over 0.upwards()
-        _loop 
-                final? << i >= a_test.retry_count
+	_local out<< !output!
+        _local attempt<< 0
+        _loop
+		attempt+<< 1
+                final? << attempt > a_test.retry_count
                 ok? << _true
-
 		normal_exit? << _false
+		
 		_catch outer_tag
 		       _protect 
 			       _catch tag
 				      
 				      _handling assertion_failed_warning
 				      _with _proc( a_condition )
-						    _import a_test, me, final?, ok?, i
+						    _dynamic !output!
+						    _import a_test, me, final?, ok?, attempt, out
+						    !output!<< out
 						    _if final?
 						    _then me.add_failure( a_test, a_condition )
-						    _else me.report_non_final_problem( a_test, a_condition, _false, i+1)
+						    _else me.report_non_final_problem( a_test, a_condition, _false, attempt)
 						    _endif 
 						    ok? << _false 
 				      _endproc
 				      
 				      _handling error
 				      _with _proc( a_condition )
-						    _import tag, a_test, me, final?, ok?, i
+						    _dynamic !output!
+						    _import tag, a_test, me, final?, ok?, attempt, out
+						    !output!<< out
 						    _if final?
 						    _then me.add_error( a_test, a_condition )
-						    _else me.report_non_final_problem( a_test, a_condition , _true, i+1)
+						    _else me.report_non_final_problem( a_test, a_condition , _true, attempt)
 						    _endif 
 						    ok? << _false 
 						    _throw tag
@@ -176,7 +181,7 @@ _method mtest_result.run_protected( a_test , a_protectable )
 							     "Something escaped from the test harness error handling.")
 				       _if final?
 				       _then me.add_error( a_test, a_condition )
-				       _else me.report_non_final_problem( a_test, a_condition , _true, i+1)
+				       _else me.report_non_final_problem( a_test, a_condition , _true, attempt)
 				       _endif 
 				       ok? << _false
 				       _throw outer_tag
