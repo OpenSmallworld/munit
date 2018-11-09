@@ -605,22 +605,11 @@ _method assert.compare_xml( an_xml_thing, other_xml_thing, _gather sort_paths )
 	## one of them are sorted before they are compared.
 	## E.g. /bookstore/book/title or /bookstore/b*/title
 	##
-	>> _self.int!compare_xml(an_xml_thing, other_xml_thing, "", 1, _scatter sort_paths )
+	>> _self.int!compare_xml(an_xml_thing, other_xml_thing, "", _scatter sort_paths )
 _endmethod
 $
 _pragma(classify_level=advanced,topic=MUnit)
-_method assert.compare_xml_with_level( an_xml_thing, other_xml_thing, level, _gather sort_paths )
-	## See compare_xml()
-	## Additional LEVEL is important for sorting on SORT_PATHS:
-	##  1 means sorting based on elements (like compare_xml()),
-	##  2 based on elements and children etc.
-	##
-	>> _self.int!compare_xml(an_xml_thing, other_xml_thing, "", level, _scatter sort_paths )
-_endmethod
-$
-
-_pragma(classify_level=advanced,topic=MUnit)
-_private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, level, _gather sort_paths )
+_private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _gather sort_paths )
 	## 
 	##
 	# Check the types
@@ -672,8 +661,8 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, le
 		_endloop
 		_if sort?
 		_then
-			elements<< sorted_collection.new_from(elements, _self.xml_element_sort_proc(level))
-			other_elements << sorted_collection.new_from(other_elements, _self.xml_element_sort_proc(level))
+			elements<< sorted_collection.new_from(elements, _self.xml_element_sort_proc)
+			other_elements << sorted_collection.new_from(other_elements, _self.xml_element_sort_proc)
 		_endif
 	_endif
 	
@@ -702,9 +691,17 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, le
 _endmethod
 $
 _pragma(classify_level=advanced,topic=MUnit)
-_private _method assert.xml_element_sort_proc(levels)
-	## LEVELS - 1 means checking self, 2 self and children etc.
+assert.define_shared_constant(:xml_element_sort_levels,
+	## 2 means checking self and children
+	2, _true )
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
+_private _method assert.xml_element_sort_proc
+	## 
 	##
+	_local levels<< _self.xml_element_sort_levels
+	
 	>> _proc @xml_element_sort_proc(xml_el1, xml_el2 _optional level)
 		   #
 		   _import levels 
