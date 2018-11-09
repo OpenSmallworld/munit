@@ -660,10 +660,10 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _g
 			>> _false 
 		_endloop
 		_if sort?
-		_then 
+		_then
 			elements<< sorted_collection.new_from(elements, _self.xml_element_sort_proc)
 			other_elements << sorted_collection.new_from(other_elements, _self.xml_element_sort_proc)
-		_endif 
+		_endif
 	_endif
 	
 	_for index _over 1.upto(elements.size)
@@ -691,10 +691,21 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _g
 _endmethod
 $
 _pragma(classify_level=advanced,topic=MUnit)
+assert.define_shared_constant(:xml_element_sort_levels,
+	## 2 means checking self and children
+	2, _true )
+$
+
+_pragma(classify_level=advanced,topic=MUnit)
 _private _method assert.xml_element_sort_proc
 	## 
 	##
-	>> _proc @xml_element_sort_proc(xml_el1, xml_el2)
+	_local levels<< _self.xml_element_sort_levels
+	
+	>> _proc @xml_element_sort_proc(xml_el1, xml_el2 _optional level)
+		   #
+		   _import levels 
+		   level<< level.default(levels)
 		   _if xml_el1.type <> xml_el2.type
 		   _then
 			   _return xml_el1.type < xml_el2.type
@@ -726,12 +737,38 @@ _private _method assert.xml_element_sort_proc
 		   _if e1s <> e2s
 		   _then
 			   _return e1s < e2s
+		   _else
+			   types<< e1a
 		   _endif
 		   e1a<< xml_el1.elements.map(_proc (el) >> el.xml_contents _endproc)
 		   e2a<< xml_el2.elements.map(_proc (el) >> el.xml_contents _endproc)
 		   e1s<< write_string( _scatter sorted_collection.new_from(e1a) )
 		   e2s<< write_string( _scatter sorted_collection.new_from(e2a) )
-		   _return e1s < e2s
+		   
+		   _if e1s <> e2s
+		   _then
+			   _return e1s < e2s
+		   _elif level - 1 > 0
+		   _then
+			   _for type _over types.fast_elements()
+			   _loop
+				   # comparing just first of each type because we don't know how they are sorted
+				   s1<< _for i _over xml_el1.elements.fast_elements()
+				   _loop
+					   _if i.type _is type _then _leave _with i _endif 
+				   _endloop
+				   s2<< _for i _over xml_el2.elements.fast_elements()
+				   _loop
+					   _if i.type _is type _then _leave _with i _endif 
+				   _endloop
+				   g<< xml_el1
+				   comp<< _self(s1, s2, level - 1)
+				   _if comp _isnt _maybe _then _return comp _endif 
+			   _endloop
+			   >> _maybe 
+		   _else
+			   >> _maybe 
+		   _endif 
 	   _endproc 
 _endmethod
 $
