@@ -752,7 +752,8 @@ _private _method assert.xml_element_sort_proc
 		   _then
 			   _for type _over types.fast_elements()
 			   _loop
-				   # comparing just first of each type because we don't know how they are sorted
+				   # todo comparing just first of each type because we don't know how they are sorted
+				   # Idealy we should then compare next of each type etc. until result is not maybe or exhausted
 				   s1<< _for i _over xml_el1.elements.fast_elements()
 				   _loop
 					   _if i.type _is type _then _leave _with i _endif 
@@ -761,7 +762,6 @@ _private _method assert.xml_element_sort_proc
 				   _loop
 					   _if i.type _is type _then _leave _with i _endif 
 				   _endloop
-				   g<< xml_el1
 				   comp<< _self(s1, s2, level - 1)
 				   _if comp _isnt _maybe _then _return comp _endif 
 			   _endloop
