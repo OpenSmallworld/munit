@@ -293,20 +293,6 @@ _private _method database_test.discard_clones()
 	_self.clones.empty()
 _endmethod
 $
-_pragma(classify_level=debug)
-_private _method database_test.clones_dataset_options()
-	## increase some ds_environment options when using clones
-	## 
-	_if _self.dataset_clones > 0
-	_then
-		dbs<< _self.dataset_clones + 1
-		options<< property_list.new_with(_scatter smallworld_product.startup_options[:ds_environment_options])
-		options[:npcls]<< max(8192 * dbs, options[:npcls].default(ds_environment.npcls))
-		options[:ndsfs]<< max(2048 * dbs, options[:ndsfs].default(ds_environment.ndsfs))
-		smallworld_product.set_startup_option(:ds_environment_options, options.for_scatter())
-	_endif 	
-_endmethod
-$
 
 _pragma(classify_level=debug)
 _method database_test.one_time_tear_down()
@@ -380,7 +366,6 @@ _private _method database_test.check_correct_database_open()
                 ds_environment.concurrency_mode << _self.concurrency_mode
                 smallworld_product.set_startup_option(:authorisation, :singleuser)
                 smallworld_product.set_startup_option(:login, "root")
-		_self.clones_dataset_options()
                 gis_program_manager.reinitialise()
 
                 open_database({_self.database_path})
