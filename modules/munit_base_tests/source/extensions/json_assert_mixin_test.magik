@@ -1,0 +1,118 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug,topic=MUnit)
+##  Testing the assert support.
+def_slotted_exemplar(:json_assert_mixin_test,
+{},
+{:test_case, :json_assert_mixin})
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+json_assert_mixin_test.define_shared_constant(:test_aspects, property_list.new_with(:always, "Always"), :public )
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method json_assert_mixin_test.test_assert_json_nested_property_pass()
+	## 
+	## 
+	_local json << '{"key0": {"key1": "value"}}'
+	_self.assert_json_nested_property(json, "key0.key1")
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method json_assert_mixin_test.test_assert_json_nested_property_fail()
+	## 
+	## 
+	_local json << '{"key0": {"key1": "value"}}'
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_json_nested_property|()|,
+		{json, "key0.key1.key2"})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method json_assert_mixin_test.test_assert_json_not_nested_property_pass()
+	## 
+	## 
+	_local json << '{"key0": {"key1": "value"}}'
+	_self.assert_json_not_nested_property(json, "key0.key1.key2")
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method json_assert_mixin_test.test_assert_json_not_nested_property_fail()
+	## 
+	## 
+	_local json << '{"key0": {"key1": "value"}}'
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_json_not_nested_property|()|,
+		{json, "key0.key1"})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method json_assert_mixin_test.test_assert_json_nested_property_equals_pass()
+	## 
+	## 
+	_local json << '{"key0": {"key1": "value"}}'
+	_self.assert_json_nested_property_equals("value", json, "key0.key1")
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method json_assert_mixin_test.test_assert_json_nested_property_equals_fail()
+	## 
+	## 
+	_local json << '{"key0": {"key1": "value"}}'
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_json_nested_property_equals|()|,
+		{"not value", json, "key0.key1"})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method json_assert_mixin_test.test_assert_json_nested_property_not_equals_pass()
+	## 
+	## 
+	_local json << '{"key0": {"key1": "value"}}'
+	_self.assert_json_nested_property_not_equals("not value", json, "key0.key1")
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method json_assert_mixin_test.test_assert_json_nested_property_not_equals_fail()
+	## 
+	## 
+	_local json << '{"key0": {"key1": "value"}}'
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_json_nested_property_not_equals|()|,
+		{"value", json, "key0.key1"})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method json_assert_mixin_test.test_assert_json_nested_property_validate()
+	## 
+	## 
+	_local json << '{"key0": {"key1": "value"}}'
+	_local called? << _false
+	_local me << _self 
+	_self.assert_json_nested_property_validate(
+		_proc(test, nested_hashy, nested_key, nested_value, message)
+			_import called?, me
+			called? << _true
+			test.assert_is(test, me)
+			test.assert_is(nested_key, :key1)
+			test.assert_equals(nested_value, "value")
+			test.assert_equals(message, "info")
+		_endproc,
+		json, "key0.key1",
+		"info"
+	      )
+	_self.assert_true(called?)
+_endmethod
+$
+
+
