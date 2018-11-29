@@ -15,11 +15,11 @@ _method remote_test_runner.run_remote(address, port, step_id)
 	## 
 	##
 
-	start << date_time_now()
+	start << date_time.now(:milliseconds)
 	count << 0
 	tests_ok? << _true
 	.retry? << _true
-	test_times << property_list.new()
+	test_times << rope.new()
 	tf << test_suite_finder.new()
 
 	_loop
@@ -43,11 +43,12 @@ _method remote_test_runner.run_remote(address, port, step_id)
 		a_stream << _self.new_stream(identifier, test_name + "_" + system.host_name)
 		
 		_protect
-			test_start << date_time_now()
+			test_start << date_time.now(:milliseconds)
 			new_runner << _self.new(a_stream, _scatter _self.properties.for_scatter())
 			new_runner.int!run(test)
 			a_stream.flush()
-			test_times[module_name + :|___| + test_name] << date_time_now() - test_start
+			test_time << date_time.now(:milliseconds) - test_start
+			test_times.add_last(write_string("Test ", test, " ran in ", test_time)) 
 		_protection
 			a_stream.close()
 		_endprotect
@@ -65,12 +66,12 @@ _method remote_test_runner.run_remote(address, port, step_id)
 	# client write a complete line to the !output! without
 	# interfering with one another.
 	_lock !output!
-	      show(write_string("Ran ", count, " tests in ", date_time_now() - start))
+	      show(write_string("Ran ", count, " tests in ", date_time.now(:milliseconds) - start))
 	_endlock
-	_for test, time _over test_times.fast_keys_and_elements()
+	_for test_time _over test_times.fast_elements()
 	_loop
 		_lock !output!
-		      show(write_string("Test ", test, " ran in ", time))
+		      show(test_time)
 		_endlock
 	_endloop 
 	
