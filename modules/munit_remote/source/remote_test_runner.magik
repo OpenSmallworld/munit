@@ -47,8 +47,9 @@ _method remote_test_runner.run_remote(address, port, step_id)
 			new_runner << _self.new(a_stream, _scatter _self.properties.for_scatter())
 			new_runner.int!run(test)
 			a_stream.flush()
-			test_time << date_time.now(:milliseconds) - test_start
-			test_times.add_last(write_string("Test ", test, " ran in ", test_time)) 
+			time << date_time.now(:milliseconds) - test_start
+			test_time << write_string("Test ", module_name, "___", test_name, " ran in ", time)
+			test_times.add_last(test_time)
 		_protection
 			a_stream.close()
 		_endprotect
