@@ -1,0 +1,47 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug)
+## This is a factory class for validators for 
+def_slotted_exemplar( :nested_property_validators, {} )
+$
+
+_pragma(classify_level=debug)
+nested_property_validators.define_shared_constant(
+	:static_validators,
+	hash_table.new_with(
+		:is_empty,
+		_proc(test, nested_hashy, nested_key, nested_value, _optional message)
+			test.assert_not_unset(nested_value, message)
+			test.assert_true(nested_value.empty?, message)
+		_endproc,
+
+		:is_not_empty,
+		_proc(test, nested_hashy, nested_key, nested_value, _optional message)
+			test.assert_not_unset(nested_value, message)
+			test.assert_false(nested_value.empty?, message)
+		_endproc
+		   ),
+	:private)
+$
+
+		
+_pragma(classify_level=debug)
+_method nested_property_validators.is_empty()
+	## 
+	## Returns a validator for empty nested properties
+	##
+	>> _self.static_validators[:is_empty]
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method nested_property_validators.is_not_empty()
+	## 
+	## Returns a validator for not empty nested properties
+	##
+	>> _self.static_validators[:is_not_empty]
+_endmethod
+$
+

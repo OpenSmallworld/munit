@@ -12,6 +12,8 @@ implementer_test_mixin
 
 deep_comparator
 assert_helper_mixin
+nested_property_validators
+nested_properties_assert_mixin
 json_assert_mixin
 xml_assert_mixin
 stub_dm_api_mixin

@@ -1,0 +1,500 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug,topic=MUnit)
+##  Testing the assert support for nested properties.
+def_slotted_exemplar(:nested_properties_assert_mixin_test,
+{},
+{:test_case, :nested_properties_assert_mixin})
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_one_level_pass()
+	## 
+	## 
+	_self.assert_nested_property(
+		hash_table.new_with(
+			:key, :value), {:key})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_one_level_fail()
+	## 
+	##
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_nested_property|()|,
+		{hash_table.new(), {:key}})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_not_nested_property_one_level_pass()
+	## 
+	## 
+	_self.assert_not_nested_property(hash_table.new_with(), {:key})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_not_nested_property_one_level_fail()
+	## 
+	##
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_not_nested_property|()|,
+		{hash_table.new_with(:key, :value), {:key}})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_one_level_pass()
+	## 
+	## 
+	_self.assert_nested_property_is(
+		:value,
+		hash_table.new_with(
+			:key, :value), {:key})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_one_level_fail()
+	## 
+	## 
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_nested_property_is|()|,
+		{:not_value, hash_table.new_with(:key, :value), {:key}})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_not_one_level_pass()
+	## 
+	## 
+	_self.assert_nested_property_is_not(
+		:not_value,
+		hash_table.new_with(
+			:key, :value), {:key})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_not_one_level_fail()
+	## 
+	## 
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_nested_property_is_not|()|,
+		{:value, hash_table.new_with(:key, :value), {:key}})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_multi_level_pass()
+	## 
+	## 
+	_self.assert_nested_property(
+		hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, hash_table.new_with(
+							    :key2, :value)
+					  )
+			   ),
+		{:key0, :key1, :key2})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_multi_level_missing_final_key_fail()
+	## 
+	##
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_nested_property|()|,
+		{hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, hash_table.new()
+					  )
+			    ),
+		 {:key0, :key1, :key2}}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_multi_level_missing_middle_key_fail()
+	## 
+	##
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_nested_property|()|,
+		{hash_table.new_with(
+			:key0, hash_table.new()
+			    ),
+		 {:key0, :key1, :key2}}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_not_nested_property_multi_level_missing_final_key_pass()
+	## 
+	## 
+	_self.assert_not_nested_property(
+		hash_table.new_with(
+			:key0, hash_table.new_with(
+				       :key1, hash_table.new()
+					  )
+			   ),
+		{:key0, :key1, :key2})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_not_nested_property_multi_level_missing_middle_key_pass()
+	## 
+	## 
+	_self.assert_not_nested_property(
+		hash_table.new_with(
+			:key0, hash_table.new()
+			   ),
+		{:key0, :key1, :key2})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_not_nested_property_multi_level_fail()
+	## 
+	##
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_not_nested_property|()|,
+		{hash_table.new_with(
+			 :key0, hash_table.new_with(
+					:key1, hash_table.new_with(
+						       :key2, :value)
+					   )
+			    ),
+		 {:key0, :key1, :key2}})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_multi_level_pass()
+	## 
+	## 
+	_self.assert_nested_property_is(
+		:value,
+		hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, hash_table.new_with(
+							    :key2, :value)
+					  )
+			   ),
+		{:key0, :key1, :key2})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_multi_level_missing_final_key_fail()
+	## 
+	##
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_nested_property_is|()|,
+		{:value,
+		 hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, hash_table.new()
+					  )
+			    ),
+		 {:key0, :key1, :key2}}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_multi_level_missing_middle_key_fail()
+	## 
+	##
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_nested_property_is|()|,
+		{:value,
+		 hash_table.new_with(
+			:key0, hash_table.new()
+			    ),
+		 {:key0, :key1, :key2}}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_not_multi_level_fail()
+	## 
+	##
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_nested_property_is_not|()|,
+		{:value,
+		 hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, hash_table.new_with(
+							    :key2, :value)
+					  )
+			   ),
+		{:key0, :key1, :key2}}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_not_multi_level_wrong_value_pass()
+	## 
+	##
+	_self.assert_nested_property_is_not(
+		:not_value,
+		hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, hash_table.new_with(
+							    :key2, :value)
+					  )
+			    ),
+		{:key0, :key1, :key2}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_not_multi_level_equal_value_pass()
+	## 
+	##
+	_self.assert_nested_property_is_not(
+		"value",
+		hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, hash_table.new_with(
+							    :key2, :value)
+					  )
+			    ),
+		{:key0, :key1, :key2}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_is_not_multi_level_missing_middle_key_pass()
+	## 
+	##
+	_self.assert_nested_property_is_not(
+		:value,
+		hash_table.new_with(
+			:key0, hash_table.new()
+			   ),
+		{:key0, :key1, :key2}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_validate()
+	## 
+	##
+	_local called? << _false
+	_local nested_hashy << hash_table.new_with(:key1, :value )
+	_local me << _self
+	_self.assert_nested_property_validate(
+		_proc(test, parent_hashy, key, value, _optional message)
+			_import called?, nested_hashy, me
+			called? << _true
+			test.assert_is(me, test)
+			test.assert_is(nested_hashy, parent_hashy)
+			test.assert_is(:key1, key)
+			test.assert_is(:value, value)
+			test.assert_equals("info", message)
+		_endproc,
+		hash_table.new_with(:key0, nested_hashy),
+		{:key0, :key1},
+		"info"
+	      )
+	_self.assert_true(called?)
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_validate_missing_final_key()
+	## 
+	##
+	_local called? << _false
+	_local nested_hashy << hash_table.new()
+	_local me << _self
+	_self.assert_nested_property_validate(
+		_proc(test, parent_hashy, key, value, _optional message)
+			_import called?, nested_hashy, me
+			called? << _true
+			test.assert_is(me, test)
+			test.assert_is(nested_hashy, parent_hashy)
+			test.assert_is(:key1, key)
+			test.assert_is(_unset, value)
+			test.assert_equals("info", message)
+		_endproc,
+		hash_table.new_with(:key0, nested_hashy),
+		{:key0, :key1},
+		"info"
+	      )
+	_self.assert_true(called?)
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_validate_missing_first_key()
+	## 
+	##
+	_local called? << _false
+	_local me << _self
+	_local hashy << hash_table.new()
+	_self.assert_nested_property_validate(
+		_proc(test, parent_hashy, key, value, _optional message)
+			_import called?, me, hashy
+			called? << _true
+			test.assert_is(me, test)
+			test.assert_is(hashy, parent_hashy)
+			test.assert_is(:key0, key)
+			test.assert_is(_unset, value)
+			test.assert_equals("info", message)
+		_endproc,
+		hashy,
+		{:key0},
+		"info"
+	      )
+	_self.assert_true(called?)
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_validate_missing_middle_key()
+	## 
+	##
+	_local called? << _false
+	_local nested_hashy << hash_table.new()
+	_local me << _self
+	_self.assert_nested_property_validate(
+		_proc(test, parent_hashy, key, value, _optional message)
+			_import called?, nested_hashy, me
+			called? << _true
+			test.assert_is(me, test)
+			test.assert_is(_unset, parent_hashy)
+			test.assert_is(:key2, key)
+			test.assert_is(_unset, value)
+			test.assert_equals("info", message)
+		_endproc,
+		hash_table.new_with(:key0, nested_hashy),
+		{:key0, :key1, :key2},
+		"info"
+	      )
+	_self.assert_true(called?)
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_validate_non_hashy_middle_key()
+	## 
+	##
+	_local called? << _false
+	_local me << _self
+	_self.assert_nested_property_validate(
+		_proc(test, parent_hashy, key, value, _optional message)
+			_import called?, me
+			called? << _true
+			test.assert_is(me, test)
+			test.assert_is(_unset, parent_hashy)
+			test.assert_is(:key2, key)
+			test.assert_is(_unset, value)
+			test.assert_equals("info", message)
+		_endproc,
+		hash_table.new_with(:key0, :value),
+		{:key0, :key1, :key2},
+		"info"
+	      )
+	_self.assert_true(called?)
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_equals_multi_level_pass()
+	## 
+	## 
+	_self.assert_nested_property_equals(
+		"value",
+		hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, "value")),
+		{:key0, :key1}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_equals_multi_level_fail()
+	## 
+	##
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_nested_property_equals|()|,
+		{"not value",
+		 hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, "value")),
+		{:key0, :key1}}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_not_equals_multi_level_pass()
+	## 
+	## 
+	_self.assert_nested_property_not_equals(
+		"not value",
+		hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, "value")),
+		{:key0, :key1}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_assert_nested_property_not_equals_multi_level_fail()
+	## 
+	##
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning}, _self, :assert_nested_property_not_equals|()|,
+		{"value",
+		 hash_table.new_with(
+			:key0, hash_table.new_with(
+					  :key1, "value")),
+		{:key0, :key1}}
+	      )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_is_empty_validator()
+	## 
+	## 
+	_local is_empty << _self.validator.is_empty()
+	is_empty(_self, hash_table, :key, {})
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning},
+		is_empty,
+		:invoke|()|,
+		{_self, hash_table, :key, {:foo}})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+_method nested_properties_assert_mixin_test.test_is_not_empty_validator()
+	## 
+	## 
+	_local is_not_empty << _self.validator.is_not_empty()
+	is_not_empty(_self, hash_table, :key, {:foo})
+	_self.assert_raised_all_conditions(
+		{:assertion_failed_warning},
+		is_not_empty,
+		:invoke|()|,
+		{_self, hash_table, :key, {}})
+_endmethod
+$
