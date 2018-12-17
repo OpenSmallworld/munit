@@ -68,7 +68,9 @@ _method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gathe
 	_try
 		actual<< decoder.parse_string(actual_json)
 	_when error
-		_self.fail( write_string(msg," Cannot parse JSON string: " , actual_json))
+		str<< internal_text_output_stream.new()
+		actual_json.print_on(str)
+		_self.fail( write_string(msg," Cannot parse actual JSON string: " , actual_json, newline_char, str.string))
 		_return _self 
 	_endtry
 	_if exp_json.is_kind_of?(handler)
