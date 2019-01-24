@@ -740,8 +740,10 @@ _private _method assert.xml_element_sort_proc
 		   _else
 			   types<< e1a
 		   _endif
-		   e1a<< xml_el1.elements.map(_proc (el) >> el.xml_contents _endproc)
-		   e2a<< xml_el2.elements.map(_proc (el) >> el.xml_contents _endproc)
+
+		   e1a<< xml_el1.elements.map(_proc (el) >> el.xml_contents.default("") _endproc)
+		   e2a<< xml_el2.elements.map(_proc (el) >> el.xml_contents.default("") _endproc)
+
 		   e1s<< write_string( _scatter sorted_collection.new_from(e1a) )
 		   e2s<< write_string( _scatter sorted_collection.new_from(e2a) )
 		   
