@@ -12,3 +12,4 @@ test_case_equality_set
 
 product_test_suite
 module_test_suite
+munit_log
