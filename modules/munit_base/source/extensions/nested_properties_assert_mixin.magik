@@ -1,0 +1,185 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug)
+## This mixin provides the methods to assert on the values of nested properties
+def_mixin( :nested_properties_assert_mixin, {} )
+$
+
+_pragma(classify_level=debug)
+_method nested_properties_assert_mixin.assert_nested_property(hashy, properties, _optional message)
+	## 
+	## Assert that the path PROPERTIES exists in HASHY, which should be a
+	## hash_table or similar
+	##
+	message << message.default(write_string("Expected ", hashy, " to have a property ", properties.join_as_strings(%.)))
+	>> _self.assert_nested_property_validate(
+		   _proc(test, nested_hashy, nested_key, nested_val, message)
+			   >> _if nested_hashy _isnt _unset 
+			      _then
+				      test.assert_true(nested_hashy.includes_key?(nested_key), message)
+			      _else
+				      test.fail(message)
+			      _endif
+		   _endproc,
+		   hashy, properties,
+		   message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method nested_properties_assert_mixin.assert_not_nested_property(hashy, properties, _optional message)
+	## 
+	## Assert that the path PROPERTIES does not exist in HASHY, which should be a
+	## hash_table or similar
+	##
+	message << message.default(write_string("Expected ", hashy, " not to have a property ", properties.join_as_strings(%.)))
+	>> _self.assert_nested_property_validate(
+		   _proc(test, nested_hashy, nested_key, nested_val, message)
+			   >> _if nested_hashy _isnt _unset 
+			      _then
+				      test.assert_false(nested_hashy.includes_key?(nested_key), message)
+			      _endif
+		   _endproc,
+		   hashy, properties,
+		   message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method nested_properties_assert_mixin.assert_nested_property_is(expected, hashy, properties, _optional message)
+	## 
+	## Assert that the path PROPERTIES references EXPECTED in HASHY using an
+	## identity test.  HASHY should be a hash_table or similar 
+	##
+	message << message.default(
+			   write_string("Expected ", hashy, "[", properties.join_as_strings(%.), "]",
+				   " is ", expected))
+	>> _self.assert_nested_property_validate(
+		   _proc(test, nested_hashy, nested_key, nested_val, message)
+			   _import expected
+			   test.assert_is(expected, nested_val, message)
+		   _endproc,
+		   hashy, properties,
+		   message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method nested_properties_assert_mixin.assert_nested_property_is_not(expected, hashy, properties, _optional message)
+	## 
+	## Assert that the path PROPERTIES does not reference EXPECTED in HASHY using an
+	## identity test.  HASHY should be a hash_table or similar 
+	##
+	message << message.default(
+			   write_string("Expected ", hashy, "[", properties.join_as_strings(%.), "]",
+				   " to not be ", expected))
+	>> _self.assert_nested_property_validate(
+		   _proc(test, nested_hashy, nested_key, nested_val, message)
+			   _import expected
+			   test.assert_is_not(expected, nested_val, message)
+		   _endproc,
+		   hashy, properties,
+		   message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method nested_properties_assert_mixin.assert_nested_property_equals(expected, hashy, properties, _optional message)
+	## 
+	## Assert that the path PROPERTIES references EXPECTED in HASHY using an
+	## equality test.  HASHY should be a hash_table or similar 
+	##
+	message << message.default(
+			   write_string("Expected ", hashy, "[", properties.join_as_strings(%.), "]",
+				   " = ", expected))
+	>> _self.assert_nested_property_validate(
+		   _proc(test, nested_hashy, nested_key, nested_val, message)
+			   _import expected
+			   test.assert_equals(expected, nested_val, message)
+		   _endproc,
+		   hashy, properties,
+		   message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method nested_properties_assert_mixin.assert_nested_property_not_equals(expected, hashy, properties, _optional message)
+	## 
+	## Assert that the path PROPERTIES references EXPECTED in HASHY using an
+	## equality test.  HASHY should be a hash_table or similar 
+	##
+	message << message.default(
+			   write_string("Expected ", hashy, "[", properties.join_as_strings(%.), "]",
+				   " ~= ", expected))
+	>> _self.assert_nested_property_validate(
+		   _proc(test, nested_hashy, nested_key, nested_val, message)
+			   _import expected
+			   test.assert_not_equals(expected, nested_val, message)
+		   _endproc,
+		   hashy, properties,
+		   message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method nested_properties_assert_mixin.assert_nested_property_validate(validator, hashy, properties, _optional message)
+	## 
+	## Assert that PROPERTIES in HASHY passes the VALIDATOR proc.  VALIDATOR is
+	## of the form
+	##   _proc(test, nested_hashy, nested_key, nested_val,
+	##         message)
+	##   _endproc 
+	##  TEST is this test
+	##  NESTED_HASHY is the nested parent hash table
+	##  NESTED_KEY is the key into the nested parent hash table
+	##  NESTED_VAL is the value of the indested element in the nested hash table
+	##  MESSAGE is passed in from the MESSAGE argument to this function
+	##
+	## If the nested hash table cannot be found, then NESTED_HASHY will be _unset,
+	## and NESTED_KEY will still be the expected key (i.e. the last key in the
+	## chain)  NESTED_VAL will be _unset
+	##
+	_local (nested_hashy, nested_key) << _self.find_nested_hashy(hashy, properties)
+	_local nested_val << 
+		_if nested_hashy _isnt _unset 
+		_then
+			>> nested_hashy[nested_key]
+		_else
+			>> _unset 
+		_endif
+	validator(_self, nested_hashy, nested_key, nested_val, message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method nested_properties_assert_mixin.validator
+	## 
+	## 
+	>> nested_property_validators
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method nested_properties_assert_mixin.find_nested_hashy(hashy, keys)
+	## 
+	## Find the nested hash table parent for lookup with KEYS from HASHY.  KEYS are
+	## a list of keys to look up in order
+	##
+	>> _if keys.size = 0
+	   _then
+		   >> (hashy, _unset)
+	   _elif _not hashy.is_kind_of?(externally_keyed_collection_mixin)
+	   _then
+		   >> (_unset, keys.last)
+	   _elif keys.size = 1
+	   _then
+		   >> (hashy, keys.first)
+	   _else
+		   >> _self.find_nested_hashy(hashy[keys.first], keys.slice_to_end(2))
+	   _endif
+_endmethod
+$
+
+

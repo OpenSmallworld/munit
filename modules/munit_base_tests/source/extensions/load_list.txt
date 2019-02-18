@@ -2,3 +2,6 @@ extension_test
 active_test_test
 repeated_test_test
 db_test_case_test
+nested_properties_assert_mixin_test
+json_assert_mixin_test
+

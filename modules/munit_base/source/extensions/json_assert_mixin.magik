@@ -5,7 +5,7 @@ $
 _pragma(classify_level=debug)
 ## This mixin provides the methods to compare json strings
 ## inherit your test from it to use assert_json_file() etc.
-def_mixin( :json_assert_mixin, { :assert_helper_mixin } )
+def_mixin( :json_assert_mixin, { :assert_helper_mixin, :nested_properties_assert_mixin } )
 $
 
 _pragma(classify_level=debug)
@@ -68,7 +68,9 @@ _method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gathe
 	_try
 		actual<< decoder.parse_string(actual_json)
 	_when error
-		_self.fail( write_string(msg," Cannot parse JSON string: " , actual_json))
+		str<< internal_text_output_stream.new()
+		actual_json.print_on(str)
+		_self.fail( write_string(msg," Cannot parse actual JSON string: " , actual_json, newline_char, str.string))
 		_return _self 
 	_endtry
 	_if exp_json.is_kind_of?(handler)
@@ -88,6 +90,91 @@ _method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gathe
 	>> _self 
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method json_assert_mixin.assert_json_nested_property(json, property, _optional message)
+	## 
+	## Asserts that the decoded JSON has a nested PROPERTY, which can contain dots, e.g.
+	## "parent_key.child_key" will check that JSON has a key "parent_key", which
+	## references an object which has a "child_key"
+	##
+	_local decoded << json_decoder.new().parse_string(json)
+	_local properties << property.split_by(%.).map(_proc(s) >> s.as_symbol() _endproc)
+
+	_self.assert_nested_property(decoded, properties, message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method json_assert_mixin.assert_json_not_nested_property(json, property, _optional message)
+	## 
+	## Asserts that the decoded JSON does not have a nested PROPERTY, which can
+	## contain dots, e.g. "parent_key.child_key" will check that JSON does not have
+	## a key "parent_key", which references an object which has a "child_key"
+	##
+	_local decoded << json_decoder.new().parse_string(json)
+	_local properties << property.split_by(%.).map(_proc(s) >> s.as_symbol() _endproc)
+
+	_self.assert_not_nested_property(decoded, properties, message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method json_assert_mixin.assert_json_nested_property_equals(value, json, property, _optional message)
+	## 
+	## Asserts that the decoded JSON has a nested PROPERTY which equals VALUE.
+	## PROPERTY can contain dots, e.g. "parent_key.child_key" will check the value
+	## of "child_key" in the object referenced by "parent_key" in JSON
+	##
+	_local decoded << json_decoder.new().parse_string(json)
+	_local properties << property.split_by(%.).map(_proc(s) >> s.as_symbol() _endproc)
+
+	_self.assert_nested_property_equals(value, decoded, properties, message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method json_assert_mixin.assert_json_nested_property_not_equals(value, json, property, _optional message)
+	## 
+	## Asserts that the decoded JSON does not have a nested PROPERTY which equals VALUE.
+	## PROPERTY can contain dots, e.g. "parent_key.child_key" will check the value
+	## of "child_key" in the object referenced by "parent_key" in JSON
+	##
+	_local decoded << json_decoder.new().parse_string(json)
+	_local properties << property.split_by(%.).map(_proc(s) >> s.as_symbol() _endproc)
+
+	_self.assert_nested_property_not_equals(value, decoded, properties, message)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method json_assert_mixin.assert_json_nested_property_validate(validator, json, property, _optional message)
+	## 
+	## Run VALIDATOR against the decoded JSON with nested PROPERTY.
+	## PROPERTY can contain dots, e.g. "parent_key.child_key" will check the value
+	## of "child_key" in the object referenced by "parent_key" in JSON
+	## VALIDATOR is of the form
+	##   _proc(test, nested_hashy, nested_key, nested_val,
+	##         message)
+	##   _endproc 
+	##  TEST is this test
+	##  NESTED_HASHY is the nested parent hash table
+	##  NESTED_KEY is the key into the nested parent hash table
+	##  NESTED_VAL is the value of the indested element in the nested hash table
+	##  MESSAGE is passed in from the MESSAGE argument to this function
+	##
+	## If the nested hash table cannot be found, then NESTED_HASHY will be _unset,
+	## and NESTED_KEY will still be the expected key (i.e. the last key in the
+	## chain)  NESTED_VAL will be _unset
+	##
+	##
+	_local decoded << json_decoder.new().parse_string(json)
+	_local properties << property.split_by(%.).map(_proc(s) >> s.as_symbol() _endproc)
+
+	_self.assert_nested_property_validate(validator, decoded, properties, message)
+_endmethod
+$
+
 _pragma(classify_level=debug)
 _private _method json_assert_mixin.assert_json_decoded(expected, actual, msg)
 	## 

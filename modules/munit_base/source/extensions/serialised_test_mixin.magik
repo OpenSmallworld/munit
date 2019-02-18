@@ -318,6 +318,39 @@ $
 
 
 _pragma(classify_level=debug)
+_private _method serialised_test_mixin.remove_completed_task_from_queue(method_name)
+	## 
+	## Look through all the elements on the queue.  For each value,
+	## if it is a vector, has 3 elements and the 3rd element
+	## matches METHOD_NAME, it will be removed from the queue.
+	##
+	
+	other_values << rope.new()
+
+	_if _self.properties[:queue] _isnt _unset
+	_then 
+		_loop
+			
+			_if _self.properties[:queue].reads_possible = 0 _then _leave _endif
+			value << _self.properties[:queue].get()
+  
+			_if _not ( value.is_kind_of?( {} ) _andif
+				   value.size >= 3 _andif
+				   value[3] = method_name )
+			_then
+				other_values.add_last( value )
+			_endif
+			
+		_endloop
+
+		_self.add_values_to_queue( other_values )
+	_endif
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
 _method serialised_test_mixin.note_change( who, what, data )
 	## 
 	##
