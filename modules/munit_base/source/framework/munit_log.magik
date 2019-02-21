@@ -1,0 +1,222 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+
+_pragma(classify_level=restricted, topic={logging})
+##
+## This is a singleton class for managing munit related logs.
+##
+## munit related classes should call the public log_*() methods as
+## required for logging events.
+##
+## New logging methods should be defined following the existing pattern:
+##   1. a log_*() method defined on munit_log
+##   2. a shared constent defining a _proc, corresponding to the log method.
+##
+def_slotted_exemplar(:munit_log,
+	{
+		{:current_run, "local"}
+	})
+$
+
+
+_pragma(classify_level=restricted, topic={logging})
+## Defines the name of the thread used by the simple_json_log as well as the top
+## level :event category.
+munit_log.define_shared_constant(:log_label, :munit, :private)
+$
+
+
+_pragma(classify_level=restricted, usage={redefinable}, topic={logging})
+## Defines the filename and path for the migration log
+munit_log.define_shared_constant(:log_filepath,
+	system.pathname_down(
+		system.pathname_down(system.pathname_up(system.temp_directory_name), "Smallworld"),
+		"munit_log.json"),	
+	:private)
+$
+
+
+_pragma(classify_level=restricted, usage={redefinable}, topic={logging})
+## Defines whether this logging is on or off.
+munit_log.define_shared_constant(:active?, _true, :private)
+$
+
+
+_pragma(classify_level=restricted, usage={redefinable}, topic={logging})
+## Defines what level of logging should be performed.
+munit_log.define_shared_constant(:log_level, :info, :private)
+$
+
+
+_pragma(classify_level=advanced)
+_method munit_log.set_current_run(current_run)
+	## 
+	.current_run << current_run
+_endmethod
+$
+
+
+_pragma(classify_level=advanced)
+_method munit_log.get_current_run()
+	## 
+	>> .current_run
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_private _method munit_log.int!log(level, log_proc, _gather props)
+	##
+	## LEVEL:    The log level method to run.
+	## LOG_PROC: A proc which takes gathered PROPS and returns the ARGS to be passed
+	##           to the logging method. (LOG_PROC receives itself at index 1 of the
+	##           ARGS it receives). See logging_framework.log().
+	## PROPS:    The properties to be passed to the LOG_PROC.
+	## 
+
+	_if _self.active?
+	_then
+		_self.get_logger().perform(level, log_proc, _scatter props)
+	_endif
+
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={logging})
+_private _method munit_log.get_logger()
+	## 
+	## Returns the log if it exists, otherwise it creates it first.
+	##
+	
+	_if _not log_manager.logger_exists?(_self.log_label)
+	_then
+		json_logging_framework << _self.new_json_logging_framework()
+		log_manager.add_logger(_self.log_label, json_logging_framework)
+	_else
+		json_logging_framework << log_manager.get_logger(_self.log_label)
+	_endif
+
+	>> json_logging_framework
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={logging})
+_private _method munit_log.new_json_logging_framework(_optional stream)
+	##
+	## Returns a new json logger for optional stream and returns a
+	## new logging framework for this logger.
+	##
+
+	json_log << _self.new_json_log(stream)
+	json_log.set_level(_self.log_level)
+	json_logging_framework << logging_framework.new(json_log)
+	
+	>> json_logging_framework
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={logging})
+_private _method munit_log.new_json_log(_optional stream)
+	##
+	## creates a new simple_json log with stream if it is
+	## provided. If not will create using log_filepath
+	##
+
+	_if stream _isnt _unset 
+	_then
+		json_log << simple_json_log.new(_self.log_label, stream)
+	_else
+		json_log << simple_json_log.new_file_appending(_self.log_label, _self.log_filepath)
+	_endif
+
+	>> json_log
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, usage={internal})
+_method munit_log.add_run_map(m_map)
+	##
+	r_map <<  concurrent_hash_map.new_with(:name, .current_run)
+				     
+	m_map[:run] << r_map 
+	_return r_map
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, usage={internal})
+_method munit_log.add_test_map(m_map, a_test_failure)
+	##
+	
+	test  << a_test_failure.failed_test()
+	t_map << concurrent_hash_map.new_with(:name, test.get_name(),
+					      :class, test.class_name, 
+					      :module, test.module_name)
+	
+	m_map[:test] << t_map
+	_return t_map
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, usage={internal})
+_method munit_log.add_failure_map(m_map, a_test_failure)
+	##
+	
+	rc << a_test_failure.raised_condition()
+	message << rc[:message]
+	_if message _is _unset 
+	_then
+		full_text << a_test_failure.full_traceback_text()
+		rc_map << concurrent_hash_map.new_with(:type, "error",
+						       :traceback, concurrent_hash_map.new_with(:string, rc.write_string,
+												:full_text, full_text))
+		
+	_else 
+		rc_map << concurrent_hash_map.new_with(:type, "failure",
+						       :failure, concurrent_hash_map.new_with(:type, rc.name,
+											      :message, rc[:message]))
+	_endif 
+				     
+	m_map[:failure] << rc_map 
+	_return rc_map
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, usage={internal})
+_method munit_log.log_failure(a_test_failure)
+	##
+	##
+	
+	_self.int!log(:|info()|, _self.failure_proc, a_test_failure)
+		
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={logging})
+munit_log.define_shared_constant(:failure_proc,
+	_proc(args)
+		(log_proc, a_test_failure) << (_scatter args)
+
+		m_map << concurrent_hash_map.new()
+		munit_log.add_run_map(m_map)
+		munit_log.add_test_map(m_map, a_test_failure)
+		munit_log.add_failure_map(m_map, a_test_failure)
+					
+		>> {"munit_failure", m_map}
+				       	
+	_endproc,
+	:private)
+$

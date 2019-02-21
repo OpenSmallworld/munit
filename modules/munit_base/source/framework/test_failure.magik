@@ -33,6 +33,8 @@ _private _method test_failure.init( a_test , a_condition )
 	.raised_condition << a_condition
 	_self.init_traceback_text()
 	
+	munit_log.log_failure(_self)
+	
 	>> _self 
 _endmethod
 $
