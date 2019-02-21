@@ -6,7 +6,6 @@ end
 
 requires
 	magik_mock
-	logging
 end
 
 language en_gb
