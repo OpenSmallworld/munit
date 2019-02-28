@@ -5,6 +5,34 @@ def_mixin(:implementer_test_mixin)
 $
 
 _pragma(classify_level=debug, topic={MUnit})
+implementer_test_mixin.define_shared_constant(
+	##
+	## A cache of replca views, keyed on main views.  The elements of this list
+	## should be replicas of those views, but in an alternative NOT managed by
+	## Design Manager
+	##
+	:replica_non_dm_views,
+	equality_property_list.new(),
+	_true
+				)
+$
+
+
+
+_pragma(classify_level=debug, topic={MUnit})
+implementer_test_mixin.define_shared_constant(
+	##
+	## A cache of replca views, keyed on main views.  The elements of this list
+	## should be replicas of those views, but in an alternative managed by
+	## Design Manager
+	##
+	:replica_dm_views,
+	equality_property_list.new(),
+	_true
+				)
+$
+
+_pragma(classify_level=debug, topic={MUnit})
 implementer_test_mixin.define_shared_constant(:disabled_implementer_tests,
 	## Defines a set of implementer tests that are no longer valid
 	## in the stream. This should be subclassed by individual
@@ -106,7 +134,6 @@ _method implementer_test_mixin.test_implementer()
 _endmethod
 $
 
-
 _pragma(classify_level=debug, topic={MUnit})
 _private _method implementer_test_mixin.int!test_implementer(implementer)
 	##
@@ -130,7 +157,6 @@ _private _method implementer_test_mixin.int!test_implementer(implementer)
 	_self.tear_down_implementer(implementer)
 _endmethod
 $
-
 
 _pragma(classify_level=debug, topic={MUnit})
 _private _method implementer_test_mixin.int!test_implementer_on_views(implementer, views, test_method)
@@ -163,17 +189,13 @@ _private _method implementer_test_mixin.int!test_implementer_on_views(implemente
 		_self.assert_false(views.empty?)
 		_for view _over views.fast_elements()
 		_loop
-			_if view.alternative_level > 0
-			_then
-				view.goto_top_alternative()
-			_endif
+			write("Testing ", implementer, " in ", view, " ", view.alternative_path_name())
 			implementer.perform(test_method, view)
 		_endloop
 	_endblock
 	
 _endmethod
 $
-
 
 _pragma(classify_level=debug, topic={MUnit})
 _private _method implementer_test_mixin.can_test_implementer?(implementer)
@@ -226,13 +248,15 @@ _iter _method implementer_test_mixin.datamodel_implementers_to_test(implementer_
 _endmethod
 $
 
-
 _pragma(classify_level=debug, topic={MUnit})
 _method implementer_test_mixin.views_for(implementer)
 	##
 	## Returns two ropes of views for IMPLEMENTER.
 	## The first rope contains target user views, the second
 	## contains target case views.
+	## Depending on the values of get_replica_view_in_design_alt_for_tests? &
+	## get_replica_view_in_non_design_alt_for_tests? then replicas of the main view
+	## may be returned in different alternatives
 	##
 	
 	user_views << rope.new()
@@ -243,6 +267,23 @@ _method implementer_test_mixin.views_for(implementer)
 		_then
 			view << target_view.target_user_view()
 			user_views.add(view)
+			_if view.alternative_level > 0
+			_then
+				view.goto_top_alternative()
+			_endif
+			
+			_if _self.get_replica_view_in_design_alt_for_tests? _andif
+			    (rv << _self.get_replica_view_in_alternative( view, _true )) _isnt _unset
+			_then
+				user_views.add(rv)
+			_endif
+			
+			_if _self.get_replica_view_in_non_design_alt_for_tests? _andif
+			    (rv << _self.get_replica_view_in_alternative( view, _false )) _isnt _unset
+			_then
+				user_views.add(rv)
+			_endif
+			
 		_endif
 		_if  target_view.targets_case_view? _is _true
 		_then
@@ -253,7 +294,6 @@ _method implementer_test_mixin.views_for(implementer)
 	_return user_views, case_views
 _endmethod
 $
-
 
 _pragma(classify_level=debug, topic={MUnit})
 _method implementer_test_mixin.target_views_proc(_optional case_view_name, user_view_name)
@@ -279,5 +319,68 @@ _method implementer_test_mixin.target_views_proc(_optional case_view_name, user_
 
 	>> target_views_proc
 	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method implementer_test_mixin.get_replica_view_in_alternative( a_view, design_alt? )
+	##
+	## Return a replica of A_VIEW
+	## If DESIGN_ALT? is true then attempts to return the replica with it in an
+	## alternative that is part of a design
+	## If DESIGN_ALT? is false then attempts to return the replica with it in an
+	## alternative that is NOT part of a design
+	## Will return unset if a suitable alternative is not found
+	##
+	replicas << _if design_alt?
+		    _then
+			    >> _self.replica_dm_views
+		    _else
+			    >> _self.replica_non_dm_views
+		    _endif
+	
+	_if (rv << replicas[a_view]) _is _unset
+	_then
+		rv << a_view.replicate()
+		replicas[a_view] << rv
+	_endif
+
+	
+	dm_top_path << swg_dsn_user_alternative_control.design_top_alternative_path(a_view.name)
+
+	_if design_alt?
+	_then
+		_if dm_top_path _is _unset
+		_then
+			write("No dm top configured for ", a_view)
+			_return _unset 
+		_endif
+		
+		#First, drop down to DM Top
+		rv.go_to_alternative(dm_top_path)
+	_else
+		rv.goto_top_alternative()
+	_endif
+	
+	alt_name << _for alt _over rv.alternatives.elements()
+	_loop
+		alt_name << alt.alternative_name
+		_if _not design_alt? _andif
+		    _not dm_top_path.matches?(write_string(%*,alt_name,%*))
+		_then
+			#this looks like it isn't DM Top
+			_leave _with alt_name
+		_else
+			_leave _with alt_name
+		_endif
+	_endloop
+
+	>> _if alt_name _isnt _unset
+	   _then
+		   rv.down(alt_name)
+		   >> rv
+	   _else
+		   >> _unset
+	   _endif
 _endmethod
 $
