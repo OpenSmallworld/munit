@@ -249,6 +249,22 @@ _endmethod
 $
 
 _pragma(classify_level=debug, topic={MUnit})
+implementer_test_mixin.define_shared_constant(
+	:get_replica_view_in_design_alt_for_tests?,
+	_false,
+	_true
+		       )
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+implementer_test_mixin.define_shared_constant(
+	:get_replica_view_in_non_design_alt_for_tests?,
+	_false,
+	_true
+		       )
+$
+
+_pragma(classify_level=debug, topic={MUnit})
 _method implementer_test_mixin.views_for(implementer)
 	##
 	## Returns two ropes of views for IMPLEMENTER.
