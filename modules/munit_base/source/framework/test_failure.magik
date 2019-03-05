@@ -32,6 +32,8 @@ _private _method test_failure.init( a_test , a_condition )
 	.failed_test << a_test
 	.raised_condition << a_condition
 	_self.init_traceback_text()
+
+	_self.log_failure()
 	
 	>> _self 
 _endmethod
@@ -67,6 +69,17 @@ _private _method test_failure.init_traceback_text()
 	
 _endmethod
 $
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method test_failure.log_failure()
+	## 
+	## Do nothing.  Redefined in munit_logging module.
+	##
+	
+_endmethod
+$
+
 
 _pragma(classify_level=basic,topic=MUnit)
 _method test_failure.failed_test()

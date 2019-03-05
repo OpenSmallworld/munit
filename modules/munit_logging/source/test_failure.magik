@@ -1,0 +1,14 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method test_failure.log_failure()
+	##
+	## Log the failure using Smallworld logging
+	##
+
+	munit_log.log_failure(_self)
+	
+_endmethod
+$
