@@ -1,0 +1,2 @@
+munit_log
+test_failure

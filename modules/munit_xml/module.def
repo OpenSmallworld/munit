@@ -6,6 +6,7 @@ end
 
 requires
 	munit_base 4
+	munit_logging
 end
 
 language en_gb
