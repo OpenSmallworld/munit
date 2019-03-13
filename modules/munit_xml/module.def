@@ -9,4 +9,8 @@ requires
 	munit_logging
 end
 
+optional 
+	 munit_logging
+end
+
 language en_gb
