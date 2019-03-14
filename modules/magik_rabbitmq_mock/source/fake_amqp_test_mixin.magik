@@ -107,18 +107,32 @@ _method fake_amqp_test_mixin.then_message_is_published(message)
 	_thisthread.sleep(50)
 	_if _not .current_channel.published.empty?
 	_then
-		_self.assert_deep_equals(.current_channel.published.last, message)
+		actual_message << _self.convert_published_message(.current_channel.published.last)
+		_self.assert_deep_equals(actual_message, message)
 	_else
 		_self.fail("No published messages")
 	_endif
 	_return _self
 _endmethod
 
+_pragma(classify_level=debug, usage=subclassable)
+_method fake_amqp_test_mixin.convert_published_message(message)
+	##
+	## Default implementation just returns a deep copy of MESSAGE
+	##
+	## This method can be subclassed to pre-process the published message before it
+	## is checked. The method should return a new object based on the contents of
+	## MESSAGE.
+	##
+	_return message.deep_copy()
+_endmethod
+$
+
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_error_is_published(message, body)
 	_if _not .current_channel.published.empty?
 	_then
-		published << .current_channel.published.last.deep_copy()
+		published << _self.convert_published_message(.current_channel.published.last)
 		_self.assert_true(published[:body].matches?(body), "published result '"+published[:body]+"' doesn't match: "+body)
 		published.remove_key(:body)
 		_self.assert_deep_equals(published, message)
@@ -129,6 +143,14 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_messages_are_published(messages)
+
+	actual_messages << rope.new()
+	_for message _over .current_channel.published.fast_elements()
+	_loop
+		converted_message << _self.convert_published_message(message)
+		actual_messages.add_last(converted_message)
+	_endloop
+	
 	sort_proc<< _proc @sort_message( a, b)
 			    ap<< property_list.new_with( _scatter a )
 			    bp<< property_list.new_with( _scatter b )
@@ -143,7 +165,7 @@ _method fake_amqp_test_mixin.then_messages_are_published(messages)
 			       _endif 	    
 		    _endproc
 	exp<< rope.new_from(sorted_collection.new_from(messages, sort_proc))
-	act<< rope.new_from(sorted_collection.new_from(.current_channel.published, sort_proc))
+	act<< rope.new_from(sorted_collection.new_from(actual_messages, sort_proc))
 	_self.assert_deep_equals(exp, act)
 	_return _self
 _endmethod
