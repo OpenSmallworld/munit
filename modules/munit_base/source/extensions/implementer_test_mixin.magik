@@ -378,16 +378,13 @@ _private _method implementer_test_mixin.get_replica_view_in_alternative( a_view,
 		rv.goto_top_alternative()
 	_endif
 	
-	alt_name << _for alt _over rv.alternatives.elements()
+	_for alt _over rv.alternatives.elements()
 	_loop
 		alt_name << alt.alternative_name
-		_if _not design_alt? _andif
-		    _not dm_top_path.matches?(write_string(%*,alt_name,%*))
+		#Ignore DM Top
+		_if alt_name <> dm_top_path
 		_then
-			#this looks like it isn't DM Top
-			_leave _with alt_name
-		_else
-			_leave _with alt_name
+			_leave
 		_endif
 	_endloop
 
