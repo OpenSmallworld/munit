@@ -397,3 +397,98 @@ _private _method implementer_test_mixin.get_replica_view_in_alternative( a_view,
 	   _endif
 _endmethod
 $
+
+_pragma(classify_level=debug, topic={MUnit})
+_private _method implementer_test_mixin.define_test_method( method_name, implementer, test_method, views )
+	##
+	## Defines a new method, named METHOD_NAME on _self.  This method will loop
+	## over VIEWS, passing them into calls to IMPLEMENTER.TEST_METHOD.
+	## Any implementer_warning or datamodel_test_failed warnings conditions will be
+	## caught and presented as munit failures, including the original condition's
+	## report string.
+	##
+	_local me << _self
+	_local imp_warning_handler <<
+		_proc(warning)
+			_import me
+			me.assert_true(
+				_false,
+				warning.report_contents_string)
+		_endproc
+	_local imp_failure_handler <<
+		_proc(warning)
+			_import me
+			me.assert_true(_false, warning.report_contents_string)
+		_endproc
+	test_proc << _proc()
+			     _import test_method
+			     _import implementer
+			     _import views
+			     _import imp_warning_handler
+			     _import imp_failure_handler
+
+			     _block 
+				     _handling implementer_warning _with imp_warning_handler		     
+				     _handling datamodel_test_failed _with imp_failure_handler
+				     
+				     _for i_view _over views.elements()
+				     _loop
+					     write("Performing ", implementer, %., test_method,
+						   "() on ", i_view)
+					     implementer.perform(test_method, i_view)
+				     _endloop
+			     _endblock 
+		     _endproc
+	>> _self.define_method(method_name.as_symbol(), test_proc, _false)
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={MUnit})
+_method implementer_test_mixin.define_individual_test_methods()
+	##
+	## Overrides the test_implementer() method and defines new methods for each of
+	## the implementers associated with self so that the result of each test is
+	## reported separately.
+	## If an implementer has a case_post_test_method defined then this will be the
+	## basis of a test method named test_case_method!<case_post_test_method>, which will
+	## perform that method passing in each case view configured for the implementer.
+	## The same is repeated for any defined user_post_test_methods.
+	##
+	_self.define_method(:|test_implementer()|,
+			    _proc()
+				    write(_self, ".test_implementer() has been replaced with individual test methods")
+			    _endproc,
+			    _false
+			    )
+	
+	_if (implementer_module << _self.implementer_module()) _isnt _unset
+	_then	
+		_for implementer _over _self.datamodel_implementers_to_test(implementer_module)
+		_loop
+			(user_views, case_views) << _self.views_for(implementer)
+			_if (case_test_method << implementer.properties[:case_post_test_method]) _isnt _unset
+			_then
+				#write("case test method: ", case_test_method, "  ", implementer)
+				_self.define_test_method(
+					write_string("test_case_method!", case_test_method),
+					implementer,
+					case_test_method,
+					case_views
+					)
+			
+			_endif
+			
+			_if (user_test_method << implementer.properties[:user_post_test_method]) _isnt _unset
+			_then
+				_self.define_test_method(
+					write_string("test_user_method!", user_test_method),
+					implementer,
+					user_test_method,
+					user_views
+					)
+			_endif
+			
+		_endloop
+	_endif
+_endmethod
+$
