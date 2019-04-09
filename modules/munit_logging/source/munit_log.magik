@@ -154,13 +154,12 @@ $
 
 
 _pragma(classify_level=restricted, usage={internal})
-_method munit_log.add_test_map(m_map, a_test_failure)
+_method munit_log.add_test_map(m_map, a_test)
 	##
 	
-	test  << a_test_failure.failed_test()
-	t_map << concurrent_hash_map.new_with(:name, test.get_name(),
-					      :class, test.class_name, 
-					      :module, test.module_name)
+	t_map << concurrent_hash_map.new_with(:name,   a_test.get_name(),
+					      :class,  a_test.class_name, 
+					      :module, a_test.module_name)
 	
 	m_map[:test] << t_map
 	_return t_map
@@ -205,6 +204,17 @@ _endmethod
 $
 
 
+_pragma(classify_level=restricted, usage={internal})
+_method munit_log.log_test_time(a_test, time)
+	## 
+	##
+
+	_self.int!log(:|info()|, _self.test_time_proc, a_test, time)
+	
+_endmethod
+$
+
+
 _pragma(classify_level=restricted, topic={logging})
 munit_log.define_shared_constant(:failure_proc,
 	_proc(args)
@@ -212,10 +222,26 @@ munit_log.define_shared_constant(:failure_proc,
 
 		m_map << concurrent_hash_map.new()
 		munit_log.add_run_map(m_map)
-		munit_log.add_test_map(m_map, a_test_failure)
+		munit_log.add_test_map(m_map, a_test_failure.failed_test())
 		munit_log.add_failure_map(m_map, a_test_failure)
 					
 		>> {"munit_failure", m_map}
+				       	
+	_endproc,
+	:private)
+$
+
+
+_pragma(classify_level=restricted, topic={logging})
+munit_log.define_shared_constant(:test_time_proc,
+	_proc(args)
+		(log_proc, a_test, time) << (_scatter args)
+
+		m_map << concurrent_hash_map.new_with(:time, time)
+		munit_log.add_run_map(m_map)
+		munit_log.add_test_map(m_map, a_test)
+					
+		>> {"munit_test_time", m_map}
 				       	
 	_endproc,
 	:private)
