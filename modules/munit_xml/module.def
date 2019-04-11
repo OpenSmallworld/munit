@@ -6,7 +6,7 @@ end
 
 requires
 	munit_base 4
-	munit_logging
+#	munit_logging
 end
 
 optional 
