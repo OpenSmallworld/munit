@@ -1,12 +1,12 @@
 munit_xml 4
 
 description
-	MUnit XML Support
+	MUnit XML Support with logging
 end
 
 requires
-	munit_base 4
-#	munit_logging
+	munit_xml_base
+	munit_logging
 end
 
 optional 
