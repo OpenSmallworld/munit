@@ -6,11 +6,12 @@ end
 
 requires
 	munit_xml_base
-	munit_logging
+# Seems like munit_logging is causing core tests to time out
+#	munit_logging
 end
 
 optional 
-	 munit_logging
+#	 munit_logging
 end
 
 language en_gb
