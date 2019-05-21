@@ -15,7 +15,7 @@ json_assert_mixin.define_shared_constant(:last_failed_json_assertion, property_l
 $
 _pragma(classify_level=debug)
 ## rounding of floats before comparing json expected vs. actual 
-json_assert_mixin.define_shared_constant(:round_mantissa_decimals, 8, :public)
+json_assert_mixin.define_shared_constant(:round_mantissa_decimals, 7, :public)
 $
 _pragma(classify_level=debug)
 _method json_assert_mixin.print_last_failed_json_assertion(_optional stream)
