@@ -88,6 +88,16 @@ $
 _pragma(classify_level=advanced,topic=MUnit)
 _method assert.assert_equals( expected , actual , _optional a_message , delta , relative? , a_type )
 	## Assert that EXPECTED and ACTUAL are equal.
+	## see compare_equals() for DELTA and RELATIVE? explanation
+
+	(equals?, a_message)<< _self.compare_equals(expected , actual , a_message, delta , relative?)
+	_return _self.assert_true( equals?, a_message , a_type.default( :assert_equals ) )
+_endmethod
+$
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.compare_equals(expected , actual , _optional a_message, delta , relative?)
+	## Returns TRUE when EXPECTED and ACTUAL are equal and new message
+	##
 	## For numbers and unit values assert that EXPECTED and ACTUAL
 	## are equal concerning a DELTA.
 	## DELTA can be absolute value or if RELATIVE? is true than 
@@ -98,7 +108,6 @@ _method assert.assert_equals( expected , actual , _optional a_message , delta , 
 	##
 	## NOTE: Asserts if RELATIVE? is true and EXPECTED is 0.0!
 
-	a_type << a_type.default( :assert_equals )
 	relative? << relative?.default( _false )
 
 	_if ( expected.is_kind_of?( unit_value )) _andif
@@ -118,8 +127,7 @@ _method assert.assert_equals( expected , actual , _optional a_message , delta , 
 	    ( _not expected.finite? _orif _not actual.finite? ) _orif 
 	    delta _is _unset _orif delta = 0 
 	_then
-		_return _self.assert( actual , :|=| , expected , a_message , a_type )
-#<====================
+		_return actual = expected, a_message
 	_endif
 	
 	_if relative? _then delta_type << " Rel." _else delta_type << " Abs." _endif 
@@ -128,7 +136,7 @@ _method assert.assert_equals( expected , actual , _optional a_message , delta , 
 	a_message << _self.format_message(a_message,  default_message)
 	
 	_if relative? _then delta << (expected * delta).abs _endif
-	_return _self.assert( (expected - actual).abs , :|<=| , delta , a_message , a_type )
+	_return (expected - actual).abs <= delta, a_message
 _endmethod
 $
 
@@ -393,10 +401,11 @@ _endmethod
 $
 
 _pragma(classify_level=advanced,topic=MUnit)
-_method assert.assert_deep_equals(expected , actual , _optional a_message)
+_method assert.assert_deep_equals(expected , actual , _optional a_message, delta , relative?)
 
 	## Assert that EXPECTED and ACTUAL are equal, taking
 	## collections into account.
+	## see compare_equals() for DELTA and RELATIVE? explanation
 	##
 	## assert_equals() isn't very useful for comparing collections
 	## because two collections with the same elements are not
@@ -442,7 +451,7 @@ _method assert.assert_deep_equals(expected , actual , _optional a_message)
 	## - reporting of unique keys doesn't say which 'side'
 	## (expected or actual) has the unique key
 	
-	result << _self.compare(expected, actual)
+	result << _self.compare(expected, actual, _unset, _unset, delta , relative?)
 	
 	_if _not result.empty?
 	_then
@@ -455,8 +464,9 @@ _method assert.assert_deep_equals(expected , actual , _optional a_message)
 		_self.fail(str.string)
 	_else		
 		_self.assert_true(_true) # only for assertion counts
-	_endif 
-
+	_endif
+	
+	>> result.empty?
 _endmethod
 $
 
@@ -478,25 +488,28 @@ $
 
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method assert.compare( object1, object2, _optional location, errors)
+_private _method assert.compare( object1, object2, _optional location, errors, delta , relative?)
 
 	location << location.default(rope.new())
 	errors << errors.default(rope.new())
 	
 	_if object1.is_kind_of?(simple_vector) _or object1.is_kind_of?(rope)
 	_then	
-		_self.compare_indexed_collection(object1, object2, location, errors)
+		_self.compare_indexed_collection(object1, object2, location, errors, delta , relative?)
 	_elif  object1.is_kind_of?(property_list) _orif object1.is_kind_of?(hash_table) _orif object1.is_kind_of?(concurrent_hash_map)
 	_then
-		_self.compare_external_keyed_collection(object1, object2,location, errors)
+		_self.compare_external_keyed_collection(object1, object2,location, errors, delta , relative?)
 	_elif  object1.is_kind_of?(set)
 	_then
-		_self.compare_sets(object1, object2,location, errors)		
-	_elif  object1 <> object2
-	_then
-		message << write_string(object1, " <> ", object2)
-		errors.add_last(_self.format_error_message(message,location))
-	_endif
+		_self.compare_sets(object1, object2,location, errors)
+	_else
+		a_message<< write_string(object1, " <> ", object2)
+		(equals?, a_message)<< _self.compare_equals(object1 , object2 , a_message, delta , relative?)
+		_if _not equals?
+		_then
+			errors.add_last(_self.format_error_message(a_message,location))
+		_endif 
+	_endif 
 
 	_return errors
 _endmethod
@@ -504,7 +517,7 @@ $
 
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method assert.compare_external_keyed_collection( object1, object2, location, errors)
+_private _method assert.compare_external_keyed_collection( object1, object2, location, errors, delta , relative?)
 
 	_if _not _self.same_class(object1, object2, location, errors)
 	_then
@@ -519,7 +532,7 @@ _private _method assert.compare_external_keyed_collection( object1, object2, loc
 		_else
 			location.add(k)
 			_protect 
-				_self.compare(v, object2[k], location, errors)
+				_self.compare(v, object2[k], location, errors, delta , relative?)
 			_protection
 				location.remove_last(k)
 			_endprotect
@@ -540,7 +553,7 @@ $
 
 
 _pragma(classify_level=restricted,topic=MUnit)
-_private _method assert.compare_indexed_collection( object1, object2, location, errors)
+_private _method assert.compare_indexed_collection( object1, object2, location, errors, delta , relative?)
 
 	_if _not _self.same_class(object1, object2, location, errors)
 	_then
@@ -559,7 +572,7 @@ _private _method assert.compare_indexed_collection( object1, object2, location, 
 	_loop
 		location.add(k)
 		_protect
-			_self.compare(v, object2[k], location, errors)
+			_self.compare(v, object2[k], location, errors, delta , relative?)
 
 		_protection
 			location.remove_last()
