@@ -14,9 +14,15 @@ _pragma(classify_level=debug)
 json_assert_mixin.define_shared_constant(:last_failed_json_assertion, property_list.new_with(:expected, _unset, :actual, _unset), :public)
 $
 _pragma(classify_level=debug)
-## rounding of floats before comparing json expected vs. actual 
-json_assert_mixin.define_shared_constant(:round_mantissa_decimals, 4, :public)
+json_assert_mixin.define_shared_constant(:numbers_tolerance,
+	## tolerance when comparing numbers decoded from json
+	## aceptable numbers difference is less than 1e-6 % 
+	## see compare_equals() for DELTA and RELATIVE? explanation
+	property_list.new_with(:delta, 1e-8, 
+			       :relative, _true ),
+	_true )
 $
+
 _pragma(classify_level=debug)
 _method json_assert_mixin.print_last_failed_json_assertion(_optional stream)
 	## prints :actual and :expected last_failed_json_assertion as a
@@ -84,8 +90,7 @@ _method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gathe
 		_self.sort_in_json(actual, _scatter sort_data_el)
 		_self.sort_in_json(expected, _scatter sort_data_el)
 	_endloop
-	_self.round_floats(actual)
-	_self.round_floats(expected)
+
 	_self.assert_json_decoded(expected, actual, msg)
 	>> _self 
 _endmethod
@@ -179,10 +184,14 @@ _pragma(classify_level=debug)
 _private _method json_assert_mixin.assert_json_decoded(expected, actual, msg)
 	## 
 	##
-	_self.assert_deep_equals( expected, actual, msg.default("Json assertion failed. Run "+_self.get_name()+" again alone and then check "+
-								_self.class_name+".last_failed_json_assertion, or call "+
-								_self.class_name+".print_last_failed_json_assertion()"))
-	_if _not _self.compare(expected, actual).empty?
+	delta<< _self.numbers_tolerance[:delta]
+	relative?<< _self.numbers_tolerance[:relative]
+	msg<< msg.default("Json assertion failed. Run "+_self.get_name()+
+			  " again alone and then check "+
+			  _self.class_name+".last_failed_json_assertion, or call "+
+			  _self.class_name+".print_last_failed_json_assertion()")
+
+	_if _not _self.assert_deep_equals( expected, actual, msg, delta, relative? )
 	_then
 		_self.last_failed_json_assertion[:expected]<< expected
 		_self.last_failed_json_assertion[:actual]<< actual
@@ -226,32 +235,3 @@ _private _method json_assert_mixin.sort_collection(parent, key, sort_proc)
 _endmethod
 $
 
-_pragma(classify_level=debug)
-_private _method json_assert_mixin.round_floats(json)
-	## 
-	## 
-	_for k, el _over json.keys_and_elements()
-	_loop
-		_if el.is_kind_of?(float)
-		_then
-			json[k]<< _self.round_float(el)
-		_elif el.is_kind_of?(integral_number_mixin)
-		_then
-			json[k]<< _self.round_float(el.as_float)
-		_elif el.is_kind_of?(basic_collection_mixin)
-		_then
-			_self.round_floats(el)
-		_endif 
-	_endloop	
-_endmethod
-$
-_pragma(classify_level=debug)
-_private _method json_assert_mixin.round_float(num)
-	## 
-	##
-	(man, exp)<< num.mantissa_and_exponent10()
-	mult<< 10.to_power(_self.round_mantissa_decimals)
-	man<< (man * mult).rounded / mult * 1.0
-	>> man  * 10.to_power(exp)
-_endmethod
-$
