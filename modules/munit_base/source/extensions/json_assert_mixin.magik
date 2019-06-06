@@ -87,9 +87,9 @@ _method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gathe
 	
 	_for sort_data_el _over sort_data.fast_elements()
 	_loop
-		_self.sort_in_json(actual, _scatter sort_data_el)
-		_self.sort_in_json(expected, _scatter sort_data_el)
-	_endloop
+		actual << _self.sort_in_json(actual, _scatter sort_data_el)
+		expected << _self.sort_in_json(expected, _scatter sort_data_el)
+	_endloop	
 
 	_self.assert_json_decoded(expected, actual, msg)
 	>> _self 
@@ -201,6 +201,21 @@ $
 _pragma(classify_level=debug)
 _private _method json_assert_mixin.sort_in_json(json, sort_proc _gather keys)
 	##
+	## An array element of JSON is to be sorted (usually in-situ) using SORT_PROC
+	##
+	## KEYS are used to find specific array elements; no checking is performed to
+	## ensure that the element is an array and can be sorted.  This is the
+	## responsibility of the caller.
+	##
+	## If no key is passed in, then it is assumed that the top level element of JSON
+	## is an array and in which case(*), a new simple vector containing sorted
+	## elements of JSON will be returned.
+	## If one or more valid keys are passed in then a nested element, or elements,
+	## will be sorted, e.g. JSON[:key1][:key2]...[:keyN]
+	## If "*" is passed in as the last key, then all elements will be sorted 
+	##
+	## Returns JSON, or a copy(*)
+	##
 	myjson<< json
 	_if keys.size > 1
 	_then 
@@ -214,7 +229,11 @@ _private _method json_assert_mixin.sort_in_json(json, sort_proc _gather keys)
 			_endif 
 		_endloop
 	_endif
-	_if keys.last = "*"
+	_if keys.empty?
+	_then
+		#Sort the top level elements
+		myjson << simple_vector.new_from(myjson.as_sorted_collection( sort_proc ))
+	_elif keys.last = "*"
 	_then
 		_for key _over myjson.keys()
 		_loop
@@ -222,7 +241,8 @@ _private _method json_assert_mixin.sort_in_json(json, sort_proc _gather keys)
 		_endloop
 	_else
 		_self.sort_collection(myjson, keys.last, sort_proc)
-	_endif 
+	_endif
+	>> myjson
 _endmethod
 $
 _pragma(classify_level=debug)
