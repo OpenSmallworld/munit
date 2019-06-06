@@ -1,0 +1,12 @@
+munit_logging	1
+
+description
+	MUnit Logging
+end
+
+requires
+	munit_base
+	logging
+end
+
+language en_gb

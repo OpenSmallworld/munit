@@ -1,0 +1,15 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method base_test_runner.log_run_time(a_test, run_time)
+	##
+	## Output timings in RUN_TIME
+	##
+	
+	munit_log.log_test_time(a_test, run_time)
+	
+_endmethod
+$

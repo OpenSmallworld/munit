@@ -141,6 +141,7 @@ _method base_test_runner.int!run( a_test, _optional suite_args )
 		run_time << _self.run_bare( a_test )
 
 		_self.output_run_time( run_time )
+		_self.log_run_time( a_test, run_time )
 	_endif
 	
 _endmethod
@@ -257,6 +258,19 @@ _private _method base_test_runner.output_run_time( run_time )
 	.stream.flush()	
 _endmethod
 $
+
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method base_test_runner.log_run_time(a_test, run_time)
+	##
+	## Output timings in RUN_TIME
+	##
+	## Customisation hook which is redefined in munit_logging 
+	##
+	
+_endmethod
+$
+
 
 _pragma(classify_level=advanced,topic=MUnit)
 _method base_test_runner.run_bare( a_test )

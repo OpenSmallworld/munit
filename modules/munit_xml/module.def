@@ -1,11 +1,17 @@
 munit_xml 4
 
 description
-	MUnit XML Support
+	MUnit XML Support with logging
 end
 
 requires
-	munit_base 4
+	munit_xml_base
+# Seems like munit_logging is causing core tests to time out
+#	munit_logging
+end
+
+optional 
+#	 munit_logging
 end
 
 language en_gb

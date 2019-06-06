@@ -310,6 +310,8 @@ _method design_manager_test_case.run_bare()
 	_local old_value << !notify_database_data_changes?!
 	!notify_database_data_changes?! << _false
 
+	_self.stub_map_rendering_if_required()
+
         _self.one_time_behaviour()
 
         _protect
