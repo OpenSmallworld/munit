@@ -96,7 +96,14 @@ _endmethod
 $
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method assert.compare_equals(expected , actual , _optional a_message, delta , relative?)
-	## Returns TRUE when EXPECTED and ACTUAL are equal and new message
+	## Returns 5 values:
+	## - a boolean: TRUE when EXPECTED and ACTUAL are equal and new message and
+	##   FALSE otherwise
+	## - a message use to describe the failed comparison
+	## - actual value
+	## - operator
+	## - expected value
+	## The last 3 values can be passed to _self.assert() by the calling code.
 	##
 	## For numbers and unit values assert that EXPECTED and ACTUAL
 	## are equal concerning a DELTA.
@@ -107,6 +114,7 @@ _private _method assert.compare_equals(expected , actual , _optional a_message, 
 	## ABS_DELTA = REL_DELTA * EXPECTED.
 	##
 	## NOTE: Asserts if RELATIVE? is true and EXPECTED is 0.0!
+	##
 
 	relative? << relative?.default( _false )
 
@@ -140,7 +148,7 @@ _private _method assert.compare_equals(expected , actual , _optional a_message, 
 
 	actual_delta << (expected - actual).abs
 	equals_within_tolerance? <<  actual_delta <= delta
-	_return equals_within_tolerance?, actual_delta , :|<=| , delta , a_message
+	_return equals_within_tolerance?, a_message, actual_delta , :|<=| , delta
 _endmethod
 $
 
