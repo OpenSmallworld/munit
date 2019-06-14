@@ -91,7 +91,7 @@ _method assert.assert_equals( expected , actual , _optional a_message , delta , 
 	## see compare_equals() for DELTA and RELATIVE? explanation
 
 	(equals?, assert_data)<< _self.compare_equals(expected , actual , a_message, delta , relative?)
-	(assert_actual, assert_operator, assert_expected, assert_message)
+	(assert_actual, assert_operator, assert_expected, assert_message) << (_scatter assert_data)
 	_return _self.assert( assert_actual, assert_operator, assert_expected, assert_message, a_type.default( :assert_equals ))
 _endmethod
 $
@@ -128,7 +128,7 @@ _private _method assert.compare_equals(expected , actual , _optional a_message, 
 	    ( _not expected.finite? _orif _not actual.finite? ) _orif 
 	    delta _is _unset _orif delta = 0 
 	_then
-		_return { actual , :|=| , expected , a_message }
+		_return actual = expected, { actual , :|=| , expected , a_message }
 	_endif
 	
 	_if relative? _then delta_type << " Rel." _else delta_type << " Abs." _endif 
@@ -138,7 +138,7 @@ _private _method assert.compare_equals(expected , actual , _optional a_message, 
 	
 	_if relative? _then delta << (expected * delta).abs _endif
 
-	_return {(expected - actual).abs , :|<=| , delta , a_message )
+	_return (expected - actual).abs <= delta, {(expected - actual).abs , :|<=| , delta , a_message }
 _endmethod
 $
 
@@ -506,10 +506,11 @@ _private _method assert.compare( object1, object2, _optional location, errors, d
 		_self.compare_sets(object1, object2,location, errors)
 	_else
 		a_message<< write_string(object1, " <> ", object2)
-		(equals?, a_message)<< _self.compare_equals(object1 , object2 , a_message, delta , relative?)
+		(equals?, assert_data)<< _self.compare_equals(object1 , object2 , a_message, delta , relative?)
 		_if _not equals?
 		_then
-			errors.add_last(_self.format_error_message(a_message,location))
+			(assert_actual, assert_operator, assert_expected, assert_message) << (_scatter assert_data)
+			errors.add_last(_self.format_error_message(assert_message,location))
 		_endif 
 	_endif 
 
