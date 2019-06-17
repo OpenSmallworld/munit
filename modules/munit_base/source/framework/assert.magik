@@ -90,13 +90,20 @@ _method assert.assert_equals( expected , actual , _optional a_message , delta , 
 	## Assert that EXPECTED and ACTUAL are equal.
 	## see compare_equals() for DELTA and RELATIVE? explanation
 
-	(equals?, a_message)<< _self.compare_equals(expected , actual , a_message, delta , relative?)
-	_return _self.assert_true( equals?, a_message , a_type.default( :assert_equals ) )
+	(equals?, assert_message, assert_actual, assert_operator, assert_expected)<< _self.compare_equals(expected , actual , a_message, delta , relative?)
+	_return _self.assert( assert_actual, assert_operator, assert_expected, assert_message, a_type.default( :assert_equals ))
 _endmethod
 $
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method assert.compare_equals(expected , actual , _optional a_message, delta , relative?)
-	## Returns TRUE when EXPECTED and ACTUAL are equal and new message
+	## Returns 5 values:
+	## - a boolean: TRUE when EXPECTED and ACTUAL are equal and new message and
+	##   FALSE otherwise
+	## - a message use to describe the failed comparison
+	## - actual value
+	## - operator
+	## - expected value
+	## The last 3 values can be passed to _self.assert() by the calling code.
 	##
 	## For numbers and unit values assert that EXPECTED and ACTUAL
 	## are equal concerning a DELTA.
@@ -107,6 +114,7 @@ _private _method assert.compare_equals(expected , actual , _optional a_message, 
 	## ABS_DELTA = REL_DELTA * EXPECTED.
 	##
 	## NOTE: Asserts if RELATIVE? is true and EXPECTED is 0.0!
+	##
 
 	relative? << relative?.default( _false )
 
@@ -127,7 +135,8 @@ _private _method assert.compare_equals(expected , actual , _optional a_message, 
 	    ( _not expected.finite? _orif _not actual.finite? ) _orif 
 	    delta _is _unset _orif delta = 0 
 	_then
-		_return actual = expected, a_message
+		equals? << actual = expected
+		_return equals?, a_message, actual , :|=| , expected
 	_endif
 	
 	_if relative? _then delta_type << " Rel." _else delta_type << " Abs." _endif 
@@ -136,7 +145,10 @@ _private _method assert.compare_equals(expected , actual , _optional a_message, 
 	a_message << _self.format_message(a_message,  default_message)
 	
 	_if relative? _then delta << (expected * delta).abs _endif
-	_return (expected - actual).abs <= delta, a_message
+
+	actual_delta << (expected - actual).abs
+	equals_within_tolerance? <<  actual_delta <= delta
+	_return equals_within_tolerance?, a_message, actual_delta , :|<=| , delta
 _endmethod
 $
 
