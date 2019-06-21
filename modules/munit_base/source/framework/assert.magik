@@ -515,15 +515,33 @@ _private _method assert.compare( object1, object2, _optional location, errors, d
 	_then
 		_self.compare_sets(object1, object2,location, errors)
 	_else
-		a_message<< write_string(object1, " <> ", object2)
-		(equals?, a_message)<< _self.compare_equals(object1 , object2 , a_message, delta , relative?)
+		(equals?, a_message)<< _self.compare_equals(object1 , object2 , _unset, delta , relative?)
 		_if _not equals?
 		_then
+			_if a_message _is _unset
+			_then
+				a_message << _self.comparison_failed_message(object1, object2)
+			_endif
 			errors.add_last(_self.format_error_message(a_message,location))
 		_endif 
 	_endif 
 
 	_return errors
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method assert.comparison_failed_message(object1, object2)
+	## 
+	## 
+	>> _if object1.class_name _isnt object2.class_name
+	   _then			
+		   >> write_string(object1, " (an instance of ", object1.class_name, ")",
+				   " <> ",
+				   object2, " (an instance of ", object2.class_name, ")")
+	   _else
+		   >> write_string(object1, " <> ", object2)
+	   _endif
 _endmethod
 $
 
