@@ -84,8 +84,7 @@ _method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gathe
 		exp_json<< exp_json()
 	_endif 
 	expected<< decoder.parse_string(exp_json)
-	
-	_for sort_data_el _over sort_data.fast_elements()
+	_for sort_data_el _over sort_data.elements()
 	_loop
 		actual << _self.sort_in_json(actual, _scatter sort_data_el)
 		expected << _self.sort_in_json(expected, _scatter sort_data_el)
@@ -225,24 +224,25 @@ _private _method json_assert_mixin.sort_in_json(json, sort_proc _gather keys)
 			_if myjson _is _unset
 			_then
 				_self.fail(write_string("Key '",keys[k],"' not found in JSON. Not possible to sort json before asserting."))
-				_return 
+				_return
 			_endif 
 		_endloop
 	_endif
-	_if keys.empty?
-	_then
-		#Sort the top level elements
-		myjson << simple_vector.new_from(myjson.as_sorted_collection( sort_proc ))
-	_elif keys.last = "*"
-	_then
-		_for key _over myjson.keys()
-		_loop
-			_self.sort_collection(myjson, key, sort_proc)
-		_endloop
-	_else
-		_self.sort_collection(myjson, keys.last, sort_proc)
-	_endif
-	>> myjson
+	>> _if keys.empty?
+	   _then
+		   #Sort the top level elements
+		   >> simple_vector.new_from(myjson.as_sorted_collection( sort_proc ))
+	   _elif keys.last = "*"
+	   _then
+		   _for key _over myjson.keys()
+		   _loop
+			   _self.sort_collection(myjson, key, sort_proc)
+		   _endloop
+		   >> json
+	   _else
+		   _self.sort_collection(myjson, keys.last, sort_proc)
+		   >> json
+	   _endif
 _endmethod
 $
 _pragma(classify_level=debug)
