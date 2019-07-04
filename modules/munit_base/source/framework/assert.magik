@@ -755,7 +755,7 @@ _private _method assert.xml_element_sort_proc
 		   _endif
 		   _if xml_el1.xml_contents <> xml_el2.xml_contents
 		   _then
-			   _return xml_el1.xml_contents < xml_el2.xml_contents
+			   _return xml_el1.xml_contents.default("") < xml_el2.xml_contents.default("")
 		   _endif
 
 		   e1a<< xml_el1.attributes
