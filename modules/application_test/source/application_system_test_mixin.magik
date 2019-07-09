@@ -339,7 +339,7 @@ _method application_system_test_mixin.when_clicking_action( plugin_name, action_
 	##
 
 	action << _self.properties[ :application ].plugin( plugin_name ).action( action_name )
-	_self.click_action_button( action, new_frame_wait_time )
+	_self.click_action_button( action, _unset, new_frame_wait_time )
 
 	>> _self
 	
