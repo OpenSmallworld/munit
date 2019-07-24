@@ -719,8 +719,10 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _g
 		_elif elements[index].is_kind_of?(char16_vector) _andif
 		      other_elements[index].is_kind_of?(char16_vector)
 		_then
-			eq?<< _self.assert_equals(elements[index], other_elements[index],
-						  write_string( "Expected ", elements[index], " to equal ", other_elements[index], "." ))
+			expected << elements[index].split_by(%newline).join_as_strings(%newline)
+			actual << other_elements[index].split_by(%newline).join_as_strings(%newline)
+			eq?<< _self.assert_equals(expected, actual,
+						  write_string( "Expected ", expected, " to equal ", actual, "." ))
 			_if _not eq? _then _return _false _endif
 
 		_elif _not _self.int!compare_xml(elements[index], other_elements[index], path, _scatter sort_paths)
