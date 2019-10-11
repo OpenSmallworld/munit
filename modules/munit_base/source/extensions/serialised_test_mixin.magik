@@ -432,6 +432,35 @@ _method serialised_test_mixin.when_the_frame_is_minimized( top_frame, minimized?
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method serialised_test_mixin.when_the_frame_is_maximized(top_frame, maximized?, _optional wait_value)
+	## 
+	##
+	
+	_if top_frame _isnt _unset
+	_then
+		
+		_if _self.queue _is _unset
+		_then 
+			_self.queue << atomic_queue.new( 1019 )
+		_endif
+
+		_if wait_value _is _unset
+		_then
+			wait_value << :task_complete
+		_endif
+
+		_self.remove_value_from_queue( wait_value )		
+		top_frame.maximized? << maximized?
+		_self.wait_for_value_on_queue( wait_value )
+		
+	_endif
+	
+	>> _self
+_endmethod
+$
+
+
 
 _pragma(classify_level=debug)
 _method serialised_test_mixin.when_the_frame_is_deactivated( top_frame )
