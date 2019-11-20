@@ -96,6 +96,15 @@ design_manager_test_case.define_shared_constant(:design_tab_updates_required?, _
 $
 
 
+_pragma(classify_level=debug,topic={MUnit, Test})
+## Specifies whether any designs created while running a test are kept or deleted
+## By default, designs are deleted, setting this to true will allow you to look
+## at the data to help develop tests.
+## This should only be set to true during development.
+design_manager_test_case.define_shared_variable(:keep_designs?, _false, :public)
+$
+
+
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 _method design_manager_test_case.properties
 	## 
@@ -506,17 +515,22 @@ _private _method design_manager_test_case.goto_test_checkpoints( _optional prefi
 _endmethod
 $
 
-
 _pragma(classify_level=debug,topic=MUnit)
 _private _method design_manager_test_case.rollback()
 	##
-        ## Rollback changes in every view we're interested in.
+	## Rollback changes in every view we're interested in.
 	##
-
-        _for a_ds_view _over _self.ds_views.fast_elements()
-        _loop
-                a_ds_view.rollback()
-        _endloop
+	
+	_if _self.keep_designs?
+	_then 
+		write("Keeping Designs")
+	_else 
+		_for a_ds_view _over _self.ds_views.fast_elements()
+		_loop
+			a_ds_view.rollback()
+		_endloop
+	_endif
+	
 _endmethod
 $
 
@@ -525,10 +539,10 @@ _private _method design_manager_test_case.teardown_design()
 	##
 	## Tear down the design.
 	##
-        ## This just rolls back the changes in every view we're
-        ## interested in
+	## This just rolls back the changes in every view we're
+	## interested in
 	## 
-
+	
 	_self.rollback()
 _endmethod
 $
