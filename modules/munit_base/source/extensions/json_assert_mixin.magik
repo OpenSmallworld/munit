@@ -100,8 +100,8 @@ _private _method json_assert_mixin.int!assert_json(exp_json, actual_json, a_proc
 
 	_if a_proc _isnt _unset
 	_then
-		(actual, expected)<< a_proc.evaluate(actual, expected)
-	_endif 
+		(actual, expected) << a_proc(actual, expected)
+	_endif
 	
 	_self.assert_json_decoded(expected, actual, msg)
 	>> _self 
@@ -114,7 +114,7 @@ _method json_assert_mixin.assert_json_with_pre_processing(exp_json, actual_json,
 	## ACTUAL_JSON already parsed to a magik object as a parameter
 	## just before they are compared A_PROC is expected to return
 	## updated EXP_JSON, ACTUAL_JSON 
-	>> _self.int!assert_json(exp_json, actual_json, a_proc ,  msg, _scatter sort_data)
+	>> _self.int!assert_json(exp_json, actual_json, a_proc, msg, _scatter sort_data)
 _endmethod
 $
 
