@@ -70,6 +70,13 @@ _method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gathe
 	## Last key can be "*" e.g. {sort_proc, :contexts, :internals, "*"}
 	## which means that values of all keys will be sorted by sort_proc
 	##
+	>> _self.int!assert_json(exp_json, actual_json, _unset ,  msg, _scatter sort_data)
+_endmethod
+$
+_pragma(classify_level=debug)
+_private _method json_assert_mixin.int!assert_json(exp_json, actual_json, a_proc, _optional msg _gather sort_data)
+	## 
+	## 
 	decoder<< json_decoder.new()
 	_try
 		actual<< decoder.parse_string(actual_json)
@@ -84,14 +91,30 @@ _method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gathe
 		exp_json<< exp_json()
 	_endif 
 	expected<< decoder.parse_string(exp_json)
+
 	_for sort_data_el _over sort_data.elements()
 	_loop
 		actual << _self.sort_in_json(actual, _scatter sort_data_el)
 		expected << _self.sort_in_json(expected, _scatter sort_data_el)
 	_endloop	
 
+	_if a_proc _isnt _unset
+	_then
+		(actual, expected) << a_proc(actual, expected)
+	_endif
+	
 	_self.assert_json_decoded(expected, actual, msg)
 	>> _self 
+_endmethod
+$
+_pragma(classify_level=debug)
+_method json_assert_mixin.assert_json_with_pre_processing(exp_json, actual_json, a_proc, _optional msg _gather sort_data)
+	## see assert_json()
+	## A_PROC is a pre processing procedure which is run with EXP_JSON,
+	## ACTUAL_JSON already parsed to a magik object as a parameter
+	## just before they are compared A_PROC is expected to return
+	## updated EXP_JSON, ACTUAL_JSON 
+	>> _self.int!assert_json(exp_json, actual_json, a_proc, msg, _scatter sort_data)
 _endmethod
 $
 
