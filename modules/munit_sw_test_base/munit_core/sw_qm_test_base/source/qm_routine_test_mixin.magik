@@ -1,0 +1,581 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted, topic={munit})
+##
+## Mixin with common test methods for QM Routine unit tests.
+## This has been implemented as a mixin because if this was
+## implemented as a class, it would appear in the Test Runner
+## as a test.
+##
+## Inheritor should define a shared constant called
+## routine_properties which lists the basic properties of the
+## routine to be tested. This mixin expects the following
+## properties to be defined:
+##
+##  :routine_exemplar - the exemplar of the routine to be tested
+##  :autofix_available? - does the routine support autofix?
+##  :autofix_for_error_codes - a property list keyed by error code
+##  with boolean values for whether the routine supports
+##  autofix? for the given error_code.
+##  :re_runnable? - is the routine re-runnable?
+##  :error_codes - a property_list keyed by error code with
+##                 severities as values. Must list all error
+##                 codes the routine could raise.
+##  :runs_on - either a list of class names of objects the
+##             routine will run on, or the name of a method (as
+##             a symbol) on the unit test class which returns a
+##             list of class names of objects the routine will
+##             run on. 
+##
+def_mixin(:qm_routine_test_mixin,{})
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.routine_to_test
+	##
+	## Returns the exemplar of the routine to test
+	##
+	>> _self.routine_properties[:routine_exemplar]
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.autofix_available?
+	##
+	## Does the routine have autofix?
+	##
+	>> _self.routine_properties[:autofix_available?]
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.autofix_available?(error_code)
+	##
+	## Does the routine have autofix? for the given
+	## error_code?. Defaults to returning autofix_available? if
+	## autofix_for_error_codes is unset.
+	##
+	
+	_if _self.routine_properties[:autofix_for_error_codes] _is _unset
+	_then 
+		_return _self.autofix_available?
+	_else
+		_return _self.routine_properties[:autofix_for_error_codes][error_code]
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.re_runnable?
+	##
+	## Is the routine have re-runnable?
+	##
+	>> _self.routine_properties[:re_runnable?]
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.objects_which_routine_can_be_run_on()
+	##
+	## Returns the list of class names the routine can run on
+	##
+	
+	runs_on << _self.routine_properties[:runs_on]
+
+	_if runs_on.is_kind_of?(:symbol)
+	_then
+		runs_on << _self.perform(runs_on)
+	_endif
+	
+	>> runs_on
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.error_codes
+	##
+	## Returns the list of error codes the routine can raise
+	##
+	>> _self.routine_properties[:error_codes].keys
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.severity_for_error_code(error_code)
+	##
+	## Returns the severity for ERROR_CODE
+	##
+	>> _self.routine_properties[:error_codes][error_code]
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_private _method qm_routine_test_mixin.message_is_internal?(text)
+	##
+	## Returns _true if TEXT has the form of an internal message
+	## string for the routine_to_test (i.e. text begins
+	## with the class name of the exemplar returned by
+	## routine_to_test).
+	## Returns _false otherwise.
+	##
+	
+	class_name << _self.routine_to_test.class_name
+	class_name_length << class_name.size
+	
+	>> (text.size >= class_name_length _andif
+	    text.slice(1, class_name_length) = class_name)
+
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.test_external_name()
+	##
+	## Test the method external_name
+	##
+
+	name << _self.routine_to_test.external_name
+
+	class_name << _self.routine_to_test.class_name
+	fail_str << write_string(class_name, ".external_name shouldn't return an internal message.")
+	
+	_self.assert_false(_self.message_is_internal?(name), fail_str)
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.test_error_description()
+	##
+	## Test the method error_description() for all error codes.
+	##
+
+	_for error_code _over _self.error_codes.fast_elements()
+	_loop
+		error_description << _self.routine_to_test.error_description(error_code)
+		fail_str << write_string("Error description for ", error_code,
+				     " shouldn't be an internal message")
+		_self.assert_false(_self.message_is_internal?(error_description), fail_str)
+	_endloop
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.test_autofix_available?()
+	##
+	## Test the method autofix_available? and autofix_available?()
+	## for all error codes.
+	##
+	
+	expected << _self.autofix_available?
+	actual << _self.routine_to_test.autofix_available?
+	
+	fail_str << write_string("autofix_available? should have returned '", expected,
+				 "' not '", actual, "'")
+	
+	_self.assert_is(expected, actual, fail_str)
+
+	_for error_code _over _self.error_codes.fast_elements()
+	_loop
+		expected << _self.autofix_available?(error_code)
+		actual << _self.routine_to_test.autofix_available?(error_code)
+		
+		fail_str << write_string("autofix_available?() for ", error_code,
+					 " should have returned '", expected,
+					 "' not '", actual, "'")
+		
+		_self.assert_is(expected, actual, fail_str)
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.test_re_runnable?()
+	##
+	## Test the method re_runnable?
+	##
+	
+	expected << _self.re_runnable?
+	actual << _self.routine_to_test.re_runnable?
+	
+	fail_str << write_string("re_runnable? should have returned '", expected,
+				 "' not '", actual, "'")
+	
+	_self.assert_is(expected, actual, fail_str)
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.run_routine_on(a_record, _gather data)
+	##
+	## Run the routine on A_RECORD.
+	##
+	## DATA is extra data which is passed to the run() method of
+	## the routine.
+	##
+	## Returns a list of flags raised when the routine was run.
+	##
+	_local flags << rope.new()
+
+	flag_proc << _proc(objs, error_code, severity, desc, _gather params )
+			     _import flags
+			     flag_data << property_list.new()
+			     flag_data[:objects] << objs
+			     flag_data[:error_code] << error_code
+			     flag_data[:severity] << severity
+			     flag_data[:desc] << desc
+			     pl << property_list.new_from_gathered( params )
+			     _for key, val _over pl.fast_keys_and_elements()
+			     _loop
+				     flag_data[key] << val
+			     _endloop 
+			     flags.add_last(flag_data)
+		     _endproc
+
+	stub_method_helper.replace_method( _self.routine_to_test,
+					   :|create_flag_for()|,
+					   flag_proc )
+	
+	_self.routine_to_test.run(a_record, _scatter data)
+
+	_return flags
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_private _method qm_routine_test_mixin.int!stub_trace_results(p_trace_results)
+	## 
+	##
+	_local l_trace_results << p_trace_results
+	stub_method_helper.replace_method( _self.routine_to_test,
+					   :|get_trace_results()|,
+					   _proc()
+						   _import l_trace_results
+						   _return l_trace_results
+					   _endproc  )
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.check_single_flag_data(expected_flag,
+							 actual_flag,
+							 prefix)
+	##
+	## Checks the data of a single flag.
+	## 
+	## EXPECTED_FLAG is a property list containing the data to be
+	## checked for a single flag.
+	##
+	## ACTUAL_FLAG is a property list containing the data for a
+	## single flag.
+	##
+	## Only the fields specified in the EXPECTED_FLAG are
+	## checked. Additional fields appearing in ACTUAL_FLAG but not
+	## appearing in EXPECTED_DATA are not checked.
+	##
+	## PREFIX is a string which will be prepended to the error
+	## message in any asserts.
+	##
+
+	_for key _over expected_flag.fast_keys()
+	_loop
+		_if key _is :objects
+		_then
+			# This is checked explicitly below
+			_continue
+		_endif
+		desc << write_string(prefix,"Expected ", key, " to be ",
+				     expected_flag[key], " not ",actual_flag[key])
+		_self.assert_equals(expected_flag[key], actual_flag[key], desc)
+
+		_if key _is :error_code
+		_then
+			_self.check_severity_for_flag(prefix, expected_flag, actual_flag)
+		_endif
+	_endloop
+
+	_if expected_flag[:objects] _isnt _unset
+	_then
+		# Check objects
+		# expected_flag[:objects] should be an equality_set.
+		expected << expected_flag[:objects]
+		actual << equality_set.new_from(actual_flag[:objects])
+
+		desc << write_string(prefix, "Expected the number of flagged objects to be ",
+				     expected.size, " not ", actual.size)
+		_self.assert_is(expected.size, actual.size, desc)
+
+		_if expected.size _is actual.size
+		_then
+			# If the union of the two sets is the same size as actual then
+			# expected doesn't contain any elements that aren't in actual.
+			# As actual and expected are the same size, this implies that
+			# the sets are equal.
+			equal? << expected.union(actual).size _is actual.size
+			desc << write_string(prefix, "The actual objects don't match the expected objects.")
+			_self.assert_true(equal?, desc)
+		_endif
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_private _method qm_routine_test_mixin.check_severity_for_flag(prefix, expected_flag, actual_flag)
+	## 
+	##
+	
+	# Check the severity
+	error_code << expected_flag[:error_code]
+	_if (expected_severity << expected_flag[:severity]) _is _unset
+	_then 
+		expected_severity << _self.severity_for_error_code(error_code)
+	_endif 
+
+	# expected_severity will be unset if the subclass did not
+	# configure the routine_properties[:error_codes] meta data. In
+	# this case, the severity might be checked already by the for
+	# loop in check_single_flag_data() which called this method.
+	_if expected_severity _isnt _unset
+	_then 
+		desc << write_string(prefix,"Expected the severity to be ",
+				     expected_severity,
+				     " not ",actual_flag[:severity], " for ", error_code)
+		_self.assert_is(expected_severity, actual_flag[:severity], desc)
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.check_flag_data(expected_data, actual_data, prefix)
+	##
+	## Checks that the expected flag data EXPECTED_DATA matches the
+	## actual flag data ACTUAL_DATA.
+	##
+	## EXPECTED_DATA is an ordered collection of property
+	## lists. Each property list contains the data of a single
+	## flag.
+	##
+	## ACTUAL_DATA is an ordered collection of property lists. Each
+	## property list contains the data that should be checked for a
+	## flag.
+	##
+	## The method first checks that the number of flags in
+	## EXPECTED_DATA and ACTUAL_DATA match. If they do, each flag
+	## is checked in order (it is assumed that the order of the
+	## flags is deterministic). Only the fields specified in the
+	## EXPECTED_DATA are checked. Additional fields appearing in
+	## ACTUAL_DATA but not appearing in EXPECTED_DATA are not
+	## checked.
+	##
+	## PREFIX is a string which will be prepended to the error
+	## message in any asserts.
+	##
+
+	expected_flag_count << expected_data.size
+	actual_flag_count << actual_data.size
+	error_desc << write_string(prefix, "Expected ", expected_flag_count,
+				   " flag(s), but got ", actual_flag_count, " flag(s)")
+	_self.assert_is(expected_flag_count,actual_flag_count,error_desc)
+
+	_if expected_flag_count = actual_flag_count _andif expected_flag_count > 0
+	_then
+		_for index _over range(1,expected_flag_count)
+		_loop
+			expected_flag << expected_data[index]
+			actual_flag << actual_data[index]
+			_self.check_single_flag_data(expected_flag,
+						     actual_flag,
+						     write_string(prefix," (flag ",index," ) "))
+			
+		_endloop
+	_endif	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_private _method qm_routine_test_mixin.check_can_run_on?(collection_name, expected_result)
+	##
+	## Check the can_run_on?() method for a mocked up object
+	## specified by the given input data.
+	##
+	## COLLECTION_NAME indicates what should be returned when
+	## source_collection.name is called on the mocked object.
+	##
+	## EXPECTED_RESULT is the expected return value of the
+	## can_run_on?() method.
+	##
+
+	rec << _self.create_record_for_collection(collection_name)
+	
+	actual_result << _self.routine_to_test.can_run_on?(rec)
+
+	fail_str << write_string("Case ( ", collection_name, " ): ",
+				 "Expected call to can_run_on?() to return ", expected_result,
+				 ", not ", actual_result, ".")
+	
+	_self.assert_is(expected_result, actual_result, fail_str)
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_private _method qm_routine_test_mixin.create_record_for_collection(collection_name)
+	##
+	##
+
+	_local class << get_global_value(collection_name)
+
+	c << mock(:collection)
+	stub(c).name.then_return(collection_name)
+	stub(c).descriptor.then_return(_unset)
+	stub(c).external_name.then_return(write_string(collection_name))
+	
+	rec << mock(:record_ + collection_name, class)
+	stub(rec).source_collection.then_return(c)
+	stub(rec).rwo_type.then_return(collection_name)
+	
+	rec << _self.stub_mocked_record(rec)
+	
+	_return rec
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit}, usage={redefinable})
+_private _method qm_routine_test_mixin.stub_mocked_record(mock_record)
+	##
+	## Classes inheriting from qm_routine_test_mixin can redefine
+	## this method to stub MOCK_RECORD with additional behaviour as
+	## required.
+	##
+
+	>> mock_record
+
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.test_can_run_on?()
+	##
+	## Test the method can_run_on?()
+	##
+	## We check all exemplars inheriting from info_flag_owner_mixin
+	## and all exemplars named in the list returned by the method
+	## objects_which_routine_can_be_run_on().
+	##
+
+	# Need to do equality inclusion to avoid complications with
+	# mocks which may have names which are strings
+	objects << equality_set.new_from( _self.objects_which_routine_can_be_run_on() )
+	
+	# Check all decendants of info_flag_owner_mixin that the system knows
+	# about:
+	_for item _over info_flag_owner_mixin.define_method_target.children(_true)
+	_loop
+		name << item.meta_at(:class_name)
+		# If name doesn't have a corresponding global variable, name
+		# will correspond to a method table cooked up by the database.
+		_if get_global_value(name) _isnt _unset
+		_then
+			_if _not objects.includes?(name)
+			_then
+				# If the object is an RWO but not one in the list can_run_on?()
+				# should return false
+				_self.check_can_run_on?(name, _false)
+			_endif
+		_endif
+	_endloop
+
+	_for i_name _over objects.fast_elements()
+	_loop
+		# Although we could check these RWO types in the loop
+		# above, we check them here explicitly, to ensure that they do
+		# get checked.
+		# For objects in this list, can_run_on?() should return
+		# true
+		_self.check_can_run_on?(i_name, _true)
+	_endloop
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_private _method qm_routine_test_mixin.int!make_mock_rwo(collection_name, field_values)
+	##
+	## Make a mock RWO object for which the source collection name
+	## is COLLECTION_NAME.
+	## FIELD_VALUES is a keyed collection specifying values for
+	## fields to be stubbed on the mock RWO.
+	## Returns the mock object.
+	##
+
+	a_mock_rwo << mock(collection_name)
+	a_coll << mock(:collection)
+	stub(a_coll).name.then_return(collection_name)
+	stub(a_mock_rwo).source_collection.then_return(a_coll)
+
+	_for key,value _over field_values.fast_keys_and_elements()
+	_loop
+		# Make mock field object
+		field << mock(:field)
+		stub(field).external_name.then_return(key)
+		stub(a_mock_rwo).field(key).then_return(field)
+		stub(a_mock_rwo).perform(key).then_return(value)
+	_endloop
+	>> a_mock_rwo
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_private _method qm_routine_test_mixin.message_from_routine(message_id, _gather args)
+	##
+	## Get the human readable message from the routine we are
+	## testing for MESSAGE_ID with arguments ARGS.
+	##
+	>> message_handler.new(_self.routine_to_test.class_name).human_string(message_id, _unset, _scatter args)
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_private _method qm_routine_test_mixin.set_up_trace_results(rwo, _gather keys_and_values)
+	##
+	## Build mock trace results for RWO from the data provided in
+	## KEYS_AND_VALUES and on the routine we're testing, stub
+	## get_trace_results() to return them.
+	##
+	## Supported keys:
+	## :loop_nodes - a list of mock loop nodes
+	## :threads    - a list of mock web threads
+	##
+
+	props << property_list.new_from_gathered(keys_and_values)
+	
+	web << mock(:network_web)
+	
+	# If loop_nodes returns an empty container it means there were
+	# no loops in the network.
+	_if (loop_nodes << props[:loop_nodes]) _isnt _unset
+	_then
+		stub(web).loop_nodes.then_return(loop_nodes)
+	_endif
+
+	_if (threads << props[:threads]) _isnt _unset
+	_then
+		stub(web).get_web_threads().then_return(threads)
+	_endif
+	
+	trace_results << equality_hash_table.new()
+	trace_results[rwo] << {web}
+
+	_self.int!stub_trace_results(trace_results)
+	
+_endmethod
+$

@@ -1,0 +1,11 @@
+sw_qm_test_base 5
+
+description
+	Test Base for QM
+end
+
+requires
+	munit_base
+end
+
+language en_gb
