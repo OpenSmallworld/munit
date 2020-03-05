@@ -244,7 +244,10 @@ $
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _method test_case.set_up()
 	## Sets up the fixture, for example, open a CORBA connection
-
+	
+	_global last_test
+	last_test << _self
+	
 	_if _self.stub_alerts?
 	_then
 		_self.int!stub_alerts()
