@@ -45,9 +45,9 @@ _method munit_xml_testcase.write_on(stream, _optional level)
 	stream.write(space_char*2*level,"<testcase classname=",%",.classname,%"," name=",%",.name,%"," time=",%",_self.time,%")
 	_if .exceptions.empty?
 	_then
-		stream.write("/>")
+		stream.write(" status=", %", "Passed", %", "/>")
 	_else
-		stream.write(">")
+		stream.write(" status=", %", "Failed", %", ">")
 		stream.newline()
 		_for f _over .exceptions.fast_elements()
 		_loop
