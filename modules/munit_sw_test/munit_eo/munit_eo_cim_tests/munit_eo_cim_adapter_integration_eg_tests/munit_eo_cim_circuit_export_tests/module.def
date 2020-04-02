@@ -1,0 +1,15 @@
+munit_eo_cim_circuit_export_tests	1
+
+description
+	Integration circuit export tests for the module sw_cim_adapter
+end
+
+requires
+	munit_eo_cim_test_utils
+end
+ 
+tests_modules
+	sw_cim_adapter
+end
+ 
+hidden

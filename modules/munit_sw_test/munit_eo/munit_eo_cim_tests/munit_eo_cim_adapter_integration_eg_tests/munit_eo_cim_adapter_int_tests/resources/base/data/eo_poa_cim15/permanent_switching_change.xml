@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rdf:RDF xmlns:dm="http://iec.ch/2002/schema/CIM_difference_model#" xmlns:cim="http://iec.ch/TC57/2010/CIM-schema-cim15#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+	<dm:DifferenceModel rdf:about="">
+		<dm:forwardDifferences rdf:parseType="Statements">
+			<rdf:Description rdf:about="#cn_13266">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18785"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#cn_13267">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18785"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#cn_13306">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18785"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#cn_193708">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18785"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#cn_193709">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18785"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#cn_193952">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18785"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#eo_cable_segment_inst_13076-NL.193708-NH.193709">
+				<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_18785"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#eo_cable_segment_inst_13079-NL.13266-NH.13267">
+				<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_18785"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#eo_cable_segment_inst_13099-NL.13306-NH.193952">
+				<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_18785"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#eo_isolating_eqpt_inst_18913">
+				<cim:Switch.normalOpen>false</cim:Switch.normalOpen>
+			</rdf:Description>
+			<rdf:Description rdf:about="#eo_isolating_eqpt_inst_193358">
+				<cim:Switch.normalOpen>true</cim:Switch.normalOpen>
+			</rdf:Description>
+		</dm:forwardDifferences>
+		<dm:reverseDifferences rdf:parseType="Statements">
+			<rdf:Description rdf:about="#cn_13266">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18799"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#cn_13267">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18799"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#cn_13306">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18799"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#cn_193708">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18799"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#cn_193709">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18799"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#cn_193952">
+				<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18799"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#eo_cable_segment_inst_13076-NL.193708-NH.193709">
+				<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_18799"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#eo_cable_segment_inst_13079-NL.13266-NH.13267">
+				<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_18799"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#eo_cable_segment_inst_13099-NL.13306-NH.193952">
+				<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_18799"/>
+			</rdf:Description>
+			<rdf:Description rdf:about="#eo_isolating_eqpt_inst_18913">
+				<cim:Switch.normalOpen>true</cim:Switch.normalOpen>
+			</rdf:Description>
+			<rdf:Description rdf:about="#eo_isolating_eqpt_inst_193358">
+				<cim:Switch.normalOpen>false</cim:Switch.normalOpen>
+			</rdf:Description>
+		</dm:reverseDifferences>
+	</dm:DifferenceModel>
+</rdf:RDF>

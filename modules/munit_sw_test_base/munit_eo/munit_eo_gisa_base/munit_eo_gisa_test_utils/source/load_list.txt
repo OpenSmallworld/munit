@@ -1,0 +1,5 @@
+sw_gisa_deterministic_identifiers
+sw_gisa_identifiers_from_register
+sw_gisa_identifiers_from_attributes
+sw_gisa_identifiers_for_update_tests
+eo_gisa_base_test_case

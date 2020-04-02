@@ -1,0 +1,231 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+
+
+_pragma(classify_level=debug)
+##
+## This class reads and validates an EMI file.
+##
+## Usage:
+## emi << exchanged_model_information.new_from_file( xml_path )
+##
+## emi.get_property(property_name)
+##
+## The following properties are extracted:
+##
+##  :day
+##  :gml_file
+##  :hour
+##  :job_name
+##  :minutes
+##  :month
+##  :rdf_file
+##  :seconds
+##  :source
+##  :target
+##  :year
+##
+def_slotted_exemplar( :exchanged_model_information,
+	{
+		# Store properties extracted from the file
+		{:properties,_unset}
+	})
+$
+
+_pragma(classify_level=restricted)
+exchanged_model_information.define_slot_access(:properties, :read, :private)
+
+_pragma(classify_level=restricted)
+_method exchanged_model_information.new_from_file( xml_path )
+	##
+	##
+	_return _clone.init( simple_xml.read_document_file( xml_path ) )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method exchanged_model_information.init( xml_thing )
+	##
+	##
+	.properties << hash_table.new()
+
+	_self.validate_top_element(xml_thing.top_element)
+	_self.read_data(xml_thing)
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method exchanged_model_information.validate_top_element( xml_element )
+	##
+	## Validate the top element XML_ELEMENT
+	##
+
+	# Check type
+
+	_if xml_element.type <> "tns:ExchangedModelInformation"
+	_then
+		desc << write_string("The top element was type ",xml_element.type,
+				     " not tns:ExchangedModelInformation")
+		condition.raise(:error,:string,desc)		
+	_endif
+
+	# Check attributes
+	attrs << xml_element.attributes
+	expected << equality_hash_table.new_with(
+			    "xmlns:tns", "http://nmm.energy.ge/datamodel/exchangedmodelinformation",
+			    "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance",
+			    "xsi:schemaLocation", "http://nmm.energy.ge/datamodel/exchangedmodelinformation ExchangedModelInformation.xsd"
+			    )
+
+	_for key, value _over expected.fast_keys_and_elements()
+	_loop
+		_if attrs[key] _is _unset
+		_then
+			desc << write_string("Attribute ",key," is missing")
+			condition.raise(:error,:string,desc)
+		_elif attrs[key] <> value
+		_then
+			desc << write_string("Attribute ",key," is incorrect")
+			condition.raise(:error,:string,desc)
+		_endif		
+	_endloop
+	
+	_if attrs.size > 3
+	_then
+		condition.raise(:error,:string,"There were additional unexpected attributes")
+	_endif		
+_endmethod
+$
+	
+_pragma(classify_level=restricted)
+_method exchanged_model_information.set_property( name, value )
+	##
+	## Set the property NAME to VALUE.
+	##
+	## A condition is raised if the property has already been set.
+	##
+	_if _self.properties.includes_key?(name)
+	_then
+		desc << write_string("The property ",name," has been specified more than once")
+		condition.raise(:error,:string,desc)
+	_endif
+
+	_self.properties[name] << value	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+exchanged_model_information.define_shared_constant(:top_element_readers,
+	equality_hash_table.new_with(
+		"tns:Source",   {:|grab_contents()|, :source},
+		"tns:Target",   {:|grab_contents()|, :target},
+		"tns:JobInfo",  :|read_job_info()|,
+		"tns:DateTime", :|read_date_time_info()|,
+		"tns:Models",   :|read_model_info()|
+			    ),
+	:private)
+$
+
+_pragma(classify_level=restricted)
+_method exchanged_model_information.grab_contents(property_name, xml_element)
+	##
+	## Set the property PROPERTY_NAME to the contents of the xml
+	## element XML_ELEMENT.
+	##
+	_self.set_property( property_name, xml_element.xml_contents )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method exchanged_model_information.read_job_info(xml_element)
+	##
+	## Read the job information from the xml element XML_ELEMENT
+	##
+	_for name _over xml_element.xml_elements()
+	_loop
+		_if name.type = "tns:JobName"
+		_then
+			_self.set_property( :job_name, name.xml_contents )
+		_else
+			condition.raise(:error,:string,"Bad job name element")
+		_endif
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method exchanged_model_information.read_model_info(xml_element)
+	##
+	## Read the model information from the xml element XML_ELEMENT
+	##
+	_for model _over xml_element.xml_elements()
+	_loop
+		_if model.type = "tns:CIMURL"
+		_then
+			_self.set_property( :rdf_file, model.xml_contents )
+		_elif model.type = "tns:GMLURL"
+		_then
+			_self.set_property( :gml_file, model.xml_contents )
+		_else
+			condition.raise(:error,:string,"Bad model element")
+		_endif
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method exchanged_model_information.read_date_time_info(xml_element)
+	##
+	## Read and parse the date and time information from the xml
+	## element XML_ELEMENT
+	##
+	date_time << xml_element.xml_contents
+
+	(date,time) << (_scatter date_time.split_by(%T))
+
+	# Parse date
+	(year, month, day) << (_scatter date.split_by(%-))
+
+	_self.set_property( :year,    year )
+	_self.set_property( :month,   month )
+	_self.set_property( :day,     day )
+
+	# Parse time
+	(hour, minutes, seconds) << (_scatter time.split_by(%:))
+
+	_self.set_property( :hour,    hour )
+	_self.set_property( :minutes, minutes )
+	_self.set_property( :seconds, seconds )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method exchanged_model_information.read_data(xml_thing)
+	##
+	## Read the data from a top level xml element XML_THING.
+	##
+	_for e _over xml_thing.top_element.xml_elements()
+	_loop
+		reader << _self.top_element_readers[e.type]
+		_if reader _isnt _unset
+		_then
+			reader.send_to(_self,e)
+		_else
+			desc << write_string("Unknown information element ",e.type)
+			condition.raise(:error,:string,desc)
+		_endif
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method exchanged_model_information.get_property(property_name)
+	##
+	## Return the property PROPERTY_NAME
+	##
+	>> _self.properties[property_name]
+_endmethod
+$

@@ -1,0 +1,5 @@
+munit_eo_cim_validator 1 
+
+description
+	Magik wrapper class for the CIM Validator tool
+end

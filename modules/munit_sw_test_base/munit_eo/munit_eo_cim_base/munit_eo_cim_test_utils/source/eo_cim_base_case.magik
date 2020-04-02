@@ -1,0 +1,745 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:eo_cim_base_case,
+{
+},
+{:eo_gisa_base_test_case})
+$
+
+_pragma(classify_level=debug)
+eo_cim_base_case.define_shared_constant( :application_name,:eo_cim_application, :public)
+$
+
+_pragma(classify_level=debug)
+eo_cim_base_case.define_shared_constant( :admin_application_name,:eo_cim_admin_application, :public)
+$
+
+_pragma(classify_level=debug)
+eo_cim_base_case.define_shared_constant( :plugin_name, :cim_adapter, :public )
+$
+
+_pragma(classify_level=debug)
+eo_cim_base_case.define_shared_constant( :target_coordinate_system_name, :world_longlat_wgs84_degree, :public )
+$
+
+_pragma(classify_level=debug)
+eo_cim_base_case.define_shared_constant( :properties_helper, sw_cim_properties_helper, :public )
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.get_name()
+	## Gets the name of a test.
+
+	config_name << system.getenv("SW_GISA_DEFAULT_CONFIG_NAME")
+	
+	_if .name _isnt _unset _andif 
+	    config_name _isnt _unset _andif
+	    config_name <> ""
+	_then
+		_return .name + " [" + config_name + "]"
+	_else
+		_return .name
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_cim_base_case.when_I_build_the_elec_model()
+
+	# Build the elec model from the cached rwos and stash in properties
+
+
+	recs << _self.rwos
+	
+        request << sw_cim_circuit_export_helper.create_request_for_set_export( _self.rwos )
+
+        request.set_property( :output_path, system.getenv( "TEMP" ) )
+        request.set_property( :job_name, _self.design_name )
+        request.set_property( :circuit_urn , urn_manager.get_urn_from_object( recs.an_element() ))
+
+        export_set_process << sw_process.new(
+                                      { sw_cim_elec_network_manager, :|process_request()| } )
+
+        export_set_process.execute(request)
+	.properties[:request] << request 
+        _return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.get_cim_adapter_plugin()
+	##
+	##
+	sw_cim_properties_helper.set_property(:target_coordinate_system_name, :world_longlat_wgs84_degree )
+
+	# Make sure the application is running
+	app << _self.application()
+	pl  << app.plugin( _self.plugin_name )
+	#pl.target_coordinate_system_name << :world_longlat_wgs84_degree
+
+	>> pl 
+_endmethod
+$
+
+# RUN AND VALIDATE CIRCUIT EXPORT
+
+_pragma(classify_level=debug)
+_private _method eo_cim_base_case.run_and_validate_circuit_export( circ, reference_gml_file, reference_rdf_file)
+	##
+	## Test that the export of the circuit CIRC is successful and
+	## the file generated matches the reference file REFERENCE_FILENAME
+	## stored as a resource of this test module
+	## 
+	request << _self.export_circuit_locally( circ )
+	_self.determine_the_configuration_and_validate_exported_files(request, circ.circuit_id, reference_gml_file, reference_rdf_file)	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_cim_base_case.get_rdf_filename( full_filename )
+	##
+	## Return the filename of the RDF file that is associated to
+	## FULL_FILENAME (which is FULL_FILENAME actually)
+	##
+
+	>> full_filename
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_cim_base_case.get_gml_filename( full_filename )
+	##
+	## Return the filename of the GML file that is associated to
+	## FULL_FILENAME
+	##
+
+	# filename is something like CIRC_EO_POF_v02_.....xml; the associated
+	# GML file is CIRC_GML_EO_POF_v02.....gml
+	_local pathname, filename
+	( filename, pathname ) << system.pathname_components( full_filename )
+	
+	_return  system.pathname_from_components(
+			 write_string( "CIRC_GML_", filename.slice( 6, filename.size - 3 ), "gml" ),
+			 pathname )
+			 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_cim_base_case.get_emi_filename( full_filename )
+	##
+	## Return the filename of the Exchanged Model Information file
+	## that is associated to FULL_FILENAME.
+	##
+
+	# filename is something like CIRC_EO_POF_v02_.....xml; the associated
+	# EMI file is ExchangedModelInformation_CIRC_EO_POF_v02.....xml
+	_local pathname, filename
+	( filename, pathname ) << system.pathname_components( full_filename )
+	
+	_return  system.pathname_from_components(
+			 write_string( "ExchangedModelInformation_", filename ),
+			 pathname )
+_endmethod
+$
+
+# RUN AND VALIDATE RECORDS EXPORT
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.run_and_validate_records_export( records , reference_gml_file, reference_rdf_file)
+	##
+	##
+	##
+	request << _self.export_records(records)
+	_self.determine_the_configuration_and_validate_exported_files(request, request.get_property(:job_name),
+								      reference_gml_file, reference_rdf_file)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.export_records(recs)
+	##
+	## Export RECS using the CIM adapater plugin
+	##
+	
+	request << sw_cim_circuit_export_helper.create_request_for_set_export( recs )
+
+	request.set_property( :output_path, system.getenv( "TEMP" ) )
+	request.set_property( :job_name, _self.design_name )
+	request.set_property( :circuit_urn ,  urn_manager.get_urn_from_object( recs.an_element() ))
+
+	process_components << rope.new_with({ sw_cim_elec_network_manager, :|process_request()| },
+					    { sw_cim_mapping_manager, :|process_request()| })
+
+	process_components.add_all_last({{ sw_cim_xml_gml_output_manager, :|process_request()| },
+					 { sw_cim_emi_output_manager, :|process_request()| }})
+	
+	export_set_process << sw_process.new(_scatter process_components)
+	
+	export_set_process.execute(request)
+	_return request
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.export_circuit_locally( a_circuit )
+
+	## Process the circuit request, using the %TEMP% for output and
+	## without messaging
+	request << sw_cim_circuit_export_helper.create_request_for_circuit_export( a_circuit,
+										   sw_cim_properties_helper.default_config_name )
+
+	request.set_property( :test_mode?, _true )
+	request.set_property( :output_path, system.getenv( "TEMP" ) )
+	request.set_property( :job_name, a_circuit.circuit_id )
+	request.set_property( :circuit_urn ,  urn_manager.get_urn_from_object( a_circuit ))
+
+	process_manager << sw_process_manager_cache.get_cached_instance( sw_cim_properties_helper.installation_type )
+	export_set_process << process_manager.get_process(:cim_circuit_export_request)
+
+	# Assume every circuit is alive (to obtain diagrams)
+	stub_method_helper.replace_method(sw_cim_is_circuit_live_manager,
+					  :|is_circuit_live?()|,
+					  _proc() _return _true _endproc)
+
+	# Disable messaging
+	stub_method_helper.replace_method(sw_cim_message_manager,
+					  :|process_request()|,
+					  _proc() _endproc)
+					  
+	export_set_process.execute(request)
+	_return request
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_cim_base_case.get_filename_from_the_request(request, profile_name, property_name_with_files)
+	##
+	## Returns filename from the REQUEST's PROPERTY_NAME property
+	## at the given PROFILE_NAME. Assumes theat the rope
+	## PROPERTY_NAME has the same order as the :profile_names. 
+	##
+	profile_index << request[:profile_names].index_equal_of(profile_name)
+	_self.assert_not_unset(profile_index, write_string("Unexpected profile_name '", profile_name, "'"))
+	filename << request[property_name_with_files][profile_index]
+	msg << write_string("Expected set ", property_name_with_files, " in the profile ", profile_name)
+	_self.assert_not_unset(filename, msg)
+	_return filename
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.get_gml_filename_from_request(request, profile_name)
+	##
+	## Returns flename from the REQUEST stored at at the given PROFILE_NAME.
+	##
+	_return _self.get_filename_from_the_request(request, profile_name, :gml_output_filenames)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.get_emi_filename_from_request(request, profile_name)
+	##
+	## Returns flename from the REQUEST stored at at the given PROFILE_NAME.
+	##
+	_return _self.get_filename_from_the_request(request, profile_name, :emi_output_filenames)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.get_rdf_filename_from_request(request, profile_name)
+	##
+	## Returns flename from the REQUEST stored at at the given PROFILE_NAME.
+	##
+	_return _self.get_filename_from_the_request(request, profile_name, :output_files)
+_endmethod
+$
+
+# RDF files checks
+
+_pragma(classify_level=debug)
+_private _method eo_cim_base_case.assert_rdf_files_equals( reference_filename , actual_pathname )
+	##
+	## Assert if ACTUAL_PATHNAME (full path and file name) is equivalent to
+	## the REFERENCE_FILENAME that is stored in the resources directory of this
+	## module
+	##
+	## Forward directly to int!assert_rdf_files_equals() method,
+	## so the cim_canonicalization can be injected.
+	##
+	_return _self.int!assert_rdf_files_equals(reference_filename, actual_pathname)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_cim_base_case.int!assert_rdf_files_equals( reference_filename , actual_pathname )
+	##
+	## Assert if ACTUAL_PATHNAME (full path and file name) is equivalent to
+	## the REFERENCE_FILENAME that is stored in the resources directory of this
+	## module
+	## 
+	expected_pathname << smallworld_product.get_resource_file( reference_filename,
+								   _self.resource_path_for_config_name,
+								   _self.module_name )
+
+	(file, report_path) << system.pathname_components(actual_pathname)
+
+	same_file? << sw_cim_rdf_file_validator.compare( expected_pathname,
+							 actual_pathname,
+							 _true,
+							 report_path
+						)
+
+	desc << write_string("The files ",expected_pathname," and ",
+			     actual_pathname," should have the same contents")
+	_self.assert_true( same_file?, desc )
+_endmethod
+$
+
+# GML files checks
+
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.assert_gml_files_equals( expected, actual , _optional a_string )
+	## Forward directly to int!assert_gml_files_equals() method,
+	## so the cim_canonicalization can be injected.
+	_return _self.int!assert_gml_files_equals(expected, actual, a_string)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.int!assert_gml_files_equals( expected, actual , _optional a_string )
+	##
+	##
+	##
+	
+	_if _not system.file_exists?(expected)
+	_then
+		expected << smallworld_product.get_resource_file(expected,
+								 _self.resource_path_for_config_name,
+								 _self.module_name)
+	_endif
+
+	same? << sw_cim_gml_file_comparer.files_equal?( expected, actual )
+	desc << write_string("The files ",expected," and ",actual," should have the same contents")
+	_self.assert_true(same?,desc)
+_endmethod
+$
+
+# EMI files checks 
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.check_emi_file_contains( expected_contents, emi_file_path , _optional a_string )
+	##
+	## Verify that the EMI file specified by EMI_FILE_PATH is valid
+	## and that the contents match those specified in EXPECTED_CONTENTS.
+	## EXPECTED_CONTENTS should be a hash_table with the following keys:
+	##
+	##  :gml_file - the value is the expected GML output file name
+	##  :job_name - the value is the expected job name
+	##  :rdf_file - the value is the expected RDF output file name
+	##  :source   - the value is the expected source system (e.g. "GIS")
+	##  :target   - the value is the expected target system (e.g. "DMS")
+	##
+	## The expected date and time is extracted from the RDF output
+	## file name.
+	##
+	emi << exchanged_model_information.new_from_file(emi_file_path)
+
+	_for name _over {:gml_file, :job_name, :rdf_file, :source, :target}.fast_elements()
+	_loop
+		expected << expected_contents[name]
+		actual << emi.get_property(name)
+		desc << write_string(a_string.default(""),
+				     "Expected the EMI ", name," property to be '",
+				     expected,"' but it was '",actual,"' instead.")
+		_self.assert_equals(expected, actual, desc)
+	_endloop
+
+	# Check time difference between file stamp from emi file name
+	# and actual time from emi file
+	expected_date_time << _self.get_date_time_from_filename(expected_contents[:rdf_file])
+	actual_date_time << _self.get_date_time_from_emi(emi)
+
+	# Set expected difference between times to be maximum 2 seconds
+	delta << time_interval.new( 0 , 2000 )
+	_self.assert_equals(expected, actual, _unset , delta, _false )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.get_date_time_from_filename( filename )
+	##
+	## Extract date and time information from the filename FILENAME.
+	##
+	## Returns date_time instance
+
+	file_stem << filename.split_by(%.)[1]
+
+	parts << file_stem.split_by(%_)
+
+	_if parts.size < 7
+	_then
+		desc << write_string("The format of filename ",filename," is not as expected. Can't extract date information")
+
+		condition.raise(:error,:string, desc)
+	_endif
+
+	# The data and time should be in the last 6 parts
+	date_time_parts << parts.subseq(parts.size - 5)
+
+	_local year    << date_time_parts[1].as_number()
+	_local month   << date_time_parts[2].as_number()
+	_local day     << date_time_parts[3].as_number()
+	_local hour    << date_time_parts[4].as_number()
+	_local minutes << date_time_parts[5].as_number()
+	_local seconds << date_time_parts[6].as_number()
+
+	>> date_time.new_from_components( year, month, day, _unset , hour, minutes, seconds , _unset , _unset )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.get_date_time_from_emi( emi )
+	##
+	## Extract date and time information from EMI file
+	##
+	## Returns date_time instance
+
+	_local year    << emi.get_property(:year).as_number()
+	_local month   << emi.get_property(:month).as_number()
+	_local day     << emi.get_property(:day).as_number()
+	_local hour    << emi.get_property(:hour).as_number()
+	_local minutes << emi.get_property(:minutes).as_number()
+	_local seconds << emi.get_property(:seconds).as_number()
+
+	>> date_time.new_from_components( year, month, day, _unset , hour, minutes, seconds , _unset , _unset )
+_endmethod
+$
+
+## Export design differences helpers START
+_private _method eo_cim_base_case.run_and_validate_export_design_differences(reference_export_file)
+	
+	_self.
+		when_design_differences_are_exported().
+		then_the_file_sets_are_exported(reference_export_file)
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.export_differences_from_current_design_locally(_optional export_type)
+
+	## Process the circuit request, using the %TEMP% for output and
+	## without messaging
+	request << sw_cim_circuit_export_helper.create_request_to_export_differences( export_type.default(:proposed) ) 
+
+	request.set_property( :test_mode?, _true )
+	request.set_property( :output_path, system.getenv( "TEMP" ) )
+
+	# sw_cim_split_export_manager now requires exchange_job_id property to be set
+	request.set_property( :exchange_job_id, :dummy_exchange_job_id )
+	
+	# set design_splitter_class_name if given in .properties slot
+	_if (splitter_name << .properties[:splitter_name]) _isnt _unset 
+	_then 
+		request.set_property( :design_splitter_class_name, splitter_name)
+	_endif 
+
+	process_manager << sw_process_manager_cache.get_cached_instance(sw_cim_properties_helper.installation_type)
+	export_set_process << process_manager.get_process(:cim_difference_export_request)
+
+	# Disable exchange job creation
+	stub_method_helper.replace_method(sw_cim_exchange_job_manager,
+					  :|process_request()|,
+					  _proc() _endproc)
+	
+	# Disable messaging
+	stub_method_helper.replace_method(sw_cim_message_manager,
+					  :|process_request()|,
+					  _proc() _endproc)
+
+	export_set_process.execute(request)
+	
+	_return request
+_endmethod
+$
+
+## Export design differences helpers END
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.given_the_export_will_be_split_using(splitter_name)
+	##
+	## Store SPLITTER_NAME in the .properties slot 
+	## 
+	
+	.properties[:splitter_name] << splitter_name
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.given_an_existing_circuit(circuit_id)
+	##
+	## Note: Subclass must implement get_circuit()
+	## 
+	a_circ << _self.get_circuit(circuit_id)
+	_self.assert_not_unset(a_circ, write_string("Cannot find circuit ", circuit_id))
+	.properties[:circuit_to_export] << a_circ
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.given_an_existing_circuit_by_name(name)
+
+	a_circ << _self.electric_view.collections[:eo_circuit].select(predicate.eq(:name, name)).an_element()
+	_self.assert_not_unset(a_circ, write_string("Cannot find circuit ", name))
+	.properties[:circuit_to_export] << a_circ
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.when_the_circuit_is_exported(_gather boolean_props)
+	## 
+	##
+	_self.set_cim_properties(boolean_props)
+	a_circ << .properties[:circuit_to_export]
+	.properties[:export_request] << _self.export_circuit_locally( a_circ )
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method eo_cim_base_case.set_cim_properties(boolean_props)
+	## 
+	##
+	props_to_set << property_list.new()
+
+	_if boolean_props.includes?(:with_gml)
+	_then
+		gml_profile_name << sw_cim_properties_helper.profile_names.split_by(%,).an_element()
+		props_to_set[:gml_profile_name] << gml_profile_name
+	_elif boolean_props.includes?(:without_gml)
+	_then
+		props_to_set[:gml_profile_name] << ""
+	_endif	
+	
+	_if boolean_props.includes?(:with_lv)
+	_then
+		props_to_set[:exclude_lv_from_export?] << _false
+	_endif
+	
+	_if boolean_props.includes?(:with_structures)
+	_then
+		props_to_set[:exclude_structures_from_export?] << _false
+	_endif
+	
+	_if boolean_props.includes?(:with_lv_servicepoints)
+	_then
+		props_to_set[:include_lv_servicepoint_in_export?] << _true
+	_endif	
+	
+	_for name, value _over props_to_set.fast_keys_and_elements()
+	_loop
+		stub_method_helper.replace_method(sw_cim_properties_helper, name,
+						  _proc()
+							  _import value
+							  _return value
+						  _endproc)
+	_endloop	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_cim_base_case.then_the_exported_files_match(ref_file_name, _optional without_gml?)
+	##
+	request << .properties[:export_request]
+	circuit_id << .properties[:circuit_to_export].circuit_id
+	_if without_gml? _is _true
+	_then
+		gml_filename << _unset		
+	_else
+		gml_filename << ref_file_name + ".gml"
+	_endif
+	_return _self.determine_the_configuration_and_validate_exported_files(request, circuit_id,
+									      gml_filename, ref_file_name + ".xml")
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method eo_cim_base_case.determine_the_configuration_and_validate_exported_files(request, job_name, reference_gml_file, reference_rdf_file)
+	# Check which export we are currently running (poa vs cimstd) and
+	# validate exported files accordingly - for poa we are
+	# expecting a one profile with/without gml, and for the cimstd
+	# two profiles (main + diagram)
+
+	# Get stored old request if available (can be set during
+	# zipping of generated files).
+	request << request[:old_request].default(request)
+	
+	_if sw_cim_properties_helper.configuration_name = "eo_dcim_standard"
+	_then
+		_self.assert_equals(2, request[:profile_names].size, "Expected exactly two profiles, when #1")
+		# XML + optional GML for the main export		
+		_self.validate_exported_files(request, job_name, reference_gml_file, reference_rdf_file, "EO_DCIM_Standard_v2")
+		# + the diagram xml alone
+		diagram_name << reference_rdf_file.truncate(reference_rdf_file.size - 4) + "_diagram.xml"
+		_self.validate_exported_files(request, job_name, _unset, diagram_name, "EO_DiagramLayout")
+	_else # 
+		# exactly one xml with an optional gml
+		_self.validate_exported_files(request, job_name, reference_gml_file, reference_rdf_file)
+	_endif
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method eo_cim_base_case.validate_exported_files(request, job_name,
+							  reference_gml_file, reference_rdf_file,
+							  _optional profile_name)
+	## 
+	##
+	_if profile_name _is _unset
+	_then
+		_self.assert_equals(1, request[:profile_names].size, "Expected exactly one profile #1.")
+		profile_name << request[:profile_names].an_element()
+	_endif	
+	_if reference_gml_file _isnt _unset
+	_then 
+		gml_path << _self.get_gml_filename_from_request(request, profile_name)
+		gml_file << system.pathname_components(gml_path)
+	_endif	
+	rdf_path << _self.get_rdf_filename_from_request(request, profile_name)
+	rdf_file << system.pathname_components(rdf_path)
+	emi_path << _self.get_emi_filename_from_request(request, profile_name)
+
+	expected_emi_contents << hash_table.new_with(
+					 :rdf_file, rdf_file,
+					 :gml_file, gml_file,
+					 :job_name, job_name,
+					 :source, sw_cim_properties_helper.source_system,
+					 :target, sw_cim_properties_helper.target_system
+					    )
+	_self.check_emi_file_contains( expected_emi_contents, emi_path )
+	_if reference_gml_file _isnt _unset
+	_then 
+		_self.assert_gml_files_equals( reference_gml_file, gml_path)
+	_endif
+	_self.assert_rdf_files_equals( reference_rdf_file, rdf_path)
+
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.then_the_file_sets_are_exported(_gather file_sets)
+	## 
+	## 
+	request << .properties[ :resulting_request ]
+	subrequests << request.get_property(:subrequests)
+	_self.assert_not_unset(subrequests, ":subrequests property should be set")
+	_if subrequests _isnt _unset
+	_then
+		_self.assert_is(subrequests.size, file_sets.size, write_string("subrequests.size check failed, expected:",file_sets.size, " actual:", subrequests.size) )
+
+		_if subrequests.size _is file_sets.size
+		_then
+			_for index, file_set _over file_sets.keys_and_elements()
+			_loop
+				_self.validate_subrequest(request, subrequests[index], file_set)
+			_endloop
+		_endif
+	_endif
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.validate_subrequest(request, subrequest, reference_export_file)
+	## 
+	##
+	reference_rdf_file << add_phase_itest.get_reference_file_name_xml(reference_export_file) 
+	reference_gml_file << add_phase_itest.get_reference_file_name_gml(reference_export_file)
+	_self.determine_the_configuration_and_validate_exported_files(subrequest, request.get_property(:job_name),
+								      reference_gml_file, reference_rdf_file)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_cim_base_case.resource_path_for_config_name
+	## 
+	## Returns resource path for default export configuration name
+	## that is set.
+	##
+
+	config_name << sw_cim_properties_helper.default_config_name
+	subfolder_name << system.validate_as_file_name(config_name).substitute_character(%space, %_)
+	
+	_return "data" + system.pathname_separator + subfolder_name
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.given_stubs_on_zipping_files()
+	## 
+
+	_local props << .properties
+	
+	.properties[:zipped_files] << rope.new()
+	
+	stub_method_helper.replace_method(zip_output_stream,
+					  :|new()|,
+					  _proc (file)
+						  _import props
+						  props[:created_zip_file] << file
+
+						  _return _self.saved!new(file)
+					  _endproc)
+
+	stub_method_helper.replace_method(zip_entry,
+					  :|new()|,
+					  _proc (file)
+						  _import props
+						  props[:zipped_files].add_last(file)
+
+						  _return _self.saved!new(file)
+					  _endproc)
+	
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.then_zip_file_was_created()
+	## 
+
+	file << .properties[:created_zip_file]
+	
+	_self.assert_not_unset(file, "ZIP file was not created.")
+	_self.assert_true(system.file_exists?(file), "ZIP file is not accessible. Probably was not written.")
+	
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.then_files_were_zipped(_gather files)
+	## 
+
+	file_list << rope.new()
+
+	_for file _over files.fast_elements()
+	_loop
+		file_list.add_last(system.pathname_components(file))
+	_endloop
+	
+	_self.assert_deep_equals(file_list, .properties[:zipped_files],
+				 "Incorrect list of zipped files: #1")
+	
+	_return _self
+_endmethod
+$

@@ -1,0 +1,139 @@
+#% text_encoding = iso8859_1
+
+_package sw
+
+_pragma(classify_level=debug)
+##
+def_slotted_exemplar(:munit_permanent_switching_change_itest,
+	{},
+	{:eo_cim_qm_test_case})
+$
+
+_pragma(classify_level=debug)
+munit_permanent_switching_change_itest.define_shared_constant(
+	:routine_to_be_tested,
+	eo_radial_flow_direction_setter_routine,
+	:public
+	)
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method munit_permanent_switching_change_itest.set_up()
+	##
+	##
+
+	_super.set_up()	
+
+	.properties[:use_dummy_application] << _false 
+	.properties[:deterministic_identifiers_mode] << :none 
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_permanent_switching_change_itest.test_permanent_switching_change()
+	##
+	##
+
+	_self.
+		given_two_live_circuits("MV 001", "MV 003").
+		given_switch_is_closed(:switch1).
+		given_switch_is_opened(:switch2).
+		given_a_circuit_is_updated(:circuit1, :circuit_id, "MV 001").
+		given_a_circuit_is_updated(:circuit2, :circuit_id, "MV 003").
+		when_design_differences_are_exported().
+		then_one_file_set_is_exported("permanent_switching_change.xml", "permanent_switching_change.gml")
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_permanent_switching_change_itest.given_two_live_circuits(_gather circuit_ids)
+	##
+	##
+
+	_for i_id _over circuit_ids.fast_elements()
+	_loop
+		eo_cim_test_helper.set_circuit_live_status_in_metadata( i_id, _true )
+	_endloop
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_permanent_switching_change_itest.given_switch_is_closed(switch_id)
+	##
+	##
+
+	_local l_switch << _self.get_asset(:eo_isolating_eqpt_inst, :id, 18913)
+	
+	_local l_ep << l_switch.existing_phases
+	l_switch.close_phases(l_ep)
+
+	_local rt << record_transaction.new_update(l_switch, property_list.new())
+	rt.run()
+	
+	.properties[switch_id] << l_switch
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_permanent_switching_change_itest.given_switch_is_opened(switch_id)
+	##
+	##
+
+	_local l_switch << _self.get_asset(:eo_isolating_eqpt_inst, :id, 193358)
+
+	_local l_ep << l_switch.existing_phases
+	l_switch.open_phases(l_ep)
+
+	_local rt << record_transaction.new_update(l_switch, property_list.new())
+	rt.run()
+	
+	.properties[switch_id] << l_switch
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_permanent_switching_change_itest.given_a_circuit_is_updated(p_circuit_id, _gather field_and_value_pairs)
+	##
+	##
+
+	_local l_circuit << _self.get_asset(:eo_circuit, _scatter field_and_value_pairs)
+
+	eo_circuit_builder_engine.new().run(l_circuit)
+
+	_self.run_routine(l_circuit)
+
+	.properties[p_circuit_id] << l_circuit
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_permanent_switching_change_itest.then_one_file_set_is_exported(reference_export_file_gml, reference_export_file_xml)
+	## 
+	##
+
+	request << .properties[:resulting_request]
+	subrequests << request.get_property(:subrequests)
+
+	_self.assert_not_unset(subrequests, "The request property :subrequests should be set")
+
+	_if subrequests _isnt _unset
+	_then
+		_self.assert_equals(subrequests.size, 1, "The number of file sets should be 1")
+
+		_if subrequests.size _is 1
+		_then
+			_self.determine_the_configuration_and_validate_exported_files(subrequests[1], request.get_property(:job_name), reference_export_file_xml, reference_export_file_gml)
+		_endif
+	_endif
+
+	_return _self
+_endmethod
+$

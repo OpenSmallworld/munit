@@ -1,0 +1,990 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rdf:RDF xmlns:dm="http://iec.ch/2002/schema/CIM_difference_model#" xmlns:cim="http://iec.ch/TC57/2010/CIM-schema-cim15#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+	<cim:ACLineSegment rdf:ID="eo_cable_segment_inst_201821-NL.19334-NH.201819">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Conductor.length>505.99</cim:Conductor.length>
+		<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_18792"/>
+		<cim:IdentifiedObject.name>Cable Segment_201821</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Backbone"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:ACLineSegment>
+	<cim:ACLineSegment rdf:ID="eo_cable_segment_inst_201869-NL.201819-NH.201959">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Conductor.length>499.67</cim:Conductor.length>
+		<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_18792"/>
+		<cim:IdentifiedObject.name>Cable Segment_201869</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Backbone"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:ACLineSegment>
+	<cim:ACLineSegment rdf:ID="eo_cable_segment_inst_4424-NL.4599-NH.4663">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Conductor.length>505.91</cim:Conductor.length>
+		<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_18792"/>
+		<cim:IdentifiedObject.name>Cable Segment_4424</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Backbone"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:ACLineSegment>
+	<cim:ACLineSegment rdf:ID="eo_cable_segment_inst_4475-NL.4663-NH.201959">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Conductor.length>503.31</cim:Conductor.length>
+		<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_18792"/>
+		<cim:IdentifiedObject.name>Cable Segment_4475</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Backbone"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:ACLineSegment>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_201821-NL.19334-NH.201819_674440_A">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_201821-NL.19334-NH.201819"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.A"/>
+		<cim:IdentifiedObject.name>Cable Segment_201821_A</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_201821-NL.19334-NH.201819_674441_B">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_201821-NL.19334-NH.201819"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.B"/>
+		<cim:IdentifiedObject.name>Cable Segment_201821_B</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_201821-NL.19334-NH.201819_674442_C">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_201821-NL.19334-NH.201819"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.C"/>
+		<cim:IdentifiedObject.name>Cable Segment_201821_C</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_201869-NL.201819-NH.201959_674449_A">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_201869-NL.201819-NH.201959"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.A"/>
+		<cim:IdentifiedObject.name>Cable Segment_201869_A</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_201869-NL.201819-NH.201959_674450_B">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_201869-NL.201819-NH.201959"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.B"/>
+		<cim:IdentifiedObject.name>Cable Segment_201869_B</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_201869-NL.201819-NH.201959_674451_C">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_201869-NL.201819-NH.201959"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.C"/>
+		<cim:IdentifiedObject.name>Cable Segment_201869_C</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_4424-NL.4599-NH.4663_674341_A">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_4424-NL.4599-NH.4663"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.A"/>
+		<cim:IdentifiedObject.name>Cable Segment_4424_A</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_4424-NL.4599-NH.4663_674342_B">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_4424-NL.4599-NH.4663"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.B"/>
+		<cim:IdentifiedObject.name>Cable Segment_4424_B</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_4424-NL.4599-NH.4663_674343_C">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_4424-NL.4599-NH.4663"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.C"/>
+		<cim:IdentifiedObject.name>Cable Segment_4424_C</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_4475-NL.4663-NH.201959_674287_A">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_4475-NL.4663-NH.201959"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.A"/>
+		<cim:IdentifiedObject.name>Cable Segment_4475_A</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_4475-NL.4663-NH.201959_674288_B">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_4475-NL.4663-NH.201959"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.B"/>
+		<cim:IdentifiedObject.name>Cable Segment_4475_B</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_4475-NL.4663-NH.201959_674289_C">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_4475-NL.4663-NH.201959"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.C"/>
+		<cim:IdentifiedObject.name>Cable Segment_4475_C</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:Asset rdf:ID="eo_cable_197570">
+		<cim:Asset.AssetInfo rdf:resource="#eo_cable_spec_197530"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_4475-NL.4663-NH.201959"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_4475-NL.4663-NH.201959_674287_A"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_4475-NL.4663-NH.201959_674288_B"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_4475-NL.4663-NH.201959_674289_C"/>
+		<cim:Asset.type>CableAsset</cim:Asset.type>
+		<cim:IdentifiedObject.name>Cable_197570</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_cable_197606">
+		<cim:Asset.AssetInfo rdf:resource="#eo_cable_spec_197530"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_4424-NL.4599-NH.4663"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_4424-NL.4599-NH.4663_674341_A"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_4424-NL.4599-NH.4663_674342_B"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_4424-NL.4599-NH.4663_674343_C"/>
+		<cim:Asset.type>CableAsset</cim:Asset.type>
+		<cim:IdentifiedObject.name>Cable_197606</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_cable_201823">
+		<cim:Asset.AssetInfo rdf:resource="#eo_cable_spec_197530"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_201821-NL.19334-NH.201819"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_201821-NL.19334-NH.201819_674440_A"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_201821-NL.19334-NH.201819_674441_B"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_201821-NL.19334-NH.201819_674442_C"/>
+		<cim:Asset.type>CableAsset</cim:Asset.type>
+		<cim:IdentifiedObject.name>Cable_201823</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_cable_201871">
+		<cim:Asset.AssetInfo rdf:resource="#eo_cable_spec_197530"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_201869-NL.201819-NH.201959"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_201869-NL.201819-NH.201959_674449_A"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_201869-NL.201819-NH.201959_674450_B"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_201869-NL.201819-NH.201959_674451_C"/>
+		<cim:Asset.type>CableAsset</cim:Asset.type>
+		<cim:IdentifiedObject.name>Cable_201871</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18030">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17859-NL.19170-NH.19174"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18030</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18066">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17853-NL.19182-NH.19194"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18066</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18072">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17915-NL.19334-NH.20134"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18072</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18084">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17855-NL.19174-NH.19198"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18084</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18140">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17838-NL.18671-NH.20304"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18140</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18144">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17851-NL.18694-NH.20296"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18144</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18150">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17841-NL.-20312-NH.18685"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17841-NL.18672-NH.20312"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18150</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18204">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17847-NL.19166-NH.19182"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18204</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18228">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17834-NL.19186-NH.19190"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18228</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18232">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17845-NL.18672-NH.18694"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18232</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18266">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17857-NL.19165-NH.19166"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18266</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18476">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17861-NL.19170-NH.19178"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18476</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18532">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17843-NL.19166-NH.19170"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18532</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18562">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17836-NL.18671-NH.18672"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18562</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_connector_segment_18596">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_connector_segment_inst_17832-NL.19182-NH.19186"/>
+		<cim:Asset.type>Busbar</cim:Asset.type>
+		<cim:IdentifiedObject.name>Connector Segment_18596</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_isolating_eqpt_18767">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_isolating_eqpt_inst_18763"/>
+		<cim:Asset.type>Circuit Breaker</cim:Asset.type>
+		<cim:IdentifiedObject.name>Isolating Equipment_18767</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_isolating_eqpt_18844">
+		<cim:Asset.AssetInfo rdf:resource="#eo_isolating_eqpt_spec_197548"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_isolating_eqpt_inst_18843"/>
+		<cim:Asset.type>Load Break Switch</cim:Asset.type>
+		<cim:IdentifiedObject.name>Isolating Equipment_18844</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_isolating_eqpt_18847">
+		<cim:Asset.AssetInfo rdf:resource="#eo_isolating_eqpt_spec_197548"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_isolating_eqpt_inst_18846"/>
+		<cim:Asset.type>Load Break Switch</cim:Asset.type>
+		<cim:IdentifiedObject.name>Isolating Equipment_18847</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_isolating_eqpt_18850">
+		<cim:Asset.AssetInfo rdf:resource="#eo_isolating_eqpt_spec_197542"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_isolating_eqpt_inst_18849"/>
+		<cim:Asset.type>Switch</cim:Asset.type>
+		<cim:IdentifiedObject.name>Isolating Equipment_18850</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_power_xfrmr_18853">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_power_xfrmr_inst_18852"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#transformer_tank_18853"/>
+		<cim:Asset.type>Substation</cim:Asset.type>
+		<cim:IdentifiedObject.name>Power Transformer_18853</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:Asset rdf:ID="eo_protective_eqpt_51569">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_protective_eqpt_inst_51568"/>
+		<cim:Asset.type>Fault Indicator</cim:Asset.type>
+		<cim:IdentifiedObject.name>Protective Equipment_51569</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:BaseVoltage rdf:ID="BaseVoltage_0.415">
+		<cim:BaseVoltage.nominalVoltage>0.415</cim:BaseVoltage.nominalVoltage>
+		<cim:IdentifiedObject.name>415.000 V</cim:IdentifiedObject.name>
+	</cim:BaseVoltage>
+	<cim:BaseVoltage rdf:ID="BaseVoltage_11.000">
+		<cim:BaseVoltage.nominalVoltage>11.000</cim:BaseVoltage.nominalVoltage>
+		<cim:IdentifiedObject.name>11.000 kV</cim:IdentifiedObject.name>
+	</cim:BaseVoltage>
+	<cim:Breaker rdf:ID="eo_isolating_eqpt_inst_18763">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_337_11.00kV"/>
+		<cim:IdentifiedObject.name>Bourn_CB_002</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+		<cim:Switch.normalOpen>false</cim:Switch.normalOpen>
+	</cim:Breaker>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17832-NL.19182-NH.19186">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17832</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17834-NL.19186-NH.19190">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17834</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17836-NL.18671-NH.18672">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17836</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17838-NL.18671-NH.20304">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17838</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17841-NL.-20312-NH.18685">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17841</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17841-NL.18672-NH.20312">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17841</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17843-NL.19166-NH.19170">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17843</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17845-NL.18672-NH.18694">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17845</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17847-NL.19166-NH.19182">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17847</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17851-NL.18694-NH.20296">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17851</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17853-NL.19182-NH.19194">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17853</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17855-NL.19174-NH.19198">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17855</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17857-NL.19165-NH.19166">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17857</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17859-NL.19170-NH.19174">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17859</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17861-NL.19170-NH.19178">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17861</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:BusbarSection rdf:ID="eo_connector_segment_inst_17915-NL.19334-NH.20134">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_337_11.00kV"/>
+		<cim:IdentifiedObject.name>Connector Segment Installation_17915</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:BusbarSection>
+	<cim:CableInfo rdf:ID="eo_cable_spec_197530">
+		<cim:IdentifiedObject.name>3A_XLPE_150_11</cim:IdentifiedObject.name>
+	</cim:CableInfo>
+	<cim:Command rdf:ID="eo_isolating_eqpt_inst_18843_SwitchPosition_cmd">
+		<cim:Control.ControlType rdf:resource="#ControlType_SwitchPosition"/>
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18843_SwitchPosition_cmd</cim:IdentifiedObject.name>
+	</cim:Command>
+	<cim:Command rdf:ID="eo_isolating_eqpt_inst_18846_SwitchPosition_cmd">
+		<cim:Control.ControlType rdf:resource="#ControlType_SwitchPosition"/>
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18846_SwitchPosition_cmd</cim:IdentifiedObject.name>
+	</cim:Command>
+	<cim:Command rdf:ID="eo_isolating_eqpt_inst_18849_SwitchPosition_cmd">
+		<cim:Control.ControlType rdf:resource="#ControlType_SwitchPosition"/>
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18849_SwitchPosition_cmd</cim:IdentifiedObject.name>
+	</cim:Command>
+	<cim:Command rdf:ID="eo_protective_eqpt_inst_51568_IndicationPosition_cmd">
+		<cim:Control.ControlType rdf:resource="#ControlType_IndicationPosition"/>
+		<cim:IdentifiedObject.name>eo_protective_eqpt_inst_51568_IndicationPosition_cmd</cim:IdentifiedObject.name>
+	</cim:Command>
+	<cim:CompositeSwitch rdf:ID="eo_composite_switch_4589">
+		<cim:CompositeSwitch.compositeSwitchType>Ring Main Unit</cim:CompositeSwitch.compositeSwitchType>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Composite Switch_4589</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:CompositeSwitch>
+	<cim:ConnectivityNode rdf:ID="cn_-20312">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_-20312</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_18671">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_18671</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_18672">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_18672</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_18685">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_18685</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_18694">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_18694</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19165">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>cn_19165</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19166">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>cn_19166</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19170">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>cn_19170</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19174">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>cn_19174</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19178">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>cn_19178</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19182">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>cn_19182</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19186">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>cn_19186</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19190">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>cn_19190</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19194">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>cn_19194</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19198">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_415.0V"/>
+		<cim:IdentifiedObject.name>cn_19198</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_19334">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18792"/>
+		<cim:IdentifiedObject.name>cn_19334</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_20133">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_337_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_20133</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_20134">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_337_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_20134</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_201819">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18792"/>
+		<cim:IdentifiedObject.name>cn_201819</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_201959">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18792"/>
+		<cim:IdentifiedObject.name>cn_201959</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_20296">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_20296</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_20304">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_20304</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_20312">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_20312</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_4599">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18792"/>
+		<cim:IdentifiedObject.name>cn_4599</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_4663">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_18792"/>
+		<cim:IdentifiedObject.name>cn_4663</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_4805">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>cn_4805</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ControlType rdf:ID="ControlType_IndicationPosition">
+		<cim:IdentifiedObject.name>IndicationPosition</cim:IdentifiedObject.name>
+	</cim:ControlType>
+	<cim:ControlType rdf:ID="ControlType_SwitchPosition">
+		<cim:IdentifiedObject.name>SwitchPosition</cim:IdentifiedObject.name>
+	</cim:ControlType>
+	<cim:Discrete rdf:ID="eo_isolating_eqpt_inst_18843_SwitchPosition">
+		<cim:Discrete.Command rdf:resource="#eo_isolating_eqpt_inst_18843_SwitchPosition_cmd"/>
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18843_SwitchPosition</cim:IdentifiedObject.name>
+		<cim:Measurement.PowerSystemResource rdf:resource="#eo_isolating_eqpt_inst_18843"/>
+		<cim:Measurement.measurementType>SwitchPosition</cim:Measurement.measurementType>
+	</cim:Discrete>
+	<cim:Discrete rdf:ID="eo_isolating_eqpt_inst_18846_SwitchPosition">
+		<cim:Discrete.Command rdf:resource="#eo_isolating_eqpt_inst_18846_SwitchPosition_cmd"/>
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18846_SwitchPosition</cim:IdentifiedObject.name>
+		<cim:Measurement.PowerSystemResource rdf:resource="#eo_isolating_eqpt_inst_18846"/>
+		<cim:Measurement.measurementType>SwitchPosition</cim:Measurement.measurementType>
+	</cim:Discrete>
+	<cim:Discrete rdf:ID="eo_isolating_eqpt_inst_18849_SwitchPosition">
+		<cim:Discrete.Command rdf:resource="#eo_isolating_eqpt_inst_18849_SwitchPosition_cmd"/>
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18849_SwitchPosition</cim:IdentifiedObject.name>
+		<cim:Measurement.PowerSystemResource rdf:resource="#eo_isolating_eqpt_inst_18849"/>
+		<cim:Measurement.measurementType>SwitchPosition</cim:Measurement.measurementType>
+	</cim:Discrete>
+	<cim:Discrete rdf:ID="eo_protective_eqpt_inst_51568_IndicationPosition">
+		<cim:Discrete.Command rdf:resource="#eo_protective_eqpt_inst_51568_IndicationPosition_cmd"/>
+		<cim:IdentifiedObject.name>eo_protective_eqpt_inst_51568_IndicationPosition</cim:IdentifiedObject.name>
+		<cim:Measurement.PowerSystemResource rdf:resource="#eo_protective_eqpt_inst_51568"/>
+		<cim:Measurement.measurementType>IndicationPosition</cim:Measurement.measurementType>
+	</cim:Discrete>
+	<cim:FaultIndicator rdf:ID="eo_protective_eqpt_inst_51568">
+		<cim:AuxiliaryEquipment.Terminal rdf:resource="#eo_cable_segment_inst_4424-NL.4599-NH.4663_t2"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Jeavons_Lane_FI001</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+	</cim:FaultIndicator>
+	<cim:Line rdf:ID="eo_circuit_18792">
+		<cim:IdentifiedObject.name>MV 002</cim:IdentifiedObject.name>
+	</cim:Line>
+	<cim:LoadBreakSwitch rdf:ID="eo_isolating_eqpt_inst_18843">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Jeavons_Lane_SW001</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+		<cim:Switch.CompositeSwitch rdf:resource="#eo_composite_switch_4589"/>
+		<cim:Switch.normalOpen>false</cim:Switch.normalOpen>
+	</cim:LoadBreakSwitch>
+	<cim:LoadBreakSwitch rdf:ID="eo_isolating_eqpt_inst_18846">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Jeavons_Lane_SW002</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+		<cim:Switch.CompositeSwitch rdf:resource="#eo_composite_switch_4589"/>
+		<cim:Switch.normalOpen>true</cim:Switch.normalOpen>
+	</cim:LoadBreakSwitch>
+	<cim:LoadBreakSwitch rdf:ID="eo_isolating_eqpt_inst_18849">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456_11.00kV"/>
+		<cim:IdentifiedObject.name>Jeavons_Lane_SW003</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+		<cim:Switch.CompositeSwitch rdf:resource="#eo_composite_switch_4589"/>
+		<cim:Switch.normalOpen>false</cim:Switch.normalOpen>
+	</cim:LoadBreakSwitch>
+	<cim:Name rdf:ID="eo_circuit_18792_nametype_circuitname_name">
+		<cim:Name.IdentifiedObject rdf:resource="#eo_circuit_18792"/>
+		<cim:Name.NameType rdf:resource="#NameType_CircuitName"/>
+		<cim:Name.name>Bourne 11 kV 002</cim:Name.name>
+	</cim:Name>
+	<cim:NameType rdf:ID="NameType_CircuitName">
+		<cim:NameType.name>CircuitName</cim:NameType.name>
+	</cim:NameType>
+	<cim:PSRRole rdf:ID="PSRRole_Backbone">
+		<cim:IdentifiedObject.name>Backbone</cim:IdentifiedObject.name>
+		<cim:PSRRole.PSRRoleType rdf:resource="#NetworkCategory"/>
+	</cim:PSRRole>
+	<cim:PSRRole rdf:ID="PSRRole_Internal">
+		<cim:IdentifiedObject.name>Internal</cim:IdentifiedObject.name>
+		<cim:PSRRole.PSRRoleType rdf:resource="#NetworkCategory"/>
+	</cim:PSRRole>
+	<cim:PSRRoleType rdf:ID="NetworkCategory">
+		<cim:IdentifiedObject.name>Network Category</cim:IdentifiedObject.name>
+	</cim:PSRRoleType>
+	<cim:PSRType rdf:ID="PSRType_Underground">
+		<cim:IdentifiedObject.name>Underground</cim:IdentifiedObject.name>
+	</cim:PSRType>
+	<cim:PowerTransformer rdf:ID="eo_power_xfrmr_inst_18852">
+		<cim:Equipment.EquipmentContainer rdf:resource="#sub_substation_4456"/>
+		<cim:IdentifiedObject.name>Jeavons_Lane_TX001</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Internal"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+		<cim:PowerTransformer.vectorGroup>Dyn1</cim:PowerTransformer.vectorGroup>
+	</cim:PowerTransformer>
+	<cim:Substation rdf:ID="sub_substation_337">
+		<cim:IdentifiedObject.name>Bourn Primary</cim:IdentifiedObject.name>
+	</cim:Substation>
+	<cim:Substation rdf:ID="sub_substation_4456">
+		<cim:IdentifiedObject.name>Jeavons Lane</cim:IdentifiedObject.name>
+	</cim:Substation>
+	<cim:SwitchInfo rdf:ID="eo_isolating_eqpt_spec_197542">
+		<cim:IdentifiedObject.name>ID_SW_AIS_630A</cim:IdentifiedObject.name>
+	</cim:SwitchInfo>
+	<cim:SwitchInfo rdf:ID="eo_isolating_eqpt_spec_197548">
+		<cim:IdentifiedObject.name>ID_LBS_630A</cim:IdentifiedObject.name>
+	</cim:SwitchInfo>
+	<cim:Terminal rdf:ID="eo_cable_segment_inst_201821-NL.19334-NH.201819_t1">
+		<cim:IdentifiedObject.name>eo_cable_segment_inst_201821-NL.19334-NH.201819_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_cable_segment_inst_201821-NL.19334-NH.201819"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19334"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_cable_segment_inst_201821-NL.19334-NH.201819_t2">
+		<cim:IdentifiedObject.name>eo_cable_segment_inst_201821-NL.19334-NH.201819_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_cable_segment_inst_201821-NL.19334-NH.201819"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_201819"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_cable_segment_inst_201869-NL.201819-NH.201959_t1">
+		<cim:IdentifiedObject.name>eo_cable_segment_inst_201869-NL.201819-NH.201959_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_cable_segment_inst_201869-NL.201819-NH.201959"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_201819"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_cable_segment_inst_201869-NL.201819-NH.201959_t2">
+		<cim:IdentifiedObject.name>eo_cable_segment_inst_201869-NL.201819-NH.201959_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_cable_segment_inst_201869-NL.201819-NH.201959"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_201959"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_cable_segment_inst_4424-NL.4599-NH.4663_t1">
+		<cim:IdentifiedObject.name>eo_cable_segment_inst_4424-NL.4599-NH.4663_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_cable_segment_inst_4424-NL.4599-NH.4663"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_4663"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_cable_segment_inst_4424-NL.4599-NH.4663_t2">
+		<cim:IdentifiedObject.name>eo_cable_segment_inst_4424-NL.4599-NH.4663_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_cable_segment_inst_4424-NL.4599-NH.4663"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_4599"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_cable_segment_inst_4475-NL.4663-NH.201959_t1">
+		<cim:IdentifiedObject.name>eo_cable_segment_inst_4475-NL.4663-NH.201959_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_cable_segment_inst_4475-NL.4663-NH.201959"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_201959"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_cable_segment_inst_4475-NL.4663-NH.201959_t2">
+		<cim:IdentifiedObject.name>eo_cable_segment_inst_4475-NL.4663-NH.201959_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_cable_segment_inst_4475-NL.4663-NH.201959"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_4663"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17832-NL.19182-NH.19186_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17832-NL.19182-NH.19186_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17832-NL.19182-NH.19186"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19182"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17832-NL.19182-NH.19186_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17832-NL.19182-NH.19186_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17832-NL.19182-NH.19186"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19186"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17834-NL.19186-NH.19190_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17834-NL.19186-NH.19190_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17834-NL.19186-NH.19190"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19186"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17834-NL.19186-NH.19190_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17834-NL.19186-NH.19190_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17834-NL.19186-NH.19190"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19190"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17836-NL.18671-NH.18672_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17836-NL.18671-NH.18672_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17836-NL.18671-NH.18672"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_18671"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17836-NL.18671-NH.18672_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17836-NL.18671-NH.18672_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17836-NL.18671-NH.18672"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_18672"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17838-NL.18671-NH.20304_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17838-NL.18671-NH.20304_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17838-NL.18671-NH.20304"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_20304"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17838-NL.18671-NH.20304_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17838-NL.18671-NH.20304_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17838-NL.18671-NH.20304"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_18671"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17841-NL.-20312-NH.18685_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17841-NL.-20312-NH.18685_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17841-NL.-20312-NH.18685"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_-20312"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17841-NL.-20312-NH.18685_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17841-NL.-20312-NH.18685_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17841-NL.-20312-NH.18685"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_18685"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17841-NL.18672-NH.20312_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17841-NL.18672-NH.20312_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17841-NL.18672-NH.20312"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_18672"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17841-NL.18672-NH.20312_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17841-NL.18672-NH.20312_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17841-NL.18672-NH.20312"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_20312"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17843-NL.19166-NH.19170_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17843-NL.19166-NH.19170_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17843-NL.19166-NH.19170"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19166"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17843-NL.19166-NH.19170_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17843-NL.19166-NH.19170_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17843-NL.19166-NH.19170"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19170"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17845-NL.18672-NH.18694_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17845-NL.18672-NH.18694_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17845-NL.18672-NH.18694"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_18694"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17845-NL.18672-NH.18694_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17845-NL.18672-NH.18694_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17845-NL.18672-NH.18694"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_18672"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17847-NL.19166-NH.19182_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17847-NL.19166-NH.19182_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17847-NL.19166-NH.19182"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19166"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17847-NL.19166-NH.19182_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17847-NL.19166-NH.19182_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17847-NL.19166-NH.19182"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19182"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17851-NL.18694-NH.20296_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17851-NL.18694-NH.20296_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17851-NL.18694-NH.20296"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_20296"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17851-NL.18694-NH.20296_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17851-NL.18694-NH.20296_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17851-NL.18694-NH.20296"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_18694"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17853-NL.19182-NH.19194_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17853-NL.19182-NH.19194_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17853-NL.19182-NH.19194"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19182"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17853-NL.19182-NH.19194_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17853-NL.19182-NH.19194_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17853-NL.19182-NH.19194"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19194"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17855-NL.19174-NH.19198_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17855-NL.19174-NH.19198_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17855-NL.19174-NH.19198"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19174"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17855-NL.19174-NH.19198_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17855-NL.19174-NH.19198_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17855-NL.19174-NH.19198"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19198"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17857-NL.19165-NH.19166_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17857-NL.19165-NH.19166_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17857-NL.19165-NH.19166"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19165"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17857-NL.19165-NH.19166_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17857-NL.19165-NH.19166_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17857-NL.19165-NH.19166"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19166"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17859-NL.19170-NH.19174_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17859-NL.19170-NH.19174_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17859-NL.19170-NH.19174"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19170"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17859-NL.19170-NH.19174_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17859-NL.19170-NH.19174_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17859-NL.19170-NH.19174"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19174"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17861-NL.19170-NH.19178_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17861-NL.19170-NH.19178_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17861-NL.19170-NH.19178"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19170"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17861-NL.19170-NH.19178_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17861-NL.19170-NH.19178_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17861-NL.19170-NH.19178"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19178"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17915-NL.19334-NH.20134_t1">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17915-NL.19334-NH.20134_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17915-NL.19334-NH.20134"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_20134"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_connector_segment_inst_17915-NL.19334-NH.20134_t2">
+		<cim:IdentifiedObject.name>eo_connector_segment_inst_17915-NL.19334-NH.20134_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_connector_segment_inst_17915-NL.19334-NH.20134"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19334"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_isolating_eqpt_inst_18763_t1">
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18763_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_isolating_eqpt_inst_18763"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_20133"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_isolating_eqpt_inst_18763_t2">
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18763_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_isolating_eqpt_inst_18763"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_20134"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_isolating_eqpt_inst_18843_t1">
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18843_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_isolating_eqpt_inst_18843"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_4599"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_isolating_eqpt_inst_18843_t2">
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18843_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_isolating_eqpt_inst_18843"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_20296"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_isolating_eqpt_inst_18846_t1">
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18846_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_isolating_eqpt_inst_18846"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_4805"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_isolating_eqpt_inst_18846_t2">
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18846_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_isolating_eqpt_inst_18846"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_20304"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_isolating_eqpt_inst_18849_t1">
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18849_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_isolating_eqpt_inst_18849"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_20312"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_isolating_eqpt_inst_18849_t2">
+		<cim:IdentifiedObject.name>eo_isolating_eqpt_inst_18849_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_isolating_eqpt_inst_18849"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_-20312"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_power_xfrmr_inst_18852_t1">
+		<cim:IdentifiedObject.name>eo_power_xfrmr_inst_18852_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_power_xfrmr_inst_18852"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_18685"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_power_xfrmr_inst_18852_t2">
+		<cim:IdentifiedObject.name>eo_power_xfrmr_inst_18852_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_power_xfrmr_inst_18852"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_19165"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABCN"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:TransformerTank rdf:ID="transformer_tank_18853">
+		<cim:IdentifiedObject.name>transformer_tank_18853</cim:IdentifiedObject.name>
+		<cim:TransformerTank.PowerTransformer rdf:resource="#eo_power_xfrmr_inst_18852"/>
+	</cim:TransformerTank>
+	<cim:TransformerTankEnd rdf:ID="transformer_tank_end_18853_1">
+		<cim:IdentifiedObject.name>transformer_tank_end_18853_1</cim:IdentifiedObject.name>
+		<cim:TransformerEnd.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:TransformerEnd.Terminal rdf:resource="#eo_power_xfrmr_inst_18852_t1"/>
+		<cim:TransformerEnd.endNumber>1</cim:TransformerEnd.endNumber>
+		<cim:TransformerTankEnd.TransformerTank rdf:resource="#transformer_tank_18853"/>
+		<cim:TransformerTankEnd.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+	</cim:TransformerTankEnd>
+	<cim:TransformerTankEnd rdf:ID="transformer_tank_end_18853_2">
+		<cim:IdentifiedObject.name>transformer_tank_end_18853_2</cim:IdentifiedObject.name>
+		<cim:TransformerEnd.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:TransformerEnd.Terminal rdf:resource="#eo_power_xfrmr_inst_18852_t2"/>
+		<cim:TransformerEnd.endNumber>2</cim:TransformerEnd.endNumber>
+		<cim:TransformerTankEnd.TransformerTank rdf:resource="#transformer_tank_18853"/>
+		<cim:TransformerTankEnd.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABCN"/>
+	</cim:TransformerTankEnd>
+	<cim:VoltageLevel rdf:ID="sub_substation_337_11.00kV">
+		<cim:IdentifiedObject.name>11.00kV</cim:IdentifiedObject.name>
+		<cim:VoltageLevel.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:VoltageLevel.Substation rdf:resource="#sub_substation_337"/>
+	</cim:VoltageLevel>
+	<cim:VoltageLevel rdf:ID="sub_substation_4456_11.00kV">
+		<cim:IdentifiedObject.name>11.00kV</cim:IdentifiedObject.name>
+		<cim:VoltageLevel.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:VoltageLevel.Substation rdf:resource="#sub_substation_4456"/>
+	</cim:VoltageLevel>
+	<cim:VoltageLevel rdf:ID="sub_substation_4456_415.0V">
+		<cim:IdentifiedObject.name>415.0V</cim:IdentifiedObject.name>
+		<cim:VoltageLevel.BaseVoltage rdf:resource="#BaseVoltage_0.415"/>
+		<cim:VoltageLevel.Substation rdf:resource="#sub_substation_4456"/>
+	</cim:VoltageLevel>
+</rdf:RDF>

@@ -1,0 +1,36 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+
+_pragma(classify_level=debug)
+#
+# Singleton class which will generate unique deterministic CIM identifiers for
+# records which have been registered with the class.
+#
+# To register IDs for records, set the IDS shared variable on this class. This
+# should be an equality_hash_table which maps an RWO to an identifier.
+#
+# To replace the default identifier generation with this class, call:
+#
+#   sw_gisa_identifiers_from_register.replace_identifier_manager()
+# 
+def_slotted_exemplar( :sw_gisa_identifiers_from_register, {},
+	:sw_gisa_deterministic_identifiers)
+$
+
+_pragma(classify_level=debug)
+## IDS is a hash table indexed by RWO record holding the id assigned
+## to the record in CIM
+sw_gisa_identifiers_from_register.define_shared_variable( :ids, _unset, :public )
+$
+
+_pragma(classify_level=debug)
+_method sw_gisa_identifiers_from_register.collection_unique_id_for_rwo ( rwo )
+	##
+	## Return an ID for RWO which is unique within its collection
+	##
+
+	>> _self.ids[rwo]
+_endmethod
+$
+	

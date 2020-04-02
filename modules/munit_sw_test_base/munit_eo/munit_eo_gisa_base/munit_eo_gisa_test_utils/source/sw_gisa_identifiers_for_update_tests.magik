@@ -1,0 +1,63 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+
+_pragma(classify_level=debug)
+#
+# Singleton class which will generate unique deterministic CIM identifiers for
+# records which have been registered with the class.
+#
+# This is similar to the method used by sw_cim_identifiers_from_register, but
+# the incremental updates test have a slightly different scheme which copes with
+# missing IDs.
+#
+# To register IDs for records, set the IDS shared variable on this class. This
+# should be an equality_hash_table which maps an RWO to an identifier.
+#
+# To replace the default identifier generation with this class, call:
+#
+#   sw_gisa_identifiers_for_update_tests.replace_identifier_manager()
+# 
+def_slotted_exemplar( :sw_gisa_identifiers_for_update_tests, {},
+	:sw_gisa_deterministic_identifiers)
+$
+
+_pragma(classify_level=debug)
+sw_gisa_identifiers_for_update_tests.define_shared_constant(:replace_id_for_network_element, _false, :private)
+$
+
+_pragma(classify_level=debug)
+## IDS is a hash table indexed by RWO record holding the id assigned
+## to the record in CIM
+sw_gisa_identifiers_for_update_tests.define_shared_variable( :ids, _unset, :public )
+$
+
+_pragma(classify_level=debug)
+_method sw_gisa_identifiers_for_update_tests.collection_unique_id_for_rwo ( rwo )
+	##
+	## Return an ID for RWO which is unique within its collection
+	##
+
+	_if (id << _self.ids[rwo]) _is _unset 
+	_then
+		# .perform() is used to enable calling this method with
+		# sw_cim_value_holder as parameter
+		id << rwo.perform(:key_value|()|).an_element()
+	_endif
+	_return id
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_gisa_identifiers_for_update_tests.unique_id_for_node( p_node )
+	##
+	
+	_if (id << _self.ids[p_node]) _is _unset 
+	_then
+		id << p_node.node_id.unique_id
+	_endif
+
+	_return id
+_endmethod
+$
+

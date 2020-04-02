@@ -1,0 +1,109 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+
+_pragma(classify_level=debug)
+#
+# Singleton base class which provides methods used to generate
+# unique deterministic CIM identifiers.
+# Subclasses should implement the method:
+#
+#  collection_unique_id_for_rwo()
+#
+# and may subclass the methods:
+#
+#  unique_id_for_node()
+#  id_for_network_element()
+#
+# A subclass of this class can be used to replace the functionality of the
+# sw_cim_identifier_manager class. Call the method replace_identifier_manager()
+# to install methods which redirect calls to the sw_cim_identifier_manager to
+# methods on this class instead. This is done using the stub_method_helper.
+#
+def_slotted_exemplar( :sw_gisa_deterministic_identifiers, {} )
+$
+
+_pragma(classify_level=debug)
+sw_gisa_deterministic_identifiers.define_shared_constant(:replace_id_for_network_element, _true, :private)
+$
+
+_pragma(classify_level=debug)
+_method sw_gisa_deterministic_identifiers.replace_identifier_manager()
+	##
+	## Replace the 3 external API methods on
+	## sw_cim_identifier_manager with procedures which forward the
+	## calls to this class.
+	##
+
+	_local me << _self	
+	stub_method_helper.replace_method(sw_cim_identifier_manager,
+					  :|collection_unique_id_for_rwo()|,
+					  _proc(rwo)
+						  _import me
+						  >> me.collection_unique_id_for_rwo(rwo)
+					  _endproc)
+	
+ 	stub_method_helper.replace_method(sw_cim_identifier_manager,
+					  :|unique_id_for_node()|,
+					  _proc(node)
+						  _import me
+						  >> me.unique_id_for_node(node)
+					  _endproc)
+
+	_if _self.replace_id_for_network_element
+	_then
+		stub_method_helper.replace_method(sw_cim_identifier_manager, 
+						  :|id_for_network_element()|,
+						  _proc(nw_elem)
+							  _import me
+							  >> me.id_for_network_element(nw_elem)
+						  _endproc)
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_abstract _method sw_gisa_deterministic_identifiers.collection_unique_id_for_rwo( rwo )
+	##
+	## Return an ID for RWO which is unique within its collection
+	##
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_gisa_deterministic_identifiers.unique_id_for_node( node )
+	##
+	## Return a unique ID for A_NODE
+	##
+
+	_local zero_fill << _proc ( number, width )
+				  _return number.as_fixed_string( width, 0 ).substitute_character( %space, %0 )
+			    _endproc
+
+	>> "".concatenation( zero_fill( node.x, 10 ),
+			     "_",
+			     zero_fill( node.y , 10) )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_gisa_deterministic_identifiers.id_for_network_element( nw_elem )
+	##
+	## Return an ID for NW_ELEM
+	##
+	
+	>> _if ( n1 << nw_elem.node_1 ) _isnt _unset 
+	   _then
+		   n1 << n1.id
+		   n2 << nw_elem.node_2.id
+		   _if n1 > n2
+		   _then
+			   (n1,n2) << (n2,n1)
+		   _endif
+		   >> write_string("-NL." , n1 , "-NH.", n2)
+	   _else
+		   >> ""
+	   _endif
+_endmethod
+$
+	

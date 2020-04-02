@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rdf:RDF xmlns:dm="http://iec.ch/2002/schema/CIM_difference_model#" xmlns:cim="http://iec.ch/TC57/2010/CIM-schema-cim15#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+	<cim:Diagram rdf:ID="ed_cabinet_687594_dg">
+		<cim:Diagram.orientation rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#OrientationKind.positive"/>
+		<cim:Diagram.x1InitialView>-12251.000</cim:Diagram.x1InitialView>
+		<cim:Diagram.x2InitialView>19806.000</cim:Diagram.x2InitialView>
+		<cim:Diagram.y1InitialView>-22493.000</cim:Diagram.y1InitialView>
+		<cim:Diagram.y2InitialView>13159.000</cim:Diagram.y2InitialView>
+		<cim:IdentifiedObject.name>Cabinet_687594</cim:IdentifiedObject.name>
+	</cim:Diagram>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687600-NL.928742-NH.928781_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687600-NL.928742-NH.928781"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687610-NL.928768-NH.928805_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687610-NL.928768-NH.928805"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687626-NL.928698-NH.928773_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687626-NL.928698-NH.928773"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687626-NL.928698-NH.929002_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687626-NL.928698-NH.929002"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687626-NL.928767-NH.928773_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687626-NL.928767-NH.928773"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687626-NL.928767-NH.929907_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687626-NL.928767-NH.929907"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687626-NL.929003-NH.929907_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687626-NL.929003-NH.929907"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687636-NL.928774-NH.928793_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687636-NL.928774-NH.928793"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687642-NL.928698-NH.928780_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687642-NL.928698-NH.928780"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687652-NL.928773-NH.928792_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687652-NL.928773-NH.928792"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_687662-NL.928767-NH.928804_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_687662-NL.928767-NH.928804"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_688112-NL.929908-NH.929915_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_688112-NL.929908-NH.929915"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_connector_segment_inst_688118-NL.929907-NH.929914_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_connector_segment_inst_688118-NL.929907-NH.929914"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_isolating_eqpt_inst_687641_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_isolating_eqpt_inst_687641"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_isolating_eqpt_inst_687651_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_isolating_eqpt_inst_687651"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_isolating_eqpt_inst_687661_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_isolating_eqpt_inst_687661"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObject rdf:ID="eo_isolating_eqpt_inst_688117_do">
+		<cim:DiagramObject.Diagram rdf:resource="#ed_cabinet_687594_dg"/>
+		<cim:DiagramObject.IdentifiedObject rdf:resource="#eo_isolating_eqpt_inst_688117"/>
+		<cim:DiagramObject.drawingOrder>1</cim:DiagramObject.drawingOrder>
+	</cim:DiagramObject>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687600-NL.928742-NH.928781_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687600-NL.928742-NH.928781_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-514.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>1889.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687600-NL.928742-NH.928781_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687600-NL.928742-NH.928781_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>1010.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>1892.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687600-NL.928742-NH.928781_do_3">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687600-NL.928742-NH.928781_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>3</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>9751.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>1910.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687610-NL.928768-NH.928805_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687610-NL.928768-NH.928805_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-561.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-5221.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687610-NL.928768-NH.928805_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687610-NL.928768-NH.928805_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>963.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-5215.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687610-NL.928768-NH.928805_do_3">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687610-NL.928768-NH.928805_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>3</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>9786.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-5180.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687626-NL.928698-NH.928773_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687626-NL.928698-NH.928773_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2249.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>1885.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687626-NL.928698-NH.928773_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687626-NL.928698-NH.928773_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2229.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-1556.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687626-NL.928698-NH.929002_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687626-NL.928698-NH.929002_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2249.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>3159.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687626-NL.928698-NH.929002_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687626-NL.928698-NH.929002_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2249.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>1885.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687626-NL.928767-NH.928773_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687626-NL.928767-NH.928773_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2229.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-1556.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687626-NL.928767-NH.928773_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687626-NL.928767-NH.928773_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2214.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-5227.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687626-NL.928767-NH.929907_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687626-NL.928767-NH.929907_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2214.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-5227.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687626-NL.928767-NH.929907_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687626-NL.928767-NH.929907_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2194.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-9925.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687626-NL.929003-NH.929907_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687626-NL.929003-NH.929907_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2194.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-9925.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687626-NL.929003-NH.929907_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687626-NL.929003-NH.929907_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2183.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-12489.00000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687636-NL.928774-NH.928793_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687636-NL.928774-NH.928793_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-702.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-1556.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687636-NL.928774-NH.928793_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687636-NL.928774-NH.928793_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>822.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-1556.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687636-NL.928774-NH.928793_do_3">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687636-NL.928774-NH.928793_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>3</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>9771.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-1556.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687642-NL.928698-NH.928780_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687642-NL.928698-NH.928780_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2249.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>1885.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687642-NL.928698-NH.928780_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687642-NL.928698-NH.928780_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-514.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>1889.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687652-NL.928773-NH.928792_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687652-NL.928773-NH.928792_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2229.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-1556.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687652-NL.928773-NH.928792_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687652-NL.928773-NH.928792_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-702.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-1556.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687662-NL.928767-NH.928804_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687662-NL.928767-NH.928804_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2214.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-5227.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_687662-NL.928767-NH.928804_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_687662-NL.928767-NH.928804_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-561.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-5221.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_688112-NL.929908-NH.929915_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_688112-NL.929908-NH.929915_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-302.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-9925.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_688112-NL.929908-NH.929915_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_688112-NL.929908-NH.929915_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>1222.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-9925.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_688112-NL.929908-NH.929915_do_3">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_688112-NL.929908-NH.929915_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>3</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>9698.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-9925.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_688112-NL.929908-NH.929915_do_4">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_688112-NL.929908-NH.929915_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>4</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>9806.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-9925.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_688118-NL.929907-NH.929914_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_688118-NL.929907-NH.929914_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-2194.000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-9925.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_connector_segment_inst_688118-NL.929907-NH.929914_do_2">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_connector_segment_inst_688118-NL.929907-NH.929914_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>2</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-302.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-9925.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_isolating_eqpt_inst_687641_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_isolating_eqpt_inst_687641_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-514.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>1889.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_isolating_eqpt_inst_687651_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_isolating_eqpt_inst_687651_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-702.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-1556.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_isolating_eqpt_inst_687661_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_isolating_eqpt_inst_687661_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-561.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-5221.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+	<cim:DiagramObjectPoint rdf:ID="eo_isolating_eqpt_inst_688117_do_1">
+		<cim:DiagramObjectPoint.DiagramObject rdf:resource="#eo_isolating_eqpt_inst_688117_do"/>
+		<cim:DiagramObjectPoint.sequenceNumber>1</cim:DiagramObjectPoint.sequenceNumber>
+		<cim:DiagramObjectPoint.xPosition>-302.0000000</cim:DiagramObjectPoint.xPosition>
+		<cim:DiagramObjectPoint.yPosition>-9925.000000</cim:DiagramObjectPoint.yPosition>
+	</cim:DiagramObjectPoint>
+</rdf:RDF>

@@ -1,0 +1,361 @@
+#% text_encoding = iso8859_1
+
+_package sw
+$
+
+_pragma(classify_level=debug)
+##
+## Test case for eo_cim_segment_mapper methods.
+##
+def_slotted_exemplar(:munit_eo_cim_segment_mapper_test,
+	{
+		{ :properties, _unset }
+	},
+	{:test_case}) #, :sw_cim_unit_test_utils_mixin})
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.set_up()
+	## 
+	## 
+
+	.properties << property_list.new()
+
+	_return _super.set_up()
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method munit_eo_cim_segment_mapper_test.get_mock_rwo( length, calculated_length )
+	## 
+	## 
+
+	mock_rwo << mock( :rwo )
+
+	stub( mock_rwo ).length.then_return( length )
+	stub( mock_rwo ).calculated_length.then_return( calculated_length )
+
+	>> mock_rwo 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method munit_eo_cim_segment_mapper_test.get_mock_cim_resource( mock_rwo , line_length )
+	## 
+	## 
+
+	mock_cim_resource << mock( :cim_resource )
+	mock_network_element << mock( :network_element )
+	mock_geometry << mock( :geometry )
+	mock_world << mock( :world )
+	mock_source_record << mock( :source_record )
+	mock_view << mock( :view )
+
+	stub( mock_cim_resource ).network_element.then_return( mock_network_element )
+	stub( mock_network_element ).geometry.then_return( mock_geometry )
+	stub( mock_geometry ).line_length.then_return( line_length )
+	stub( mock_geometry ).world.then_return( mock_world )
+	stub( mock_world ).unit_name.then_return( :m )
+	stub( mock_world ).source_view.then_return( mock_view )
+	stub( mock_view ).world.then_return( mock_world )
+	stub( mock_cim_resource ).source_record.then_return( mock_source_record )
+	stub( mock_source_record ).source.then_return( mock_rwo )
+	
+	>> mock_cim_resource
+_endmethod
+$
+
+
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.test_get_cim_length_moves_geom_to_geographic_world()
+	## 
+	## 
+
+	_self.
+		given_rwo().
+		given_cim_resource_with_geom_internal_world().
+		given_stubbed_method_move_geom_to_geographic_world_from_world_owner().
+		when_get_cim_length_is_called().
+		then_the_geom_is_moved()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.given_rwo()
+	## 
+	## 
+
+	expected_length << length_value(1.2, :m)
+	line_length << length_value(1.0, :m)
+
+	.properties[:mock_rwo] << _self.get_mock_rwo( expected_length , line_length )
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.given_cim_resource_with_geom_internal_world()
+	## 
+	## 
+
+	.properties[:mock_cim_resource] << mock_cim_resource << mock( :cim_resource )
+
+	line_length << length_value(1.0, :m)
+	mock_network_element << mock( :network_element )
+	mock_geometry << mock( :geometry )
+	mock_geom_world << mock( :geom_world )
+	mock_source_record << mock( :source_record )
+	mock_view << mock( :view )
+	mock_view_world << mock( :view_world )
+	mock_rwo << .properties[:mock_rwo]
+
+	stub( mock_cim_resource ).network_element.then_return( mock_network_element )
+	stub( mock_network_element ).geometry.then_return( mock_geometry )
+	stub( mock_geometry ).line_length.then_return( line_length )
+	stub( mock_geometry ).world.then_return( mock_geom_world )
+	stub( mock_geom_world ).unit_name.then_return( :m )
+	stub( mock_geom_world ).source_view.then_return( mock_view )
+	stub( mock_view ).world.then_return( mock_view_world )
+	stub( mock_cim_resource ).source_record.then_return( mock_source_record )
+	stub( mock_source_record ).source.then_return( mock_rwo )
+	
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.given_stubbed_method_move_geom_to_geographic_world_from_world_owner()
+	## 
+	## 
+
+	_local props << .properties
+	props[:used?] << _false
+
+	stub_method_helper.replace_method(eo_cim_segment_mapper,
+					  :|move_geom_to_geographic_world_from_world_owner()|,
+					  _proc(geom)
+						  _import props
+						  props[:used?] << _true
+						  _return geom
+					  _endproc)
+
+	stub_method_helper.replace_method(eo_cim_segment_mapper,
+					  :|get_world_owner_for_geom()|,
+					  _proc() _return _true _endproc)
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.when_get_cim_length_is_called()
+	## 
+	## 
+
+	mock_cim_resource << .properties[:mock_cim_resource]
+
+	actual_length << eo_cim_segment_mapper.get_cim_length( mock_cim_resource , :m )
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.then_the_geom_is_moved()
+	## 
+	## 
+
+	_self.assert_true(.properties[:used?], "The geometry was not moved from internal to geographoc world as expected")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.test_get_cim_length_dlp_for_set_actual_length_returns_get_cim_length()
+	## 
+	## 
+
+	_self.
+		given_cim_resource().
+		given_network_element_geometry_for_the_cim_resource().
+		given_rwo_for_the_cim_resource().
+		given_actual_length_for_the_rwo_is(1).
+		given_stubbed_get_cim_length_method_returns(:cim_length).
+		when_get_cim_length_dlp_is_called().
+		then_the_result_is(:cim_length)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.test_get_cim_length_dlp_for_unset_actual_length_unset_world_owner_returns_get_cim_length()
+	## 
+	## 
+
+	_self.
+		given_cim_resource().
+		given_network_element_geometry_for_the_cim_resource().
+		given_rwo_for_the_cim_resource().
+		given_actual_length_for_the_rwo_is(_unset).
+		given_world_owner_for_the_network_element_geometry_is(_unset).
+		given_stubbed_get_cim_length_method_returns(:cim_length).
+		when_get_cim_length_dlp_is_called().
+		then_the_result_is(:cim_length)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.test_get_cim_length_dlp_for_unset_actual_length_set_world_owner_not_diagram_owner_returns_get_cim_length()
+	## 
+	## 
+
+	_self.
+		given_cim_resource().
+		given_network_element_geometry_for_the_cim_resource().
+		given_rwo_for_the_cim_resource().
+		given_actual_length_for_the_rwo_is(_unset).
+		given_world_owner_for_the_network_element_geometry_is(:world_owner).
+		given_world_owner_is_diagram_owner_is(_false).
+		given_stubbed_get_cim_length_method_returns(:cim_length).
+		when_get_cim_length_dlp_is_called().
+		then_the_result_is(:cim_length)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.test_get_cim_length_dlp_for_unset_actual_length_set_world_diagram_owner_returns_unset()
+	## 
+	## 
+
+	_self.
+		given_cim_resource().
+		given_network_element_geometry_for_the_cim_resource().
+		given_rwo_for_the_cim_resource().
+		given_actual_length_for_the_rwo_is(_unset).
+		given_world_owner_for_the_network_element_geometry_is(:world_owner).
+		given_world_owner_is_diagram_owner_is(_true).
+		when_get_cim_length_dlp_is_called().
+		then_the_result_is(_unset)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.given_cim_resource()
+	## 
+	## 
+
+	.properties[:cim_resource] << mock(:mock_cim_resource)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.given_network_element_geometry_for_the_cim_resource()
+	## 
+	## 
+
+	cim_resource << .properties[:cim_resource]
+	network_element << mock(:mock_network_element)
+	stub(cim_resource).network_element.then_return(network_element)
+	stub(network_element).geometry.then_return(:geometry)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.given_rwo_for_the_cim_resource()
+	## 
+	## 
+
+	.properties[:rwo] << rwo << mock(:mock_rwo)
+
+	source_record << mock(:mock_source_record)
+	stub(source_record).source.then_return(rwo)
+
+	stub(.properties[:cim_resource]).source_record.then_return(source_record)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.given_actual_length_for_the_rwo_is(actual_length)
+	## 
+	## 
+
+	stub(.properties[:rwo]).actual_length.then_return(actual_length)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.given_world_owner_for_the_network_element_geometry_is(value)
+	## 
+	## 
+
+	stub_method_helper.replace_method(eo_cim_segment_mapper, :|get_world_owner_for_geom()|,
+					  _proc()
+						  _import value
+						  _return value
+					  _endproc
+			   )
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.given_world_owner_is_diagram_owner_is(value)
+	## 
+	## 
+
+	stub_method_helper.replace_method(eo_cim_segment_mapper, :|is_world_owner_diagram_owner?()|,
+					  _proc()
+						  _import value
+						  _return value
+					  _endproc
+			   )
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.given_stubbed_get_cim_length_method_returns(value)
+	## 
+	## 
+
+	
+	stub_method_helper.replace_method(eo_cim_segment_mapper, :|get_cim_length()|,
+					  _proc()
+						  _import value
+						  _return value
+					  _endproc
+			   )
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.when_get_cim_length_dlp_is_called()
+	## 
+	## 
+
+	.properties[:result] << eo_cim_segment_mapper.get_cim_length_dlp(.properties[:cim_resource], :m)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_eo_cim_segment_mapper_test.then_the_result_is(expected_result)
+	## 
+	## 
+
+	_self.assert_equals(expected_result, .properties[:result])
+_endmethod
+$

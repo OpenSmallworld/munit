@@ -1,0 +1,114 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+
+_pragma(classify_level=debug)
+#
+# Singleton class which will generate unique deterministic CIM identifiers using
+# attributes of the records.
+#
+# This class can be used in cases where each RWO in the data to be exported has
+# a unique ID stored on one of its fields. The ID is returned via the method
+# cim_id which is added to various RWO classes when replace_identifier_manager()
+# is called. The field used depends on the RWO class:
+#   ed_pole: asset_id
+#   eo_installation: name
+#   eo_service_point: alias
+#   eo_circuit: circuit_id
+#   sub_substation: name
+# See method add_cim_id_methods() for further details.
+#
+# To replace the default identifier generation with this class, call:
+#
+#   sw_gisa_identifiers_from_attributes.replace_identifier_manager()
+#
+def_slotted_exemplar( :sw_gisa_identifiers_from_attributes, {},
+	:sw_gisa_deterministic_identifiers)
+$
+
+_pragma(classify_level=debug)
+_method sw_gisa_identifiers_from_attributes.collection_unique_id_for_rwo ( rwo )
+	##
+	## Return an ID for RWO which is unique within its collection
+	##
+
+	>> rwo.cim_id
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_gisa_identifiers_from_attributes.replace_identifier_manager()
+	## 
+	## Replace the 3 external API methods on
+	## sw_cim_identifier_manager with procedures which forward the
+	## calls to this class.
+	## 
+
+	_self.add_cim_id_methods()
+
+	_super.replace_identifier_manager()
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_gisa_identifiers_from_attributes.add_cim_id_methods()
+	##
+	## Add cim_id methods to various RWOs as stubs via the stub_method_helper.
+	## The stubs will be removed during test teardown.
+	## 
+	stub_method_helper.replace_method(ds_record, :cim_id,
+					  _proc()
+						  >> _unset
+					  _endproc)
+	stub_method_helper.replace_method(eo_structure, :cim_id,
+					  _proc()
+						  >> _self.asset_id
+					  _endproc)
+	stub_method_helper.replace_method(eo_installation, :cim_id,
+					  _proc()
+						  >> _self.name
+					  _endproc)
+	stub_method_helper.replace_method(eo_service_point, :cim_id,
+					  _proc()
+						  >> _self.alias
+					  _endproc)
+	stub_method_helper.replace_method(eo_asset, :cim_id,
+					  _proc()
+						  >> write_string(_self.installation().cim_id, %_, _self.phase_annotation_string())
+					  _endproc)
+	stub_method_helper.replace_method(eo_asset_phase, :cim_id,
+					  _proc()
+						  >> write_string(_self.installation.cim_id, %_, _self.phase)
+					  _endproc)
+	stub_method_helper.replace_method(eo_circuit, :cim_id,
+					  _proc()
+						  >> _self.circuit_id
+					  _endproc)
+	stub_method_helper.replace_method(sub_substation, :cim_id,
+					  _proc()
+						  >> _self.name
+					  _endproc)	
+	stub_method_helper.replace_method(eo_energy_source, :cim_id,
+					  _proc()
+						  >> _self.asset_id
+					  _endproc)
+	stub_method_helper.replace_method(eo_spec, :cim_id,
+					  _proc()
+						  >> _self.spec_name
+					  _endproc)
+	stub_method_helper.replace_method(eo_energy_consumer, :cim_id,
+					  _proc()
+						  >> _self.asset_id
+					  _endproc)
+	stub_method_helper.replace_method(eo_composite_switch, :cim_id,
+					  _proc()
+						  >> _self.asset_id
+					  _endproc)
+	stub_method_helper.replace_method(eo_bay, :cim_id,
+					  _proc()
+						  >> _self.name
+					  _endproc)
+	
+_endmethod
+$
