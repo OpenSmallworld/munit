@@ -1,0 +1,13 @@
+munit_xml_file_comparator	layered_product
+
+title
+	Smallworld Electric Office XML File Comparer
+end
+
+description
+	Compares two XML files
+end
+
+requires	
+
+end
