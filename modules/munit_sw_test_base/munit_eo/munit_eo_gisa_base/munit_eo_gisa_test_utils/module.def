@@ -6,5 +6,5 @@ end
 
 requires
 	munit_eo_base
-	munit_xml_file_comparator
+	xml_file_comparator
 end

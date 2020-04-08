@@ -7,5 +7,5 @@ end
 requires
 	munit_eo_cim_validator
 	munit_eo_gisa_test_utils
-	munit_xml_file_comparator
+	xml_file_comparator
 end

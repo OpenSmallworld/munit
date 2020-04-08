@@ -1,4 +1,4 @@
-munit_xml_file_comparator 1
+xml_file_comparator 1
 
 requires_java
 	xml_file_comparator
