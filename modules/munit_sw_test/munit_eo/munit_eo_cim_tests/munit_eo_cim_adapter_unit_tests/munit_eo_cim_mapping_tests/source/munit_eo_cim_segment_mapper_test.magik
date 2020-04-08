@@ -127,11 +127,12 @@ _method munit_eo_cim_segment_mapper_test.given_a_cim_resource_for_the_rwo()
 	##
 	##
 
+	.properties[:cim_resource] << res << mock(:mock_cim_resource)
+
 	rwo << .properties[:rwo]
-
-	holder << sw_cim_value_holder.new(:cim_value_source, rwo)
-
-	.properties[:cim_resource] << sw_cim_resource.new(holder)
+	source_record << mock(:mock_source_record)
+	stub(res).source_record.then_return(source_record)
+	stub(source_record).source.then_return(rwo)
 
 	_return _self
 _endmethod
