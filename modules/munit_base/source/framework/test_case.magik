@@ -470,7 +470,7 @@ _method test_case.value_for_display_tree( key )
 
 	>> _if key _is :name
 	   _then
-		   >> _self
+		   >> _self.get_name()
 	   _elif key _is :icon
 	   _then
 		   error_tests << rope.new()
