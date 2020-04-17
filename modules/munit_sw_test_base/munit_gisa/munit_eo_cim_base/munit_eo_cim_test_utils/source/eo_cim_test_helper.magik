@@ -1,0 +1,212 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:eo_cim_test_helper,
+	{
+	},
+	{})
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.set_circuit_live_status_in_metadata(circuit_id, live?, _optional want_increments? )
+	##
+	## Set the live status for circuit named CIRCUIT_ID to LIVE?
+	##
+
+	_local circuit_pred << predicate.new(:circuit_id,:|=|,circuit_id)
+	_local e_ds << gis_program_manager.cached_dataset(:electric)
+	_local circuit_coll << e_ds.collection(:eo_circuit)
+	_local circuit << circuit_coll.select(circuit_pred).an_element()
+	_if circuit _is _unset
+	_then
+		_return
+	_endif
+
+	_local circuit_urn << urn_manager.get_urn_from_object(circuit)
+	_local an_engine << sw_cim_metadata_engine.get_instance()
+	_local circuit_meta << an_engine.sys!perform( :get_metadata_for_circuit_urn|()| , circuit_urn)
+
+	_local proposed_values << property_list.new()
+	_if circuit_meta.live? _isnt live?
+	_then
+		proposed_values[:live?] << live?
+	_endif
+
+	_if want_increments? _isnt _unset _andif 
+	    circuit_meta.want_increments _isnt want_increments?
+	_then
+		proposed_values[:want_increments] << want_increments?	
+	_endif
+
+	_if _not proposed_values.empty?
+	_then
+		_local trans << record_transaction.new_update(circuit_meta, proposed_values)
+		trans.run()
+	_endif 
+
+	>> circuit_meta
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.cim_plugin(application)
+	##
+	## Return the CIM adapter plugin configured into the
+	## application APPLICATION.
+	##
+	>> application.plugin(:cim_adapter)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.rdf_file_check(actual_file_path, application, tc)
+	##
+	## Checks that the exported RDF file is equivalent to the file
+	## ACTUAL_FILE_PATH.
+	## APPLICATION is the running application. It is used to check
+	## that files were exported and get hold of the exported RDF file.
+	##
+	## TC is the MATT test case object. Asserts are called on TC.
+	##
+	_if (file_paths << _self.cim_plugin(application).file_paths).empty?
+	_then
+	        tc.assert_false(_true ,"CIM files not exported")
+		_return
+	_endif
+	# The report, if there is one, will be placed in the same directory as the reference file
+	(file, report_path) <<  system.pathname_components(actual_file_path)
+	result << sw_cim_rdf_file_validator.compare(file_paths[1],actual_file_path, _true, report_path)
+	tc.assert_true(result, "CIM exported files are not same")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.check_no_files_exported(application, tc)
+	##
+	## Check that no files have been exported.
+	##
+	## APPLICATION is the running application. It is used to check
+	## that files were exported and get hold of the exported RDF file.
+	##
+	## TC is the MATT test case object. Asserts are called on TC.
+	##
+	nothing_exported? << _self.cim_plugin(application).file_paths.empty?
+	tc.assert_true(nothing_exported? ,"CIM files were exported")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.check_files_exported(application, tc)
+	##
+	## Check that some files have been exported.
+	##
+	## APPLICATION is the running application. It is used to check
+	## that files were exported and get hold of the exported RDF file.
+	##
+	## TC is the MATT test case object. Asserts are called on TC.
+	##
+	nothing_exported? << _self.cim_plugin(application).file_paths.empty?
+	tc.assert_false(nothing_exported? ,"CIM files were not exported")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.gml_file_check(reference_gml_file, application, tc)
+	##
+	## Checks that the exported GML file is equivalent to the file
+	## REFERENCE_GML_FILE.
+	## APPLICATION is the running application. It is used to check
+	## that files were exported and get hold of the exported RDF file.
+	##
+	## TC is the MATT test case object. Asserts are called on TC.
+	##
+	_if (file_paths << _self.cim_plugin(application).file_paths).empty?
+	_then
+	        tc.assert_false(_true ,"CIM files not exported")
+		_return
+	_endif
+	exported_gml_file << _self.get_gml_filename_from_rdf_filename(file_paths[1])
+	result << sw:sw_cim_gml_file_comparer.files_equal?(reference_gml_file, exported_gml_file)
+	tc.assert_true(result, "Exported GML files are not the same")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.get_gml_filename_from_rdf_filename(rdf_filename)
+	##
+	## Get the GML filename that was exported with the RDF file
+	## RDF_FILENAME.
+	##
+	( filename, pathname ) << system.pathname_components( rdf_filename )
+
+	# Remove extension
+	name << filename.split_by(%.)[1]
+
+	# Name must be changed to insert "GML_" at first underscore
+	# e.g. CIRC_EO_STUFF... -> CIRC_GML_EO_STUFF...
+	first_underscore_inx << name.index_of(%_ )
+	prefix << name.slice( 1, first_underscore_inx-1)
+	remainder << name.slice_to_end( first_underscore_inx + 1 )
+	new_parts << rope.new_with(prefix, "GML", remainder)
+	new_name << write_string_with_separator( new_parts , %_ , _unset ,".gml" )
+	
+	_return system.pathname_from_components(new_name, pathname )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.allow_export_of_lv(application)
+	##
+	## Set the properties on the CIM plugin in the application
+	## APPLICATION so that LV can be exported.
+	##
+	pl << _self.cim_plugin(application)
+
+	pl.exclude_lv_from_export? << _false
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.allow_export_of_structures(application)
+                ##
+                ## Set the properties on the CIM plugin in the application
+                ## APPLICATION so that structures can be exported.
+                ##
+                pl << _self.cim_plugin(application)
+
+                pl.exclude_structures_from_export?<< _false
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.set_output_path(output_path, application)
+	##
+	## Set the output path for CIM exports to OUTPUT_PATH in the
+	## application APPLICATION
+	##
+	pl << _self.cim_plugin(application)
+	pl.output_path << output_path
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_test_helper.reset_cim_uva(p_min_value)
+	##
+	## Drop current CIM uva and create new one starting from
+	## P_MIN_VALUE if P_MIN_VALUE is higher then current UVA value
+	## 
+
+	v << gis_program_manager.cached_dataset(:cim_metadata)
+	uva_name << :cim
+	current_value << v.uvas[uva_name].get()
+	
+	_if  p_min_value _isnt _unset 
+	_then
+		_for i _over current_value.upto( p_min_value )
+		_loop
+			v.uvas[uva_name].get()
+		_endloop  
+	_endif 
+_endmethod
+$

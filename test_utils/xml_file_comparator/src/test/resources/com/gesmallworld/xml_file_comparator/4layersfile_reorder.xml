@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<nmm:NMMFeatureCollection xmlns:gml="http://www.opengis.net/gml" xmlns:nmm="http://www.ge.com/nmm" xmlns:smil20="http://www.w3.org/2001/SMIL20/" xmlns:smil20lang="http://www.w3.org/2001/SMIL20/Language" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:schemalocation="http://www.ge.com/nmm nmm_gml.xsd">
+	<nmm:DeviceMember>
+		<nmm:Device>
+			<nmm:ID>tester_4</nmm:ID>
+			<nmm:secondPoint>8</nmm:secondPoint>
+		</nmm:Device>
+	</nmm:DeviceMember>
+	<nmm:DeviceMember>
+		<nmm:Device>
+			<nmm:ID>tester_1</nmm:ID>
+			<nmm:secondPoint>5</nmm:secondPoint>
+		</nmm:Device>
+	</nmm:DeviceMember>
+	<nmm:DeviceMember>
+		<nmm:Device>
+			<nmm:ID>tester_3</nmm:ID>
+			<nmm:secondPoint>7</nmm:secondPoint>
+		</nmm:Device>
+	</nmm:DeviceMember>
+	<nmm:DeviceMember>
+		<nmm:Device>
+			<nmm:ID>tester_2</nmm:ID>
+			<nmm:secondPoint>6</nmm:secondPoint>
+		</nmm:Device>
+	</nmm:DeviceMember>
+</nmm:NMMFeatureCollection>

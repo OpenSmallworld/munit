@@ -1,0 +1,11 @@
+munit_eo_cim_test_utils	1
+
+description
+	Provides magik code for use in integration and MATT tests
+end
+
+requires
+	munit_eo_cim_validator
+	munit_eo_gisa_test_utils
+	xml_file_comparator
+end

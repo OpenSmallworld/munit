@@ -1,0 +1,771 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:eo_gisa_base_test_case,
+{
+	{ :ids, _unset },
+	{ :specs, _unset }
+},
+{:eo_dm_test_case})
+$
+
+eo_gisa_base_test_case.define_slot_externally_writable( :specs )
+$
+
+_pragma(classify_level=debug)
+## Max number of attempts when trying to switch the frozen file
+## to write mode before it fails
+eo_gisa_base_test_case.define_shared_constant( :max_attempts_for_frozen_file, 20, :private )
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.set_up()
+
+	_super.set_up()
+
+	# Cachec views
+	_self.ds_views
+	
+	.ids << equality_hash_table.new()
+	
+	.properties[ :coords ] << _self.setup_coords()
+	.properties[ :cables ] << rwo_set.new()
+	.properties[ :rwos ] << rwo_set.new()	
+	.properties[ :plugin_settings] << property_list.new()
+
+	helper << _self.properties_helper
+	helper.set_property(:target_coordinate_system_name, _self.target_coordinate_system_name)
+
+	# Make sure the application is running
+	_self.application()
+	
+	# caching the original plugin values, so that they can be put
+	# back when the test finishes. 
+	.properties[:plugin_settings][:exclude_lv_from_export?] << helper.exclude_lv_from_export?
+	.properties[:plugin_settings][:include_lv_servicepoint_in_export?] << helper.include_lv_servicepoint_in_export?
+	.properties[:plugin_settings][:exclude_structures_from_export?] << helper.exclude_structures_from_export?
+
+	_self.setup_specifications()			
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.tear_down()
+
+	_for key,value _over .properties[ :plugin_settings ].fast_keys_and_elements()
+	_loop
+		_self.properties_helper.set_property( key, value.write_string )
+	_endloop
+
+	_self.teardown_specifications()
+	
+	.ids.empty()
+	
+	_super.tear_down()
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method eo_gisa_base_test_case.teardown_design()
+	##
+	## Tear down the design.
+	##
+        ## This just rolls back the changes in every view we're
+        ## interested in and close current design 
+	## 
+
+	_self.rollback()
+	swg_dsn_admin_engine.activate_design( _unset )	
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method eo_gisa_base_test_case.set_properties_to_export_everything()
+	## 
+	##
+	helper << _self.properties_helper
+	helper.set_property( :exclude_lv_from_export?, "false" )
+	helper.set_property( :include_lv_servicepoint_in_export?, "true")
+	helper.set_property( :exclude_structures_from_export?, "false")
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test}, usage=redefinable)
+_method eo_gisa_base_test_case.setup_coords()
+	##
+	## Define a property list of coordinates to build your test data
+	## key will be used in your constructor methods e.g. coord(
+	## :xfrmr_source_loc )
+	##
+
+	_return property_list.new()
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.coord( c_name )
+
+	>> .properties[:coords][c_name]
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.add_rwo( an_rwo )
+
+	.properties[:rwos].add( an_rwo )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.rwos
+
+	>> .properties[:rwos]
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.add_cable( a_cable )
+
+	.properties[:cables].add( a_cable )
+	.properties[:rwos].add( a_cable )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method  eo_gisa_base_test_case.cables()
+
+	>> .properties[:cables]
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method  eo_gisa_base_test_case.create_a_cable( id, route_geom_coords, _gather fields_and_values  )
+	
+
+	_local route_geometry <<  _self.create_geometry_with_bng_coords( route_geom_coords )
+
+	route_geometry.world << _self.electric_view.world
+
+	_local inst << _self.insert_record( :eo_cable_segment_inst, 3,
+					    :route, route_geometry, _scatter fields_and_values  )
+
+	_self.add_cable( inst )
+
+_endmethod 	
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.transformer
+
+	>> .properties[:transformer]
+	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.transformer << an_xfrmr
+
+	.properties[:transformer] << an_xfrmr
+	.properties[:rwos].add( an_xfrmr )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.electric_view
+	##
+	## Return a handle on the electric view
+	##
+
+	 >> gis_program_manager.databases[:electric]
+_endmethod
+$
+
+# DETERMINISTIC IDENTIFIERS SUPPORT
+
+_pragma(classify_level=debug)
+## IDS is a hash table indexed by RWO record holding the id assigned
+## to the record in CIM
+eo_gisa_base_test_case.define_slot_access( :ids, :writable, :private )
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.run_bare()
+        ## Runs the bare test sequence
+
+	# Disable database notifications.
+	_dynamic !notify_database_data_changes?!, !current_application!
+	_local old_value << !notify_database_data_changes?!
+	!notify_database_data_changes?! << _false
+
+	_self.one_time_behaviour()
+	
+	_if swg_dsn_admin_engine.view _is _unset
+	_then
+		swg_dsn_admin_engine.init()
+	_endif
+	
+        _protect
+		_self.set_up()
+		!current_application! << _self.get_current_application() # Must be after set_up() so properties are set
+		
+		_self.setup_design()
+		_self.setup_sub_design()
+
+		_self.setup_deterministic_identifiers()
+		
+                _self.run_test()
+        _protection
+                _self.teardown_design()
+		_self.tear_down()		
+		!notify_database_data_changes?! << old_value 
+        _endprotect
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.project_name
+	## 
+	## sets project name to be test class name
+	>> _self.class_name
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.design_name
+	## 
+	## sets design name to be test class name
+	>> _self.class_name
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.sub_design_name(parent_design)
+	## subclassing this method to provide unique design names
+	## across test classes so running tests in parralel does not
+	## cause issues.
+	## 
+
+
+	
+	design_name << write_string( _super.sub_design_name( parent_design ),
+				     date_time.now().as_seconds)
+	_if design_name.size > 64 _then
+		design_name << design_name.slice ( 1, 64 )
+	_endif
+
+	>> design_name 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.get_current_application()
+	##
+	##
+
+	_if .properties[:use_dummy_application] _is _true 
+	_then
+		_return  dummy_application.new()
+	_else
+		_return  smallworld_product.application(_self.application_name)
+ 	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.setup_deterministic_identifiers()
+	##
+	##
+
+	id_mode << .properties[:deterministic_identifiers_mode]
+	_if id_mode _is :register
+	_then
+		# Initialise the IDs
+		sw_gisa_identifiers_from_register.ids << _self.ids 
+		sw_gisa_identifiers_from_register.replace_identifier_manager()
+	_elif id_mode _is :inc_updates
+	_then
+		# Incremental update tests have their own identifier scheme which is similar to
+		# sw_gisa_identifiers_from_register but handles missing IDs.
+		
+		# Initialise the IDs
+		sw_gisa_identifiers_for_update_tests.ids << _self.ids 
+		sw_gisa_identifiers_for_update_tests.replace_identifier_manager()		
+	_elif id_mode _is :attributes
+	_then
+		sw_gisa_identifiers_from_attributes.replace_identifier_manager()
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.get_asset_and_set_id( rwo_type, field , value )
+	##
+	##
+
+	an_asset << _self.get_asset( rwo_type, field, value )
+	_self.assign_id_to_record( value, an_asset )
+
+	>> an_asset
+_endmethod
+$
+
+# CREATION OF DATA
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.one_time_setup_database()
+	## 
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+## This is a property list indexed by collection name where
+## default values for the different fields are specified
+eo_gisa_base_test_case.define_shared_variable( :default_values,
+	property_list.new_with(
+
+		:eo_cable_segment_inst,	property_list.new_with(
+						:status, "Existing",
+						:network_type, "MV",
+						:nominal_voltage_pp, voltage_value.new( 11, :kV ),
+						:owner_type, "Company Owned",
+						:owner_name, "Electric Utility",
+						:mounting, "Underground",
+						:usage, "",
+						:arrangement, "",
+						:alias, "Alias1" ),
+		:eo_isolating_eqpt_inst,	property_list.new_with(
+						:status, "Existing",
+						:network_type, "MV",
+						:nominal_voltage_pp, voltage_value.new( 11, :kV ),
+						:owner_type, "Company Owned",
+						:owner_name, "Electric Utility" ),
+		
+		:eo_cable, property_list.new_with(
+				   :alias, "Alias",
+				   :manufacturer, "" ),
+		
+		:eo_power_xfrmr_inst,	property_list.new_with(
+						:status, "Existing",
+						:source_network_type, "MV",
+						:source_nominal_voltage_pp, voltage_value.new( 11, :kV ),
+						:load_network_type, "LV",
+						:load_nominal_voltage_pp, voltage_value.new( 2.4, :kV ),
+						:owner_type, "Company Owned",
+						:owner_name, "Electric Utility",
+						:mounting, "Underground"),
+		
+		:eo_power_xfrmr, property_list.new_with(
+				   :device_type, "Substation"),
+		
+		:eo_power_xfrmr_spec, property_list.new_with(
+				   :device_type, "Substation"),
+		
+		:eo_circuit, property_list.new_with(
+				     :circuit_id, "1000" ),
+
+		:eo_protective_eqpt_inst, property_list.new_with(
+						  :status, "Existing",
+						  :network_type, "MV",
+						  :nominal_voltage_pp, voltage_value.new( 11, :kV ),
+						  :owner_type, "Company Owned",
+						  :owner_name, "Electric Utility",
+						  :mounting, "Underground"),
+		
+		:eo_protective_eqpt, property_list.new_with(
+				   :device_type, "Fault Indicator"),
+		:eo_network_hypernode, property_list.new_with(
+					        :status, "Existing" ),
+				   
+		:eo_composite_switch, property_list.new_with(:device_type, "Unknown",
+							     :status, "Existing",
+							     :network_type, "MV",
+							     :phasing, "ABC",
+							     :owner_type, "Company Owned",
+							     :owner_name, "Electric Utility",
+							     :mounting, "Underground" )
+		      ),
+	:public )
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.insert_record( coll_name, rdf_id, _gather attr_and_values )
+	##
+	## Insert a record in the collection called COLL_NAME in the
+	## electric view. RFD_ID is the id that will be used to export
+	## to CIM, and ATTR_AND_VALUES is a pair of keys and values
+	## that will be used in conjunction with the default values to
+	## populate the record to be inserted. The default values are
+	## found in the shared constant .default_values.
+	##
+	## If COLL_NAME represents a spec ( *_spec ), then it deals
+	## with frozen storage appropriately
+	## 
+
+	_if coll_name.matches?( "*_spec" )
+	_then
+		_return _self.insert_frozen_record( coll_name, rdf_id, _scatter attr_and_values )
+	_else
+		# If it is not frozen, is it warm?
+		_return _self.insert_warm_record( coll_name, rdf_id, _scatter attr_and_values )
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.insert_warm_record ( coll_name, rdf_id, _gather attr_and_values )
+	## 
+	## Insert a record in the collection called COLL_NAME in the
+	## electric view. RFD_ID is the id that will be used to export
+	## to CIM, and ATTR_AND_VALUES is a pair of keys and values
+	## that will be used in conjunction with the default values to
+	## populate the record to be inserted. The default values are
+	## found in the shared constant .default_values.
+	## 
+
+	_local ev << _self.electric_view
+	_local coll << ev.collections[coll_name]
+
+	_local rec_values <<  _self.get_record_values( coll_name, _scatter attr_and_values )
+	_local trans << record_transaction.new_insert(
+				coll,
+				rec_values,
+				coll_name.write_string )
+	
+	_local rec << ev.run_transaction( trans )
+	_self.assign_id_to_record( rdf_id, rec )
+
+	>> rec
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.add_phases( inst, asset, phases )
+	##
+	## Add existing phases specified by PHASES to associate an
+	## installation record INST with ASSET.
+	##
+	## Return nothing
+	##
+
+	_local recs << inst.add_existing_assets( phases, { asset } )
+	an_existing_phase << asset.existing_phases().an_element()
+	_for rec _over recs.fast_elements()
+	_loop
+		_if rec.is_kind_of?(an_existing_phase)
+		_then
+			_self.assign_id_to_record(_self.get_id_value(), rec )
+		_endif
+	_endloop
+
+_endmethod
+$	
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.assign_id_to_record ( id, record )
+	##
+	## The identifier in CIM for RECORD is set to be ID
+	##
+
+	_self.ids[record] << id
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.get_id_value(_optional greater?)
+	##
+	## If greater? then the value is above 10M to simulate adding
+	## new objects, which in general case should have higher id then
+	## the existing ones (assuming 32bit UVAs).
+	##
+	id << .ids.size +1
+	_if greater? _is _true
+	_then
+		id +<< 1e7
+	_endif	
+	_return id	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.create_geometry_with_wgs84_coords( xy_vec )
+	## 
+	## Create a geometry (pseudo point or pseudo_chain depending on the number
+	## of points in XY_VEC) where the coordinates are specified in WGS84
+	##
+
+	>> _self.create_geometry_with_source_cs( :world_longlat_wgs84_degree, xy_vec )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.create_geometry_with_bng_coords( xy_vec )
+	## 
+	## Create a geometry (pseudo point or pseudo_chain depending on the number
+	## of points in XY_VEC) where the coordinates are specified in British National
+	## Grid, in mm
+	##
+
+	>> _self.create_geometry_with_source_cs( :uk_british_national_grid_mm, xy_vec )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.create_geometry_with_source_cs( source_cs_name, xy_vec )
+	##
+	## Create a geometry (pseudo point or pseudo_chain depending on the number
+	## of points in XY_VEC) where the coordinates are specified in the projection
+	## defined by SOURCE_CS_NAME (the name of a coordinate system in the electric dataset)
+	## Geometry will be created in !current_world! which defaults
+	## to self.electric_view.world
+	
+	_local target_cs << _self.electric_view.world.coordinate_system
+	_local source_cs << _self.electric_view.coordinate_system( source_cs_name )
+	_local transf << transform.new_converting_cs_to_cs( source_cs, target_cs )	
+	_local geometry << sector.new_with_xy_vector( xy_vec )
+
+	_dynamic !current_world!
+	_if !current_world! _is _unset
+	_then
+		!current_world! << _self.electric_view.world
+	_endif
+	
+	_if geometry.size = 1
+	_then
+		_return pseudo_point.new( geometry.transformed( transf ) )
+	_else
+		_return pseudo_chain.new( geometry.transformed( transf ) )
+	_endif
+	
+_endmethod
+$
+
+# SPECS SUPPORT
+
+_pragma(classify_level=debug)
+## SPECS is an rwo set with the specifications that have been
+## inserted as part of the test. The records will be deleted in
+## the tear down process, AFTER the associated assets have been
+## deleted
+eo_gisa_base_test_case.define_slot_access( :specs, :writable, :private )
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.setup_specifications ()
+	##
+	## Initialise the list of specifications that have been stored
+	## in the database
+	##
+
+	_self.specs << rwo_set.new()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.teardown_specifications ()
+	##
+	## Delete the specifications that are stored in the specs slot
+	##
+
+	_protect
+		# We need to replace this method, as this will ask the user for
+		# confirmation before the spec is deleted
+		eo_spec.sys!save_and_replace_method( :|br_delete_confirm_delete()|,
+						     _proc ()
+							     # Do nothing
+						     _endproc )
+		
+		_for spec _over _self.specs.fast_elements()
+		_loop
+			_self.remove_frozen_record( spec )
+		_endloop
+	_protection
+		eo_spec.sys!restore_saved_method( :|br_delete_confirm_delete()| )		
+	_endprotect
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.insert_frozen_record ( coll_name, rdf_id, _gather attr_and_values )
+	##
+	## Insert a new record in the collection called
+	## COLL_NAME in the electric view. RFD_ID is the id that will
+	## be used to export to CIM. ATTR_AND_VALUES is a pair of
+	## keys and values that will be used in conjunction with the
+	## default values to populate the spec. The default values are
+	## found in the shared constant .default_values.
+	##
+	## This method deals with frozen collections and commits after
+	## the record has been inserted. If at the time of inserting
+	## the record someone else is writing, it will continue to try
+	## until it manages to grab the view in write mode
+	##
+
+	# Setting this dynamic to false will stop the audit history
+	# manager creating audit history records for the specs
+	_dynamic !add_audit_history?! << _false	
+
+	_local ev << _self.electric_view
+	_local coll << ev.collections[coll_name]
+	_local rec_values << _self.get_record_values( coll_name, _scatter attr_and_values )
+	_local trans << record_transaction.new_insert(
+				coll,
+				rec_values,
+				coll_name.write_string )
+	_local previous_mode, rec, writable?, anything_changed?
+	_local ok? << _false
+	
+	_protect
+		previous_mode << ev.perform_frozen( :mode )
+		_self.ensure_frozen_write_mode( ev )
+		rec << ev.run_transaction( trans )
+		_if rec _isnt _unset
+		_then
+			_self.specs.add( rec )
+			_self.assign_id_to_record( rdf_id, rec )
+		_endif
+		ok? << _true
+	_protection
+		_if ok? _is _true
+		_then
+			ev.perform_frozen( :|commit()| )
+		_else
+			ev.perform_frozen( :|rollback()| )
+		_endif
+		ev.perform_frozen( :|switch()|, previous_mode )
+	_endprotect
+	>> rec
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.remove_frozen_record ( rec )
+	##
+	## Remove an existing record REC from a storage that is treated
+	## as frozen.
+	##
+	## This method deals with frozen collections and commits after
+	## the record has been deleted. If at the time of deleting
+	## the record someone else is writing, it will continue to try
+	## until it manages to grab the view in write mode.
+	##
+
+	# Setting this dynamic to false will stop the audit history
+	# manager creating audit history records for the records being
+	# deleted
+	_dynamic !add_audit_history?! << _false
+	
+	_local ev << _self.electric_view
+	_local trans << record_transaction.new_delete( rec,
+						       write_string( "Deleting ", rec ) )
+	_local previous_mode
+	_local ok? << _false
+	
+	_protect
+		previous_mode << ev.perform_frozen( :mode )
+		_self.ensure_frozen_write_mode( ev )
+		ev.run_transaction( trans )
+		ok? << _true
+	_protection
+		_if ok? _is _true
+		_then
+			ev.perform_frozen( :|commit()| )
+		_else
+			ev.perform_frozen( :|rollback()| )
+		_endif
+		ev.perform_frozen( :|switch()|, previous_mode )
+	_endprotect
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.ensure_frozen_write_mode ( v )
+	## 
+	## Try to switch the frozen components of view V to write
+	## mode. Will keep trying until it is achieved.
+	##
+
+	_local writable?, anything_changed?
+
+	_over 1.upto( _self.max_attempts_for_frozen_file )
+	_loop
+		( anything_changed?, writable? ) << v.perform_frozen( :|switch()|, :write )
+		_if writable?
+		_then
+			_RETURN
+		_endif
+		_thisthread.sleep( 100 )
+	_endloop
+
+	# If we get to this point, then fail, because we didn't manage
+	# to switch to write mode
+	_self.fail( write_string( "Didn't manage to get hold of the frozen files in write mode. Current writer is: ",
+				  v.perform_frozen( :current_writer ) ) )
+			
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.get_record_values ( coll_name, _gather attr_and_values )
+	## 
+	## Return a list of attribute names and values according to the
+	## values in ATTR_AND_VALUES and the default values for
+	## collection named COLL_NAME
+	##
+
+	_local default_values << _self.default_values[coll_name].default( {} )
+	_local additional_values << property_list.new_from_gathered( attr_and_values.default({}) )
+	_local rec_values <<  property_list.new_from( default_values )
+	rec_values.add_all( additional_values )
+
+	>> rec_values
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.when_design_differences_are_exported()
+	##
+	##
+	# Dont stop cloning exchange job records
+	stub_method_helper.replace_method(sw_cim_metadata_engine, :|clone_exchange_job_record()|, :new_exchange_job_id)
+	stub_method_helper.replace_method(sw_cim_metadata_engine, :|update_exchange_job_with_metadata()|, _unset)
+	_self.commit_and_merge_all_views()
+	.properties[ :resulting_request ] << _self.export_differences_from_current_design_locally()
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.commit_and_merge_all_views()
+	##
+	##
+
+	_for a_view _over _self.ds_views.fast_elements()
+	_loop
+		# FIXME move this to setup design and subdesign?
+		a_view.commit()
+		a_name << a_view.alternative_path_name()
+		a_view.up(:write)
+		a_view.merge()
+		a_view.go_to_alternative( a_name )
+		a_view.merge()
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method eo_gisa_base_test_case.get_circuit(circuit_id)
+	## 
+	## 
+	ev << _self.electric_view
+	pred << predicate.eq(:circuit_id, circuit_id)
+	>> ev.collection(:eo_circuit).select(pred).an_element()
+_endmethod
+$
+

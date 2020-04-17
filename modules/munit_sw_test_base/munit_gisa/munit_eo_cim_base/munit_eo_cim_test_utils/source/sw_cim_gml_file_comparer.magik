@@ -1,0 +1,152 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:sw_cim_gml_file_comparer,
+	{
+	},
+	{})
+$
+
+
+_pragma(classify_level=debug)
+_private _method sw_cim_gml_file_comparer.check_xml(file1, file2)
+	##
+	## Check that FILE1 and FILE2 contain valid XML.
+	##
+	## Check that both files have:
+	##  - the same number of elements
+	##  - the same top element type
+	##  - the same number of elements in the top element
+	## If there is any difference, return _false.
+	## Otherwise, return _true.
+	## 
+	# Check that export is valid XML file
+	file1_xml << simple_xml.read_document_file( file1 )
+	file2_xml << simple_xml.read_document_file( file2 )
+
+	# Check that we have right top element and right number of elements
+	_if file1_xml.elements.size ~= file2_xml.elements.size
+	_then
+		write("Top elements size did not match:")
+		write("File 1: ", file1_xml.elements.size," elements")
+		write("File 2: ", file2_xml.elements.size," elements")
+		_return _false
+	_endif
+	
+	_if file1_xml.top_element.type _isnt file2_xml.top_element.type
+	_then
+		write("Top element types did not match:")
+		write("File 1: ", file1_xml.top_element.type)
+		write("File 2: ", file2_xml.top_element.type)
+		_return _false
+	_endif
+	
+	_if file1_xml.top_element.elements.size ~= file2_xml.top_element.elements.size
+	_then
+		write("The number of elements in the top element did not match:")
+		write("File 1: ", file1_xml.top_element.elements.size," elements")
+		write("File 2: ", file2_xml.top_element.elements.size," elements")
+		_return _false
+	_endif
+	_return _true
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_cim_gml_file_comparer.files_equal?( file1, file2 )
+	##
+	## FILE1 and FILE2 are full path names of GML files from a CIM
+	## export.
+	##
+	## Return _true if they are equivalent and _false if they are
+	## not. Files are equivalent if they contain the same elements,
+	## irrespective of order.
+	##
+	_if _not _self.check_xml(file1, file2)
+	_then
+		_return _false
+	_endif
+
+	# Check rest of GML as text 
+	file1_xml_data << _self.read_gml_file( file1 )
+	file2_xml_data << _self.read_gml_file( file2 )
+
+	_if file1_xml_data.size ~= file2_xml_data.size
+	_then
+		write("The number of elements read from the GML files did not match:")
+		write("File 1 ", file1_xml_data.size)
+		write("File 2 ", file2_xml_data.size)
+		_return _false
+	_endif
+
+	comparator << xml_file_comparator.new()
+
+	(file2_name, report_path) << system.pathname_components(file2)
+	difference_filename << write_string(file2_name, "_differences.txt")
+
+	difference_filepath << system.pathname_from_components( difference_filename, report_path)
+	( has_differences? , difference_file ) << comparator.has_differences?( file1 , file2 , "gml" , difference_filepath )
+
+	_return _not has_differences?
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method sw_cim_gml_file_comparer.read_gml_file( filename )
+	## 
+	##
+
+	result << hash_table.new()
+	xml_text << ""; id << _unset
+	s << external_text_input_stream.new(filename)
+
+	_protect
+		_loop 
+			_if (a_line << s.get_line()) _is _unset
+			_then
+				_leave
+
+			# New device starting
+			_elif a_line.index_of_seq( "<nmm:DeviceMember>" ) _isnt _unset
+			_then
+				# If we find first device process text so far as header
+				_if result[:header] _is _unset _then result[:header] << xml_text _endif
+
+				# Restart text for each device
+				xml_text << a_line.trim_spaces(); id << _unset
+
+			# Definition of device is finished here
+			_elif a_line.index_of_seq( "</nmm:DeviceMember>" ) _isnt _unset
+			_then
+				xml_text +<< a_line.trim_spaces()
+
+				# Add device with id to result
+				result[id] << xml_text
+
+				# Reset text and id 
+				xml_text << ""; id << _unset
+
+			# Get here device id  
+			_elif (start << a_line.index_of_seq( "<nmm:ID>" )) _isnt _unset
+			_then
+				end << a_line.index_of_seq( "</nmm:ID>" )
+				id_string << a_line.slice( start+8 , end-1)
+				id << id_string.as_symbol()
+
+			# In any other case just add current line to text 
+			_else
+				xml_text +<< a_line.trim_spaces()
+			_endif 
+		_endloop 	
+	_protection
+		s.close()
+	_endprotect
+
+	# Set what is left after last device as footer
+	result[:footer] << xml_text
+
+	>> result
+_endmethod
+$

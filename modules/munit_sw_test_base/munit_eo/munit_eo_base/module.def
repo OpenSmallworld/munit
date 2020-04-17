@@ -1,0 +1,11 @@
+munit_eo_base	1
+
+description
+	Top level Munit module for EO, contains no tests per se, just top level classes and utilities.
+end
+
+requires
+	munit_base
+	munit_remote
+	application_test
+end

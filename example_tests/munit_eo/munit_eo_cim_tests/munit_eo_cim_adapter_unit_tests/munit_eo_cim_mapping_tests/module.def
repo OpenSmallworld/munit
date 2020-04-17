@@ -1,0 +1,16 @@
+munit_eo_cim_mapping_tests	1
+
+description
+	Test the eo_cim_mapping module
+end
+
+requires
+	munit_base
+end
+ 
+tests_modules
+   eo_cim_mapping
+end
+
+hidden
+language en_gb

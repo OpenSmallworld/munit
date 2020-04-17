@@ -1,0 +1,139 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted, topic={munit})
+def_slotted_exemplar(:eo_cim_qm_test_case,
+	## 
+	## Base class for testing all QM routines
+	##
+	## Subclass should provide shared constant called
+	## objects_dump_file which contains the test data.
+	## 
+	{
+		{:routine, _unset},
+		{:flags, _unset},
+		{:application, _unset},
+		{:a_qm_engine, _unset}
+	},
+	{:eo_cim_test_case})
+$
+
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+eo_cim_qm_test_case.define_shared_constant(
+	:objects_dump_file,
+	_unset,
+	:public
+	)
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+##
+## Specifies the routine that will be tested by the class.
+## Subclasses should redefine this.
+##
+eo_cim_qm_test_case.define_shared_constant(
+	:routine_to_be_tested,
+	_unset,
+	:public
+	)
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_method eo_cim_qm_test_case.set_up()
+	##
+	## Set up test case
+	## initialise slots
+	##
+
+	_super.set_up()
+
+	.application <<
+		_if (real_app<< _self.get_application()) _isnt _unset
+		_then
+			>> real_app
+		_else
+			dummy_app<< application.new(:electric_dm)
+			>> dummy_app
+		_endif
+
+	.a_qm_engine << qm_engine.new(.application.database,:dummy)
+	.routine <<  _self.routine_to_be_tested.new(.a_qm_engine)
+
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
+_method eo_cim_qm_test_case.tear_down()
+	##
+	## Tear down case
+	##
+
+	.routine.terminate()
+	.a_qm_engine.terminate()
+	_super.tear_down()
+
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method eo_cim_qm_test_case.handle_qm_flag_condition(a_condition)
+	##
+	## Store the data in A_CONDITION in a canonical form
+	##
+	p << property_list.new()
+	p[:objects] << equality_set.new()
+	p[:objects].add_all(a_condition[:objects].default({}))
+
+	props << a_condition[:properties]
+	p[:routine] << props[:routine].class_name
+	p[:error_code] << props[:error_code]
+	p[:severity] << props[:severity_type]
+	p[:description] << props[:description]
+	p[:location] << props[:location]
+	p[:region] << props[:region]
+	p[:world] << _unset
+	p[:related_object] << props[:related_object]
+
+	.flags.add_last(p)
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method eo_cim_qm_test_case.run_routine(a_record)
+	##
+	## Run the routine A_ROUTINE on A_RECORD
+	##
+	
+	.flags << rope.new()
+	
+	_local me << _self
+	_block
+		_handling qm_flag _with _proc(cond)
+						_import me
+						me.handle_qm_flag_condition(cond)
+		_endproc
+
+		# We set !current_application! so that spatial context
+		# information can be retrieved (there are futher comments about
+		# .application in the set_up() method).		
+		_dynamic !current_application!<< .application
+		
+		.routine.run(a_record)
+	_endblock	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={munit})
+_method eo_cim_qm_test_case.get_message(message_id, _gather args)
+	##
+	## Retrieve the message for MESSAGE_ID from the routine being
+	## tested.
+	## ARGS are arguments for the message.
+	##
+	>> _self.routine_to_be_tested.sys!perform(:|message()|,message_id,_scatter args)
+_endmethod 
+$
+

@@ -1,0 +1,90 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+
+## These tests will export named circuits and validate the
+## exported files. 
+## They should NOT be dependent on messaging or DMS - see the
+## end to end tests for that.
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(
+	:munit_circuit_export_tests,
+	{},
+	{:eo_cim_base_case})
+$
+
+_pragma(classify_level=debug)
+munit_circuit_export_tests.define_shared_constant( :good_profile_module_name,
+	:eo_ge_dcim,
+	:public )
+$
+
+_pragma(classify_level=debug)
+munit_circuit_export_tests.define_shared_constant( :good_profile_filename,
+	"GE_CDPSM_15_v18.owl",
+	:public )
+$
+
+_pragma(classify_level=debug)
+_private _method munit_circuit_export_tests.get_profile_filename ()
+	## Returns the fully qualified file name for the profile called .profile_filename stored in
+	## resources/base/data under module .profile_module_name
+	##
+	
+	>> smallworld_product.get_data_file( _self.good_profile_filename,
+					     _self.good_profile_module_name)
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method munit_circuit_export_tests.setup_design()
+	# Disable testing in a design, this test cases are
+	# not expected to introduce any changes.
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method munit_circuit_export_tests.setup_sub_design()
+	# Disable testign in a design.
+_endmethod
+$
+
+#
+# EXPORT INTERACTIVELY
+# --------------------
+#
+
+_pragma(classify_level=debug)
+_method munit_circuit_export_tests.test_export_circuit_MV_001_without_structures()
+	##
+	##
+	_self.
+		given_an_existing_circuit("MV 001").
+		when_the_circuit_is_exported().
+		then_the_exported_files_match("MV_001_without_structures")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_circuit_export_tests.test_export_circuit_MV_002_with_lv_without_structures()
+	##
+	##
+	_self.
+		given_an_existing_circuit("MV 002").
+		when_the_circuit_is_exported(:with_lv).
+		then_the_exported_files_match("MV_002_with_lv_without_structures")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_circuit_export_tests.test_export_circuit_BH_SaxonWay_001_with_lv_with_structures()
+	##
+	##
+	_self.
+		given_an_existing_circuit("BH_SaxonWay_001").
+		when_the_circuit_is_exported(:with_lv, :with_structures).
+		then_the_exported_files_match("BH_SaxonWay_001_with_lv_with_structures")
+_endmethod
+$

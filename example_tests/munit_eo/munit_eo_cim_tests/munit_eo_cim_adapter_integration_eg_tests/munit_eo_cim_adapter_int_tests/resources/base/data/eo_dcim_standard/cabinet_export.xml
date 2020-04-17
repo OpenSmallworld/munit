@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rdf:RDF xmlns:dm="http://iec.ch/2002/schema/CIM_difference_model#" xmlns:cim="http://iec.ch/TC57/2010/CIM-schema-cim15#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+	<cim:ACLineSegment rdf:ID="eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000">
+		<cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage_11.000"/>
+		<cim:Conductor.length>2.00</cim:Conductor.length>
+		<cim:Equipment.EquipmentContainer rdf:resource="#eo_circuit_9"/>
+		<cim:IdentifiedObject.name>Cable Segment_2</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.Location rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_path"/>
+		<cim:PowerSystemResource.PSRRoles rdf:resource="#PSRRole_Lateral"/>
+		<cim:PowerSystemResource.PSRType rdf:resource="#PSRType_Underground"/>
+	</cim:ACLineSegment>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_3_A">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.A"/>
+		<cim:IdentifiedObject.name>Cable Segment_2_A</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_4_B">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.B"/>
+		<cim:IdentifiedObject.name>Cable Segment_2_B</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:ACLineSegmentPhase rdf:ID="eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_5_C">
+		<cim:ACLineSegmentPhase.ACLineSegment rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000"/>
+		<cim:ACLineSegmentPhase.phase rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#SinglePhaseKind.C"/>
+		<cim:IdentifiedObject.name>Cable Segment_2_C</cim:IdentifiedObject.name>
+	</cim:ACLineSegmentPhase>
+	<cim:Asset rdf:ID="eo_cable_1">
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_3_A"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_4_B"/>
+		<cim:Asset.PowerSystemResources rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_5_C"/>
+		<cim:Asset.type>CableAsset</cim:Asset.type>
+		<cim:IdentifiedObject.name>Cable_1</cim:IdentifiedObject.name>
+	</cim:Asset>
+	<cim:BaseVoltage rdf:ID="BaseVoltage_11.000">
+		<cim:BaseVoltage.nominalVoltage>11.000</cim:BaseVoltage.nominalVoltage>
+		<cim:IdentifiedObject.name>11.000 kV</cim:IdentifiedObject.name>
+	</cim:BaseVoltage>
+	<cim:Cabinet rdf:ID="ed_cabinet_3">
+		<cim:Asset.type>Unknown</cim:Asset.type>
+		<cim:IdentifiedObject.name>Cabinet_3</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.Location rdf:resource="#ed_cabinet_3_location"/>
+	</cim:Cabinet>
+	<cim:Cabinet rdf:ID="ed_cabinet_6">
+		<cim:Asset.type>Switch Cabinet</cim:Asset.type>
+		<cim:IdentifiedObject.name>Cabinet_6</cim:IdentifiedObject.name>
+		<cim:PowerSystemResource.Location rdf:resource="#ed_cabinet_6_location"/>
+	</cim:Cabinet>
+	<cim:ConnectivityNode rdf:ID="cn_0000000000_0000000000">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_9"/>
+		<cim:IdentifiedObject.name>cn_0000000000_0000000000</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:ConnectivityNode rdf:ID="cn_0000002000_0000000000">
+		<cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#eo_circuit_9"/>
+		<cim:IdentifiedObject.name>cn_0000002000_0000000000</cim:IdentifiedObject.name>
+	</cim:ConnectivityNode>
+	<cim:CoordinateSystem rdf:ID="urn_ogc_def_crs_EPSG__4326">
+		<cim:CoordinateSystem.crsUrn>urn:ogc:def:crs:EPSG::4326</cim:CoordinateSystem.crsUrn>
+	</cim:CoordinateSystem>
+	<cim:Line rdf:ID="eo_circuit_9">
+		<cim:IdentifiedObject.name>circuit</cim:IdentifiedObject.name>
+	</cim:Line>
+	<cim:Location rdf:ID="ed_cabinet_3_location">
+		<cim:Location.CoordinateSystem rdf:resource="#urn_ogc_def_crs_EPSG__4326"/>
+	</cim:Location>
+	<cim:Location rdf:ID="ed_cabinet_6_location">
+		<cim:Location.CoordinateSystem rdf:resource="#urn_ogc_def_crs_EPSG__4326"/>
+	</cim:Location>
+	<cim:Location rdf:ID="eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_path">
+		<cim:Location.CoordinateSystem rdf:resource="#urn_ogc_def_crs_EPSG__4326"/>
+	</cim:Location>
+	<cim:Name rdf:ID="eo_circuit_9_nametype_circuitname_name">
+		<cim:Name.IdentifiedObject rdf:resource="#eo_circuit_9"/>
+		<cim:Name.NameType rdf:resource="#NameType_CircuitName"/>
+		<cim:Name.name>cabinet_export</cim:Name.name>
+	</cim:Name>
+	<cim:NameType rdf:ID="NameType_CircuitName">
+		<cim:NameType.name>CircuitName</cim:NameType.name>
+	</cim:NameType>
+	<cim:PSRRole rdf:ID="PSRRole_Lateral">
+		<cim:IdentifiedObject.name>Lateral</cim:IdentifiedObject.name>
+		<cim:PSRRole.PSRRoleType rdf:resource="#NetworkCategory"/>
+	</cim:PSRRole>
+	<cim:PSRRoleType rdf:ID="NetworkCategory">
+		<cim:IdentifiedObject.name>Network Category</cim:IdentifiedObject.name>
+	</cim:PSRRoleType>
+	<cim:PSRType rdf:ID="PSRType_Underground">
+		<cim:IdentifiedObject.name>Underground</cim:IdentifiedObject.name>
+	</cim:PSRType>
+	<cim:PositionPoint rdf:ID="ed_cabinet_3_location_1">
+		<cim:PositionPoint.Location rdf:resource="#ed_cabinet_3_location"/>
+		<cim:PositionPoint.sequenceNumber>1</cim:PositionPoint.sequenceNumber>
+		<cim:PositionPoint.xPosition>-7.557276468</cim:PositionPoint.xPosition>
+		<cim:PositionPoint.yPosition>49.76714985</cim:PositionPoint.yPosition>
+	</cim:PositionPoint>
+	<cim:PositionPoint rdf:ID="ed_cabinet_6_location_1">
+		<cim:PositionPoint.Location rdf:resource="#ed_cabinet_6_location"/>
+		<cim:PositionPoint.sequenceNumber>1</cim:PositionPoint.sequenceNumber>
+		<cim:PositionPoint.xPosition>-7.557248825</cim:PositionPoint.xPosition>
+		<cim:PositionPoint.yPosition>49.76715117</cim:PositionPoint.yPosition>
+	</cim:PositionPoint>
+	<cim:PositionPoint rdf:ID="eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_path_1">
+		<cim:PositionPoint.Location rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_path"/>
+		<cim:PositionPoint.sequenceNumber>1</cim:PositionPoint.sequenceNumber>
+		<cim:PositionPoint.xPosition>-7.557276468</cim:PositionPoint.xPosition>
+		<cim:PositionPoint.yPosition>49.76714985</cim:PositionPoint.yPosition>
+	</cim:PositionPoint>
+	<cim:PositionPoint rdf:ID="eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_path_2">
+		<cim:PositionPoint.Location rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_path"/>
+		<cim:PositionPoint.sequenceNumber>2</cim:PositionPoint.sequenceNumber>
+		<cim:PositionPoint.xPosition>-7.557248825</cim:PositionPoint.xPosition>
+		<cim:PositionPoint.yPosition>49.76715117</cim:PositionPoint.yPosition>
+	</cim:PositionPoint>
+	<cim:Terminal rdf:ID="eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_t1">
+		<cim:IdentifiedObject.name>eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_t1</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_0000000000_0000000000"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>1</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+	<cim:Terminal rdf:ID="eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_t2">
+		<cim:IdentifiedObject.name>eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000_t2</cim:IdentifiedObject.name>
+		<cim:Terminal.ConductingEquipment rdf:resource="#eo_cable_segment_inst_2-NL.0000000000_0000000000-NH.0000002000_0000000000"/>
+		<cim:Terminal.ConnectivityNode rdf:resource="#cn_0000002000_0000000000"/>
+		<cim:Terminal.phases rdf:resource="http://iec.ch/TC57/2010/CIM-schema-cim15#PhaseCode.ABC"/>
+		<cim:Terminal.sequenceNumber>2</cim:Terminal.sequenceNumber>
+	</cim:Terminal>
+</rdf:RDF>

@@ -1,0 +1,19 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:eo_cim_test_case, {}, {:eo_cim_base_case})
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_cim_test_case.set_up()
+
+	_super.set_up()	
+
+	.properties[:use_dummy_application] << _true 
+	.properties[:deterministic_identifiers_mode] << :register
+
+_endmethod
+$
+

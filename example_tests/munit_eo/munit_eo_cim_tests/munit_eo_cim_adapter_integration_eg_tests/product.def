@@ -1,0 +1,9 @@
+munit_eo_cim_adapter_integration_eg_tests	layered_product
+
+title
+	Smallworld Electric Office CIM Adapter integration tests
+end
+
+description
+	All integration tests in sw_cim_adapter.
+end

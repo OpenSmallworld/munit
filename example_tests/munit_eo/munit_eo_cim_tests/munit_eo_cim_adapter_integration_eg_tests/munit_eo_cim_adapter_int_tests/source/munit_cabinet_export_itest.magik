@@ -1,0 +1,244 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+
+_pragma(classify_level=debug)
+def_slotted_exemplar( :munit_cabinet_export_itest,
+	{},
+	{:eo_cim_test_case})
+$
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.set_up()
+	## 
+	## 
+
+	_super.set_up()
+
+	.properties[:exclude_structures?] << sw_cim_properties_helper.exclude_structures_from_export?
+	sw_cim_properties_helper.set_property( :exclude_structures_from_export?, "false" )
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.tear_down()
+	## 
+	## 
+
+	sw_cim_properties_helper.set_property( :exclude_structures_from_export?, .properties[:exclude_structures?] )
+
+	_super.tear_down()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method munit_cabinet_export_itest.insert_a_wire(xy_vec)
+	## 
+	## Create a mini network that consists of a circuit, with a cable
+	## segment, an existing asset and one phase (A)
+	##
+
+	# Geometry
+	# We can specify the coordinates in WGS84 as this is what we will get in the GML file
+	_local geometry << _self.create_geometry_with_wgs84_coords(xy_vec)
+	_local asset << _self.insert_record( :eo_cable, 1  )
+	_local inst << _self.insert_record( :eo_cable_segment_inst, 2,
+					    :network_type, "MV",
+					    :route, geometry,
+					    :usage, "Backbone Tap")
+	_self.add_phases( inst, asset, { "ABC" } )
+
+	_return  inst 
+
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method munit_cabinet_export_itest.insert_a_cabinet(xy, number, type)
+	## 
+	## Create a mini network that consists of a circuit, with a
+	## cabinet.
+	##
+
+	# Geometry
+	# We can specify the coordinates in WGS84 as this is what we will get in the GML file
+	_local geometry << _self.create_geometry_with_wgs84_coords(xy)
+				   
+	_local cabinet << _self.insert_record( :ed_cabinet, number,
+					       :type, type,
+					       :location, geometry )
+	_return cabinet
+
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method munit_cabinet_export_itest.insert_connector_point(xy, a_world, number)
+	## 
+	## Create a mini network that consists of a circuit and sample object.
+	##
+
+	# Geometry
+	# We can specify the coordinates in WGS84 as this is what we will get in the GML file
+	_dynamic !current_world! << a_world
+	_local geometry << _self.create_geometry_with_wgs84_coords(xy)
+				   
+	_local asset << _self.insert_record( :eo_connector_point, number,
+					     :asset_id, "Asset",
+					     :device_type, "Mains")
+	_local inst << _self.insert_record( :eo_connector_point_inst, number+1,
+					    :network_type, "MV",
+					    :name, "name",
+					    :mounting, "Underground",
+					    :location, geometry )
+	_self.add_phases( inst, asset, { "ABC" } )
+	_return inst
+
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.given_two_coordinates()
+	## 
+	## 
+	
+	.properties[:coord_1] << {-7.557276468, 49.76714985}
+	.properties[:coord_2] << {-7.557248825, 49.76715117}
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.given_a_wire_between_coordinates()
+	## 
+	## 
+
+	coord_1 << .properties[:coord_1]
+	coord_2 << .properties[:coord_2]
+
+	.properties[:wire] << _self.insert_a_wire({coord_1[1], coord_1[2],
+						   coord_2[1], coord_2[2]})
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.given_a_cabinet_at_the_first_coordinate()
+	## 
+	## 
+
+	.properties[:cabinet] << _self.insert_a_cabinet(.properties[:coord_1], 3, "Unknown")
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.given_an_equipment_in_the_first_cabinet_world()
+	## 
+	## 
+
+	a_world << .properties[:cabinet].world
+
+	.properties[:eqpt] << _self.insert_connector_point(.properties[:coord_1], a_world, 4)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.given_another_cabinet_at_the_second_coordinate()
+	## 
+	## 
+
+	.properties[:another_cabinet] << _self.insert_a_cabinet(.properties[:coord_2], 6, "Fuse Cabinet")
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.given_another_equipment_in_the_second_cabinet_world()
+	## 
+	## 
+
+	another_world << .properties[:another_cabinet].world
+
+	.properties[:another_eqpt] << _self.insert_connector_point(.properties[:coord_2], another_world, 4)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.given_a_circuit_with_the_wire_and_the_equipment()
+	## 
+	## 
+
+	line_segments << rwo_set.new_with(.properties[:wire])
+	equipments << rwo_set.new_with(.properties[:eqpt], .properties[:another_eqpt])	
+	
+	.properties[:circuit_to_export] << _self.insert_record( :eo_circuit, 9,
+								:circuit_id, "circuit",
+								:name, "cabinet_export",
+								:line_segments, line_segments,
+								:equipment, equipments)	
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.given_the_cim_property_exclude_structures_from_export?_is_false()
+	## 
+	## 
+
+	sw_cim_properties_helper.set_property( :exclude_structures_from_export?, "false" )
+
+	_return _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method munit_cabinet_export_itest.test_cabinet_export ()
+	##
+	## Build a circuit and test that the export is successful and the
+	## RDF file is equivalent to a reference file stored in the
+	## resources
+	##
+
+	_self.
+		given_two_coordinates().
+		given_a_wire_between_coordinates().
+		given_a_cabinet_at_the_first_coordinate().
+		given_an_equipment_in_the_first_cabinet_world().
+		given_another_cabinet_at_the_second_coordinate().
+		given_another_equipment_in_the_second_cabinet_world().
+		given_a_circuit_with_the_wire_and_the_equipment().
+		given_the_cim_property_exclude_structures_from_export?_is_false().
+		when_the_circuit_is_exported().
+		then_the_exported_files_match("cabinet_export")
+		
+		
+#	circ << _self.build_circuit()
+#	exclude_structures? << sw_cim_properties_helper.exclude_structures_from_export?
+#	sw_cim_properties_helper.set_property( :exclude_structures_from_export?, "false" )
+#	
+#	_protect
+#		_self.run_and_validate_circuit_export( circ,
+#					       "cabinet_export.gml",
+#					       "cabinet_export.xml" )		
+#	_protection
+#		sw_cim_properties_helper.set_property( :exclude_structures_from_export?, exclude_structures? )
+#	_endprotect
+
+_endmethod
+$
+
