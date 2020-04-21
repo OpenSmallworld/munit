@@ -7,7 +7,7 @@
 Either clone the repository to a local directory
 
 ```
-$ git clone ...
+$ git clone https://github.com/OpenSmallworld/munit.git
 ```
 
 or download a zip of the source from [https://github.com/OpenSmallworld/munit](https://github.com/OpenSmallworld/munit) and extract that to a local directory.
