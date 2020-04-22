@@ -1,0 +1,204 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+
+## These tests will export named circuits and validate the
+## exported files. 
+## They should NOT be dependent on messaging or DMS - see the
+## end to end tests for that.
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:xml_file_comparator_test,
+	{
+		{:properties, _unset}
+	},
+	{:test_case})
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.set_up()
+	## 
+	## 
+	.properties << property_list.new()
+	_super.set_up()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_inc01_with_extra_attribute()
+	##
+	##
+	_self.
+		given_compared_files("inc01.xml", "inc01_extra_attribute.xml").
+		when_the_files_are_compared_for_type("dnom").
+		then_the_result_is(_true)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_inc01_with_missing_attribute()
+	##
+	##
+	_self.
+		given_compared_files("inc01.xml", "inc01_missing_attribute.xml").
+		when_the_files_are_compared_for_type("dnom").
+		then_the_result_is(_true)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_inc01_with_extra_node()
+	##
+	##
+	_self.
+		given_compared_files("inc01.xml", "inc01_extra_node.xml").
+		when_the_files_are_compared_for_type("dnom").
+		then_the_result_is(_true)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_inc01_with_missing_node()
+	##
+	##
+	_self.
+		given_compared_files("inc01.xml", "inc01_missing_node.xml").
+		when_the_files_are_compared_for_type("dnom").
+		then_the_result_is(_true)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_inc01_against_inc01()
+	##
+	##
+	_self.
+		given_compared_files("inc01.xml", "inc01.xml").
+		when_the_files_are_compared_for_type("dnom").
+		then_the_result_is(_false)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_inc01_reordered()
+	##
+	##
+	_self.
+		given_compared_files("inc01.xml", "inc01_reordered.xml").
+		when_the_files_are_compared_for_type("dnom").
+		then_the_result_is(_false)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_3_layered_same_files_reordered()
+	##
+	##
+	_self.
+		given_compared_files("3layersfile.xml", "3layersfile_reorder.xml").
+		when_the_files_are_compared_for_type("gml").
+		then_the_result_is(_false)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_4_layered_same_files_reordered()
+	##
+	##
+	_self.
+		given_compared_files("4layersfile.xml", "4layersfile_reorder.xml").
+		when_the_files_are_compared_for_type("gml").
+		then_the_result_is(_false)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_4_layered_different_files_reordered()
+	##
+	##
+	_self.
+		given_compared_files("4layersfile.xml", "4layersfile_reorder_different_text.xml").
+		when_the_files_are_compared_for_type("gml").
+		then_the_result_is(_true)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_same_gml_files_reordered()
+	##
+	##
+	_self.
+		given_compared_files("gml_file.gml", "gml_file_reordered.gml").
+		when_the_files_are_compared_for_type("gml").
+		then_the_result_is(_false)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_objects_in_ui_container_reordered()
+	##
+	##
+	_self.
+		given_compared_files("objects_in_ui_container.xml", "objects_in_ui_container_reordered.xml").
+		when_the_files_are_compared_for_type("dnom").
+		then_the_result_is(_false)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_objects_in_switch_cabinet_reordered()
+	##
+	##
+	_self.
+		given_compared_files("split_conductor_in_cabinet_by_a_switch_itest.xml", "split_conductor_in_cabinet_by_a_switch_itest_reordered.xml").
+		when_the_files_are_compared_for_type("dnom").
+		then_the_result_is(_false)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.test_label_placement()
+	##
+	##
+	_self.
+		given_compared_files("label_placement.xml", "label_placement_reordered.xml").
+		when_the_files_are_compared_for_type("dnom").
+		then_the_result_is(_false)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.given_compared_files(filename1, filename2)
+	## 
+	## 
+
+	.properties[:file1] << smallworld_product.get_resource_file(filename1, :data, _self.module_name)
+	.properties[:file2] << smallworld_product.get_resource_file(filename2, :data, _self.module_name)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.when_the_files_are_compared_for_type(type)
+	## 
+	## 
+
+	(filename, path) << system.pathname_components(.properties[:file1])
+	diff_file_path << system.pathname_from_components("difference_file.txt", path)
+	
+	.properties[:result] << xml_file_comparator.new().has_differences?(.properties[:file1], .properties[:file2], type, diff_file_path)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method xml_file_comparator_test.then_the_result_is(expected)
+	## 
+	##
+
+	_self.assert_equals(expected, .properties[:result], "The result is not as expected: #1")
+
+_endmethod
+$
