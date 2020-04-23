@@ -101,7 +101,7 @@
   <!-- publish all confs  -->
   <target name="ivy-publish-task">
     <echo message="ivy.conf.to.publish: ${ivy.conf.to.publish}" />
-    <ivy:publish resolver="${publish.type}-rep" forcedeliver="true" conf="default" overwrite="true" revision="${version.number.complete}">
+    <ivy:publish resolver="${publish.type}-rep" forcedeliver="true" conf="*" overwrite="true" revision="${version.number.complete}">
       <artifacts pattern="${xml_file_comparator.build.dir}/[type]s/[artifact]-[revision].[ext]"/>
     </ivy:publish>
   </target>
