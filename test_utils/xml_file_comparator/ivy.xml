@@ -3,7 +3,6 @@
   <configurations>
     <conf name="default"/>
     <conf name="eclipse" extends="default" />
-    <conf name="test" extends="default" description="xml_file_comparator Test Time dependencies" visibility="public"/>
   </configurations>
   
   <publications>
