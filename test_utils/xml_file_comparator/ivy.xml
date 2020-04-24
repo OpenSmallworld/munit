@@ -9,7 +9,6 @@
   <publications>
     
     <artifact name="com.gesmallworld.xml_file_comparator"       type="jar" conf="default"/>
-    <artifact name="com.gesmallworld.xml_file_comparator-tests" type="jar" conf="test"/>
 
   </publications>
   
