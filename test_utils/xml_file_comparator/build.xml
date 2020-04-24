@@ -164,7 +164,7 @@
   <target name="test-jar" depends="compile-test, test-jar-task"
     description="jar the test code"/>
 
-  <target name="publish-src-test" depends="jar, test-jar, ivy-publish-task"
+  <target name="publish-src-test" depends="jar, ivy-publish-task"
     description="publish this project"/>
 
   <target name="publish" depends="clean, publish-src-test"
