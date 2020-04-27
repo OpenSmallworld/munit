@@ -9,11 +9,6 @@
   <property name="xml_file_comparator.src.dir"     value="src/main/java"/>
   <property name="xml_file_comparator.libs.dir"     value="libs"/>
 
-  <property name="xml_file_comparator_test.build.dir"               value="build"/>
-  <property name="xml_file_comparator_test.classes.dir"             value="test_classes"/>
-  <property name="xml_file_comparator_test.src.dir"                 value="src/test/java"/>
-  <property name="xml_file_comparator_test.resources.dir"           value="src/test/resources"/>
- 
    <!-- Note: java_interop_libs_dir should be set to a directory where the magik.interop lib is available
        If required it can be set explicitly to use SMALLWORLD_GIS environment variable instead
        by setting this property via command line. i.e, -Djava_interop_libs_dir=%SMALLWORLD_GIS%/libs -->
@@ -23,15 +18,8 @@
   <!-- dir where alll OSS dependencies will be retrieved -->
   <property name="xml_file_comparator.deps.libs.dir"        value="${xml_file_comparator.build.dir}/xml_file_comparator_libs"/>
 
-  <property name="run.tests.jar.location" value="${xml_file_comparator_test.build.dir}/test/test-jar"/>
-  <property name="run.tests.src.jar" value="${run.tests.jar.location}/${ant.project.name}.jar"/>
-  <property name="run.tests.test.jar" value="${run.tests.jar.location}/${ant.project.name}-tests.jar"/>
-
   <target name="clean-task">
-      <delete dir="${xml_file_comparator.build.dir}"/>
       <delete dir="${xml_file_comparator.classes.dir}"/>
-      <delete dir="${xml_file_comparator_test.build.dir}"/>
-      <delete dir="${xml_file_comparator_test.classes.dir}"/>
       <delete dir="${xml_file_comparator.libs.dir}"/>
   </target>
 
