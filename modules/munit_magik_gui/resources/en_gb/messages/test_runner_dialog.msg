@@ -4,7 +4,9 @@
 :failures                 Failures
 :test_hierarchy           Test Hierarchy
 :finished                 Finished:  #1  seconds
-:running                  Running  #1
+:running                  Running
+:running_test             Running  #1
+:in_progress              In progress
 :interrupted              Interrupted
 :run                      Run
 :stop                     Stop
