@@ -16,7 +16,7 @@
       <dependency org="javax.xml.bind" name="jaxb-api" rev="${jaxb-api.version}" conf="default->default"/>
       <!-- https://mvnrepository.com/artifact/org.xmlunit/xmlunit-core -->
       <dependency org="org.xmlunit" name="xmlunit-core" rev="${xmlunit-core.version}" conf="default->default"/>
-      <dependency org="junit" name="junit" rev="${junit.version}" conf="test->default; eclipse->default"/>
+      <dependency org="junit" name="junit" rev="${junit.version}" conf="default->default; eclipse->default"/>
 
   </dependencies>
   
