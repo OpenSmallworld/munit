@@ -285,7 +285,7 @@ _method test_runner_dialog.start_test( a_test )
 	## Callback from mtest_result
 	##
 
-	_self.changed( :status_info, :text, _self.message(:running, a_test.write_string ) )
+	_self.changed( :status_info, :text, _self.message(:running_test, a_test.write_string ) )
 
 _endmethod
 $
@@ -447,18 +447,25 @@ _method test_runner_dialog.failures_display_tree()
 	##
 	
 	failures << rope.new()
-	_if .test_result _isnt _unset
+	_if .test_result _is _unset
 	_then
-		_for e _over .test_result.errors()
-		_loop
-			failures.add(e)
-		_endloop
-		_for f _over .test_result.failures()
-		_loop
-			failures.add(f)
-		_endloop 
+		_if _self.running?()
+		_then 
+			_return {_self.message(:running)}
+		_else
+			_return ""
+		_endif
 	_endif
-
+	
+	_for e _over .test_result.errors()
+	_loop
+		failures.add(e)
+	_endloop
+	_for f _over .test_result.failures()
+	_loop
+		failures.add(f)
+	_endloop 
+	
 	result << rope.new()
 	_if failures.size = 0
 	_then
@@ -468,18 +475,18 @@ _method test_runner_dialog.failures_display_tree()
 		_loop
 			dt << display_tree.new( a_failure )
 			a_colour << _if a_failure.is_failure?()
-				    _then
-					    >> :black
-				    _else
-					    >> :red
-				    _endif
+				_then
+					>> :black
+				_else
+					>> :red
+				_endif
 			dt.styled_string << styled_string.new( a_colour, a_failure )
 			result.add( dt )
 		_endloop 
 	_endif 
-
+	
 	>> result
-
+	
 _endmethod
 $
 
