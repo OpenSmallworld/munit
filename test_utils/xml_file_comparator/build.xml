@@ -106,48 +106,6 @@
     </ivy:publish>
   </target>
 
-  <target name="clean-run-tests-task">
-      <delete dir="${run.tests.jar.location}"/>
-  </target>
-
-  <target name="retrieve-tests-jar-task">
-    <echo message="In retrieve-tests-jar-task......"/>
-    <ivy:resolve file="ivy-run-tests.xml" conf="default"/>
-    <ivy:retrieve pattern="${run.tests.jar.location}/[artifact].[ext]" conf="default"/>
-  </target>
-
-
-  <path id = "run.tests.classpath">
-    <pathelement location = "${java_interop_libs_dir}" />
-    <fileset dir="${run.tests.jar.location}">
-      <include name="**/*.jar" />
-    </fileset>
-    <!-- <pathelement location = "${run.tests.src.jar}" /> -->
-    <!-- <pathelement location = "${run.tests.test.jar}" /> -->
-  </path>
-  
-  
- <target name="run-tests-task" description="run tests for this project">
-    <echo message="run.tests.classpath is ${toString:run.tests.classpath}" />
-    <sequential>
-    <junit failureproperty="junit.failure" fork="true"  forkMode="once" showoutput="true" haltonerror="true" printsummary="true">
-        <classpath refid = "run.tests.classpath" />
-        <batchtest>
-          <!-- Ideally would like to do below so that tests can be run from the retrieved artifact 
-          but that will need some changes to XmlFileComparator to support comparing files from resources as well.
-          So run tests from repo for now -->
-<!--           <resources>
-            <zipfileset src="${run.tests.test.jar}" includes="**/Test*.class"/>
-          </resources>  -->
-          <fileset dir="${xml_file_comparator_test.src.dir}">
-             <include name="**/*Test.java"/>
-          </fileset>
-        </batchtest>
-        <formatter type = "brief" usefile = "false" />
-    </junit>
-    <fail if="junit.failure" message="XmlFileComparator's  Unit test(s) failed.  See reports!"/>
-    </sequential>
-  </target>
 
   <target name="clean" depends="clean-task"
     description="clean this project"/>
@@ -164,16 +122,10 @@
   <target name="test-jar" depends="compile-test, test-jar-task"
     description="jar the test code"/>
 
-  <target name="publish-src-test" depends="jar, ivy-publish-task"
+  <target name="publish-src" depends="jar, ivy-publish-task"
     description="publish this project"/>
 
-  <target name="publish" depends="clean, publish-src-test"
+  <target name="publish" depends="clean, publish-src"
     description="publish this project"/>
 
-   <target name="run-tests-only" depends="clean-run-tests-task, retrieve-tests-jar-task, run-tests-task" 
-    description="Runs tests this project using the pre-published src and test jars"/>
-
-  <target name="publish-run-tests" depends="publish, run-tests-only"
-    description="publish this project"/>
- 
 </project>
