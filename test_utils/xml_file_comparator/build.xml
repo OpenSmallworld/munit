@@ -56,24 +56,6 @@
     </javac>
   </target>
 
-  <target name="compile-test-task">
-    <mkdir dir="${xml_file_comparator_test.classes.dir}"/>
-    <javac srcdir="${xml_file_comparator_test.src.dir}" destdir="${xml_file_comparator_test.classes.dir}" includeantruntime="false" debug="true" target="1.8">
-      <classpath>
-        <fileset dir="${java_interop_libs_dir}">
-          <include name="*.jar"/>
-        </fileset>
-        <fileset dir="${xml_file_comparator.deps.libs.dir}/test">
-          <include name="*.jar"/>
-        </fileset>
-        <pathelement location="${xml_file_comparator.classes.dir}"/>
-      </classpath>
-    </javac>
-    <copy todir="${xml_file_comparator_test.classes.dir}" failonerror="false">
-      <fileset dir="${xml_file_comparator_test.resources.dir}"/>
-    </copy>
-  </target>
-
   <target name="jar-task">
     <mkdir dir="${xml_file_comparator.build.dir}/META-INF" />
     <manifest file="${xml_file_comparator.build.dir}/META-INF/MANIFEST.MF">
@@ -91,13 +73,6 @@
     </jar>
   </target>
   
-    <target name="test-jar-task">
-    <mkdir dir="${xml_file_comparator_test.build.dir}/jars" />
-    <jar destfile="${xml_file_comparator_test.build.dir}/jars/${ant.project.name}-tests-${version.number.complete}.jar"
-         basedir="${xml_file_comparator_test.classes.dir}"  >
-    </jar>
-  </target>
-
   <!-- publish all confs  -->
   <target name="ivy-publish-task">
     <echo message="ivy.conf.to.publish: ${ivy.conf.to.publish}" />
@@ -115,12 +90,6 @@
     
   <target name="jar" depends="compile, jar-task"
     description="jar this project"/>
-
-  <target name="compile-test" depends="compile-test-task"
-    description="compile test code"/>
-
-  <target name="test-jar" depends="compile-test, test-jar-task"
-    description="jar the test code"/>
 
   <target name="publish-src" depends="jar, ivy-publish-task"
     description="publish this project"/>
