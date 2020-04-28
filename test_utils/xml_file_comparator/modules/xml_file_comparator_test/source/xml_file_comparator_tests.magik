@@ -2,10 +2,8 @@
 ##
 _package sw
 
-## These tests will export named circuits and validate the
-## exported files. 
-## They should NOT be dependent on messaging or DMS - see the
-## end to end tests for that.
+## Test the java magic xml_file_comparator object
+## correctly recognizes the file differences
 
 _pragma(classify_level=debug)
 def_slotted_exemplar(:xml_file_comparator_test,
@@ -184,8 +182,7 @@ _method xml_file_comparator_test.when_the_files_are_compared_for_type(type)
 	## 
 	## 
 
-	(filename, path) << system.pathname_components(.properties[:file1])
-	diff_file_path << system.pathname_from_components("difference_file.txt", path)
+	diff_file_path << system.pathname_from_components("difference_file.txt", system.getenv("TEMP"))
 	
 	.properties[:result] << xml_file_comparator.new().has_differences?(.properties[:file1], .properties[:file2], type, diff_file_path)
 

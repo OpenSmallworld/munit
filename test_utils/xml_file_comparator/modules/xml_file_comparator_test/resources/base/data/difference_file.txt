@@ -1,5 +1,0 @@
-Expected child nodelist length '13' but was '14' - comparing <Switch...> at /Substation[1]/Switch[2] to <Switch...> at /Substation[1]/Switch[1] (DIFFERENT)
-Expected element tag name 'NormallyOpen' but was 'CompositeSwitchLinkID' - comparing <NormallyOpen...> at /Substation[1]/Switch[2]/NormallyOpen[1] to <CompositeSwitchLinkID...> at /Substation[1]/Switch[1]/CompositeSwitchLinkID[1] (DIFFERENT)
-Expected text value 'false' but was '18825' - comparing <NormallyOpen ...>false</NormallyOpen> at /Substation[1]/Switch[2]/NormallyOpen[1]/text()[1] to <CompositeSwitchLinkID ...>18825</CompositeSwitchLinkID> at /Substation[1]/Switch[1]/CompositeSwitchLinkID[1]/text()[1] (DIFFERENT)
-Expected element tag name 'NominalFeederBoundary' but was 'NormallyOpen' - comparing <NominalFeederBoundary...> at /Substation[1]/Switch[2]/NominalFeederBoundary[1] to <NormallyOpen...> at /Substation[1]/Switch[1]/NormallyOpen[1] (DIFFERENT)
-Expected child 'null' but was 'NominalFeederBoundary' - comparing <NULL> to <NominalFeederBoundary...> at /Substation[1]/Switch[1]/NominalFeederBoundary[1] (DIFFERENT)
