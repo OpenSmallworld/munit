@@ -19,6 +19,7 @@
   <property name="xml_file_comparator.deps.libs.dir"        value="${xml_file_comparator.build.dir}/xml_file_comparator_libs"/>
 
   <target name="clean-task">
+      <delete dir="${xml_file_comparator.build.dir}"/>
       <delete dir="${xml_file_comparator.classes.dir}"/>
       <delete dir="${xml_file_comparator.libs.dir}"/>
   </target>
