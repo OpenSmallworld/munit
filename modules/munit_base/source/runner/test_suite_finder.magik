@@ -3,9 +3,9 @@ _package sw
 
 _pragma(classify_level=restricted,topic=MUnit)
 def_slotted_exemplar(:test_suite_finder,
-{
-	{ :test_suites , _unset }
-})
+	{
+		{ :test_suites , _unset }
+	})
 $
 
 
@@ -13,7 +13,7 @@ _pragma(classify_level=restricted)
 ## This shared constant keeps track of all the additional
 ## test suites that are created that are not stored as a
 ## global, e.g. the way in which the PNI conflict tests are
-## created 
+## created
 test_suite_finder.define_shared_constant(:additional_test_suites, hash_table.new(), :public)
 $
 
@@ -26,7 +26,7 @@ $
 
 _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.init()
-	
+
 	_self.find_all_suitable_suites()
 
 	>> _self
@@ -37,11 +37,11 @@ _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.get_test_suite_owner_names()
 
 	owner_names << rope.new()
-		
+
 	_for a_test_suite_owner_name _over .test_suites.keys()
 	_loop
 		owner_names.add( a_test_suite_owner_name )
-	_endloop 
+	_endloop
 
 	>> owner_names.as_sorted_collection()
 _endmethod
@@ -60,58 +60,57 @@ _private _method test_suite_finder.find_all_suitable_suites()
 	.test_suites << hash_table.new()
 
 	_for i _over test_interface.define_method_target.children(_true )
-	_loop 
+	_loop
 		_if ( glo << i.meta_at(:exemplar_global) ) _isnt _unset _andif
-		    _not (a_suite << glo.value).infrastructure? 
+		    _not (a_suite << glo.value).infrastructure?
 		_then
 			a_class_name << a_suite.class_name
 			.test_suites[ a_class_name ] << a_suite
-		_endif 
-	_endloop 
+		_endif
+	_endloop
 
 	>> .test_suites
 _endmethod
 $
+
 _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.find_classes_for_module( module_name )
 	##
 	## Return a rope containing all the test_suite owners in the
 	## module MODULE_NAME
 	##
-	
+
 	result << rope.new()
-		
-	_for a_test_suite_owner_name _over .test_suites.keys()
+
+	_for a_test_suite_owner_name, a_class _over .test_suites.keys_and_elements()
 	_loop
-		a_class << _self.find_class(a_test_suite_owner_name)
-		
 		_if a_class _isnt _unset _andif
 		    a_class.module_name _is module_name
 		_then
 			result.add( a_class )
 		_endif
-	_endloop 
+	_endloop
 
 	>> result
-	
+
 _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method test_suite_finder.find_class(class_name)
 	## Returns the class named CLASS_NAME.
-	
+
 	>> get_global_value(write_string("user:", class_name))
-	
+
 _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.test_and_identifier(module_name, test_name)
-	## 
 	##
-	
-	_if _self.additional_test_suites[test_name] _isnt _unset 
+	##
+
+	_if _self.additional_test_suites[test_name] _isnt _unset
 	_then
 		test       << _self.additional_test_suites[test_name][:test_suite]
 		identifier << _self.additional_test_suites[test_name][:module_name]
@@ -121,6 +120,6 @@ _method test_suite_finder.test_and_identifier(module_name, test_name)
 	_endif
 
 	>> (test, identifier)
-	
+
 _endmethod
 $
