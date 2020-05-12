@@ -1,10 +1,10 @@
-munit layered_product
+munit_root layered_product
 
 title
-	MUnit product
+	All MUnit products
 end
 
 description
-	Munit product
+	The MUnit product, example tests and extensions
 end
 
