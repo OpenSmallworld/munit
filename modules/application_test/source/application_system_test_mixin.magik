@@ -1193,7 +1193,7 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_going_to_inserted_record()
-	## 
+	
 	## In the current map view, go to the primary spatial context
 	## of the record stored in .properties[:new_record]
 	##
@@ -1201,9 +1201,22 @@ _method application_system_test_mixin.when_going_to_inserted_record()
 	## - There is no record in .properties[ :new_record ]
 	## - The record does not have a primary spatial context name 
 	##
-
-	_if ( record << _self.properties[ :new_record ]) _isnt _unset
-	_then
+	## This has been known to try too early so, if this happens wait for 1 second
+	## up to 5 times before aborting.
+	
+	_for i _over 1.upto(5)
+	_loop
+		_if (record << _self.properties[ :new_record ]) _isnt _unset
+		_then
+			_leave
+		_else 
+			_thisthread.sleep(1000)
+			write("Waiting for new record - attempt ", i)
+		_endif
+	_endloop
+	
+	_if record _isnt _unset 
+	_then 
 		manager << _self.map_manager
 		mv << manager.current_map_view
 		app << _self.properties[ :application ]
