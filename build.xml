@@ -1,0 +1,16 @@
+<project name="munit" default="installer" xmlns:ivy="antlib:org.apache.ivy.ant">
+
+  <property name="projects.dir"             location="${ant.file}/../.."/>
+  <dirname property="my.dir"                file="${ant.file}"/>
+  <property name="ivy.dep.file"             location="${my.dir}/ivy.xml"/>
+
+  <property name="alchemy.script" location="${projects.dir}/build_tools/ant/alchemy_install.xml" />
+
+  <echo message="Importing helper script from ${alchemy.script}"/>
+
+  <import file="${alchemy.script}" />
+
+  <target name="ivy-publish-artifactory-task" depends="ivy-configure-task">
+    <ivy-publish-macro pattern="${output.dir}/[artifact].[ext]"/>
+  </target>  
+</project>
