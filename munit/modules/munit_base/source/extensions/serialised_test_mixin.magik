@@ -114,7 +114,7 @@ _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, 
 
 	other_values   << rope.new()
 	timed_out?     << _false 
-	wait_time      << wait_time.default( 500 )
+	wait_time      << wait_time.default( 2000 )
 
 	_loop 
 		value << _self.properties[:queue].get( wait_time )
