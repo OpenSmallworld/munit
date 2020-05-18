@@ -1,0 +1,43 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar( :eo_design_phase_test_case,
+		    {},
+		    {:eo_dm_test_case} )
+$
+
+_pragma(classify_level=debug, usage=subclassable)
+## Defines the Job type for the project - used to look up the
+## state model. Subclassed to "Electric Meta Update" since this
+## is the only state model in the demo database that supports
+## design phases.
+eo_design_phase_test_case.define_shared_constant(:default_state_model_name, "Electric Meta Update", :public)
+$
+
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+## The status to transition the design to to ensure that it is writable
+eo_design_phase_test_case.define_shared_constant(:writable_design_status, "As Built Changes", :public)
+$
+ 
+_pragma(classify_level=debug, topic={munit})
+_private _method eo_design_phase_test_case.setup_sub_design()
+	## 
+	## validate_name_not_in_use() has to be stubbed because the name space for phase
+	## names is the whole project so there may be phases with the same name under
+	## different sub-designs.  For teh purposes of the tests, we do not care about
+	## duplicate phase names.
+
+	stub_method_helper.replace_method( swg_dsn_scheme, :can_become_singular_state?,
+					   _proc() >> _true _endproc )
+	stub_method_helper.replace_method( swg_dsn_admin_engine, :|validate_build_phase_creatable?()|,
+					   _proc() >> _true _endproc )
+	stub_method_helper.replace_method( swg_dsn_build_phase, :|validate_name_not_in_use()|,
+					   _proc() _endproc )
+
+	>> _super.setup_sub_design()
+	
+_endmethod
+$

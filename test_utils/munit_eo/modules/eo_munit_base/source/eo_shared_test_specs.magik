@@ -1,0 +1,283 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+##
+## A class to hold properties for specs.
+## Used as a singleton.
+## 
+def_slotted_exemplar( :eo_shared_tests_specs,
+	{
+	},
+	{})
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+eo_shared_tests_specs.define_shared_constant(:spec_properties, hash_table.new_with(
+	:eo_cable_spec,
+	{
+		property_list.new_with(:spec_name,         "3A_XLPE_150_11",
+				       :size_val,          "150mm",
+				       :material,          "Aluminium",
+				       :manufacturer,      "GE",
+				       :manufacturer_code, "XPLE-AL-150x3",
+				       :diameter,          length_value.new(45.5, :mm)),
+		
+		property_list.new_with(:spec_name,         "3A_XLPE_185_11",
+				       :size_val,          "185mm",
+				       :material,          "Aluminium",
+				       :manufacturer,      "GE",
+				       :manufacturer_code, "XPLE-AL-185x3",
+				       :diameter,          length_value.new(49.8, :mm)),
+		
+		property_list.new_with(:spec_name,         "1A_XLPE_95_LV",
+				       :size_val,          "95mm",
+				       :material,          "Aluminium",
+				       :manufacturer,      "GE",
+				       :diameter,          length_value.new(23.2, :mm))
+	},
+	:eo_conduit_spec,
+	{
+		property_list.new_with(:spec_name,         "100x200mm",
+				       :conduit_type,      "Conduit",
+				       :is_circular,       "No",
+				       :is_solid,          "No",
+				       :material,          "Steel",
+				       :external_height,   unit_value.new(200, :mm),
+				       :external_width,    unit_value.new(100, :mm) ),
+
+		property_list.new_with(:spec_name,         "Big Circle",
+				       :internal_diameter, unit_value.new( 0.3, :m ),
+				       :external_diameter, unit_value.new( 0.3, :m ),
+				       :is_circular,       "Yes",
+				       :is_solid,          "No" ),
+		
+		property_list.new_with(:spec_name,         "Circle",
+				       :internal_diameter, unit_value.new( 0.2, :m ),
+				       :external_diameter, unit_value.new( 0.2, :m ),
+				       :is_circular,       "Yes",
+				       :is_solid,          "No" ),
+		
+		property_list.new_with(:spec_name,         "Rectangle",
+				       :internal_width,    unit_value.new( 0.3, :m ),
+				       :internal_height,   unit_value.new( 0.4, :m ),
+				       :external_width,    unit_value.new( 0.3, :m ),
+				       :external_height,   unit_value.new( 0.4, :m ),
+				       :is_circular,       "No",
+				       :is_solid,          "No" ),
+		
+		property_list.new_with(:spec_name,         "Small Circle",
+				       :internal_diameter, unit_value.new( 0.1, :m ),
+				       :external_diameter, unit_value.new( 0.1, :m ),
+				       :is_circular,       "Yes",
+				       :is_solid,          "No" ),
+		
+		property_list.new_with(:spec_name,         "Small Rectangle",
+				       :internal_width,    unit_value.new( 0.2, :m ),
+				       :internal_height,   unit_value.new( 0.3, :m ),
+				       :external_width,    unit_value.new( 0.2, :m ),
+				       :external_height,   unit_value.new( 0.3, :m ),
+				       :is_circular,       "No",
+				       :is_solid,          "No" )
+	},
+	:eo_connector_segment_spec,
+	{
+		property_list.new_with(:spec_name,         "BUS-MV",
+				       :device_type,       "Busbar",
+				       :manufacturer,      "GE" )
+	},
+	:eo_isolating_eqpt_spec,
+	{
+		property_list.new_with (:spec_name,         "ID_SW_AIS_630A_test",
+					:device_type,       "Switch",
+					:manufacturer,      "GE" )
+	},
+	:eo_current_transformer_spec,
+	{
+		property_list.new_with (:spec_name,         "current_transformer_test",
+					:device_type,       "Current Transformer",
+					:sub,                            _false,
+					:lv,                             _true,
+					:mv,                             _false,
+					:hv,                             _false,
+					:ehv,                            _false,
+					:obsolete,                       _false,
+					:real_spec,                      _true, 
+					:ratio,                          10.0, 
+					:primary_current,                unit_value(11.0, :amp),
+					:dynamic_current,                unit_value(12.0, :amp),
+					:peak_primary_current,           unit_value(18.0, :amp),
+					:short_circuit_thermal,          unit_value(17.0, :amp), 
+					:impulse_withstand_voltage,      unit_value(13.0, :kv),
+					:rated_insulation_voltage,       unit_value(14.0, :kv),
+					:power_frequency_withstand_volt, unit_value(16.0, :kv), 
+					:ct_type,                        "",
+					:accuracy_limit_factor,          1, 
+					:safety_factor,                  1,
+					:accuracy_power,                 1, 
+					:accuracy_class,                 %A )
+	},
+	:eo_voltage_transformer_spec,
+	{
+		property_list.new_with (:spec_name,         "voltage_transformer_test",
+					:device_type,       "Voltage Transformer",
+					:sub,                            _false,
+					:lv,                             _true,
+					:mv,                             _false,
+					:hv,                             _false,
+					:ehv,                            _false,
+					:obsolete,                       _false,
+					:real_spec,                      _true,
+					:thermal_rating,                 unit_value(15.0, :va),
+					:ratio,                          10.0, 
+					:accuracy_class,                 %A, 
+					:bank_configuration,             "" ) 
+	},
+	:eo_wire_spec,
+	{
+		property_list.new_with(:spec_name, "3A_OHL_50_11",
+				       :manufacturer, "GE",
+				       :manufacturer_code, "OHL_AL_50x3",
+				       :description, "11kv 50mm OHL",
+				       :material, "OHL",
+				       :size_val, "50 mm",
+				       :weight, _unset,
+				       :diameter, _unset, 
+				       :stranding, _unset,
+				       :resistance_25, unit_value.new(1.191, :ohm_per_m),
+				       :resistance_50, _unset,
+				       :company_ampacity, unit_value.new( 62.000, :amp ),
+				       :manufacturer_ampacity, unit_value.new( 62.000, :amp ),
+				       :rated_strength, _unset,
+				       :obsolete, _false,
+				       :lv, _false,
+				       :mv, _true,
+				       :hv, _false,
+				       :ehv, _false,
+				       :sub, _false,
+				       :real_spec, _true),
+		
+		property_list.new_with(:spec_name, "3A_ACSR_100_11",
+				       :manufacturer, "GE",
+				       :manufacturer_code, "ASCR_AL_100x3",
+				       :description, "11kv 100mm OHL Al, Steel Reinforced",
+				       :material, "ACSR",
+				       :size_val, "100 mm",
+				       :weight, _unset,
+				       :diameter, _unset, 
+				       :stranding, _unset,
+				       :resistance_25, unit_value.new(0.896, :ohm_per_m),
+				       :resistance_50, _unset,
+				       :company_ampacity, unit_value.new( 300.000, :amp ),
+				       :manufacturer_ampacity, unit_value.new( 300.000, :amp ),
+				       :rated_strength, _unset,
+				       :obsolete, _false,
+				       :lv, _false,
+				       :mv, _true,
+				       :hv, _false,
+				       :ehv, _false,
+				       :sub, _false,
+				       :real_spec, _true),
+		
+		property_list.new_with(:spec_name, "1AL_TT_OH",
+				       :manufacturer, "GE",
+				       :description, "Single phase twisted triplex + Neutral",
+				       :size_val, "2 mm",
+				       :weight, _unset,
+				       :diameter, _unset, 
+				       :stranding, _unset,
+				       :resistance_25, _unset,
+				       :resistance_50, _unset,
+				       :company_ampacity, unit_value.new( 300.000, :amp ),
+				       :manufacturer_ampacity, unit_value.new( 300.000, :amp ),
+				       :rated_strength, _unset,
+				       :obsolete, _false,
+				       :lv, _true,
+				       :mv, _false,
+				       :hv, _false,
+				       :ehv, _false,
+				       :sub, _false,
+				       :real_spec, _true),
+		
+		property_list.new_with(:spec_name, "1A_OHL_service",
+				       :manufacturer, "GE",
+				       :description, "35mm OHL service single phase",
+				       :size_val, "2 mm",
+				       :weight, _unset,
+				       :diameter, _unset, 
+				       :stranding, _unset,
+				       :resistance_25, _unset,
+				       :resistance_50, _unset,
+				       :company_ampacity, unit_value.new( 300.000, :amp ),
+				       :manufacturer_ampacity, unit_value.new( 300.000, :amp ),
+				       :rated_strength, _unset,
+				       :obsolete, _false,
+				       :lv, _true,
+				       :mv, _false,
+				       :hv, _false,
+				       :ehv, _false,
+				       :sub, _false,
+				       :real_spec, _true)
+	}),
+	:private)
+$
+
+_pragma(classify_level=debug,topic=MUnit)
+eo_shared_tests_specs.define_shared_constant(:spec_properties_lookup, hash_table.new(), :private)
+$
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method eo_shared_tests_specs.get_properties_for(spec_table_name, spec_name)
+	## 
+	## 
+	specs << _self.get_specs_for_table(spec_table_name)
+	_if (props << specs[spec_name]) _is _unset
+	_then
+		condition.raise(:error, :string, write_string("No spec properties for ", spec_name, " in table ", spec_table_name))
+	_endif
+
+	# Return a copy so that caller can't change our values
+	>> property_list.new_from(props)
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_private _method eo_shared_tests_specs.get_specs_for_table(spec_table_name)
+	## 
+	##
+	_if _self.spec_properties_lookup[spec_table_name] _is _unset
+	_then
+		_self.populate_lookup_for_table(spec_table_name)
+	_endif
+	>> _self.spec_properties_lookup[spec_table_name]
+_endmethod
+$
+
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_private _method eo_shared_tests_specs.populate_lookup_for_table(spec_table_name)
+	## 
+	## 
+
+	spec_props_list << _self.spec_properties[spec_table_name]
+	_if spec_props_list _is _unset
+	_then
+		condition.raise(:error, :string, "No spec properties for spec table " + spec_table_name)
+	_endif
+	
+	lookup << equality_hash_table.new()
+	_for spec _over spec_props_list.fast_elements()
+	_loop
+		spec_name << spec[:spec_name]
+		_if spec_name _is _unset
+		_then
+			condition.raise(:error, :string, "Spec properties has no spec name")
+		_endif
+		lookup[spec_name] << spec
+	_endloop
+
+	_self.spec_properties_lookup[spec_table_name] << lookup
+_endmethod
+$
+
+

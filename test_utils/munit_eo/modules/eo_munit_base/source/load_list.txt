@@ -1,0 +1,8 @@
+additions/
+eo_shared_test_specs
+eo_start_application_mixin
+eo_dm_test_case
+eo_design_phase_test_case
+dummy_application
+#The example test doesn't work, so commenting it out for now
+#eo_dm_example_test
