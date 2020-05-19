@@ -7,7 +7,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/magik.interop"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/magik.commons"/>
-	<classpathentry kind="lib" path="C:/projects/hg/gis_adapter/tests/test_utils/xml_file_comparator/libs/junit-4.8.2.jar"/>
 	<classpathentry kind="lib" path="C:/projects/hg/gis_adapter/tests/test_utils/xml_file_comparator/libs/com.gesmallworld.xml_file_comparator-qualifier.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

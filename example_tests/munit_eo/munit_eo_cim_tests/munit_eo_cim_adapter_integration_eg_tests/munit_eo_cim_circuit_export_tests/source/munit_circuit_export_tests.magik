@@ -15,30 +15,6 @@ def_slotted_exemplar(
 $
 
 _pragma(classify_level=debug)
-munit_circuit_export_tests.define_shared_constant( :good_profile_module_name,
-	:eo_ge_dcim,
-	:public )
-$
-
-_pragma(classify_level=debug)
-munit_circuit_export_tests.define_shared_constant( :good_profile_filename,
-	"GE_CDPSM_15_v18.owl",
-	:public )
-$
-
-_pragma(classify_level=debug)
-_private _method munit_circuit_export_tests.get_profile_filename ()
-	## Returns the fully qualified file name for the profile called .profile_filename stored in
-	## resources/base/data under module .profile_module_name
-	##
-	
-	>> smallworld_product.get_data_file( _self.good_profile_filename,
-					     _self.good_profile_module_name)
-	
-_endmethod
-$
-
-_pragma(classify_level=debug)
 _private _method munit_circuit_export_tests.setup_design()
 	# Disable testing in a design, this test cases are
 	# not expected to introduce any changes.

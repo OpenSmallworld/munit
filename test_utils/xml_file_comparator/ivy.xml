@@ -2,14 +2,11 @@
   <info organisation="com.gesmallworld" module="com.gesmallworld.xml_file_comparator" revision="${version.number.complete}"/>
   <configurations>
     <conf name="default"/>
-    <conf name="eclipse" extends="default" />
-    <conf name="test" extends="default" description="xml_file_comparator Test Time dependencies" visibility="public"/>
   </configurations>
   
   <publications>
     
     <artifact name="com.gesmallworld.xml_file_comparator"       type="jar" conf="default"/>
-    <artifact name="com.gesmallworld.xml_file_comparator-tests" type="jar" conf="test"/>
 
   </publications>
   
@@ -18,7 +15,6 @@
       <dependency org="javax.xml.bind" name="jaxb-api" rev="${jaxb-api.version}" conf="default->default"/>
       <!-- https://mvnrepository.com/artifact/org.xmlunit/xmlunit-core -->
       <dependency org="org.xmlunit" name="xmlunit-core" rev="${xmlunit-core.version}" conf="default->default"/>
-      <dependency org="junit" name="junit" rev="${junit.version}" conf="test->default; eclipse->default"/>
 
   </dependencies>
   

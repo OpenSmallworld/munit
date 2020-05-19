@@ -1,0 +1,11 @@
+xml_file_comparator_tests	1
+
+requires
+	xml_file_comparator
+end
+ 
+tests_modules
+	xml_file_comparator
+end
+ 
+hidden
