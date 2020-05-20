@@ -1,4 +1,4 @@
-munit_eo_base	1
+eo_munit_base	1
 
 description
 	Top level Munit module for EO, contains no tests per se, just top level classes and utilities.
