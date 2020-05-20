@@ -1,4 +1,4 @@
-minut_eo_cim_adapter_int_tests	1
+munit_eo_cim_adapter_int_tests	1
 
 description
 	Integration tests for the module sw_cim_adapter
@@ -6,7 +6,7 @@ end
 
 requires
 	munit_base
-	munit_eo_base
+	eo_munit_base
 	munit_eo_cim_test_utils
 end
  

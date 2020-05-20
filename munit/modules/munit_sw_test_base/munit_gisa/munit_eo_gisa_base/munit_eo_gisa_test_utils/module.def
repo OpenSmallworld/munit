@@ -5,6 +5,6 @@ description
 end
 
 requires
-	munit_eo_base
+	eo_munit_base
 	xml_file_comparator
 end
