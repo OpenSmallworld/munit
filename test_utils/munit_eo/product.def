@@ -1,9 +1,0 @@
-munit_eo	layered_product
-
-title
-	Base classes for munit testing of Smallworld Electric Office
-end
-
-description
-	Provideds base classes for writing unit and integration tests for EO
-end
