@@ -1,0 +1,203 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar(:sw_cim_rdf_file_reader,
+	## 
+	## Class to read an rdf file, and cache the values into the
+	## slots which can be accessed by other classes
+	## 
+	{
+		{ :forward_resources,     _unset },
+		{ :reverse_resources,     _unset },
+		#temporary slot used to store the CIM resources 
+		{ :cim_resources,     _unset }
+	}, _unset )
+$
+
+_pragma(classify_level=restricted)
+sw_cim_rdf_file_reader.define_slot_access( :forward_resources, :read, :public )
+$
+
+_pragma(classify_level=restricted)
+sw_cim_rdf_file_reader.define_slot_access( :reverse_resources, :read, :public )
+$
+
+_pragma(classify_level=restricted)
+_method sw_cim_rdf_file_reader.new()
+	## 
+	## Create a new instance of the class that will read the RDF
+	## file FILENAME located in the directory PATH
+
+	_return _clone.init()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_reader.init()
+	## 
+	## Create a cache for lookup of the elements in the RDF file
+
+	.forward_resources << equality_hash_table.new()
+	.reverse_resources << equality_hash_table.new()
+	.cim_resources << equality_hash_table.new()
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method sw_cim_rdf_file_reader.reinit()
+	## 
+	## Reinitialise _self to enable another RDF file to be read
+	
+	.forward_resources.empty()
+	.reverse_resources.empty()
+	.cim_resources.empty()
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method sw_cim_rdf_file_reader.read_file( pathname )
+	## 
+	## Read the RDF file referenced by PATHNAME
+
+	_self.reinit()
+	
+	# Open the xml document
+	_try
+		xml_thing << simple_xml.read_document_file( pathname )
+	_when error 
+		write("Unable to read RDF file. Aborting!!!")
+		_return 
+	_endtry
+	
+	_if xml_thing.elements.an_element().element_matching_name("dm:DifferenceModel") _isnt _unset 
+	_then
+		#difference file
+		_self.process_difference_file(xml_thing)
+	_else
+		#rdf file
+		_self.process_rdf_file(xml_thing)
+	_endif
+
+	_return .forward_resources, .reverse_resources
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_reader.process_difference_file(xml_thing)
+	## 
+	## read the difference file and cache the values
+	##
+	diff_model << xml_thing.elements.first.elements.an_element()
+	_if (forward_diff << diff_model.element_matching_name("dm:forwardDifferences")) _isnt _unset 
+	_then
+		.forward_resources << _self.process_cim_resources(forward_diff)
+	_endif
+
+	_if (reverse_diff << diff_model.element_matching_name("dm:reverseDifferences")) _isnt _unset 
+	_then
+		.reverse_resources << _self.process_cim_resources(reverse_diff)
+	_endif
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_reader.process_rdf_file(xml_thing)
+	## 
+	## read the initial export RDF file
+	## 
+	cim_resources << xml_thing.elements.an_element()
+	.forward_resources << _self.process_cim_resources(cim_resources)	
+
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_reader.process_cim_resources(xml_thing)
+	## 
+	## Loops around the CIM resources in the XML tag and creates
+	## the CIM resources. Finally adds attributes and associations.
+	##
+	cim_associations << equality_hash_table.new()
+	.cim_resources << equality_hash_table.new()
+	_for a_cim_element _over xml_thing.elements.fast_elements()
+	_loop
+		cim_resource << sw_cim_resource.new()
+		rdf_id << a_cim_element.attribute(:|rdf:ID|).default(a_cim_element.attribute(:|rdf:about|))
+		cim_id << rdf_id.write_string
+		cim_resource.set_urid(cim_id)
+		cim_resource.target_class << write_string(a_cim_element.type).split_by(":")[2]
+		
+		_for a_cim_value _over a_cim_element.elements.fast_elements()
+		_loop
+			_if a_cim_value.attributes.empty?
+			_then
+				#its CIM attribute
+				cim_resource.add_attribute(write_string(a_cim_value.type).split_by(":")[2],a_cim_value.elements.first)
+			_else
+				#its CIM association
+				#store the cim Associations into a temp cim_associations
+				asso_name << write_string(a_cim_value.type).split_by(":")[2]
+				asso_id << write_string(a_cim_value.attribute("rdf:resource")).split_by("#")[1]
+				_self.store_cim_associations(cim_associations,cim_id,asso_name,asso_id)
+			_endif
+		_endloop
+		.cim_resources[cim_id] << cim_resource
+	_endloop
+	#associate actual resources to associations
+	_self.add_associations_to_resources(cim_associations)
+	_return .cim_resources
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_reader.add_associations_to_resources(cim_associations)
+	## 
+	## Adds the associations to all the temp cim_resources
+	## chached.
+	##
+	_for a_cim_key, a_cim_resource  _over .cim_resources.fast_keys_and_elements()
+	_loop
+		_if cim_associations[a_cim_key] _isnt _unset 
+		_then
+			_for an_asso_name, an_asso_ids _over cim_associations[a_cim_key].fast_keys_and_elements()
+			_loop
+				_for an_asso_id _over an_asso_ids.fast_elements()
+				_loop
+					_if (asso << .cim_resources[an_asso_id]) _isnt _unset
+					_then
+						a_cim_resource.add_association(an_asso_name, asso)
+					_endif					
+				_endloop
+			_endloop
+		_endif
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_reader.store_cim_associations(cim_associations,cim_id,asso_name,asso_id)
+	## 
+	## helper method to chache all the associations needed in a
+	## datastructure for future references.
+	 _if cim_associations[cim_id] _is _unset 
+	 _then
+		 cim_associations[cim_id] << equality_property_list.new()
+	 _endif
+	_if cim_associations[cim_id][asso_name] _is _unset 
+	_then
+		cim_associations[cim_id][asso_name] << equality_set.new()
+	_endif
+	cim_associations[cim_id][asso_name].add(asso_id)
+
+	_if (associations << cim_associations[asso_id]) _is _unset
+	_then
+		 associations << cim_associations[asso_id] << equality_property_list.new()
+	_endif
+	rev_name << "rev_" + asso_name
+	_if (res_associations << associations[rev_name]) _is _unset
+	_then
+		 res_associations << associations[rev_name] << equality_set.new()
+	_endif
+	res_associations.add(cim_id)	
+_endmethod
+$
