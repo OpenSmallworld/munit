@@ -136,8 +136,7 @@ _private _method sw_cim_rdf_file_comparer.same_resources?(res1,res2)
 
 	_for attr_name, attr_value _over res1.attributes.fast_keys_and_elements()
 	_loop
-		_if attr_name <> "IdentifiedObject.name" _andif
-		    res2.get_attribute(attr_name) <> attr_value 
+		_if res2.get_attribute(attr_name) <> attr_value 
 		_then
 			_return _false 
 		_endif
