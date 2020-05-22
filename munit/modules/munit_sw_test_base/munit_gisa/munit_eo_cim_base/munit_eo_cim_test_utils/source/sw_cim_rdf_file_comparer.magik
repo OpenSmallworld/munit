@@ -197,7 +197,7 @@ _pragma(classify_level=restricted)
 _private _method sw_cim_rdf_file_comparer.read_file_from(file_path)
 	## 
 	## Reads the file using sw_cim_rdf_file_reader and returns it.
-	 file_reader << sw_cim_rdf_file_reader.new()
+	 file_reader << sw_cim_rdf_file_reader.new(_true)
 	_if file_reader.read_file(file_path) _is _unset 
 	_then
 		write("File reading error in ",file_path, " Aborting!!!")
