@@ -2,6 +2,7 @@ xml_file_comparator_tests	1
 
 requires
 	xml_file_comparator
+	munit_base
 end
  
 tests_modules
