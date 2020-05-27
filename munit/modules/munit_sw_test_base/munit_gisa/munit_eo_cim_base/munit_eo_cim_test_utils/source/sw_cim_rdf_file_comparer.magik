@@ -1,0 +1,212 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar(:sw_cim_rdf_file_comparer,
+	## 
+	## Class to compare two rdf files and return whether they are
+	## simila or not. This is a singleton class no need to instantiate.
+	## 
+	{
+	},
+	{})
+$
+_pragma(classify_level=restricted)
+_method sw_cim_rdf_file_comparer.compare(file_1,file_2)
+	## 
+	## Compare the two RDF files and return true if they are having
+	## the same XML tags. The order of the tags is not important.
+	file_reader_1 << _self.read_file_from(file_1)
+	file_reader_2 << _self.read_file_from(file_2)
+
+	_return _self.compare_files(file_reader_1,file_reader_2)
+
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_comparer.compare_files(file_reader_1,file_reader_2)
+	## 
+	## Compare the file readers by reading its forward and reverse
+	## resources 
+	#if any of file is not read return false.
+	_if file_reader_1 _is _unset _orif file_reader_2 _is _unset 
+	_then
+		_return _false 
+	_endif
+
+	#compare all the forward resources
+	_if _not _self.compare_sets(file_reader_1.forward_resources,file_reader_2.forward_resources)
+	_then
+		_return _false 
+	_endif
+
+	#compare all the reverse resources, used when comparing the
+	# difference file
+	_if _not _self.compare_sets(file_reader_1.reverse_resources,file_reader_2.reverse_resources)
+	_then
+		_return _false 
+	_endif
+
+	_return _true 
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_comparer.compare_sets(set1,set2)
+	## 
+	## comparing the fw/rw sets by grouping them 
+	#return flase if sizes are not equal
+	_if _not _self.sets_size_equal?(set1,set2)
+	_then
+		_return _false 
+	_endif
+
+	#group the sets with target_class. which will return
+	# equality_hash_table of target_class as keys
+	grouped_set1 << _self.get_grouped_resources_set(set1)
+	grouped_set2 << _self.get_grouped_resources_set(set2)
+
+	_if _not _self.sets_size_equal?(grouped_set1,grouped_set2)
+	_then
+		_return _false 
+	_endif
+
+	_for target_class,resources_set _over grouped_set1.fast_keys_and_elements()
+	_loop
+		_if _not _self.compare_resource_sets(grouped_set2[target_class] , resources_set)
+		_then
+			_return _false				
+		_endif
+	_endloop
+
+	_return _true 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_comparer.compare_resource_sets(set1,set2)
+	## 
+	## Return if the two sets are identical or not.
+	_if _not _self.sets_size_equal?(set1,set2)
+	_then
+		_return _false 
+	_endif
+	
+	_for a_resource _over set1.fast_elements()
+	_loop
+		_if _not _self.set_has_resource?(set2,a_resource)
+		_then
+			_return _false 
+		_endif
+	_endloop
+	
+	_return _true 
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_comparer.set_has_resource?(a_set,resource_to_look)
+	## 
+	## Return true if the resource_to_look is present in the a_set
+	 _for a_resource _over a_set.fast_elements()
+	 _loop
+		 _if _self.same_resources?(resource_to_look, a_resource)
+		 _then
+			 _return _true 
+		 _endif
+	 _endloop
+	 
+	 _return _false 
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_comparer.same_resources?(res1,res2)
+	## 
+	## Check whether two resources are equal by checking
+	## target_class, attributes sizes, values. Associations sizes. 
+	_if res1.target_class <> res2.target_class
+	_then
+		_return _false  
+	_endif
+
+	_if _not _self.sets_size_equal?(res1.attributes,res2.attributes)
+	_then
+		_return _false 
+	_endif
+	
+
+	_for attr_name, attr_value _over res1.attributes.fast_keys_and_elements()
+	_loop
+		_if res2.get_attribute(attr_name) <> attr_value 
+		_then
+			_return _false 
+		_endif
+	_endloop
+
+	_if _not _self.sets_size_equal?(res1.associations,res2.associations)
+	_then
+		_return _false 
+	_endif
+		
+	_for asso_name, asso_value _over res1.associations.fast_keys_and_elements()
+	_loop
+		_if _not _self.sets_size_equal?(res2.get_association(asso_name),asso_value)
+		_then
+			_return _false 
+		_endif
+		
+	_endloop
+
+	_return _true 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_comparer.get_grouped_resources_set(a_set)
+	## 
+	## Return an equality_hash_table of all the resources grouped
+	## with target class as their id.
+	eht << equality_hash_table.new()
+	_for a_resource _over a_set.fast_elements()
+	_loop
+		tc << a_resource.target_class
+		_if eht[tc] _is _unset 
+		_then
+			eht[tc] << equality_set.new_with(a_resource)
+		_else
+			eht[tc].add(a_resource)
+		_endif
+	_endloop
+	_return eht
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_comparer.sets_size_equal?(set1,set2)
+	## 
+	## Return true if the sizes of two sets are equale else false 
+	#if size is not same return false.
+	_if set1.size = set2.size
+	_then
+		_return _true
+	_else 
+		_return _false 
+	_endif
+
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method sw_cim_rdf_file_comparer.read_file_from(file_path)
+	## 
+	## Reads the file using sw_cim_rdf_file_reader and returns it.
+	 file_reader << sw_cim_rdf_file_reader.new(_true)
+	_if file_reader.read_file(file_path) _is _unset 
+	_then
+		write("File reading error in ",file_path, " Aborting!!!")
+		_return 
+	_else
+		_return file_reader
+	_endif
+	
+_endmethod
+$
+
+

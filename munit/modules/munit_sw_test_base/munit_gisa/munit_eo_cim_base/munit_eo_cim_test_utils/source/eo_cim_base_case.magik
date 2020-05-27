@@ -284,17 +284,21 @@ _private _method eo_cim_base_case.int!assert_rdf_files_equals( reference_filenam
 								   _self.resource_path_for_config_name,
 								   _self.module_name )
 
-	(file, report_path) << system.pathname_components(actual_pathname)
-
-	same_file? << sw_cim_rdf_file_validator.compare( expected_pathname,
-							 actual_pathname,
-							 _true,
-							 report_path
-						)
+	same_file? << _self.rdf_files_equals?(expected_pathname, actual_pathname)
 
 	desc << write_string("The files ",expected_pathname," and ",
 			     actual_pathname," should have the same contents")
 	_self.assert_true( same_file?, desc )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_cim_base_case.rdf_files_equals?(expected_pathname, actual_pathname)
+	##
+	## Checks if RDF files are equal.
+	##
+	
+	_return sw_cim_rdf_file_comparer.compare(expected_pathname, actual_pathname)
 _endmethod
 $
 
