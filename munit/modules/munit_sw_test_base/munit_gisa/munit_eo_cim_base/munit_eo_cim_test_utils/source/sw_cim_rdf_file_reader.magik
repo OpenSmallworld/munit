@@ -225,11 +225,11 @@ _private _method sw_cim_rdf_file_reader.get_name_from_value(value)
 	## not be removed from value.
 	##
 
-	_return _if .include_ns_prefixes? _is _true
-		_then
-			_return write_string(value)
-		_else
-			_return write_string(value).split_by(":")[2]
-		_endif
+	_if .include_ns_prefixes? _is _true
+	_then
+		_return write_string(value)
+	_else
+		_return write_string(value).split_by(":")[2]
+	_endif
 _endmethod
 $
