@@ -1,1 +1,0 @@
-sw_cim_rdf_file_validator
