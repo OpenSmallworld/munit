@@ -292,7 +292,7 @@ _method application_system_test_mixin.when_inserting_record()
 	action << _self.insert_action()
 	_self.click_action_button(action)
 	
-	_for i _over 1.upto(5)
+	_for i _over 1.upto(10)
 	_loop
 		_if (new_record << _self.properties[:editor].current_object) _isnt _unset
 		_then
