@@ -5,7 +5,6 @@
   <property name="ivy.dep.file"                    location="${my.dir}/ivy.xml"/>
   <property name="xml_file_comparator.home"        location="${my.dir}/test_utils/xml_file_comparator"/>
   <property name="xml_file_comparator.build.dir"   value="${xml_file_comparator.home}/build"/>
-  <property name="dont-clone-munit"                value="true"/> <!-- Don't clone MUnit again -->
 
   <property name="alchemy.script" location="${projects.dir}/build_tools/ant/alchemy_install.xml" />
 
