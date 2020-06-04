@@ -42,8 +42,8 @@
   </target>
 
   <target name="ivy-publish-xml-file-comparator-task" depends="ivy-configure-task" description="Publish the XML File Comparator">
-    <ivy:publish resolver="${publish.type}-rep" forcedeliver="true" conf="*" overwrite="true" 
-      revision="${version.number.complete}" srcivypattern="${xml_file_comparator.home}/ivy.xml">
+    <ivy:resolve file="${xml_file_comparator.home}/ivy.xml"/>
+    <ivy:publish resolver="${publish.type}-rep" forcedeliver="true" conf="*" overwrite="true" revision="${version.number.complete}">
         <artifacts pattern="${xml_file_comparator.build.dir}/[type]s/[artifact]-[revision].[ext]"/>
     </ivy:publish>
   </target>
