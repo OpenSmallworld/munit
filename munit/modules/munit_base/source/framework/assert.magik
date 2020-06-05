@@ -704,6 +704,7 @@ _private _method assert.int!compare_xml( an_xml_thing, other_xml_thing, path, _g
 		_endloop
 		_if sort?
 		_then
+			write( "*** Sorting XML: ", path)
 			elements<< sorted_collection.new_from(elements, _self.xml_element_sort_proc)
 			other_elements << sorted_collection.new_from(other_elements, _self.xml_element_sort_proc)
 		_endif
