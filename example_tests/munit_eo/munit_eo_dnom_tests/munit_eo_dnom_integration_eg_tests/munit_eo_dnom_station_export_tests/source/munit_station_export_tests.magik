@@ -1,0 +1,67 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+
+## These tests will export named substation and validate the
+## exported files.
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(
+	:munit_station_export_tests,
+	{
+		{:properties, _unset }
+	},
+	{:test_case, :eo_dnom_test_mixin, :eo_start_application_mixin})
+$
+
+_pragma(classify_level=debug)
+_method munit_station_export_tests.init( _gather args )
+
+	.properties << concurrent_hash_map.new()
+	>> _super.init( _scatter args )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method munit_station_export_tests.set_up()
+
+	stub_method_helper.replace_method(sw_dnom_request_cleanup_manager, :|int!process_request()|,
+					  _proc() _endproc)
+	
+	_super.set_up()
+	
+	# Make sure the application is running - just to put us into DM Top
+	_self.application(eo_dnom_base_case.application_name)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_station_export_tests.properties
+	_return .properties
+_endmethod
+$
+
+#
+# EXPORT INTERACTIVELY
+# --------------------
+#
+
+_pragma(classify_level=debug)
+_method munit_station_export_tests.test_saxon_way_ss()
+
+	_self.given_a_station("Saxon Way SS").
+		when_the_station_is_exported().
+		then_the_exported_files_match("saxon_way_ss")
+		
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method munit_station_export_tests.test_villa_road_primary()
+
+	_self.given_a_station("Villa Road Primary").
+		when_the_station_is_exported().
+		then_the_exported_files_match("villa_road_primary")
+		
+_endmethod
+$
