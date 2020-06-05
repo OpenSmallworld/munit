@@ -1,0 +1,704 @@
+#% text_encoding = iso8859_1
+_package sw
+
+##
+## Provides utility methods that are applicable across
+## integration tests that make use of designs and those that
+## can just run in DM top
+##
+## All classes that inherits from this mixin must define a
+## .properties method that returns a property_list.
+##
+#
+_pragma(classify_level=debug)
+def_mixin( :eo_dnom_test_mixin, { :application_system_test_mixin } )
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_a_station( name_or_number )
+	##
+	## Asserts that the station with NAME_OR_NUMBER exists and
+	## caches it as :station_to_export property
+	##
+
+	provider <<  sw_dnom_properties_helper.station_provider
+	station << provider.get_station( name_or_number )
+	_self.assert_not_unset(station, write_string("Cannot find station ", name_or_number ))
+	_self.properties[:station_to_export] << station
+
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.when_the_station_is_exported( _gather request_properties )
+	##
+	## Create and process a station export request, cacheing the
+	## request in the :export_request property
+	## REQUEST_PROPERTIES is a list of request property key and
+	## value pairs which can be used to override default properties
+	## on the request
+
+	request << _self.create_station_export_request()
+
+	request.set_properties(_scatter request_properties)
+	
+	_self.properties[:export_request] << request
+
+	p_cache << sw_process_manager_cache.get_cached_instance(
+					    request.get_property(:installation_type) )
+
+	# Disable SOAP messaging
+	stub_method_helper.replace_method( sw_dnom_message_manager, :|process_request()|, _proc() _return _endproc )
+
+	_self.when_registering_written_xml_files()
+		
+	export_process << p_cache.get_process( :dnom_station_export_request )
+	export_process.execute(request)
+	
+	_return _self 
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.when_registering_written_xml_files()
+	# Store filepaths to wrote xmls, keeping the write order.
+	_local xml_files << equality_property_list.new()
+	_local schematic_files << equality_property_list.new()
+	_self.properties[:written_substations] << xml_files
+	_self.properties[:written_distribution_systems] << schematic_files
+	stub_method_helper.replace_method(
+		dnom_writer,
+		:print_substation|()|,
+		_proc(ss, filepath)
+			file << _self.saved!print_substation(ss, filepath)
+			_import xml_files
+			xml_files.at_or_new_if_absent(ss.name.write_string, rope).add_last(filepath)
+			_return file
+		_endproc)
+
+	stub_method_helper.replace_method(
+		dnom_writer,
+		:print_distribution_system|()|,
+		_proc(ss, filepath)
+			file << _self.saved!print_distribution_system(ss, filepath)
+			_import schematic_files
+			name << _if ss.substation _isnt _unset
+				_then
+					>> ss.substation.name.write_string
+				_else
+					>> "distibution_system_without_a_substation"
+				_endif
+			schematic_files.at_or_new_if_absent(name, rope).add_last(filepath)
+			_return file
+		_endproc)
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.create_station_export_request()
+
+	_local request << sw_dnom_substation_export_helper.create_request_for_substation_export(_self.properties[:station_to_export])
+
+	request.set_property( :output_path, system.getenv( "TEMP" ) )
+	
+	# don't delete xml files for tests
+	request.set_property( :test_mode?, _true )
+
+	# write the internals files for tests
+	request.set_property( :export_station_internals?, _true )
+
+	_return request 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_station_file_was_written(p_flag?)
+
+	_return _self.int!then_file_was_written( _false, p_flag? )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_station_internal_file_was_written(p_flag?)
+
+	_return _self.int!then_file_was_written( _true, p_flag? )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_station_internal_file_has_not_been_created()
+	##
+	## see sw_dnom_xml_write_component.write_dnom_substation_to_file
+	## Differs from the then_station_internal_file_was_written that
+	## it check if the file has been writen at all, not write and
+	## then removed during zipping.
+	##
+	xml_files << _self.properties[:written_substations].an_element()
+		
+	_self.assert_equals(1, xml_files.size, "Expected exactly one file, when #1")
+	_for filename _over xml_files.fast_elements()
+	_loop
+		message << write_string("Internal file has been writed in ", filename,
+					" when it has been explictly required not to.")
+		_self.assert_unset(filename.index_of_seq("INTERNAL"), message)
+	_endloop
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.int!then_file_was_written( p_internal?, p_flag? )
+	xml_files << _self.properties[:written_substations].an_element()
+	_self.assert_false( xml_files.empty?, "No xml files has been written at all.")
+	_if p_internal?
+	_then		
+		_self.assert_true(xml_files.size >= 2, write_string("Expected at least two files"))
+		fullpath << xml_files[2]
+		_self.assert_not_unset(fullpath.index_of_seq("INTERNAL"))
+	_else		
+		fullpath << xml_files[1]
+	_endif
+		
+	_if p_flag? _is _true
+	_then 
+		_self.assert_true( system.file_exists?( fullpath ), write_string("Expect file ",fullpath," but it is missing.") )
+	_else
+		_self.assert_false( system.file_exists?( fullpath ), write_string("File exists ",fullpath," but it should not exist.") )
+	_endif
+
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_zip_file_was_written( p_flag? )
+
+	request << _self.properties[:export_request]
+	_self.assert_not_unset( request , "No export request cached")
+
+	output_path << request.get_property( :output_path, "Output path not defined on request" )
+	_self.assert_not_unset( output_path )
+	
+	fullpath <<  request.get_property( :output_files ).an_element()
+	_self.assert_not_unset( fullpath, write_string("Missing zip file data.") )
+
+	_if p_flag? _is _true
+	_then 
+		_self.assert_true( system.file_exists?( fullpath ), write_string("Expect file ",fullpath," but it is missing.") )
+	_else
+		_self.assert_false( system.file_exists?( fullpath ), write_string("File exists ",fullpath," but it should not exist.") )
+	_endif
+
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_a_circuit( circuit_id )
+	##
+	## Asserts that the circuit with NAME_OR_NUMBER exists and
+	## caches it as :circuit_of_interest  property
+	##
+
+	ev << gis_program_manager.cached_dataset( :electric )
+	circuit <<ev.collections[:eo_circuit].select(predicate.eq(:circuit_id, circuit_id)).an_element()
+		
+	_self.assert_not_unset(circuit, write_string("Cannot find circuit ", circuit_id ))
+	_self.properties[:circuit_of_interest] << circuit
+
+	>> _self
+_endmethod
+$
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_a_wire_segment( name )
+	##
+	## Asserts that the circuit with NAME exists and
+	## caches it as :segment_of_interest property
+	##
+
+	ev << gis_program_manager.cached_dataset( :electric )
+	wire <<ev.collections[:eo_wire_segment_inst].select(predicate.eq(:name, name))
+		
+	_self.assert_not_unset(wire, write_string("Cannot find wire Segment ", wire ))
+	_self.properties[:segment_of_interest] << wire
+
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_an_eo_object( collection_name, _gather field_name_value_keys_elements )
+	ev << gis_program_manager.cached_dataset( :electric )
+	coll << ev.collections[collection_name]
+	field_values << property_list.new_from_gathered(field_name_value_keys_elements)
+	selection << predicate
+	_for i_field, i_value _over field_values.fast_keys_and_elements()
+	_loop
+		selection << selection.and(predicate.eq(i_field, i_value))
+	_endloop	
+	object << coll.select(selection).an_element()
+	_self.assert_not_unset(object, write_string("Cannot find ", coll.external_name,
+						    " with: ", selection, %.))
+	_self.properties[:object_of_interest] << object
+
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_object_attributes_are(p_object, _gather keys_and_values)
+	##
+	## Check that the exported object has attributes and values
+	## specified by KEYS_AND_VALUES.
+	## Only the keys in KEYS_AND_VALUES are checked. The export may contain other
+	## attributes which aren't checked.
+	##
+	
+	props_to_check << property_list.new_from_gathered(keys_and_values)
+	
+	dnom_obj << _self.get_first_mapped_object_for(p_object)
+
+	_for key, expected_value _over props_to_check.fast_keys_and_elements()
+	_loop
+		actual_value << dnom_obj.get_attribute(key)
+		fail_msg << write_string("Value for attribute '", key, "' is incorrect: #1" )
+		_self.assert_equals(expected_value, actual_value, fail_msg)
+	_endloop
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_test_mixin.get_first_mapped_object_for(p_object)
+	## 
+	##
+	mapped_objs << _self.get_mapped_objects_for(p_object)
+	>> _if mapped_objs _isnt _unset
+	   _then
+		  >> mapped_objs.an_element()
+	   _endif	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_test_mixin.get_mapped_objects_for(p_object)
+	##
+	## Return the set of mapped objects for the first substation that P_OBJECT has a
+	## mapping.
+	##
+	## NOTE: If the object has more than one related substation, the object will
+	## appear in more than one mapped set and the mappings might be different for
+	## each substation.
+	## 
+	request << _self.properties[:export_request]
+	dnom_substations << request.get_property(:dnom_substations)
+	
+	_for dnom_substation _over dnom_substations.fast_elements()
+	_loop
+		dnom_model << dnom_substation[:dnom_model]
+		mapped_objs << dnom_model.get_mapping_for( p_object )
+		_if mapped_objs _isnt _unset
+		_then
+			_return mapped_objs
+		_endif
+	_endloop
+	_return _unset
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_object_attribute_counts_are(p_object, _gather keys_and_values)
+	##
+	## Check that the exported object has attributes and their
+	## counts as specified by KEYS_AND_VALUES.
+	## Only the keys in KEYS_AND_VALUES are checked. The export may contain other
+	## attributes which aren't checked.
+	## Attributes:
+	## P_OBJECT - object to check
+	## KEYS_AND_VALUES - attributes to check on object
+	##
+	
+	props_to_check << property_list.new_from_gathered(keys_and_values)
+	
+	request << _self.properties[:export_request]
+	dnom_obj << request.get_property(:dnom_model).get_mapping_for( p_object ).an_element()
+	
+	_for key, expected_value _over props_to_check.fast_keys_and_elements()
+	_loop
+		actual_value << dnom_obj.get_attribute(key).size
+		fail_msg << write_string("Count for attribute '", key, "' is incorrect: #1" )
+		_self.assert_equals(expected_value, actual_value, fail_msg)
+	_endloop
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_label_attributes_are(p_object, p_label_pos, _gather keys_and_values)
+	##
+	## Check that the exported label has attributes and their
+	## values are as specified by KEYS_AND_VALUES.
+	## Attributes:
+	## P_OBJECT - object to check
+	## P_LABEL_POS - index of label to check
+	## KEYS_AND_VALUES - attributes to check on label
+	##
+	
+	props_to_check << property_list.new_from_gathered(keys_and_values)
+
+	dnom_obj << _self.get_first_mapped_object_for(p_object)	
+	labels << dnom_obj.get_attribute(:label_placement)
+
+	_self.assert_unset(label, "No labels exported for object.")
+
+	label << labels[p_label_pos]
+	
+	_for key, expected_value _over props_to_check.fast_keys_and_elements()
+	_loop
+		actual_value << label.perform(key)
+		fail_msg << write_string("Attribute for label '", key, "' is incorrect: #1" )
+		_self.assert_equals(expected_value, actual_value, fail_msg)
+	_endloop
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _iter _method eo_dnom_test_mixin.objects_which_should_be_mapped(a_substation_or_circuit)
+	objects << equality_set.new()
+	_if a_substation_or_circuit.source.name _is :eo_circuit
+	_then
+		getters << {:get_equipment|()|, :get_line_segments|()|}
+	_else
+		getters << {:rwos|()|}
+	_endif	
+
+	_for i_getter _over getters.fast_elements()
+	_loop
+		_for i_object _over a_substation_or_circuit.perform(i_getter).fast_elements()
+		_loop
+			_if i_object.responds_to?(:circuit_source_stopper) _andif
+			    i_object.circuit_source_stopper _isnt _unset _andif
+			    (l_circ << i_object.circuit_source_stopper.eo_circuit) _isnt _unset _andif
+			    (l_sub << l_circ.originating_substations.an_element()) _isnt _unset _andif
+			    eo_dnom_substation_provider.is_primary_station?(l_sub)
+			_then
+				_continue 
+			_endif
+			
+			collection_name << i_object.source.name
+			_if collection_name _is :eo_power_xfrmr_inst
+			_then # special case for a transformer mapper from assets instead of rwo/inst
+				xfrmr_holder << sw_cim_value_holder.new(:cim_value_source, i_object)
+				xfmrm_facade << eo_gisa_transformer_facade.new(sw_cim_resource.new(xfrmr_holder))
+				_if xfmrm_facade.banked?()
+				_then 
+					_loopbody(i_object)
+				_endif
+				_for i_asset _over i_object.get_relevant_assets().fast_elements()
+				_loop
+					_loopbody(write_string(:eo_power_xfrmr_, i_asset.id))
+				_endloop
+			_elif collection_name _is :eo_service_point
+			_then
+				# Not check eo_service_points
+				_continue 
+			_else
+				_loopbody(i_object)
+			_endif	
+		_endloop
+	_endloop	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_contained_objects_are_correct(p_object)
+	##
+	## Check that p_object has associations to all p_int_objects.
+	##
+
+	l_dnom_obj << _self.get_first_mapped_object_for(p_object)
+	l_cos << l_dnom_obj.get_association(:|objects|)
+
+	l_set << equality_hash_table.new()
+	_for l_co _over l_cos.fast_elements()
+	_loop
+		l_set[l_co.get_property("ID")] << _true
+	_endloop
+
+	l_counter << 0
+
+	_if p_object.is_kind_of?(eo_composite_switch)
+	_then
+		_for l_io _over rwo_set.new_from(p_object.components).select_collection( {:eo_isolating_eqpt_inst} ).fast_elements()
+		_loop
+			_if (l_dnom_io_map << _self.get_mapped_objects_for(l_io)) _isnt _unset _andif
+			    (l_dnom_io << l_dnom_io_map.an_element()) _isnt _unset
+			_then
+				l_counter +<< l_dnom_io_map.size
+				l_fail_msg2 << write_string("No association for " + l_io.write_string )
+				_self.assert_not_unset(l_set[l_dnom_io.get_property("Id")], l_fail_msg2)
+			_endif
+		_endloop
+
+	_else		
+		_for l_io _over _self.objects_which_should_be_mapped(p_object)
+		_loop
+			_if _not l_io.is_kind_of?(eo_composite_switch) _andif
+			    (l_dnom_io_map << _self.get_mapped_objects_for(l_io)) _isnt _unset _andif
+			    (l_dnom_io << l_dnom_io_map.an_element()) _isnt _unset
+			_then
+				l_counter +<< l_dnom_io_map.size
+				l_fail_msg2 << write_string("No association for " + l_io.write_string )
+				_self.assert_not_unset(l_set[l_dnom_io.get_property("Id")], l_fail_msg2)
+			_endif
+		_endloop
+	_endif
+	
+	l_fail_msg1 << write_string("Count of contained objects is incorrect: #1" )
+	_self.assert_equals(l_counter, l_cos.size, l_fail_msg1)
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_objects_are_not_mapped(_gather p_objects)
+	##
+	## Check that p_objects have not been mapped and will be not
+	## exported. 
+	##
+
+	l_request << _self.properties[:export_request]
+	l_dnom_model << l_request.get_property(:dnom_model)
+
+	_for l_object _over p_objects.fast_elements()
+	_loop
+		mapped_objs << _self.get_mapped_objects_for(l_object)	
+		_self.assert_unset(mapped_objects, "Object mapped while it should not be: " + l_object.write_string)
+	_endloop
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_objects_are_mapped(_gather p_objects)
+	##
+	## Check that p_objects have been mapped and will be exported. 
+	##
+	
+	_for l_object _over p_objects.fast_elements()
+	_loop
+		mapped_objs << _self.get_mapped_objects_for(l_object)
+		_self.assert_not_unset(mapped_objs, "Object not mapped while it should be: " + l_object.write_string)
+	_endloop
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.get_object_from_db(p_db_name, p_coll_name, p_field, p_val)
+	##
+	## Gets object from db.
+	##
+
+	l_coll << gis_program_manager.databases[p_db_name].collections[p_coll_name]
+	
+	>> l_coll.select(predicate.eq(p_field, p_val)).an_element()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name)
+	## 
+	##
+	written_substations << _self.properties[:written_substations].an_element()
+	_self.assert_equals(written_substations.size, 2, "Expected two Substation xmls, when got #1")
+	reference_xml_file << ref_file_name + ".xml"
+	reference_int_xml_file << ref_file_name + "_internal.xml"
+	_self.assert_xml_files_equals( reference_xml_file, written_substations[1])
+	_self.assert_xml_files_equals( reference_int_xml_file, written_substations[2])
+	
+	_if _self.using_previous_dnom_version?
+	_then
+		_return
+	_endif
+
+	written_dss << _self.properties[:written_distribution_systems].an_element()
+	_self.assert_equals(written_substations.size, 2, "Expected two DistributionSystem xmls, when got #1")
+	reference_ortho_schematic << ref_file_name + "_schem_ortho.xml"	
+	reference_geo_schematic << ref_file_name + "_schem_geo.xml"
+	_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1])
+	_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2])
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.assert_xml_files_equals( reference_filename , actual_pathname )
+	##
+	## Assert if ACTUAL_PATHNAME (full path and file name) is equivalent to
+	## the REFERENCE_FILENAME that is stored in the resources directory of this
+	## module
+	## 
+
+	# Forward directly to int!assert_xml_files_equals().
+	# The implementation isn't inlined here so that we can inject the golden file
+	# canonicalizer when we need it.
+	_self.int!assert_xml_files_equals( reference_filename , actual_pathname )
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.int!assert_xml_files_equals( reference_filename , actual_pathname )
+	## 
+	##
+	(same_file?, report_file) << _self.compare_xml_files(reference_filename , actual_pathname)
+	
+	desc << write_string( "The output file doesn't match the reference file: ",
+			      reference_filename, "See details here: ", report_file )
+
+	_self.assert_true( same_file?, desc )	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+## If this variable is set to a path, when the tests are run, any XML files
+## which are compared and do not match are copied to the specified path. This
+## makes the files easier to find and analyse, rather than looking through the
+## temp directory.
+eo_dnom_test_mixin.define_shared_variable( :save_differing_xml_files_dir, _unset, :public )
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_test_mixin.compare_xml_files(reference_filename , actual_pathname)
+	## 
+	## 
+	expected_pathname << smallworld_product.get_resource_file( reference_filename,
+								   _self.resource_path,
+								   _self.module_name )
+
+	report_file << actual_pathname + ".diffs.txt"
+	
+	same_file? << _not xml_file_comparator.has_differences?(expected_pathname,
+								actual_pathname,
+								"dnom",
+								report_file)
+
+	_if _not same_file? _andif
+	    (output_dir << _self.save_differing_xml_files_dir) _isnt _unset
+	_then
+		(filestem,suffix) << _self.get_filename_parts(expected_pathname)
+		_self.save_file(expected_pathname, output_dir, filestem, "expected", suffix)
+		_self.save_file(actual_pathname, output_dir, filestem, "actual", suffix)
+	_endif
+	
+	>> same_file?, report_file
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_test_mixin.save_file(input_pathname, output_dir, filestem, tag, suffix)
+	## 
+	##
+	save_filename << write_string(filestem, %_, tag, %., suffix)
+	save_pathname << system.pathname_down(output_dir, save_filename)
+	system.file_copy( input_pathname, save_pathname )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.get_filename_parts(pathname)
+	##
+	## PATHNAME is the path of a file.
+	## Strip off the pathname and return the filestem and the file suffix, splitting
+	## by '.'.
+	## Raise an error if the filename does not contain exactly one '.'. 
+	## 
+	(filename,dir) << system.pathname_components(pathname)
+	bits << filename.split_by(%.)
+	_if bits.size <> 2
+	_then
+		msg << write_string("Unexpected format for filename ", filename, ". Expected exactly one '.' characters")
+		condition.raise(:error, :string, msg)
+	_endif
+	>> (_scatter bits)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+## If set to _true then resource path will contain config name
+## element.
+eo_dnom_test_mixin.define_shared_constant(:use_config_in_resource_path?, _false, :public)
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.resource_path
+	##
+	## Return resource path.
+	## 
+
+	_if _self.use_config_in_resource_path?
+	_then
+		config_name << sw_dnom_properties_helper.default_config_name
+		subfolder_name << system.validate_as_file_name(config_name).substitute_character(%space, %_)
+	
+		_return "data" + system.pathname_separator + subfolder_name
+	_else
+		_return "data"
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.using_previous_dnom_version?
+	##
+	## True when the test is run for the DNOM 3 08 06 configuration:
+	## e.g. Schematic/PLACEMENTS files are not expected.
+	##
+	_return sw_dnom_properties_helper.configuration_name = "ADMS DNOM 3_08_06"
+_endmethod
+$
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_custom_field_mapping_config_for_line()
+	xml_string <<
+	'<cim_associations>' +	
+	'<cim_association name="custom_field_mounting" target_class="dnom_custom_field" register_mapping="false"> ' +
+	'<cim_attribute name="is_string?" source="constant" value="true"/>' +
+	'<cim_attribute name="name" source="constant" value="Mounting"/>' +
+	'<cim_attribute name="value" source="record" getter="mounting"/>' +
+	'</cim_association>' +
+	'<cim_association name="custom_field_remarks" target_class="dnom_custom_field" register_mapping="false"> ' +
+	'<cim_attribute name="is_string?" source="constant" value="true"/>' +
+	'<cim_attribute name="name" source="constant" value="Remarks"/>' +
+	'<cim_attribute name="value" source="record" getter="remarks"/>' +
+	'</cim_association>' +
+	'</cim_associations>'
+
+	_local xml_doc << simple_xml.read_document_string(xml_string)
+
+	stub_method_helper.replace_method(sw_cim_mapping_config,
+					  :|read_associations()|,
+					  _proc (p_collection_ele, p_cim_map)
+						  _import xml_doc
+						  _self.saved!read_associations(p_collection_ele, p_cim_map)
+
+						  _if p_cim_map.cim_class_name[:name] = "dnom_line"
+						  _then 
+							  _self.saved!read_associations(xml_doc.top_element,
+											p_cim_map)
+						  _endif 
+					  _endproc)
+						  
+	_return _self 
+_endmethod
+$
