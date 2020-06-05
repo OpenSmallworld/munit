@@ -280,10 +280,39 @@ _private _method application_system_test_mixin.get_item_with_identifier(tag, ide
 _endmethod
 $
 
-
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_inserting_record()
 	## 
+	## Insert a record using a transaction
+	## This is the normal method to use.
+	## Use when_inserting_record_using_editor() when inserting into a frozen dataset e.g when inserting a spec   
+	##
+	
+	# Need this in case the insert transaction needs to get data from the
+	# application - typically values of options
+	_dynamic !current_application!
+	!current_application! << _self.properties[:application]
+	
+	ed             << _self.properties[:editor]
+	a_collection   << ed.collection
+	data           << ed.get_proposed_field_values(:insert)
+	a_transaction  << record_transaction.new_insert(a_collection, data)
+	new_record     << a_transaction.run()
+
+	ed.current_object << new_record
+	_self.properties[:new_record] << new_record
+
+	>> _self
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_inserting_record_using_editor()
+	## 
+	## For normal records use when_inserting_record() which runs a transaction.
+	## Use this method when inserting into a frozen dataset e.g when inserting a spec   
 	##
 	
 	_dynamic !current_application!
@@ -292,7 +321,7 @@ _method application_system_test_mixin.when_inserting_record()
 	action << _self.insert_action()
 	_self.click_action_button(action)
 	
-	_for i _over 1.upto(10)
+	_for i _over 1.upto(5)
 	_loop
 		_if (new_record << _self.properties[:editor].current_object) _isnt _unset
 		_then
@@ -1349,35 +1378,9 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_editor_label_is( expected_string )
-	## 
-	## 
 
-	editor << _self.properties[ :editor ]
-	con << editor.sys!slot(:container)
-
-	collection_string << _if ( a_label_item << con.get_item("collection_name_label") ) _isnt _unset
-			     _then
-				     >> a_label_item.label
-			     _endif
-	
-	status_string << _if ( a_label_item << con.get_item("status_label") ) _isnt _unset
-			 _then
-				 >> a_label_item.label
-			 _endif
-	actual_string << write_string( collection_string, " ", status_string )
-
-	# Repeat a couple of times in case there is a timing issue
-	_for i _over 1.upto( 10 )
-	_loop 
-		_if expected_string = actual_string
-		_then
-			_leave
-		_endif
-		write( "then_editor_label_is(", expected_string, ") failed. Trying again" )
-		_thisthread.sleep( 500 )
-	_endloop
-	
-	_self.assert_equals( expected_string, actual_string )
+	## This was unreliable and has been retired.
+	## It should be removed when all references (2 in EO) have been removed
 	
 	>> _self
 _endmethod
@@ -1624,7 +1627,6 @@ _method application_system_test_mixin.scenario_insert_record( dataset_name, coll
 		when_going_to_inserted_record().
 
 		then_record_is_shown_on_map( _self.parameter_new_record() ).
-		then_editor_label_is( _self.parameter_editor_label_inserted() ).
 		then_editor_fields_display( expected_values )	
 	
 _endmethod
@@ -1871,31 +1873,13 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.parameter_editor_label_inserted()
-	## 
-	## Return a string with the expected string for the editor when
-	## a record is inserted.
-	##
-	## This is based on the current record:
-	## [<dataset_name>] <collection_name> - record inserted
-	##
 
-	>> write_string( _self.editor_label(), " - record inserted" )
+	## This should be removed when all references have been removed
+	## - 2 references in EO
+	## - Also redefinitions in pni_system_test_mixin should be removed
+	## - Also redefinitions in ftth_system_test_mixin should be removed
 	
-_endmethod
-$
-
-
-_pragma(classify_level=debug)
-_private _method application_system_test_mixin.parameter_editor_label_updated()
-	## 
-	## Return a string with the expected string for the editor when
-	## a record is updated.
-	##
-	## This is based on the current record:
-	## [<dataset_name>] <collection_name> - record updated
-	##
-
-	>> write_string( _self.editor_label(), " - record updated" )
+	>> "REDUNDANT"
 	
 _endmethod
 $
@@ -1903,13 +1887,13 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.editor_label()
-	## 
-	##
-	
-	record << _self.parameter_new_record()
-	label  << write_string( "[", record.source_view.external_name, "] ", record.external_name )
 
-	>> label 
+	## This should be removed when all references have been removed
+	## - 1 in pni_system_test_mixin
+	## - 1 in ftth_system_test_mixin
+
+	
+	>> "REDUNDANT" 
 	
 _endmethod
 $
@@ -2414,7 +2398,7 @@ _method application_system_test_mixin.then_styled_string_is( tree_id_or_path, a_
 _endmethod
 $
 
-_pragma(classify_level=restricted)
+_pragma(classify_level=restricted)
 _method application_system_test_mixin.given_an_embedded_editor_populated_with( ds_name, table_name, field_values )
         ## 
         ## Populate the embedded editor with a record in table TABLE_NAME in
