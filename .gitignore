@@ -1,5 +1,9 @@
 #syntax: glob
 
+# Build Artifacts
+build/
+output/
+
 # Backup files left by emacs
 *~
 
@@ -11,4 +15,3 @@
 **.magikc
 **.old
 **.msgc
-
