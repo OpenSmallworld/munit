@@ -1,0 +1,15 @@
+munit_eo_dnom_station_export_tests	1
+
+description
+	Integration station export tests for the module sw_dnom_adapter
+end
+
+requires
+	munit_eo_dnom_test_utils
+end
+ 
+tests_modules
+	sw_dnom_adapter
+end
+ 
+hidden

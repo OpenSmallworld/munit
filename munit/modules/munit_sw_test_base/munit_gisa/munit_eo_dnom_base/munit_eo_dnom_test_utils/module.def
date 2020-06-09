@@ -1,0 +1,10 @@
+munit_eo_dnom_test_utils	1
+
+description
+	Provides magik code for use in DNOM integration tests
+end
+
+requires
+	munit_eo_gisa_test_utils
+	xml_file_comparator
+end

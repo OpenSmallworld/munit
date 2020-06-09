@@ -1,0 +1,167 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:eo_dnom_base_case,
+{
+},
+{:eo_gisa_base_test_case, :eo_dnom_test_mixin})
+$
+
+_pragma(classify_level=debug)
+eo_dnom_base_case.define_shared_constant( :application_name,:eo_dnom_application, :public)
+$
+
+_pragma(classify_level=debug)
+eo_dnom_base_case.define_shared_constant( :admin_application_name,:eo_dnom_admin_application, :public)
+$
+
+_pragma(classify_level=debug)
+eo_dnom_base_case.define_shared_constant( :plugin_name, :dnom_adapter, :public )
+$
+
+_pragma(classify_level=debug)
+eo_dnom_base_case.define_shared_constant( :target_coordinate_system_name, :uk_british_national_grid_m, :public )
+$
+
+_pragma(classify_level=debug)
+eo_dnom_base_case.define_shared_constant( :properties_helper, sw_dnom_properties_helper, :public )
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_base_case.note_change( who, what, data )
+	##
+	## Conflict resolution from two times inherited
+	## sw:serialised_test_mixin.
+	##
+	_super( eo_dnom_test_mixin ).note_change( who, what, data )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_dnom_base_case.given_prop_values(_gather prop_values)
+
+	.properties[:proposed_values] << property_list.new_with(_scatter prop_values)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_dnom_base_case.given_object_fill_checks(_gather p_checks)
+
+	l_checks << property_list.new_with(_scatter p_checks)
+
+	_for l_key, l_filled? _over l_checks.fast_keys_and_elements()
+	_loop
+		exists? << .properties[:object_of_interest].perform(l_key) _isnt _unset 
+		_self.assert_is(l_filled?, exists?, l_key + " value is not correct. ")
+	_endloop
+	
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_dnom_base_case.given_run_insert_transaction()
+
+	record_transaction.new_insert(.properties[:collection_of_interest], .properties[:proposed_values]).run()
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_dnom_base_case.given_run_update_transaction()
+
+	record_transaction.new_update(.properties[:object_of_interest], .properties[:proposed_values]).run()
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_dnom_base_case.when_object_is_deleted()
+
+	record_transaction.new_delete(.properties[:object_of_interest]).run()
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_base_case.export_differences_from_current_design_locally( )
+
+	## Process the circuit request, using the %TEMP% for output and
+	## without messaging
+	request << sw_dnom_substation_export_helper.create_request_to_export_differences( :as_built ) 
+
+	request.set_property( :output_path, system.getenv( "TEMP" ) )
+
+	# don't delete xml files for tests
+	request.set_property( :test_mode?, _true )
+
+	# always export the external fiels
+	request.set_property( :export_station_internals?, _true )
+	
+	# sw_dnom_split_export_manager now requires exchange_job_id property to be set
+	request.set_property( :exchange_job_id, :dummy_exchange_job_id )
+	
+	# sw_dnom_message_manager now requires :ds_version_timestamp property to be set
+	request.set_property( :ds_version_timestamp, :dummy_ds_version_timestamp )
+	
+	# set design_splitter_class_name if given in .properties slot
+	_if (splitter_name << .properties[:splitter_name]) _isnt _unset 
+	_then 
+		request.set_property( :design_splitter_class_name, splitter_name)
+	_endif 
+
+	process_manager << sw_process_manager_cache.get_cached_instance( sw_dnom_properties_helper.installation_type )
+	export_set_process << process_manager.get_process(:dnom_difference_export_request)
+
+	# Disable exchange job creation
+	stub_method_helper.replace_method(sw_dnom_exchange_job_manager,
+					  :|process_request()|,
+					  _proc() _endproc)
+	
+	# Disable messaging if not requested otherwise
+	_if .properties[:disable_messaging?] _isnt _false
+	_then 
+		stub_method_helper.replace_method(sw_dnom_message_manager,
+						  :|process_request()|,
+						  _proc() _endproc)
+	_endif
+
+	_self.when_registering_written_xml_files()					  
+	
+	export_set_process.execute(request)
+	
+	_return request
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_base_case.export_substation_locally( a_substation )
+
+	_local l_station_provider << sw_dnom_substation_export_helper.get_substation_provider_instance()
+	_local name << l_station_provider.get_sanitized_station_name(a_substation)
+	
+	## Process the station request, using the %TEMP% for output and
+	## without messaging
+	request << sw_dnom_substation_export_helper.create_request_for_substation_export( a_substation )
+
+	request.set_property( :output_path, system.getenv( "TEMP" ) )
+	request.set_property( :job_name, name )
+	request.set_property( :station_urn ,  urn_manager.get_urn_from_object( a_substation ))
+
+	process_manager << sw_process_manager_cache.get_cached_instance( sw_dnom_properties_helper.installation_type )
+	export_set_process << process_manager.get_process(:dnom_station_export_request)
+
+	# Disable DNOM messaging
+	stub_method_helper.replace_method(sw_dnom_message_manager,
+					  :|process_request()|,
+					  _proc() _endproc)
+	export_set_process.execute(request)
+	_return request
+_endmethod
+$
