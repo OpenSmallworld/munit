@@ -1,0 +1,14 @@
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
+
+  <info organisation="com.gesmallworld" module="com.gesmallworld.magik.munit" revision="${version.number.complete}"/>
+
+  <configurations>
+    <conf name="default"/>
+    <conf name="installer"/>
+  </configurations>
+
+  <publications/>
+
+  <dependencies>
+  </dependencies>
+</ivy-module>
