@@ -1,0 +1,9 @@
+munit_eo_dnom_integration_eg_tests	layered_product
+
+title
+	Smallworld Electric Office DNOM integration tests
+end
+
+description
+	All integration tests in sw_dnom_adapter.
+end

@@ -1,8 +1,10 @@
-<project name="munit" default="installer" xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="munit" default="installer" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:if="ant:if" xmlns:unless="ant:unless">
 
-  <property name="projects.dir"             location="${ant.file}/../.."/>
-  <dirname property="my.dir"                file="${ant.file}"/>
-  <property name="ivy.dep.file"             location="${my.dir}/ivy.xml"/>
+  <property name="projects.dir"                    location="${ant.file}/../.."/>
+  <dirname property="my.dir"                       file="${ant.file}"/>
+  <property name="ivy.dep.file"                    location="${my.dir}/ivy.xml"/>
+  <property name="xml_file_comparator.home"        location="${my.dir}/test_utils/xml_file_comparator"/>
+  <property name="xml_file_comparator.build.dir"   value="${xml_file_comparator.home}/build"/>
 
   <property name="alchemy.script" location="${projects.dir}/build_tools/ant/alchemy_install.xml" />
 
@@ -10,7 +12,48 @@
 
   <import file="${alchemy.script}" />
 
-  <target name="ivy-publish-artifactory-task" depends="ivy-configure-task">
+  <property if:set="central.deploy.dir" 	    name="core.product.dir"     value="${upstream.install.dir}"/>
+  <property unless:set="central.deploy.dir"   name="core.product.dir"     value="${build.dir}/install"/>
+
+  <target name="fetch-deps-task" description="Install core" depends="ivy-configure-task">
+    <antcall unless:set="central.deploy.dir" target="installer-gma"/>
+  </target>
+
+  <!-- If calling from command line, pass in core product location: -Dcore.product.dir="C:\smallworld\core" -->
+  <target name="build-xml-file-comparator-task" description="Build the XML File Comparator">
+    <echo>Building XML File Comparator version: ${version.number.complete}</echo>
+    <ant antfile="${xml_file_comparator.home}/build.xml" target="build" useNativeBaseDir="true" >
+      <property name="version.number.complete" value="${version.number.complete}"/>
+      <property name="smallworld.gis.dir" value="${core.product.dir}"/>
+    </ant>
+  </target>
+
+  <target name="test-xml-file-comparator-task" description="Run the XML File Comparator tests">
+    <launch-test-macro
+      testproduct="munit_xml_file_comparator"
+      alias="base"
+      alias-file="${core.product.dir}/config/gis_aliases"
+      testfile="${projects.dir}/build_tools/scripts/run_tests.magik"
+      dir="${core.product.dir}" 
+      test.products.dirs="${xml_file_comparator.home}">
+          <env if:set="central.deploy.dir" key="SMALLWORLD_REGISTRY" value="${central.deploy.dir}\smallworld_registry"/>
+          <env key="TEST_MODULE" value="xml_file_comparator_tests" />
+    </launch-test-macro>
+  </target>
+
+  <target name="ivy-publish-xml-file-comparator-task" depends="ivy-configure-task" description="Publish the XML File Comparator">
+    <ivy:resolve file="${xml_file_comparator.home}/ivy.xml"/>
+    <ivy:publish resolver="${publish.type}-rep" forcedeliver="true" conf="*" overwrite="true" revision="${version.number.complete}">
+        <artifacts pattern="${xml_file_comparator.build.dir}/[type]s/[artifact]-[revision].[ext]"/>
+    </ivy:publish>
+  </target>
+
+  <target name="ivy-publish-munit-task" depends="ivy-configure-task">
     <ivy-publish-macro pattern="${output.dir}/[artifact].[ext]"/>
-  </target>  
+  </target>
+
+
+  <target name="compile-java-task" depends="build-xml-file-comparator-task"/>
+  <target name="post-compile-java-task" depends="test-xml-file-comparator-task"/>
+  <target name="ivy-publish-artifactory-task" depends="ivy-configure-task, ivy-publish-munit-task, ivy-publish-xml-file-comparator-task"/>
 </project>

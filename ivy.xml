@@ -10,5 +10,6 @@
   <publications/>
 
   <dependencies>
+    <dependency org="com.gesmallworld" name="com.gesmallworld.magik.google_maps.installer" rev="${gma.target.version}" conf="installer->installer" transitive="true" />
   </dependencies>
 </ivy-module>

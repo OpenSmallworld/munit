@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src/main/java"/>
-	<classpathentry kind="src" path="src/test/resources"/>
-	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="lib" path="libs/xmlunit-core-2.4.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/magik.interop"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/magik.commons"/>
-	<classpathentry kind="lib" path="C:/projects/hg/gis_adapter/tests/test_utils/xml_file_comparator/libs/com.gesmallworld.xml_file_comparator-qualifier.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
