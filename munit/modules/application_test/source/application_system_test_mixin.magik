@@ -985,7 +985,7 @@ _method application_system_test_mixin.when_refreshing_the_map()
 		view.sys!slot( :controller ).add_dependent( _self )
 	_endloop
 
-	_self.when_clicking_item( "application|map_gui_framework.view_refresh" )
+	_self.map_manager.action(:view_refresh).execute_action()
 
 	# Wait for each view to finish rendering.  Wait for a maximum
 	# of 1 second per view
@@ -1467,6 +1467,9 @@ _method application_system_test_mixin.then_map_contains( rwo_collection_name, ex
 	## 
 	## Asserts the map contains the correct number of rwos from the
 	## specified collection.
+
+	# Refresh the map to make sure it has finished rendering before asking the question
+	_self.when_refreshing_the_map()
 
 	geoms << _self.get_map_geoms()
 	
