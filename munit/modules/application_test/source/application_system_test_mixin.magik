@@ -967,16 +967,15 @@ _method application_system_test_mixin.when_going_to_bounds( xmin, ymin, xmax, ym
 _endmethod
 $
 
-
 _pragma(classify_level=debug)
-_method application_system_test_mixin.when_refreshing_the_map()
+_method application_system_test_mixin.when_the_map_has_finished_rendering(_optional proc_to_run)
 	## 
-	## Refresh the map and wait for the rendering to complete
+	## Wait for the rendering to complete
+	## If proc_to_run is provided, execute this between starting to wait and completion
 	##
 
 	# Add self as a dependent on the render_controller to be able
 	# to wait for :end_render
-	
 	current_map << _self.map_manager.current_map
 	n_views << 0
 	_for view _over current_map.views()
@@ -985,8 +984,11 @@ _method application_system_test_mixin.when_refreshing_the_map()
 		view.sys!slot( :controller ).add_dependent( _self )
 	_endloop
 
-	_self.map_manager.action(:view_refresh).execute_action()
-
+	_if proc_to_run _isnt _unset
+	_then
+		proc_to_run.invoke()
+	_endif
+	
 	# Wait for each view to finish rendering.  Wait for a maximum
 	# of 1 second per view
 	_self.remove_value_from_queue( :end_render )
@@ -1001,12 +1003,28 @@ _method application_system_test_mixin.when_refreshing_the_map()
 		n_views +<< 1
 		view.sys!slot( :controller ).remove_dependent( _self )
 	_endloop
-
+	
 	>> _self 
 	
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_refreshing_the_map()
+	## 
+	## Refresh the map and wait for the rendering to complete
+	##
+
+	_local map_man << _self.map_manager
+	refresh_proc << _proc()
+				_import map_man
+				map_man.action(:view_refresh).execute_action()
+			_endproc
+
+	_self.when_the_map_has_finished_rendering(refresh_proc)
+	
+_endmethod
+$
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_set_defaults_button()
@@ -1468,8 +1486,8 @@ _method application_system_test_mixin.then_map_contains( rwo_collection_name, ex
 	## Asserts the map contains the correct number of rwos from the
 	## specified collection.
 
-	# Refresh the map to make sure it has finished rendering before asking the question
-	_self.when_refreshing_the_map()
+	# Make sure the map has finished rendering before asking the question
+	_self.when_the_map_has_finished_rendering()
 
 	geoms << _self.get_map_geoms()
 	
