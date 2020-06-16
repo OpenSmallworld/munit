@@ -108,9 +108,19 @@ _method eo_dnom_test_mixin.create_station_export_request()
 	request.set_property( :test_mode?, _true )
 
 	# write the internals files for tests
-	request.set_property( :export_station_internals?, _true )
+	request.set_property( :export_station_internals?,
+			      _self.properties[:export_station_internals?].default(_true) )
 
 	_return request 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_export_station_internals(val)
+
+	_self.properties[:export_station_internals?] << val
+	
+	_return _self 
 _endmethod
 $
 

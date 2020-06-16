@@ -102,7 +102,8 @@ _method eo_dnom_base_case.export_differences_from_current_design_locally( )
 	request.set_property( :test_mode?, _true )
 
 	# always export the external fiels
-	request.set_property( :export_station_internals?, _true )
+	request.set_property( :export_station_internals?,
+			      _self.properties[:export_station_internals?].default(_true) )
 	
 	# sw_dnom_split_export_manager now requires exchange_job_id property to be set
 	request.set_property( :exchange_job_id, :dummy_exchange_job_id )
