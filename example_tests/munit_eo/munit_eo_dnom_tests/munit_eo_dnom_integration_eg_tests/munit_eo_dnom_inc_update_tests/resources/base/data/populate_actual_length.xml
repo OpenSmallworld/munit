@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Substation>
+	<Id>sub_substation_1168768_dnom_substation</Id>
+	<Name>Villa Road Primary</Name>
+	<AltName>Villa Road Primary</AltName>
+	<SymbolPlacement>
+		<GeometryType>DETAIL</GeometryType>
+		<Vertex>
+			<X>543651.2285</X>
+			<Y>262955.972</Y>
+		</Vertex>
+	</SymbolPlacement>
+	<Line IncrChangeType="Update">
+		<Id>eo_cable_segment_inst_1172408-NL.1374125-NH.VR33_001</Id>
+		<Feeder1>VR33_001</Feeder1>
+		<FromNode>1374125</FromNode>
+		<ToNode>VR33_001</ToNode>
+		<Phase>ABC</Phase>
+		<NormallyDeenergized>false</NormallyDeenergized>
+		<ConstructionModel>Unknown NA-UG</ConstructionModel>
+		<ConductorModelA>3A_XLPE_185_11-UG</ConductorModelA>
+		<ConductorModelB>3A_XLPE_185_11-UG</ConductorModelB>
+		<ConductorModelC>3A_XLPE_185_11-UG</ConductorModelC>
+		<ConductorModelN>Unknown-UG</ConductorModelN>
+		<Length>160.0</Length>
+		<NumCircuits>1</NumCircuits>
+		<LinePlacement>
+			<GeometryType>DETAIL</GeometryType>
+			<Vertex>
+				<X>543693.308</X>
+				<Y>262978.705</Y>
+			</Vertex>
+			<Vertex>
+				<X>543765.093</X>
+				<Y>262907.273</Y>
+			</Vertex>
+			<Vertex>
+				<X>543812.688</X>
+				<Y>262948.415</Y>
+			</Vertex>
+		</LinePlacement>
+	</Line>
+	<IsSubFed>false</IsSubFed>
+</Substation>

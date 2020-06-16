@@ -1,0 +1,96 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:eo_dnom_test_helper,
+	{
+	},
+	{})
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_helper.set_substation_live_status_in_metadata(substation_id, live?, _optional want_increments? )
+	##
+	## Set the live status for substation named SUBSTATION_ID to LIVE?
+	##
+	## SUBSTATION_ID: name or number of substation record
+	##
+
+	_local substation_provider << sw_dnom_substation_export_helper.get_substation_provider_instance()
+	_local substation << substation_provider.get_station( substation_id )
+	
+	_if substation _is _unset
+	_then
+		_return
+	_endif
+
+	_local substation_urn << urn_manager.get_urn_from_object(substation)
+	_local an_engine << sw_cim_metadata_engine.get_instance()
+	_local substation_meta << an_engine.sys!perform( :get_metadata_for_station_urn|()| , substation_urn)
+
+	_local proposed_values << property_list.new()
+	_if substation_meta.live? _isnt live?
+	_then
+		proposed_values[:live?] << live?
+	_endif
+
+	_if want_increments? _isnt _unset _andif 
+	    substation_meta.want_increments _isnt want_increments?
+	_then
+		proposed_values[:want_increments] << want_increments?	
+	_endif
+
+	_if _not proposed_values.empty?
+	_then
+		_local trans << record_transaction.new_update(substation_meta, proposed_values)
+		trans.run()
+	_endif 
+
+	>> substation_meta
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_helper.dnom_plugin(application)
+	##
+	## Return the DNOM adapter plugin configured into the
+	## application APPLICATION.
+	##
+	>> application.plugin(:dnom_adapter)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_helper.allow_export_of_lv(application)
+	##
+	## Set the properties on the DNOM plugin in the application
+	## APPLICATION so that LV can be exported.
+	##
+	pl << _self.dnom_plugin(application)
+
+	pl.exclude_lv_from_export? << _false
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_helper.allow_export_of_structures(application)
+                ##
+                ## Set the properties on the DNOM plugin in the application
+                ## APPLICATION so that structures can be exported.
+                ##
+                pl << _self.dnom_plugin(application)
+
+                pl.exclude_structures_from_export?<< _false
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_helper.set_output_path(output_path, application)
+	##
+	## Set the output path for DNOM exports to OUTPUT_PATH in the
+	## application APPLICATION
+	##
+	pl << _self.dnom_plugin(application)
+	pl.output_path << output_path
+_endmethod
+$
