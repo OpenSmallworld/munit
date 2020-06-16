@@ -244,13 +244,6 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_inc_update_itest_base.given_circuits_are_rebuilt(_gather circuit_ids)
-
-	_return _self.when_rebuilding_circuits(_scatter circuit_ids)
-_endmethod
-$
-
-_pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.when_design_differences_are_exported()
 	##
 	_super.when_design_differences_are_exported()
