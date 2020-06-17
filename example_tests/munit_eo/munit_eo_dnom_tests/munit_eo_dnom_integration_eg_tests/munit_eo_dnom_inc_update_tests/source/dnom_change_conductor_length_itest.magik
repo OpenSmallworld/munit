@@ -27,32 +27,32 @@ _method dnom_change_conductor_length_itest.test_populate_actual_length()
 _endmethod
 $
 
-_pragma(classify_level=debug)
-_method dnom_change_conductor_length_itest.test_change_ar_route_length()
-
-	_self.
-		given_substations_are_alive("Saxon Way SS").
-		given_an_eo_object(:ed_pole, :id, 313501).
-		given_prop_value_translated_point(:location, -400, 0).		
-		given_run_update_transaction().
-		when_design_differences_are_exported().
-		then_the_file_sets_are_exported("change_wire_accurate_route_length")
-
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method dnom_change_conductor_length_itest.given_prop_value_translated_point(p_field, p_dx, p_dy)
-
-	.properties[:proposed_values] << property_list.new()
-
-	l_new_x << .properties[:object_of_interest].perform(p_field).coord.x + p_dx
-	l_new_y << .properties[:object_of_interest].perform(p_field).coord.y + p_dy
-	
-	new_coord << coordinate(l_new_x, l_new_y)
-
-	.properties[:proposed_values][p_field] << pseudo_point.new_at(new_coord)	
-
-	_return _self
-_endmethod
-$
+#_pragma(classify_level=debug)
+#_method dnom_change_conductor_length_itest.test_change_ar_route_length()
+#
+#	_self.
+#		given_substations_are_alive("Saxon Way SS").
+#		given_an_eo_object(:ed_pole, :id, 313501).
+#		given_prop_value_translated_point(:location, -400, 0).		
+#		given_run_update_transaction().
+#		when_design_differences_are_exported().
+#		then_the_file_sets_are_exported("change_wire_accurate_route_length")
+#
+#_endmethod
+#$
+#
+#_pragma(classify_level=debug)
+#_method dnom_change_conductor_length_itest.given_prop_value_translated_point(p_field, p_dx, p_dy)
+#
+#	.properties[:proposed_values] << property_list.new()
+#
+#	l_new_x << .properties[:object_of_interest].perform(p_field).coord.x + p_dx
+#	l_new_y << .properties[:object_of_interest].perform(p_field).coord.y + p_dy
+#	
+#	new_coord << coordinate(l_new_x, l_new_y)
+#
+#	.properties[:proposed_values][p_field] << pseudo_point.new_at(new_coord)	
+#
+#	_return _self
+#_endmethod
+#$
