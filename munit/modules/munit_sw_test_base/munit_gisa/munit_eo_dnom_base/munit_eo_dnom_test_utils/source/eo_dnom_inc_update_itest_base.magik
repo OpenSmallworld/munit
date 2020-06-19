@@ -355,6 +355,10 @@ _method eo_dnom_inc_update_itest_base.then_the_calculated_files_match_the_golden
 	calc_diff_files << .properties[:calculated_diff_files]
 	_for index, calc_diff_file _over calc_diff_files.fast_keys_and_elements()
 	_loop
+		_if calc_diff_file _is _unset
+		_then
+			_continue # no substation export, only schematics
+		_endif		
 		reference_file << file_sets[index]
 		_if _not _self.incorrect_golden_files.includes_by_equality?(reference_file)
 		_then

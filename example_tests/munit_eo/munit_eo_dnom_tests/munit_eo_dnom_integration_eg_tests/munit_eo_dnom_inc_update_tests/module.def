@@ -5,11 +5,7 @@ description
 end
 
 requires
-	munit_base
-	eo_munit_base
 	munit_eo_dnom_test_utils
-	munit_eo_dnom_model_test_utils
-	munit_eo_gisa_test_db_utils
 end
  
 tests_modules

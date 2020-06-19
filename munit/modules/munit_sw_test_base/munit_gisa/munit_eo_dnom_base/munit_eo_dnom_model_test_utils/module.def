@@ -5,5 +5,5 @@ description
 end
 
 requires
-	munit_eo_dnom_test_utils
+
 end
