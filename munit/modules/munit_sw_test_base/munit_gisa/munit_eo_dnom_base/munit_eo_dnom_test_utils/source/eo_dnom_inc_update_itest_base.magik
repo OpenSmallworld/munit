@@ -20,6 +20,12 @@ eo_dnom_inc_update_itest_base.define_shared_constant( :incorrect_golden_files, {
 	}, :public )
 $
 
+_pragma(classify_level=restricted)
+## Module name with the golden files for initial export used to find the
+## differences in the incremaltal update export tests
+eo_dnom_inc_update_itest_base.define_shared_constant(:initial_export_module_name, :munit_eo_dnom_station_export_tests, :private)
+$
+
 _pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.base_station_export_file_name_to_use(station_name)
 	## Defines a file name of base station export file to be used
@@ -343,7 +349,7 @@ _private _method eo_dnom_inc_update_itest_base.get_initial_export_file_for_stati
 	before_file_name << write_string(station_name, ".xml")
 	before_file << smallworld_product.get_resource_file( before_file_name,
 							     "data",
-							     :munit_eo_dnom_station_export_tests )
+							     _self.initial_export_module_name )
 	>> before_file
 _endmethod
 $
