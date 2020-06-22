@@ -108,9 +108,19 @@ _method eo_dnom_test_mixin.create_station_export_request()
 	request.set_property( :test_mode?, _true )
 
 	# write the internals files for tests
-	request.set_property( :export_station_internals?, _true )
+	request.set_property( :export_station_internals?,
+			      _self.properties[:export_station_internals?].default(_true) )
 
 	_return request 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_export_station_internals(val)
+
+	_self.properties[:export_station_internals?] << val
+	
+	_return _self 
 _endmethod
 $
 
@@ -118,34 +128,6 @@ _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.then_station_file_was_written(p_flag?)
 
 	_return _self.int!then_file_was_written( _false, p_flag? )
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method eo_dnom_test_mixin.then_station_internal_file_was_written(p_flag?)
-
-	_return _self.int!then_file_was_written( _true, p_flag? )
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method eo_dnom_test_mixin.then_station_internal_file_has_not_been_created()
-	##
-	## see sw_dnom_xml_write_component.write_dnom_substation_to_file
-	## Differs from the then_station_internal_file_was_written that
-	## it check if the file has been writen at all, not write and
-	## then removed during zipping.
-	##
-	xml_files << _self.properties[:written_substations].an_element()
-		
-	_self.assert_equals(1, xml_files.size, "Expected exactly one file, when #1")
-	_for filename _over xml_files.fast_elements()
-	_loop
-		message << write_string("Internal file has been writed in ", filename,
-					" when it has been explictly required not to.")
-		_self.assert_unset(filename.index_of_seq("INTERNAL"), message)
-	_endloop
-	_return _self 
 _endmethod
 $
 
@@ -522,11 +504,9 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name)
 	## 
 	##
 	written_substations << _self.properties[:written_substations].an_element()
-	_self.assert_equals(written_substations.size, 2, "Expected two Substation xmls, when got #1")
+	_self.assert_equals(written_substations.size, 1, "Expected one Substation xml, when got #1")
 	reference_xml_file << ref_file_name + ".xml"
-	reference_int_xml_file << ref_file_name + "_internal.xml"
 	_self.assert_xml_files_equals( reference_xml_file, written_substations[1])
-	_self.assert_xml_files_equals( reference_int_xml_file, written_substations[2])
 	
 	_if _self.using_previous_dnom_version?
 	_then
@@ -534,7 +514,7 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name)
 	_endif
 
 	written_dss << _self.properties[:written_distribution_systems].an_element()
-	_self.assert_equals(written_substations.size, 2, "Expected two DistributionSystem xmls, when got #1")
+	_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
 	reference_ortho_schematic << ref_file_name + "_schem_ortho.xml"	
 	reference_geo_schematic << ref_file_name + "_schem_geo.xml"
 	_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1])
