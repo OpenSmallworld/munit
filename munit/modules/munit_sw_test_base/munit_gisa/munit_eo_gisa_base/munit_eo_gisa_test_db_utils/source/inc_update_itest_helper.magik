@@ -1,0 +1,245 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+$
+
+##
+## This is a helper class to get at installation and asset objects for a circuit.
+## It works for an application - !current_application!. Hence this must be set before using methods
+## on this class
+
+_pragma(classify_level=debug)
+##
+def_slotted_exemplar(:inc_update_itest_helper, {}, {})
+$
+
+_pragma(classify_level=debug)
+inc_update_itest_helper.define_shared_constant(:circ_association_equipment, "equipment", _false)
+$
+
+_pragma(classify_level=debug)
+inc_update_itest_helper.define_shared_constant(:circ_association_line_segments, "line_segments", _false)
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_circuit(circ_id)
+	_local app << !current_application!
+	_local circuit_coll << app.database.dataset(:electric).collection(:eo_circuit)
+	_local circuit << circuit_coll.select(predicate.eq(:circuit_id, circ_id)).an_element()
+
+	 >> circuit
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_named_installation(col_name, name)
+
+	c << !current_application!.database.dataset(:electric).collection(col_name)
+	_return c.select(predicate.eq(:name, name)).an_element()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_eqpt_installation_on_circuit(circuit, inst_name)
+	##
+	## Assumption is that the installation name is unique on the circuit
+
+	>> circuit.equipment.select(predicate.eq(:name, inst_name)).an_element()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_line_seg_installation_on_circuit(circuit, inst_name)
+	##
+	## Assumption is that the installation name is unique on the circuit
+
+	>> circuit.get_line_segments().select(predicate.eq(:name, inst_name)).an_element()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_installation_on_circuit(circuit, inst_name, circ_assoc_name)
+	##
+	## Assumption is that the installation name is unique on the circuit
+	_if circ_assoc_name = inc_update_itest_helper.circ_association_equipment
+	_then
+		installation << inc_update_itest_helper.get_eqpt_installation_on_circuit(circuit, inst_name)
+	_elif circ_assoc_name = inc_update_itest_helper.circ_association_line_segments
+	_then 
+		installation << inc_update_itest_helper.get_line_seg_installation_on_circuit(circuit, inst_name)
+	_endif
+
+	>> installation
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_asset_on_installation(inst, asset_id)
+	##
+	## Assumption is that the asset_id is unique for the installation for the relevant phase
+
+	>> inst.get_relevant_assets().select(predicate.eq(:asset_id, asset_id )).an_element()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_asset_on_installation_by_field_match(inst, asset_match_field, asset_match_value)
+	##
+	## Assumption is that the asset_match_field is valid and asset_match_value is unique for the installation for the relevant phase
+
+	>> inst.get_relevant_assets().select(predicate.eq(asset_match_field.as_symbol(), asset_match_value )).an_element()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_eqpt_asset_on_circuit(circuit, inst_name, asset_id)
+
+	inst << inc_update_itest_helper.get_eqpt_installation_on_circuit(circuit, inst_name)
+	asset << inc_update_itest_helper.get_asset_on_installation(inst, asset_id)
+	>> (asset, inst)
+
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_line_seg_asset_on_circuit(circuit, inst_name, asset_id)
+
+	inst << inc_update_itest_helper.get_line_seg_installation_on_circuit(circuit, inst_name)
+	asset << inc_update_itest_helper.get_asset_on_installation(inst, asset_id)
+	>> (asset, inst)
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_asset_on_circuit(circuit, inst_name, asset_id, circ_assoc_name)
+
+	inst << inc_update_itest_helper.get_installation_on_circuit(circuit, inst_name, circ_assoc_name)
+	asset << inc_update_itest_helper.get_asset_on_installation(inst, asset_id)
+	>> (asset, inst)
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_eqpt_asset_on_circuit_by_field_match(circuit, inst_name, asset_match_field, asset_match_value )
+
+	inst << inc_update_itest_helper.get_eqpt_installation_on_circuit(circuit, inst_name)
+	asset << inc_update_itest_helper.get_asset_on_installation_by_field_match(inst, asset_match_field, asset_match_value)
+	>> (asset, inst)
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_existing_phase_for_asset(asset, phase_name)
+	
+	>> asset.existing_phases.select(predicate.eq(:phase, phase_name)).an_element()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_named_structure_from_circuit(circuit, rwo_type, struct_name)
+	structs << circuit.get_structures().rwo_set().cs_get_unique_rwo_type(rwo_type)
+	>> structs.select(predicate.eq(:asset_id, struct_name)).an_element()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_named_structure(rwo_type, struct_name)
+
+	col << !current_application!.database.dataset(:electric).collection(rwo_type)
+	>> col.select(predicate.eq(:name, struct_name)).an_element()
+
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_sp_on_circuit_by_alias(circuit, alias)
+	##
+	## Assumption is that the alias name is unique on the circuit
+
+	>> circuit.equipment.select(predicate.eq(:alias, alias)).an_element()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.get_record_by_id(table_name, id)
+	##
+
+	_return !current_application!.database.dataset(:electric).collection(table_name).at(id)
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.remove_asset(installation, asset)
+
+	installation.remove_assets(rwo_set.new_with(asset))
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.propose_remove_asset(installation, asset)
+
+	installation.propose_remove_assets(rwo_set.new_with(asset))
+
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.find_specification(spec_type, spec_name, device_type)
+
+	app << !current_application!
+	spec_col << app.database.dataset(:electric).collection(spec_type)
+
+	pp << predicate
+	_if spec_name _isnt _unset 
+	_then
+		pp << pp.and(predicate.new(:spec_name, :eq, spec_name))
+	_endif
+
+	_if device_type _isnt _unset 
+	_then
+		pp << pp.and(predicate.new(:device_type, :eq, device_type))
+	_endif
+	
+	_return spec_col.select(pp).an_element()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.edit_chain_geometry(installation, connector_field, coords, _optional world)
+
+	sec << sector.new_from(coords_vector.new_with_xy(_scatter coords))
+	inst_world << world.default(installation.perform(connector_field).world)
+	route_val << pseudo_chain.new_for_world(sec,  inst_world)
+	>> record_transaction.new_update(installation, property_list.new_with(connector_field, route_val)).run()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.edit_point_geometry(installation, geom_field, coords)
+
+	point_coord << coordinate.new(_scatter coords)
+	geom << installation.perform(geom_field)
+	point_val << pseudo_point.new_with(geom)
+	point_val.coord << point_coord
+	point_val.orientation << 90.0
+	>> record_transaction.new_update(installation, property_list.new_with(geom_field, point_val)).run()
+
+_endmethod
+$

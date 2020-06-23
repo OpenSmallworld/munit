@@ -1,0 +1,202 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar( :dnom_canonicalizer,
+	{
+		{:types, _unset}
+	}, {} )
+$
+
+_pragma(classify_level=restricted)
+_method dnom_canonicalizer.new()
+	## 
+	## 
+	>> _clone.init()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_canonicalizer.init()
+	## 
+	##
+	.types << dnom_xsd_parser.get_types()
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_canonicalizer.canonicalize(input_file, output_file)
+	## 
+	## 
+	input << _self.read_xml(input_file)
+
+	output << _self.canonicalize_element(input, input.type.write_string)
+
+	_self.write_xml(output_file, output)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_canonicalizer.read_xml(xml_file)
+	## 
+	## 
+	_return simple_xml.new().read_element_file(xml_file)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_canonicalizer.write_xml(output_file, output)
+	## 
+	## 
+	_dynamic !text_encoding!
+	!text_encoding! << :utf8
+
+	simple_xml.write_element_file(output_file, output)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_canonicalizer.canonicalize_element(input, data_type)
+	## 
+	##
+	>> _if .types.is_dnom_complex_type?(data_type)
+		_then
+			>> _self.dnom_object_canonicalization(input,data_type)
+		_else
+			>> input
+		_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_canonicalizer.dnom_object_canonicalization(input, input_type)
+	## 
+	##
+	canonicalized_elements << rope.new()
+	_for element _over input.elements.fast_elements()
+	_loop
+		data_type << .types.data_type_for_field(input_type, element.type)
+		canonicalized_sub_element << _self.canonicalize_element(element, data_type)
+		canonicalized_elements.add(canonicalized_sub_element)
+	_endloop
+	
+	reordered_elements << _self.reorder_elements(input_type, canonicalized_elements)
+	
+	>> simple_xml_thing.new(input.type, reordered_elements, input.attributes)       
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_canonicalizer.is_dnom_type?(type)
+	## 
+	## 
+	_return _not (type _is _unset _orif type.write_string.matches?("xs:*"))
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_canonicalizer.is_dnom_container_type?(type)
+	## 
+	## 
+	_if _self.is_dnom_type?(type)
+	_then
+		field_names << .types.ordered_field_names_for_type(type.write_string)
+		_if field_names.includes?(:|Objects|)
+		_then
+			_return _true
+		_endif
+	_endif
+	_return _false
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_private _method dnom_canonicalizer.default_canonicalization(input)
+	## 
+	## 
+	>> input
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_canonicalizer.reorder_elements(owning_type, canonicalized_elements)
+	## 
+	##
+	field_names << .types.ordered_field_names_for_type(owning_type.write_string)
+
+	to_order << rope.new()
+	_for index, el _over canonicalized_elements.fast_keys_and_elements()
+	_loop
+		field_order_index << field_names.index_of(el.type.as_symbol())
+		id << _self.get_id_for_element(el)
+		to_order.add({field_order_index, id, index, el})
+	_endloop
+
+	sorted << sorted_collection.new_from(to_order,
+					     _proc(a,b)
+						     cf1 <<  a[1] _cf b[1]
+						     >> _if cf1 _isnt _maybe
+							_then
+								>> cf1
+							_else
+								cf2 << a[2] _cf b[2]
+								>> _if cf2 _isnt _maybe
+								   _then
+									   >> cf2
+								   _else
+									   >> a[3] _cf b[3]
+								   _endif
+							_endif
+					     _endproc)
+	
+	sorted_els << rope.new()
+	_for el_info _over sorted.fast_elements()
+	_loop
+		sorted_els.add(el_info[4])
+	_endloop
+	
+	_return sorted_els
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_canonicalizer.get_id_for_element(el)
+	## 
+	## 
+	id << _if el.type = "LabelPlacement"
+	      _then
+		      >> _self.get_id_for_label_placement(el)
+	      _elif (id_el << el.element_matching_name("Id")) _isnt _unset
+	      _then
+		      >> id_el.elements[1]
+	      _elif (id_el << el.element_matching_name("ID")) _isnt _unset
+	      _then
+		      >> id_el.elements[1]
+	      _elif (id_el << el.element_matching_name("Name")) _isnt _unset
+	      _then
+		      >> id_el.elements[1]
+	      _endif
+	>> id.default("")
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_canonicalizer.get_id_for_label_placement(el)
+	## 
+	## 
+	_if (gt << el.element_matching_name("GeometryType")) _isnt _unset  _andif
+			(x << el.element_matching_name("X")) _isnt _unset  _andif
+			(y << el.element_matching_name("Y")) _isnt _unset  _andif
+			(rotation << el.element_matching_name("Rotation")) _isnt _unset _andif
+			(text << el.element_matching_name("Text")) _isnt _unset
+	_then
+		text_str << _if text.elements.size>0 _then >> text.elements[1] _else  >> "" _endif
+		_return write_string(gt.elements[1],"$",x.elements[1],"$",y.elements[1],"$",rotation.elements[1],"$",text_str )
+	_endif
+	_return ""
+_endmethod
+$
+

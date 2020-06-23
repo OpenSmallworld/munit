@@ -1,0 +1,117 @@
+#% text_encoding = iso8859_1
+_package sw
+
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar( :dnom_xsd_types,
+	{
+		{:types, _unset}
+	}, {} )
+$
+
+_pragma(classify_level=restricted)
+_method dnom_xsd_types.new()
+	## 
+	## 
+	>> _clone.init()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_xsd_types.init()
+	## 
+	##
+	.types << concurrent_hash_map.new()
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_xsd_types.add(xml_type, complex_type)
+	## 
+	## 
+	.types[xml_type] << complex_type
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_xsd_types.output()
+	## 
+	## 
+	_for name, type _over .types.fast_keys_and_elements()
+	_loop
+		show(name, type[:base], "********")
+		_for field _over type[:fields].fast_elements()
+		_loop
+			show("    ", field[:name], field[:type], field[:minOccurs], field[:maxOccurs])
+		_endloop
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_xsd_types.fields_for_type(type_name)
+	## 
+	## 
+	type << .types[type_name]
+	base_type_name << type[:base]
+	local_fields << _self.local_fields_for_type(type_name)
+	_if base_type_name _isnt _unset
+	_then
+		inherited_fields << _self.fields_for_type(base_type_name)
+		inherited_fields.add_all_last(local_fields)
+		all_fields << inherited_fields
+	_else
+		all_fields << local_fields
+	_endif
+	_return all_fields
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_xsd_types.local_fields_for_type(type_name)
+	## 
+	## 
+	>> rope.new_from(.types[type_name][:fields])
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_xsd_types.ordered_field_names_for_type(type_name)
+	## 
+	## 
+	fields << _self.fields_for_type(type_name)
+	names << rope.new()
+	_for field _over fields.fast_elements()
+	_loop
+		names.add_last(field[:name].as_symbol())
+	_endloop
+	>> names
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_xsd_types.data_type_for_field(type_name, field_name)
+	## 
+	##
+	type << .types[type_name.write_string]
+	fields << type[:fields]
+	_for field _over fields.fast_elements()
+	_loop
+		_if field[:name] = field_name
+		_then
+			_return field[:type]
+		_endif
+	_endloop
+	_return _unset
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_xsd_types.is_dnom_complex_type?(type_name)
+	## 
+	## 
+	type << .types[type_name.write_string]
+	_return type _isnt _unset
+_endmethod
+$

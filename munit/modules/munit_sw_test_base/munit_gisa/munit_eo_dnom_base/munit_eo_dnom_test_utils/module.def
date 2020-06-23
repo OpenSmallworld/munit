@@ -6,5 +6,7 @@ end
 
 requires
 	munit_eo_gisa_test_utils
+	munit_eo_dnom_model_test_utils
+	munit_eo_gisa_test_db_utils
 	xml_file_comparator
 end

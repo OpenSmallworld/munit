@@ -1,0 +1,284 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar( :dnom_diff,
+	{
+		{:canonicalizer, _unset}
+	}, {} )
+$
+
+_pragma(classify_level=restricted)
+_method dnom_diff.new()
+	## 
+	## 
+	>> _clone.init()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_diff.init()
+	## 
+	##
+	.canonicalizer << dnom_canonicalizer.new()
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_diff.diff(before_file, after_file, output_file)
+	## 
+	## 
+
+	before << _self.read_and_canonicalize(before_file)
+	after << _self.read_and_canonicalize(after_file)
+
+	output << _self.int!diff(before, after)
+
+	_if output _is _unset
+	_then
+		write("No differences found")
+		_return _false
+	_endif
+	
+	output_canon << _self.canonicalize_element(output)
+	_self.write_xml(output_file, output_canon)
+	_return _true
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_diff.read_and_canonicalize(file)
+	## 
+	## 
+	el << _self.read_xml(file)
+	>> _self.canonicalize_element(el)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_diff.canonicalize_element(el)
+	## 
+	## 
+	>> .canonicalizer.canonicalize_element(el, el.type.write_string)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_diff.read_xml(xml_file)
+	## 
+	##
+	# TODO: Copied from dnom_canonicalizer
+	_return simple_xml.new().read_element_file(xml_file)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_diff.write_xml(output_file, output)
+	## 
+	## 
+	# TODO: Copied from dnom_canonicalizer
+	_dynamic !text_encoding!
+	!text_encoding! << :utf8
+
+	simple_xml.write_element_file(output_file, output)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_diff.int!diff(before, after)
+	## 
+	## 
+	(before_station, before_objects) << _self.split_element(before)
+	(after_station, after_objects) << _self.split_element(after)
+
+	changed_objects << _self.get_changed_objects(before_objects, after_objects)
+	station_changed? << _self.station_changed?(before_station, after_station)
+
+	>> _if _not changed_objects.empty? _orif station_changed?
+	   _then
+		   elements << rope.new_from(after_station.elements)
+		   elements.add_all_last(changed_objects)
+		   
+		   attributes << property_list.new()
+		   _if station_changed?
+		   _then
+			   attributes["IncrChangeType"] << "Update"
+		   _endif
+		   
+		   >> simple_xml_thing.new(after_station.type, elements, attributes)
+	   _endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_diff.split_element(el)
+	##
+	## EL represents a station.
+	##
+	## Split this into:
+	##  1. a "simple" station object only containing child elements that are fields
+	##     on the station itself (e.g. Name, LabelPlacement etc.)
+	##  2. a keyed collection of "electrical" objects within the station
+	##     (i.e. objects which should have their own "IncrChangeType" tag).
+	##     For now we assume that those are the objects which have an "Id".
+	##     Collection will be keyed by Id.
+	##
+	## Returns two values:
+	## -  the simplified station as a simple_xml_thing
+	## -  the keyed collection of objects
+	## 
+	objects << concurrent_hash_map.new()
+	other_elements << rope.new()
+	
+	_for child_el _over el.elements.fast_elements()
+	_loop
+		_if (id << _self.get_id(child_el)) _isnt _unset
+		_then
+			objects[id] << child_el
+		_else
+			other_elements.add_last(child_el)
+		_endif
+	_endloop
+
+	station << simple_xml_thing.new(el.type, other_elements, el.attributes)
+	
+	>> station, objects
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_diff.get_id(el)
+	##
+	## If CHILD_EL has an "Id" element, return that.
+	## Otherwise return _unset.
+	##
+	>> _if (id_els << el.element_matching_name("Id")) _isnt _unset
+	   _then
+		   >> id_els.elements[1]
+	   _endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_diff.get_changed_objects(before_objects, after_objects)
+	## 
+	##
+
+	diff_objects << rope.new()
+
+	_for key _over before_objects.keys.fast_elements()
+	_loop
+		before_el << before_objects[key]
+		
+		_if after_objects.includes_key?(key)
+		_then
+			# Possible update?
+			after_el << after_objects[key]
+			_if _not _self.xml_element_same?(before_el, after_el)
+			_then
+				new_el << _self.new_el(after_el, "Update")
+				diff_objects.add(new_el)
+			_endif
+		_else
+			new_el << _self.new_el(before_el, "Delete")
+			diff_objects.add(new_el)
+		_endif
+	_endloop
+
+	_for key _over after_objects.keys.fast_elements()
+	_loop
+		_if _not before_objects.includes_key?(key)
+		_then
+			after_el << after_objects[key]
+			new_el << _self.new_el(after_el, "Create")
+			diff_objects.add(new_el)	
+		_endif
+	_endloop
+
+	>> diff_objects
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_diff.new_el(el, change_tag)
+	## 
+	##
+
+	# TODO Assume el has no attributes - is that reasonable?
+	# TODO Duplication with creating new substation element
+	attributes << property_list.new_with("IncrChangeType", change_tag)
+	>> simple_xml_thing.new(el.type, el.elements, attributes)
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method dnom_diff.station_changed?(before_station, after_station)
+	## 
+	## 
+	>> _not _self.xml_element_same?(before_station, after_station)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_diff.xml_element_same?(an_xml_thing, other_xml_thing)
+	## 
+	## 
+	# TODO Refactor with assert.int!compare_xml()?
+
+	_if an_xml_thing.type _isnt other_xml_thing.type
+	_then
+		_return _false
+	_endif
+
+	an_attrib_list << an_xml_thing.attributes
+	other_attrib_list << other_xml_thing.attributes
+
+	_if an_attrib_list.size _isnt other_attrib_list.size
+	_then
+		_return _false
+	_endif
+
+	_for k,e _over an_attrib_list.fast_keys_and_elements()
+	_loop
+		_if _not ( other_attrib_list[k.as_symbol()] = e.as_symbol() )
+		_then
+			_return _false
+		_endif
+	_endloop
+
+	elements << an_xml_thing.elements
+	other_elements << other_xml_thing.elements
+	_if elements.size _isnt other_elements.size
+	_then
+		_return _false
+	_endif
+
+	# Assume canonicalized order
+	_for index, element _over elements.fast_keys_and_elements()
+	_loop
+		other_element << other_elements[index]
+
+		_if element.class_name <> other_element.class_name
+		_then
+			_return _false
+		_endif
+
+		_if element.is_kind_of?(char16_vector) _andif
+		    other_element.is_kind_of?(char16_vector)
+		_then
+			_if element <> other_element
+			_then
+				_return _false
+			_endif
+		_elif _not _self.xml_element_same?(element, other_element)
+		_then
+			_return _false
+		_endif
+	_endloop
+
+	_return _true
+_endmethod
+$

@@ -1,0 +1,44 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+$
+
+_pragma(classify_level=debug)
+##
+def_slotted_exemplar(:dnom_change_isolating_equipment_type_itest,
+	{
+	}, 
+	{:eo_dnom_inc_update_itest_base})
+$
+
+_pragma(classify_level=debug)
+_method dnom_change_isolating_equipment_type_itest.test_change_fuse_to_switch()
+
+	_self.
+		given_substations_are_alive("Saxon Way SS").
+		given_an_eo_object(:eo_isolating_eqpt_inst, :name, "VikingWay_BH_Fuse01").
+		given_object_assets_new_specification("ID_SW_AIS_630A").
+		when_design_differences_are_exported().
+		then_the_exported_file_set_matches("change_fuse_to_switch")
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_change_isolating_equipment_type_itest.given_object_assets_new_specification(spec)
+	## 
+	## 
+
+	l_new_specification << inc_update_itest_helper.find_specification(:eo_isolating_eqpt_spec,
+									  spec,
+									  _unset)
+	l_props << property_list.new_with(:device_type, l_new_specification.device_type,
+					  :specification, l_new_specification)
+	_for i_asset _over .properties[:object_of_interest].existing_assets().fast_elements()
+	_loop
+		record_transaction.new_update(i_asset, l_props).run()
+	_endloop
+		
+	_return _self
+_endmethod
+$

@@ -1,0 +1,420 @@
+#% text_encoding = iso8859_1
+##
+_package sw
+$
+
+_pragma(classify_level=debug)
+##
+def_slotted_exemplar(:eo_dnom_inc_update_itest_base, 
+{
+}, 
+{:eo_dnom_base_case})
+$
+
+_pragma(classify_level=restricted)
+## A list of golden files which don't match the calculated differences.
+## In some cases a golden file is used by more than one test. For now we assume
+## that if a golden file is incorrect for one test, it is incorrect for all -
+## the assumption seems to be valid for now.
+eo_dnom_inc_update_itest_base.define_shared_constant( :incorrect_golden_files, {
+	}, :public )
+$
+
+_pragma(classify_level=restricted)
+## Module name with the golden files for initial export used to find the
+## differences in the incremaltal update export tests
+eo_dnom_inc_update_itest_base.define_shared_constant(:initial_export_module_name, :munit_eo_dnom_station_export_tests, :private)
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.base_station_export_file_name_to_use(station_name)
+	## Defines a file name of base station export file to be used
+	## when comparing golden files. By default returns the given STATION_NAME.
+	_return station_name
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_dnom_inc_update_itest_base.set_up()
+	## 
+	##
+	_super.set_up()
+
+	.properties[:not_alive_substations] << rope.new()
+	.properties[:alive_substations] << rope.new()
+	
+	_self.set_properties_to_export_everything()
+
+	.properties[:deterministic_identifiers_mode] << :inc_updates
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_dnom_inc_update_itest_base.tear_down()
+	## 
+	## 
+	
+	_super.tear_down()
+	
+	_for i_substation_id _over .properties[:not_alive_substations].fast_elements()
+	_loop
+		eo_dnom_test_helper.set_substation_live_status_in_metadata( i_substation_id, _true )
+	_endloop
+	
+	_for i_substation_id _over .properties[:alive_substations].fast_elements()
+	_loop
+		eo_dnom_test_helper.set_substation_live_status_in_metadata( i_substation_id, _false )
+	_endloop
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.given_substations_are_not_alive(_gather substation_ids)
+	## 
+	## 
+
+	_for i_substation_id _over substation_ids.fast_elements()
+	_loop
+		eo_dnom_test_helper.set_substation_live_status_in_metadata( i_substation_id, _false )
+		.properties[:not_alive_substations].add(i_substation_id)
+	_endloop
+	
+	>> _self 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.given_substations_are_alive(_gather substation_ids)
+	## 
+	## 
+
+	_for i_substation_id _over substation_ids.fast_elements()
+	_loop
+		eo_dnom_test_helper.set_substation_live_status_in_metadata( i_substation_id, _true )
+		.properties[:alive_substations].add(i_substation_id)
+	_endloop
+	
+	>> _self 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.potential_files(file_sets)
+	##
+	sets << rope.new(file_sets.size)
+	_for i, file _over file_sets.fast_keys_and_elements()
+	_loop		
+		sets[i] << property_list.new_with(:substation, file + ".xml",
+						  :internal, file + "_internal.xml",
+						  :ortho_schematic, file + "_schem_ortho.xml",
+						  :geo_schematic, file + "_schem_geo.xml")
+	_endloop
+	_return sets
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.present_goldenfiles(file_sets)
+	## Returns the self.potential_files() filled with the actual goldenfiles,
+	## e.g. lack of a schem_geo goldenfile, indicates that it
+	## should not be exported, and the lsit is _unset there,
+	## e.g. returns a rop of file_sets.size with a element
+	## property_list:
+	## :substation 	"3_add_phase_cable.xml" 
+	## :internal 	"3_add_phase_cable_internal.xml" 
+	## :ortho_schematic 	unset 
+	## :geo_schematic 	unset 
+	##	
+	all_goldenfiles << sw_module_manager.module(_self.module_name).resource_files(:data, _true, _false)
+	goldenfiles << _self.potential_files(file_sets)	
+	_for file_set _over goldenfiles.fast_elements()
+	_loop
+		_for type, filename _over file_set.keys_and_elements()
+		_loop
+			files << all_goldenfiles.all_elements_satisfying(predicate.wild(:yourself, %*+filename))
+			_self.assert_true(files.size <=1, write_string("Expected not more than a one matching file for ", filename))
+			_if files.empty?
+			_then
+				file_set[type] << _unset
+			_else
+				file_set[type] << filename
+			_endif			
+		_endloop
+	_endloop
+	_return goldenfiles	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.exported_sets()
+	## Creates a list similar with self.potential_files(), filled up
+	## with actually exported files; to be compared with the result
+	## of the self.present_goldenfiles()
+	written_substations << _self.properties[:written_substations]
+	written_schematics << _self.properties[:written_distribution_systems]
+
+	substation_names << equality_set.new_from(written_substations.keys)
+	substation_names.add_all(written_schematics.keys)
+
+	exported_sets << rope.new()	
+	_for substation_name _over substation_names.as_sorted_collection().fast_elements()
+	_loop
+		file_set << property_list.new()
+		exported_sets.add_last(file_set)
+		substation_files << written_substations[substation_name].default({})
+		schematic_files << written_schematics[substation_name].default({})
+		substation_file << _unset
+		internal_file << _unset 
+		_for file _over substation_files.fast_elements()
+		_loop
+			_if file.index_of_seq("INTERNAL") _isnt _unset
+			_then
+				_self.assert_unset(internal_file, write_string("Unexpected internal file:", file))
+				internal_file << file
+			_else
+				_self.assert_unset(substation_file, write_string("Unexpected substation file:", file))
+				substation_file << file
+			_endif			
+		_endloop
+
+		geo_schematic << _unset 
+		ortho_schematic << _unset 
+		_for file _over schematic_files.fast_elements()
+		_loop
+			_if file.index_of_seq("PLACEMENTS_1_to_1_Geo-schematic") _isnt _unset
+			_then
+				_self.assert_unset(geo_schematic, write_string("Unexpected geo schematic:", file))
+				geo_schematic << file
+			_elif file.index_of_seq("PLACEMENTS_MV_ortho-schematic") _isnt _unset
+			_then
+				_self.assert_unset(ortho_schematic, write_string("Unexpected ortho schematic:", file))
+				ortho_schematic << file	
+			_endif
+		_endloop
+
+		file_set[:substation] << substation_file
+		file_set[:internal] << internal_file
+		file_set[:ortho_schematic] << ortho_schematic
+		file_set[:geo_schematic] << geo_schematic
+	_endloop
+
+	_return exported_sets	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.then_the_file_sets_are_exported(_gather file_sets)
+	potential_sets << _self.potential_files(file_sets)
+	actual_sets << _self.exported_sets()
+	expected_sets << _self.present_goldenfiles(file_sets)
+
+	_self.assert_equals(expected_sets.size, actual_sets.size, "Different number of file_sets, #1")	
+
+	_for idx, actual_files _over actual_sets.fast_keys_and_elements()
+	_loop
+		expected_files << expected_sets[idx]
+		_for type, actual_file _over actual_files.fast_keys_and_elements()
+		_loop
+			expected_file << expected_files[type]
+			_if expected_file _isnt _unset			    
+			_then
+				_if _self.assert_not_unset(actual_file, write_string("No file written for ", expected_file))
+				_then
+					_self.assert_xml_files_equals(expected_file, actual_file)
+				_endif
+			_else
+				_if _not _self.assert_unset(actual_file, write_string("Unexpected file written ", actual_file))
+				_then
+					# Only for the potential canonicalizer
+					potential_filename << potential_sets[idx][type]
+					_self.assert_xml_files_equals(potential_filename, actual_file) # Only for the canonicalizer
+				_endif
+			_endif
+		_endloop		
+	_endloop	
+
+	_return _self.then_the_calculated_files_match_the_golden_files(_scatter file_sets)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.then_the_exported_file_set_matches(_gather file_set)
+	## 
+	## 
+	>> _self.then_the_file_sets_are_exported(_scatter file_set)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.when_design_differences_are_exported()
+	##
+	_super.when_design_differences_are_exported()
+
+	_self.get_calculated_diff_files();
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.get_calculated_diff_files()
+	##
+	## Calculated expected difference files by comparing before and after full
+	## station exports. We only calculate differences for the full station files
+	## because we're not supporting sending station internals files to Eterra. It
+	## shouldn't be hard to extend this to calculate station internals diffs when we
+	## need them.
+	##
+	# :written_substations and :written_distribution_systems contain the exported
+	# incremental files. These are needed later. We cache them here and set them
+	# back at the end of the method, because it will get overwritten when we
+	# export the stations.
+	 
+	preserved_substations << _self.properties[:written_substations]
+	preserved_ds << _self.properties[:written_distribution_systems]
+
+	calc_diff_files << .properties[:calculated_diff_files] << rope.new()
+	
+	dd << dnom_diff.new()
+	
+	request << .properties[:resulting_request]
+	substation_names << rope.new()
+	_for substation_urn _over request.get_property(:related_substations).fast_elements()
+	_loop
+		substation_names.add_last(urn_manager.get_object_from_urn(substation_urn).name())
+	_endloop
+
+	_for substation_name _over substation_names.as_sorted_collection().fast_elements()
+	_loop
+		goldenfile_name << _self.base_station_export_file_name_to_use(substation_name)
+		write("Exporting: ", substation_name)
+		before_file << _self.get_initial_export_file_for_station(goldenfile_name)
+		after_file << _self.export_station(substation_name)
+		output_file << _self.write_expected_diff(before_file, after_file, dd)
+		calc_diff_files.add_last(output_file)
+	_endloop
+	
+	# Set back to what it was when we started	
+	_self.properties[:written_substations] << preserved_substations
+	_self.properties[:written_distribution_systems] << preserved_ds	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.write_expected_diff(before_file, after_file, dd)
+	## 
+	## 
+	(after_file_name, after_file_path) << system.pathname_components(after_file)
+	output_file_name << write_string("DIFF_", after_file_name)
+	output_file << system.pathname_from_components(output_file_name, after_file_path)		
+	
+	diff? << dd.diff(before_file, after_file, output_file)
+
+	>> _if diff?
+	   _then 
+		   >> output_file
+	   _else
+		   >> _unset
+	   _endif
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.export_station(station_name)
+	## 
+	## 
+	_self.given_a_station(station_name).
+		when_the_station_is_exported()
+
+	wrote_xmls << _self.properties[:written_substations].an_element()
+	station_file << wrote_xmls[1]
+
+	>> station_file	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.get_initial_export_file_for_station(station_name)
+	## 
+	## 
+
+	station_name << sw_dnom_output_filename_generator.canonicalise_value(station_name)
+	before_file_name << write_string(station_name, ".xml")
+	before_file << smallworld_product.get_resource_file( before_file_name,
+							     "data",
+							     _self.initial_export_module_name )
+	>> before_file
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.then_the_calculated_files_match_the_golden_files(_gather file_sets)
+	## 
+	## 
+	calc_diff_files << .properties[:calculated_diff_files]
+	_for index, calc_diff_file _over calc_diff_files.fast_keys_and_elements()
+	_loop
+		_if calc_diff_file _is _unset
+		_then
+			_continue # no substation export, only schematics
+		_endif		
+		reference_file << file_sets[index]
+		_if _not _self.incorrect_golden_files.includes_by_equality?(reference_file)
+		_then
+			_self.check_golden_file_matches_calculated_file(reference_file, calc_diff_file)
+		_else
+			_self.check_golden_file_does_not_match_calculated_file(reference_file, calc_diff_file)
+		_endif
+	_endloop
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.check_golden_file_matches_calculated_file(reference_file, calc_diff_file)
+	## 
+	## 
+	reference_xml_file << reference_file + ".xml"
+	_if calc_diff_file _isnt _unset
+	_then
+		write("Checking ", reference_xml_file, " matches ", calc_diff_file)
+		# We want this step to compare files even when we're running tests with
+		# canonicalization turned on, so we use the int! version of the method.
+		_self.int!assert_xml_files_equals( reference_xml_file, calc_diff_file)
+	_else
+		_self.fail(write_string("No calculated differences, but test expects ", reference_xml_file))
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.check_golden_file_does_not_match_calculated_file(reference_file, calc_diff_file)
+	## 
+	## 
+	_if calc_diff_file _isnt _unset
+	_then
+		reference_xml_file << reference_file + ".xml"
+		write("Checking ", reference_xml_file, " does not match ", calc_diff_file)
+		_self.int!assert_xml_files_not_equal( reference_xml_file, calc_diff_file)
+		
+	# _else golden file exists but calculated diff is empty, so they do not match
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.int!assert_xml_files_not_equal( reference_filename, actual_pathname)
+	## 
+	##
+	(same_file?, report_file) << _self.compare_xml_files(reference_filename , actual_pathname)
+
+	_self.assert_false( same_file?, "The output file unexpectedly matches the reference file" )	
+_endmethod
+$

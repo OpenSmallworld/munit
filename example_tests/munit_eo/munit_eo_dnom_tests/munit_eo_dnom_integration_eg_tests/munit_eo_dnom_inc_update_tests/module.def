@@ -1,0 +1,15 @@
+munit_eo_dnom_inc_update_tests	1
+
+description
+	Incremental update integration tests for DNOM
+end
+
+requires
+	munit_eo_dnom_test_utils
+end
+ 
+tests_modules
+	sw_dnom_adapter
+end
+ 
+hidden

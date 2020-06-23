@@ -1,2 +1,4 @@
 eo_dnom_test_mixin
 eo_dnom_base_case
+eo_dnom_test_helper
+eo_dnom_inc_update_itest_base

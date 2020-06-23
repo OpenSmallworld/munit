@@ -1,0 +1,90 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar( :dnom_xsd_parser,
+	{		
+	}, {} )
+$
+
+_pragma(classify_level=restricted)
+dnom_xsd_parser.define_shared_constant(:dnom_xsd_filenames,
+	{"DNOMConverter.xsd", "DistributionSystem.xsd"},
+	 :private)
+$
+
+_pragma(classify_level=restricted)
+_iter _method dnom_xsd_parser.xsd_files
+	## 
+	##
+	_for filename _over _self.dnom_xsd_filenames.fast_elements()
+	_loop
+		_loopbody(smallworld_product.get_resource_file(filename, "data", :sw_dnom_model))
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_xsd_parser.get_types()
+	## 
+	## 
+	types << dnom_xsd_types.new()
+
+	_for xsd_file _over _self.xsd_files
+	_loop
+		_self.add_types_from_xsd(types, xsd_file)
+	_endloop
+	_return types
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_xsd_parser.add_types_from_xsd(types, xsd_filename)
+	##
+	xml_file << simple_xml.new().read_element_file(xsd_filename)
+	_for x_parent _over xml_file.elements_matching_name("xs:complexType")
+	_loop
+		xml_type << x_parent.attributes["name"]
+		
+		fields << rope.new()
+		complex_type << concurrent_hash_map.new_with(:fields, fields)
+		
+		_self.add_fields(fields, x_parent, complex_type)
+		
+		_for comp_cont _over x_parent.elements_matching_name("xs:complexContent") #complexContent
+		_loop 
+			_local base << _unset 
+			_for ext _over comp_cont.elements_matching_name("xs:extension") #extension
+			_loop
+				_self.add_fields(fields, ext, complex_type)
+			_endloop 
+		_endloop 
+		types.add(xml_type, complex_type)
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_xsd_parser.add_fields(fields, element, complex_type)
+	## 
+	## 
+	base << element.attributes["base"]
+	complex_type[:base] << base
+	
+	_for seq _over element.elements_matching_name("xs:sequence") #sequence
+	_loop
+		_for element _over seq.elements_matching_name("xs:element") #sequence
+		_loop
+			field_info << concurrent_hash_map.new_with(
+					      :minOccurs, element.attributes["minOccurs"],
+					      :maxOccurs, element.attributes["maxOccurs"],
+					      :name, element.attributes["name"],
+					      :type, element.attributes["type"])
+			fields.add(field_info)			
+		_endloop
+	_endloop
+	
+_endmethod
+$
