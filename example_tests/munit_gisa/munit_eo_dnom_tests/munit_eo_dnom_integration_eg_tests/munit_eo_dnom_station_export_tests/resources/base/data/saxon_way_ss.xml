@@ -11433,6 +11433,7 @@
 		<ConnectionControl>false</ConnectionControl>
 	</EnergyResource>
 	<IsSubFed>false</IsSubFed>
+	<strInternalName>SS_SAX001</strInternalName>
 	<FlaggedData>
 		<Id>flg_eo_isolating_eqpt_inst_314067_dnom_breaker_largest_coord_fuse</Id>
 		<RelatedObjectId>eo_isolating_eqpt_inst_314067_dnom_breaker</RelatedObjectId>

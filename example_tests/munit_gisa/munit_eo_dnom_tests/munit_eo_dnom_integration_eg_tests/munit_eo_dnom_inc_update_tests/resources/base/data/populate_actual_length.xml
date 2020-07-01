@@ -11,10 +11,10 @@
 		</Vertex>
 	</SymbolPlacement>
 	<Line IncrChangeType="Update">
-		<Id>eo_cable_segment_inst_1172408-NL.1374125-NH.VR33_001</Id>
+		<Id>eo_cable_segment_inst_1172408-NL.1366983-NH.1374125</Id>
 		<Feeder1>VR33_001</Feeder1>
-		<FromNode>1374125</FromNode>
-		<ToNode>VR33_001</ToNode>
+		<FromNode>1366983</FromNode>
+		<ToNode>1374125</ToNode>
 		<Phase>ABC</Phase>
 		<NormallyDeenergized>false</NormallyDeenergized>
 		<ConstructionModel>Unknown NA-UG</ConstructionModel>
@@ -41,4 +41,5 @@
 		</LinePlacement>
 	</Line>
 	<IsSubFed>false</IsSubFed>
+	<strInternalName>Villa Road Primary-INTERNAL</strInternalName>
 </Substation>
