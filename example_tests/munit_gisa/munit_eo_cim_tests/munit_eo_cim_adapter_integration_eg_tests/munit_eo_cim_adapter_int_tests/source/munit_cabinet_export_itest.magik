@@ -226,19 +226,6 @@ _method munit_cabinet_export_itest.test_cabinet_export ()
 		when_the_circuit_is_exported().
 		then_the_exported_files_match("cabinet_export")
 		
-		
-#	circ << _self.build_circuit()
-#	exclude_structures? << sw_cim_properties_helper.exclude_structures_from_export?
-#	sw_cim_properties_helper.set_property( :exclude_structures_from_export?, "false" )
-#	
-#	_protect
-#		_self.run_and_validate_circuit_export( circ,
-#					       "cabinet_export.gml",
-#					       "cabinet_export.xml" )		
-#	_protection
-#		sw_cim_properties_helper.set_property( :exclude_structures_from_export?, exclude_structures? )
-#	_endprotect
-
 _endmethod
 $
 
