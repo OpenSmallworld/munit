@@ -386,7 +386,7 @@ _private _iter _method eo_dnom_test_mixin.objects_which_should_be_mapped(a_subst
 				_endif
 				_for i_asset _over i_object.get_relevant_assets().fast_elements()
 				_loop
-					_loopbody(write_string(:eo_power_xfrmr_, i_asset.id))
+					_loopbody(sw_cim_identifier_manager.urid_with_translated_collection_name(i_asset))
 				_endloop
 			_elif collection_name _is :eo_service_point
 			_then
