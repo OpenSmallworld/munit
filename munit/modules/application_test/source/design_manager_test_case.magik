@@ -105,6 +105,15 @@ design_manager_test_case.define_shared_variable(:keep_designs?, _false, :public)
 $
 
 
+_pragma(classify_level=debug,topic={MUnit, Test})
+## Specifies whether !notify_database_data_changes?! should be enabled
+## By default this is switched off to improve performance.
+## subclasses can redefine it where it is necessary to react to notifications as
+## part of the test e.g. for testing action or  button states.
+design_manager_test_case.define_shared_variable(:notify_database_data_changes?, _false, :private)
+$
+
+
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 _method design_manager_test_case.properties
 	## 
@@ -317,8 +326,8 @@ _method design_manager_test_case.run_bare()
 	# Disable database notifications.
 	_dynamic !notify_database_data_changes?!
 	_local old_value << !notify_database_data_changes?!
-	!notify_database_data_changes?! << _false
-
+	!notify_database_data_changes?! << _self.notify_database_data_changes?
+	
 	_self.stub_map_rendering_if_required()
 
         _self.one_time_behaviour()
