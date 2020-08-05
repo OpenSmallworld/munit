@@ -682,3 +682,51 @@ _method eo_dnom_test_mixin.given_custom_field_mapping_config_for_line()
 	_return _self 
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_station_has_no_related_circuits_and_no_internals(substation_name)
+
+	provider <<  sw_dnom_properties_helper.station_provider
+	_local sub << provider.get_station(substation_name)
+	
+	stub_method_helper.replace_method(sub_substation,
+					  :|get_circuits()|,
+					  _proc ()
+						  _import sub
+						  
+						  _if sub.id = _self.id
+						  _then
+							  _return rwo_set.new()
+						  _else
+							  _return _self.saved!get_circuits()
+						  _endif
+					  _endproc)
+
+	stub_method_helper.replace_method(sub_substation,
+					  :|rwos()|,
+					  _proc ()
+						  _import sub
+						  
+						  _if sub.id = _self.id
+						  _then
+							  _return rwo_set.new()
+						  _else
+							  _return _self.saved!rwos()
+						  _endif
+					  _endproc)
+
+	stub_method_helper.replace_method(sub_substation,
+					  :|get_conducting_equipments()|,
+					  _proc ()
+						  _import sub
+						  
+						  _if sub.id = _self.id
+						  _then
+							  _return rwo_set.new()
+						  _else
+							  _return _self.saved!get_conducting_equipments()
+						  _endif
+					  _endproc)
+	_return _self 
+_endmethod
+$
