@@ -195,7 +195,7 @@ _method fake_amqp_test_mixin.given_a_fake_rabbit()
 _endmethod
 
 _pragma(classify_level=debug)
-_method fake_amqp_test_mixin.as_signed_bytes(string _optional encoding)
+_method fake_amqp_test_mixin.convert_to_signed_bytes(string _optional encoding)
 	## returns STRING encoded using ENCODING (defaults to :utf8) as a signed_byte_vector 
 	msg<< text_converter.new(encoding.default(:utf8),_true).translate(string)
 	sz << msg.size
@@ -205,7 +205,7 @@ _method fake_amqp_test_mixin.as_signed_bytes(string _optional encoding)
 _endmethod
 $
 _pragma(classify_level=debug)
-_method fake_amqp_test_mixin.as_string(a_signed_byte_vector _optional encoding)
+_method fake_amqp_test_mixin.convert_to_string(a_signed_byte_vector _optional encoding)
 	## returns A_SIGNED_BYTE_VECTOR decoded using ENCODING (defaults to :utf8) as a string
 	sz << a_signed_byte_vector.size
 	ub_vector<< byte_vector.new(sz)
