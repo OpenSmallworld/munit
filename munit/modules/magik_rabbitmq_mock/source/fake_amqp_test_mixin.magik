@@ -3,6 +3,7 @@ _package sw
 $
 
 _pragma(classify_level=debug)
+#todo this is named mixin but it actually is an object
 def_slotted_exemplar(:fake_amqp_test_mixin,
 	{{:current_channel, _unset, :readable}},
 	{})
@@ -150,7 +151,6 @@ _method fake_amqp_test_mixin.then_messages_are_published(messages)
 		converted_message << _self.convert_published_message(message)
 		actual_messages.add_last(converted_message)
 	_endloop
-	
 	sort_proc<< _proc @sort_message( a, b)
 			    ap<< property_list.new_with( _scatter a )
 			    bp<< property_list.new_with( _scatter b )
@@ -193,3 +193,23 @@ _method fake_amqp_test_mixin.given_a_fake_rabbit()
 		_endproc )
 	_return _self
 _endmethod
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.convert_to_signed_bytes(string _optional encoding)
+	## returns STRING encoded using ENCODING (defaults to :utf8) as a signed_byte_vector 
+	msg<< text_converter.new(encoding.default(:utf8),_true).translate(string)
+	sz << msg.size
+	sb_msg << signed_byte_vector.new(sz)
+	sb_msg.extract_from_bytes(1, sz, msg)
+	>> sb_msg
+_endmethod
+$
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.convert_to_string(a_signed_byte_vector _optional encoding)
+	## returns A_SIGNED_BYTE_VECTOR decoded using ENCODING (defaults to :utf8) as a string
+	sz << a_signed_byte_vector.size
+	ub_vector<< byte_vector.new(sz)
+	a_signed_byte_vector.deposit_as_bytes(1,sz,ub_vector)
+	>> text_converter.new(encoding.default(:utf8),_false).translate(ub_vector)
+_endmethod
+$
