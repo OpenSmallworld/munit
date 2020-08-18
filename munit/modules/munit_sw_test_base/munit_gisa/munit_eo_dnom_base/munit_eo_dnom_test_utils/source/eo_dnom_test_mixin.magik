@@ -111,6 +111,10 @@ _method eo_dnom_test_mixin.create_station_export_request()
 	request.set_property( :export_station_internals?,
 			      _self.properties[:export_station_internals?].default(_true) )
 
+	# write the schematics files for tests
+	request.set_property( :export_schematics?,
+			      _self.properties[:export_schematics?].default(_true) )
+	
 	_return request 
 _endmethod
 $
@@ -119,6 +123,15 @@ _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.given_export_station_internals(val)
 
 	_self.properties[:export_station_internals?] << val
+	
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_export_schematics(val)
+
+	_self.properties[:export_schematics?] << val
 	
 	_return _self 
 _endmethod
@@ -514,11 +527,17 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name)
 	_endif
 
 	written_dss << _self.properties[:written_distribution_systems].an_element()
-	_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
-	reference_ortho_schematic << ref_file_name + "_schem_ortho.xml"	
-	reference_geo_schematic << ref_file_name + "_schem_geo.xml"
-	_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1])
-	_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2])
+	_if _self.properties[:export_request][:export_schematics?] _is _true
+	_then
+		_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
+		reference_ortho_schematic << ref_file_name + "_schem_ortho.xml"	
+		reference_geo_schematic << ref_file_name + "_schem_geo.xml"
+		_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1])
+		_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2])
+	_else
+		_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
+	_endif
+	
 _endmethod
 $
 
