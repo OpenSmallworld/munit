@@ -273,6 +273,18 @@ _method fake_amqp_test_mixin.given_an_async_request(_gather props)
 	>> _self
 _endmethod
 $
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.given_a_request_body(body _optional encoding)
+	## 
+	##
+	body_str<< _if body.is_kind_of?(charindex_mixin)
+		   _then >> body
+		   _else >> json_encoder.new().generate_string(body)			   
+		   _endif 
+	_self.properties[:request_msg_body]<< _self.convert_to_signed_bytes( body_str, encoding )
+	>> _self 
+_endmethod
+$
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.given_a_raw_async_request(request_msg)
@@ -296,6 +308,10 @@ _method fake_amqp_test_mixin.when_receiving_the_request()
 		request_msg << json_encoder.new().generate_string(msg)
 		request_msg << _self.convert_to_signed_bytes( request_msg  )
 	_endif
+	_if (body<< _self.properties[:request_msg_body]) _isnt _unset
+	_then
+		request_msg<< signed_byte_vector.concatenation(request_msg, {10}, body)
+	_endif 
 
 	_local aq << atomic_queue.new(1)
 	stub_method_helper.replace_method(fake_channel, :|basic_ack()|,
@@ -314,7 +330,8 @@ _method fake_amqp_test_mixin.when_receiving_the_request()
 	vertx_adaptor << _self.application.plugin(:rabbit_connection).plugin(:rabbit_vertx_adaptor)
 	fake_props << mock(:basic_properties)
 	stub(fake_props).correlation_id.then_return("correlation id")
-	vertx_adaptor.receive(_self.sys!slot(:current_channel), _self.envelope, fake_props, request_msg)
+	vertx_adaptor.receive(_self.sys!slot(:current_channel), _self.envelope,
+			      fake_props, request_msg)
 
 	reply << aq.get(5000)
 	_self.assert_true(reply _isnt _unset, "request was not processed")
