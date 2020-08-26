@@ -109,6 +109,11 @@ _method fake_amqp_test_mixin.then_message_is_published(message)
 	_if _not .current_channel.published.empty?
 	_then
 		actual_message << _self.convert_published_message(.current_channel.published.last)
+		_if _not message.includes_key?(:body)
+		_then
+			# to be aserted later using then_response_is_*() API
+			_self.properties[:published_message_body]<< actual_message.remove_key(:body)
+		_endif 
 		_self.assert_deep_equals(actual_message, message)
 	_else
 		_self.fail("No published messages")
@@ -126,6 +131,31 @@ _method fake_amqp_test_mixin.convert_published_message(message)
 	## MESSAGE.
 	##
 	_return message.deep_copy()
+_endmethod
+$
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.convert_published_vertx_adaptor_message(message)
+	## 
+	##
+	published_body << message[:body]
+	split_index << published_body.index_of(10)
+	_if split_index _isnt _unset
+	_then
+		header << _self.convert_to_string( published_body.slice(1, split_index - 1) )
+		body << _self.convert_to_string( published_body.slice(split_index + 1, published_body.size) )
+	_else
+		header << _self.convert_to_string( published_body )
+		body << _unset
+	_endif
+	converted_message << property_list.new_with(
+				     :exchange, message[:exchange],
+				     :routing_key, message[:routing_key],
+				     :properties, message[:properties],
+				     :header, header,
+				     :body, body
+					   )
+
+	>> converted_message
 _endmethod
 $
 
@@ -213,3 +243,154 @@ _method fake_amqp_test_mixin.convert_to_string(a_signed_byte_vector _optional en
 	>> text_converter.new(encoding.default(:utf8),_false).translate(ub_vector)
 _endmethod
 $
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.given_an_async_request(_gather props)
+	## 
+	## 
+	request_props << property_list.new_from_gathered(props)
+
+	headers << _if request_props[:headers] _isnt _unset
+		   _then
+			   >> property_list.new_from_gathered(request_props[:headers])
+		   _else
+			   >> property_list.new()
+		   _endif
+
+	params << _if request_props[:params] _isnt _unset
+		  _then
+			  >> property_list.new_from_gathered(request_props[:params])
+		  _else
+			  >> _unset
+		  _endif
+	method << request_props[:method].default(:get)
+	
+	request_msg <<  property_list.new_with(:path, request_props[:path],
+					       :params, params,
+					       :headers, headers,
+					       :method, method,
+					       :request_id, request_props[:request_id])
+	_self.properties[:request_msg] << request_msg
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.given_a_raw_async_request(request_msg)
+	## 
+	## 
+	_self.properties[:raw_request_msg] << request_msg
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.when_receiving_the_request()
+	## 
+	##
+
+	_self.given_initialise()
+	
+	_if (request_msg << _self.properties[:raw_request_msg]) _is _unset
+	_then
+		msg << _self.properties[:request_msg]
+		request_msg << json_encoder.new().generate_string(msg)
+		request_msg << _self.convert_to_signed_bytes( request_msg  )
+	_endif
+
+	_local aq << atomic_queue.new(1)
+	stub_method_helper.replace_method(fake_channel, :|basic_ack()|,
+					  _proc(_gather params)
+						  _import aq
+						  _self.saved!basic_ack(_scatter params)
+						  aq.put(params)
+					  _endproc)
+	stub_method_helper.replace_method(fake_channel, :|basic_nack()|,
+					  _proc(_gather params)
+						  _import aq
+						  _self.saved!basic_ack(_scatter params)
+						  aq.put(params)
+					  _endproc)
+
+	vertx_adaptor << _self.application.plugin(:rabbit_connection).plugin(:rabbit_vertx_adaptor)
+	fake_props << mock(:basic_properties)
+	stub(fake_props).correlation_id.then_return("correlation id")
+	vertx_adaptor.receive(_self.sys!slot(:current_channel), _self.envelope, fake_props, request_msg)
+
+	reply << aq.get(5000)
+	_self.assert_true(reply _isnt _unset, "request was not processed")
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_the_message_is_published(_gather response_props)
+	## 
+
+	_self.then_message_is_acked(_self.envelope.delivery_tag)
+	
+	props << property_list.new_from_gathered(response_props)
+
+	response_headers << equality_property_list.new_from_gathered(props[:response_headers])
+
+	header_props << property_list.new_with(:request_id, props[:request_id],
+					       :code, props[:code],
+					       :headers, response_headers)
+	header << json_encoder.new().generate_string(header_props)
+
+	
+	body << _if props[:body] _is _unset
+		_then
+			>> _unset 
+		_elif response_headers["content-type"] = "text/plain"
+		_then
+			>> props[:body]
+		_else
+			body_props << property_list.new_from_gathered(props[:body])
+			>> json_encoder.new().generate_string(body_props)
+		_endif 
+		
+	response << property_list.new_with(:exchange, props[:exchange],
+					   :routing_key, props[:routing_key],
+					   :header, header, 
+					   :body, body,
+					   :properties, props[:properties])
+	_if _not props.includes_key?(:body)
+	_then
+		response.remove_key(:body)
+	_endif 
+	>> _self.then_message_is_published(response)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method fake_amqp_test_mixin.then_error_is_published(request_id, code, error_msg, _gather options)
+	## 
+	##
+
+	_self.then_message_is_acked(_self.envelope.delivery_tag)
+	
+	params << property_list.new_from_gathered(options)
+	
+	response_headers << property_list.new()
+	response_headers["content-type"] << "text/plain"
+	_if (language << params[:language]) _isnt _unset
+	_then
+		response_headers["content-language"] << language
+	_endif
+	
+	properties << _if (correlation_id << params[:correlation_id]) _isnt _unset
+		_then
+			>> {:delivery_mode, 2, :correlation_id, correlation_id}
+		_else 
+			>> {:delivery_mode, 2}
+		_endif
+	response << property_list.new_with(:exchange, "ssm.extraction",
+					   :routing_key, "ssm.vertx.response",
+					   :header, json_encoder.new().generate_string(property_list.new_with(:request_id, request_id, :code, code, :headers, response_headers)),
+					   :body, error_msg,
+					   :properties, properties)
+	>> _self.then_message_is_published(response)	
+_endmethod
+$
+
