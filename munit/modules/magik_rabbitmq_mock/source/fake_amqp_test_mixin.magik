@@ -134,7 +134,7 @@ _method fake_amqp_test_mixin.convert_published_message(message)
 _endmethod
 $
 _pragma(classify_level=debug)
-_method fake_amqp_test_mixin.convert_published_vertx_adaptor_message(message, body_to_string?)
+_method fake_amqp_test_mixin.convert_published_vertx_adaptor_message(message _optional body_to_string?)
 	## 
 	##
 	published_body << message[:body]
@@ -143,7 +143,7 @@ _method fake_amqp_test_mixin.convert_published_vertx_adaptor_message(message, bo
 	_then
 		header << _self.convert_to_string( published_body.slice(1, split_index - 1) )
 		body << published_body.slice(split_index + 1, published_body.size)
-		_if body_to_string?
+		_if body_to_string? _isnt _false 
 		_then
 			body << _self.convert_to_string( body )
 		_endif 
