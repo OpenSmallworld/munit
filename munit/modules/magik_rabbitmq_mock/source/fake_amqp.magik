@@ -127,3 +127,8 @@ _method fake_envelope.new()
 	_return _clone
 _endmethod
 $
+_pragma(classify_level=debug)
+_method fake_envelope.redelivered?
+	>> _true 
+_endmethod
+$
