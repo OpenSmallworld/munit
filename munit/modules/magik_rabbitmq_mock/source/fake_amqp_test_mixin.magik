@@ -300,51 +300,6 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method fake_amqp_test_mixin.when_receiving_the_request()
-	## 
-	##
-
-	_self.given_initialise()
-	
-	_if (request_msg << _self.properties[:raw_request_msg]) _is _unset
-	_then
-		msg << _self.properties[:request_msg]
-		request_msg << json_encoder.new().generate_string(msg)
-		request_msg << _self.convert_to_signed_bytes( request_msg  )
-	_endif
-	_if (body<< _self.properties[:request_msg_body]) _isnt _unset
-	_then
-		request_msg<< signed_byte_vector.concatenation(request_msg, {10}, body)
-	_endif 
-
-	_local aq << atomic_queue.new(1)
-	stub_method_helper.replace_method(fake_channel, :|basic_ack()|,
-					  _proc(_gather params)
-						  _import aq
-						  _self.saved!basic_ack(_scatter params)
-						  aq.put(params)
-					  _endproc)
-	stub_method_helper.replace_method(fake_channel, :|basic_nack()|,
-					  _proc(_gather params)
-						  _import aq
-						  _self.saved!basic_ack(_scatter params)
-						  aq.put(params)
-					  _endproc)
-
-	vertx_adaptor << _self.application.plugin(:rabbit_connection).plugin(:rabbit_vertx_adaptor)
-	fake_props << mock(:basic_properties)
-	stub(fake_props).correlation_id.then_return("correlation id")
-	vertx_adaptor.receive(_self.sys!slot(:current_channel), _self.envelope,
-			      fake_props, request_msg)
-
-	reply << aq.get(5000)
-	_self.assert_true(reply _isnt _unset, "request was not processed")
-
-	_return _self
-_endmethod
-$
-
-_pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_the_message_is_published(_gather response_props)
 	## 
 
