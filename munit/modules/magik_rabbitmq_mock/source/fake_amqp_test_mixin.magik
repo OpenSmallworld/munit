@@ -286,7 +286,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method fake_amqp_test_mixin.then_the_message_is_published(_gather response_props)
+_method fake_amqp_test_mixin.then_response_message_is_published(_gather response_props)
 	## 
 
 	props << property_list.new_from_gathered(response_props)
@@ -310,8 +310,8 @@ _method fake_amqp_test_mixin.then_the_message_is_published(_gather response_prop
 			>> json_encoder.new().generate_string(body_props)
 		_endif 
 		
-	response << property_list.new_with(:exchange, props[:exchange],
-					   :routing_key, props[:routing_key],
+	response << property_list.new_with(:exchange, "ssm.extraction",
+					   :routing_key, "ssm.vertx.response",
 					   :header, header, 
 					   :body, body,
 					   :properties, props[:properties])
@@ -326,32 +326,29 @@ $
 
 
 _pragma(classify_level=debug)
-_method fake_amqp_test_mixin.then_error_is_published(request_id, code, error_msg, _gather options)
+_method fake_amqp_test_mixin.then_error_response_is_published(request_id, code, error_msg, _gather options)
 	## 
 	##
-	
-	params << property_list.new_from_gathered(options)
-	
-	response_headers << property_list.new()
-	response_headers["content-type"] << "text/plain"
+	params << property_list.new_from_gathered(options)	
+	headers << rope.new_with( "content-type", "text/plain" )
 	_if (language << params[:language]) _isnt _unset
 	_then
-		response_headers["content-language"] << language
+		headers.add_all_last({"content-language", language})
 	_endif
-	
 	properties << _if (correlation_id << params[:correlation_id]) _isnt _unset
 		_then
 			>> {:delivery_mode, 2, :correlation_id, correlation_id}
 		_else 
 			>> {:delivery_mode, 2}
 		_endif
-	response << property_list.new_with(:exchange, "ssm.extraction",
-					   :routing_key, "ssm.vertx.response",
-					   :header, json_encoder.new().generate_string(property_list.new_with(:request_id, request_id, :code, code, :headers, response_headers)),
-					   :body, error_msg,
-					   :properties, properties)
-	_self.then_message_is_published(response)
-	>> _self.then_message_is_acked(_self.envelope.delivery_tag)
+	
+	>> _self.then_response_message_is_published(
+		   :request_id, request_id,
+		   :code, code,
+		   :response_headers, headers,
+		   :body, error_msg,
+		   :headers, headers,
+		   :properties, properties )	
 _endmethod
 $
 
