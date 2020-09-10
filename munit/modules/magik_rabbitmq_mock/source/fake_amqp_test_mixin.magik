@@ -164,19 +164,6 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method fake_amqp_test_mixin.then_error_is_published(message, body)
-	_if _not .current_channel.published.empty?
-	_then
-		published << _self.convert_published_message(.current_channel.published.last)
-		_self.assert_true(published[:body].matches?(body), "published result '"+published[:body]+"' doesn't match: "+body)
-		published.remove_key(:body)
-		_self.assert_deep_equals(published, message)
-	_else
-		_self.fail("No published messages")
-	_endif
-_endmethod
-
-_pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_messages_are_published(messages)
 
 	actual_messages << rope.new()
@@ -206,7 +193,6 @@ _endmethod
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_message_is_acked(ack)
-	_thisthread.sleep(50)
 	_self.assert_deep_equals(.current_channel.acked, ack, "then_message_is_acked")
 	_return _self
 _endmethod
@@ -303,8 +289,6 @@ _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_the_message_is_published(_gather response_props)
 	## 
 
-	_self.then_message_is_acked(_self.envelope.delivery_tag)
-	
 	props << property_list.new_from_gathered(response_props)
 
 	response_headers << equality_property_list.new_from_gathered(props[:response_headers])
@@ -335,16 +319,16 @@ _method fake_amqp_test_mixin.then_the_message_is_published(_gather response_prop
 	_then
 		response.remove_key(:body)
 	_endif 
-	>> _self.then_message_is_published(response)
+	_self.then_message_is_published(response)
+	>> _self.then_message_is_acked(_self.envelope.delivery_tag)
 _endmethod
 $
+
 
 _pragma(classify_level=debug)
 _method fake_amqp_test_mixin.then_error_is_published(request_id, code, error_msg, _gather options)
 	## 
 	##
-
-	_self.then_message_is_acked(_self.envelope.delivery_tag)
 	
 	params << property_list.new_from_gathered(options)
 	
@@ -366,7 +350,8 @@ _method fake_amqp_test_mixin.then_error_is_published(request_id, code, error_msg
 					   :header, json_encoder.new().generate_string(property_list.new_with(:request_id, request_id, :code, code, :headers, response_headers)),
 					   :body, error_msg,
 					   :properties, properties)
-	>> _self.then_message_is_published(response)	
+	_self.then_message_is_published(response)
+	>> _self.then_message_is_acked(_self.envelope.delivery_tag)
 _endmethod
 $
 
