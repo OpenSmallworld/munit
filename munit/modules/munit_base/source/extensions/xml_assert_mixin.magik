@@ -60,8 +60,9 @@ _method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg _gather so
 	## one of them are sorted before they are compared.
 	## E.g. /bookstore/book/title or /bookstore/b*/title
 	##
+	dec << simple_xml.new(:allow_doctype?, _true)
 	_try
-		actual<< simple_xml.read_element_string(actual_xml)
+		actual<< dec.read_element_string(actual_xml)
 	_when error
 		_self.fail( write_string(msg," Cannot parse XML string: " , actual_xml))
 		_return _self 
@@ -70,7 +71,7 @@ _method xml_assert_mixin.assert_xml(exp_xml, actual_xml _optional msg _gather so
 	_then
 		exp_xml<< exp_xml()
 	_endif 
-	expected<< simple_xml.read_element_string(exp_xml)
+	expected<< dec.read_element_string(exp_xml)
 	
 	_self.assert_xml_decoded(expected, actual, msg, _scatter sort_paths)
 	>> _self 
