@@ -59,7 +59,6 @@ _method eo_cim_base_case.tear_down()
 	# Remove temp folder.
 	_if _self.delete_temp_folder_in_tear_down?
 	_then
-		system.gc(_true)
 		system.rmdir(.test_output_path, _true, _true)
 	_endif
 _endmethod
