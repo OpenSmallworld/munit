@@ -4,6 +4,7 @@ _package sw
 _pragma(classify_level=debug)
 def_slotted_exemplar(:eo_cim_base_case,
 {
+	{:test_output_path, _unset}
 },
 {:eo_gisa_base_test_case})
 $
@@ -26,6 +27,56 @@ $
 
 _pragma(classify_level=debug)
 eo_cim_base_case.define_shared_constant( :properties_helper, sw_cim_properties_helper, :public )
+$
+
+_pragma(classify_level=debug)
+eo_cim_base_case.define_shared_constant( :delete_temp_folder_in_tear_down?, _true, :public )
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.set_up()
+
+	_local test_output_path << _self.set_test_output_path()
+
+	# Create temp folder for exported files
+	system.mkdir(test_output_path)
+
+	stub_method_helper.replace_method(sw_cim_properties_helper, :output_path,
+					  _proc()
+						  _import test_output_path
+						  _return test_output_path
+					  _endproc)
+	
+	_super.set_up()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.tear_down()
+
+	_super.tear_down()
+	
+	# Remove temp folder.
+	_if _self.delete_temp_folder_in_tear_down?
+	_then
+		system.gc(_true)
+		system.rmdir(.test_output_path, _true, _true)
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.set_test_output_path()
+	##
+	## Generates a name and creates temp folder for exported
+	## files.
+	##
+	
+	subfolder_name << _self.class_name + %_ + date_time.now().as_milliseconds.write_string
+	.test_output_path << system.pathname_down(system.getenv("TEMP"), subfolder_name)
+	
+	_return .test_output_path
+_endmethod
 $
 
 _pragma(classify_level=debug)
@@ -55,8 +106,7 @@ _method eo_cim_base_case.when_I_build_the_elec_model()
 	
         request << sw_cim_circuit_export_helper.create_request_for_set_export( _self.rwos )
 
-        request.set_property( :output_path, system.getenv( "TEMP" ) )
-        request.set_property( :job_name, _self.design_name )
+	request.set_property( :job_name, _self.design_name )
         request.set_property( :circuit_urn , urn_manager.get_urn_from_object( recs.an_element() ))
 
         export_set_process << sw_process.new(
@@ -166,7 +216,6 @@ _method eo_cim_base_case.export_records(recs)
 	
 	request << sw_cim_circuit_export_helper.create_request_for_set_export( recs )
 
-	request.set_property( :output_path, system.getenv( "TEMP" ) )
 	request.set_property( :job_name, _self.design_name )
 	request.set_property( :circuit_urn ,  urn_manager.get_urn_from_object( recs.an_element() ))
 
@@ -192,7 +241,6 @@ _method eo_cim_base_case.export_circuit_locally( a_circuit )
 										   sw_cim_properties_helper.default_config_name )
 
 	request.set_property( :test_mode?, _true )
-	request.set_property( :output_path, system.getenv( "TEMP" ) )
 	request.set_property( :job_name, a_circuit.circuit_id )
 	request.set_property( :circuit_urn ,  urn_manager.get_urn_from_object( a_circuit ))
 
@@ -441,8 +489,7 @@ _method eo_cim_base_case.export_differences_from_current_design_locally(_optiona
 	request << sw_cim_circuit_export_helper.create_request_to_export_differences( export_type.default(:proposed) ) 
 
 	request.set_property( :test_mode?, _true )
-	request.set_property( :output_path, system.getenv( "TEMP" ) )
-
+	
 	# sw_cim_split_export_manager now requires exchange_job_id property to be set
 	request.set_property( :exchange_job_id, :dummy_exchange_job_id )
 	
