@@ -78,8 +78,8 @@ $
 _pragma(classify_level=debug)
 _private _method eo_gisa_base_test_case.set_test_output_path()
 	##
-	## Generates a name and creates temp folder for exported
-	## files.
+	## Generates a name for temp folder dedicated to the current
+	## test.
 	##
 	
 	subfolder_name << _self.class_name + %_ + date_time.now().as_milliseconds.write_string
@@ -91,10 +91,12 @@ $
 
 _pragma(classify_level=debug)
 _private _method eo_gisa_base_test_case.create_temp_folder()
+	##
+	## Creates temp folder dedicated to the current test.
+	##
 
 	_local test_output_path << _self.set_test_output_path()
 
-	# Create temp folder for exported files
 	system.mkdir(test_output_path)
 
 	stub_method_helper.replace_method(sw_cim_properties_helper, :output_path,
@@ -107,11 +109,17 @@ $
 
 _pragma(classify_level=debug)
 _private _method eo_gisa_base_test_case.remove_temp_folder()
-
-	# Remove temp folder.
+	##
+	## Removes temp folder dedicated to the current test.
+	##
+	
 	_if _self.delete_temp_folder_in_tear_down?
 	_then
-		system.rmdir(.test_output_path, _true, _true)
+		_try 
+			system.rmdir(.test_output_path, _true, _true)
+		_when error
+			# Do nothing in case of error.
+		_endtry
 	_endif
 _endmethod
 $
