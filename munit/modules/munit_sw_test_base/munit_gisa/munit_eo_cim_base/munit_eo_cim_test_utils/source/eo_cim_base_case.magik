@@ -4,7 +4,6 @@ _package sw
 _pragma(classify_level=debug)
 def_slotted_exemplar(:eo_cim_base_case,
 {
-	{:test_output_path, _unset}
 },
 {:eo_gisa_base_test_case})
 $
@@ -27,55 +26,6 @@ $
 
 _pragma(classify_level=debug)
 eo_cim_base_case.define_shared_constant( :properties_helper, sw_cim_properties_helper, :public )
-$
-
-_pragma(classify_level=debug)
-eo_cim_base_case.define_shared_constant( :delete_temp_folder_in_tear_down?, _true, :public )
-$
-
-_pragma(classify_level=debug)
-_method eo_cim_base_case.set_up()
-
-	_local test_output_path << _self.set_test_output_path()
-
-	# Create temp folder for exported files
-	system.mkdir(test_output_path)
-
-	stub_method_helper.replace_method(sw_cim_properties_helper, :output_path,
-					  _proc()
-						  _import test_output_path
-						  _return test_output_path
-					  _endproc)
-	
-	_super.set_up()
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method eo_cim_base_case.tear_down()
-
-	_super.tear_down()
-	
-	# Remove temp folder.
-	_if _self.delete_temp_folder_in_tear_down?
-	_then
-		system.rmdir(.test_output_path, _true, _true)
-	_endif
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method eo_cim_base_case.set_test_output_path()
-	##
-	## Generates a name and creates temp folder for exported
-	## files.
-	##
-	
-	subfolder_name << _self.class_name + %_ + date_time.now().as_milliseconds.write_string
-	.test_output_path << system.pathname_down(system.getenv("TEMP"), subfolder_name)
-	
-	_return .test_output_path
-_endmethod
 $
 
 _pragma(classify_level=debug)

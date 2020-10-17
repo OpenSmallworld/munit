@@ -102,8 +102,6 @@ _method eo_dnom_test_mixin.create_station_export_request()
 
 	_local request << sw_dnom_substation_export_helper.create_request_for_substation_export(_self.properties[:station_to_export])
 
-	request.set_property( :output_path, system.getenv( "TEMP" ) )
-	
 	# don't delete xml files for tests
 	request.set_property( :test_mode?, _true )
 
