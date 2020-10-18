@@ -21,6 +21,9 @@ eo_gisa_base_test_case.define_shared_constant( :max_attempts_for_frozen_file, 20
 $
 
 _pragma(classify_level=debug)
+## This shared constant controls if temp folder created for
+## currently running test will be deleted in tear down
+## process.
 eo_gisa_base_test_case.define_shared_constant( :delete_temp_folder_in_tear_down?, _true, :public )
 $
 
