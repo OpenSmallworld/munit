@@ -96,8 +96,6 @@ _method eo_dnom_base_case.export_differences_from_current_design_locally( )
 	## without messaging
 	request << sw_dnom_substation_export_helper.create_request_to_export_differences( :as_built ) 
 
-	request.set_property( :output_path, system.getenv( "TEMP" ) )
-
 	# don't delete xml files for tests
 	request.set_property( :test_mode?, _true )
 
@@ -155,7 +153,6 @@ _method eo_dnom_base_case.export_substation_locally( a_substation )
 	## without messaging
 	request << sw_dnom_substation_export_helper.create_request_for_substation_export( a_substation )
 
-	request.set_property( :output_path, system.getenv( "TEMP" ) )
 	request.set_property( :job_name, name )
 	request.set_property( :station_urn ,  urn_manager.get_urn_from_object( a_substation ))
 

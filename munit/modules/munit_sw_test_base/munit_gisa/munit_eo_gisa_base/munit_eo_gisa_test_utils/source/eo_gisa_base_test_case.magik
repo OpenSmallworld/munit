@@ -5,7 +5,8 @@ _pragma(classify_level=debug)
 def_slotted_exemplar(:eo_gisa_base_test_case,
 {
 	{ :ids, _unset },
-	{ :specs, _unset }
+	{ :specs, _unset },
+	{ :test_output_path, _unset }
 },
 {:eo_dm_test_case})
 $
@@ -17,6 +18,13 @@ _pragma(classify_level=debug)
 ## Max number of attempts when trying to switch the frozen file
 ## to write mode before it fails
 eo_gisa_base_test_case.define_shared_constant( :max_attempts_for_frozen_file, 20, :private )
+$
+
+_pragma(classify_level=debug)
+## This shared constant controls if temp folder created for
+## currently running test will be deleted in tear down
+## process.
+eo_gisa_base_test_case.define_shared_constant( :delete_temp_folder_in_tear_down?, _true, :public )
 $
 
 _pragma(classify_level=debug,topic={MUnit, Test})
@@ -46,7 +54,9 @@ _method eo_gisa_base_test_case.set_up()
 	.properties[:plugin_settings][:include_lv_servicepoint_in_export?] << helper.include_lv_servicepoint_in_export?
 	.properties[:plugin_settings][:exclude_structures_from_export?] << helper.exclude_structures_from_export?
 
-	_self.setup_specifications()			
+	_self.setup_specifications()
+
+	_self.create_temp_folder()
 _endmethod
 $
 
@@ -61,8 +71,59 @@ _method eo_gisa_base_test_case.tear_down()
 	_self.teardown_specifications()
 	
 	.ids.empty()
+
+	_self.remove_temp_folder()
 	
 	_super.tear_down()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.set_test_output_path()
+	##
+	## Generates a name for temp folder dedicated to the current
+	## test.
+	##
+	
+	subfolder_name << _self.class_name + %_ + date_time.now().as_milliseconds.write_string
+	.test_output_path << system.pathname_down(system.getenv("TEMP"), subfolder_name)
+	
+	_return .test_output_path
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.create_temp_folder()
+	##
+	## Creates temp folder dedicated to the current test.
+	##
+
+	_local test_output_path << _self.set_test_output_path()
+
+	system.mkdir(test_output_path)
+
+	stub_method_helper.replace_method(sw_cim_properties_helper, :output_path,
+					  _proc()
+						  _import test_output_path
+						  _return test_output_path
+					  _endproc)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.remove_temp_folder()
+	##
+	## Removes temp folder dedicated to the current test.
+	##
+	
+	_if _self.delete_temp_folder_in_tear_down?
+	_then
+		_try 
+			system.rmdir(.test_output_path, _true, _true)
+		_when error
+			# Do nothing in case of error.
+		_endtry
+	_endif
 _endmethod
 $
 
