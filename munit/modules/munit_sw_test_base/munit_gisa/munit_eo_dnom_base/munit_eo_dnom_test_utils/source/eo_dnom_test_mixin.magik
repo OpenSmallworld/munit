@@ -521,7 +521,7 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name)
 	
 	_if _self.using_previous_dnom_version?
 	_then
-		_return
+		_return _self 
 	_endif
 
 	written_dss << _self.properties[:written_distribution_systems].an_element()
@@ -535,7 +535,34 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name)
 	_else
 		_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
 	_endif
-	
+
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_all_files_prefixes_are(prefix)
+	## 
+	##
+
+	_for written_file _over _self.properties[:written_substations].an_element().fast_elements()
+	_loop
+		_self.assert_true(system.pathname_components(written_file).index_of_seq(prefix) = 1,
+				  "Wrong prefix for: " + written_file)
+	_endloop
+
+	_if _self.using_previous_dnom_version?
+	_then
+		_return _self
+	_endif
+
+	_for written_file _over _self.properties[:written_distribution_systems].an_element().fast_elements()
+	_loop
+		_self.assert_true(system.pathname_components(written_file).index_of_seq(prefix) = 1,
+				  "Wrong prefix for: " + written_file)
+	_endloop
+
+	_return _self
 _endmethod
 $
 
