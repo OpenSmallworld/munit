@@ -83,7 +83,7 @@ _method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional
 		_else
 			value << _self.properties[:queue].get( wait_time )
 		_endif
-
+		
 		timed_out? << value _is _unset 
 		
 		_if value = expected_value _orif
@@ -354,7 +354,7 @@ _pragma(classify_level=debug)
 _method serialised_test_mixin.note_change( who, what, data )
 	## 
 	##
-
+	
 	_if ( test_queue << _self.queue ) _isnt _unset
 	_then 
 		_if what _is :event_handled _orif
@@ -383,13 +383,14 @@ _method serialised_test_mixin.when_the_frame_is_activated( top_frame )
 	    _not top_frame.active?
 	_then
 		
+		frame.add_dependent(_self)
 		_if _self.queue _is _unset
 		_then 
 			_self.queue << atomic_queue.new( 1019 )
 		_endif
 		
 		top_frame.activate()
-		_self.wait_for_value_on_queue( {:frame_active, top_frame}, _true )
+		_self.wait_for_value_on_queue( {:frame_active, top_frame}, _true, 1000 )
 		
 		# There are also at least two config_change events.
 		_self.wait_for_value_on_queue( :resize_complete )
