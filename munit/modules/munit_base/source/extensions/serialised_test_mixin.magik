@@ -396,6 +396,8 @@ _method serialised_test_mixin.when_the_frame_is_activated( top_frame )
 		_self.wait_for_value_on_queue( :resize_complete )
 		_self.wait_for_value_on_queue( :resize_complete )
 		
+		frame.remove_dependent(_self)
+		
 	_endif
 	
 	>> _self
