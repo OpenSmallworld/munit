@@ -206,11 +206,17 @@ _private _method serialised_test_mixin.wait_for_task_to_complete( method_name, _
 		_then
 			# Wait to make sure that the task's status is set to complete
 			# as well.
+			_for i _over range(1,10000)
 			_loop
 				_if value[2].completed? _then _leave _endif
 				_thisthread.sleep(1)
 			_endloop
-			write( "Found ", method_name, " Duration: ", date_time.now() - start )
+			_if _not value[2].completed? 
+			_then
+				write("ERROR: ", method_name, " not completed in ", date_time.now() - start, " status is ", value[2].status)
+			_else
+				write( "Found ", method_name, " Duration: ", date_time.now() - start, " status is ", value[2].status)
+			_endif
 			_leave
 		_else
 			other_values.add_last( value.copy() )
