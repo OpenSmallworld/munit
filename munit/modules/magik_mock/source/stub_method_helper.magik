@@ -108,6 +108,31 @@ $
 
 
 _pragma(classify_level=debug, topic={MUnit})
+_method stub_method_helper.restore_stubbed_method(class, method_name)
+	##
+	## Restore the original implementation of CLASS.METHOD_NAME
+	##
+	method_key << _self.method_key(class, method_name)
+	_if _self.replaced_method_data.includes_key?(method_key)
+	_then
+		class.sys!restore_saved_method(method_name)
+		_self.replaced_method_data.remove_key(method_key)
+
+	_elif _self.defined_method_data.includes_key?(method_key)
+	_then
+		class.remove_method(method_name)
+		_self.defined_method_data.remove_key(method_key)
+
+	_else
+		write(method_key + " not stubbed")
+		_return _false
+	_endif
+	_return _true
+_endmethod
+$
+
+
+_pragma(classify_level=debug, topic={MUnit})
 _method stub_method_helper.method_stubbed?(class, method_name)
 	## 
 	## Return true id CLASS.METHOD_NAME has been stubbed.

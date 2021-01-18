@@ -19,17 +19,24 @@ $
 _pragma(classify_level=debug)
 ## Tests asserting contents of golden files should cache the path to that file
 ## here to enable it to be referenced down the line
-json_assert_mixin.define_shared_variable(:last_expected_file_path, _unset, :private)
+json_assert_mixin.define_shared_variable(:last_expected_file_path, _unset, :readonly)
 $
 
 _pragma(classify_level=debug)
 ## ALL expected json (golden) files can be overwritten during test runs (in
 ## assert_json_file() ) by setting this to true. 
 ##
-## Once overwritten the files will need examining for differences, probably
-## after prettifying.
+## Once overwritten the files will need examining for differences.
 ##
 json_assert_mixin.define_shared_variable(:overwrite_expected_json_file?, _false, :public)
+$
+
+_pragma(classify_level=debug)
+## ALL attempts to overwrite expected json (golden) files will be logged here
+## for convenience.  It's useful for spotting where an incorrect overwrite was
+## triggered from.
+##
+json_assert_mixin.define_shared_variable(:overwrite_log, rope.new(), :public)
 $
 
 _pragma(classify_level=debug)
@@ -73,6 +80,51 @@ _method json_assert_mixin.overwrite_expected_file_for_last_test_failure()
 _endmethod
 $
 
+_pragma(classify_level=restricted)
+_iter _method hash_values_helper.temp!sorted_fast_keys_and_elements()
+	## This is a temporary method that will be used to temporarily replace the core
+	## implementaion of :|fast_keys_and_elements()|.
+	## To do so, use the following in a test method
+	## stub_method_helper.replace_method(hash_values_helper,
+	##   :|fast_keys_and_elements()|,
+	##   hash_values_helper.method(:temp!sorted_fast_keys_and_elements|()|).value)   
+	##
+	## The value in this implementation is that when the hash_tables within a json
+	## structure are processed, then this will happen according to the order of the
+	## keys, if possible.  If not possible, then they will be processed, as usual,
+	## unsorted. 
+	vals << .values
+	
+	ok? << _true
+	sc << sorted_collection.new(vals.size, _proc(a,b) >> a[1] _cf b[1] _endproc)
+	_try _with c
+		_for i,k _over _self.valid_indices(_false)
+		_loop
+			sc.add({k,vals[i]})
+		_endloop
+	_when error
+		write("CANNOT SORT KEYS")
+		c.report_on(!output!)
+		ok? << _false
+	_endtry
+
+	_if ok? 
+	_then
+		_for i _over sc.elements()
+		_loop
+			_loopbody(_scatter i)
+		_endloop
+	_else
+		#Revert to original implementation
+		_for i,k _over _self.valid_indices(_false)
+		_loop
+			_loopbody(k,vals[i])
+		_endloop
+	_endif	
+	
+_endmethod
+$
+
 _pragma(classify_level=debug)
 _private _method json_assert_mixin.generate_new_expected_file(file_path, actual)
 	##
@@ -82,19 +134,32 @@ _private _method json_assert_mixin.generate_new_expected_file(file_path, actual)
 	##	
 	_if file_path _is _unset
 	_then
-		write("No file path provided.  Cannot generate new expected file for ", _self)
+		str << write_string("No file path provided.  Cannot generate new expected file for ", _self)
+		_self.overwrite_log.add(str)
+		write(str)
 		_return
 	_elif system.file_exists?(file_path)
 	_then
-		write("WRITING UPDATED FILE: ", file_path)
+		str << write_string("WRITING UPDATED FILE: for ", _self,": ", file_path)
+		_self.overwrite_log.add(str)
+		write(str)
 		system.unlink(file_path, _true, _true)
 	_else
-		write("WRITING FILE: ", file_path)
+		str << write_string("WRITING FILE: ", _self, ": ", file_path)
+		_self.overwrite_log.add(str)
+		write(str)
 	_endif
 	
-	enc << json_encoder.new()
-	enc.generate_file(actual,file_path)
-	
+	stub_method_helper.replace_method(hash_values_helper,
+		:|fast_keys_and_elements()|,
+		hash_values_helper.method(:temp!sorted_fast_keys_and_elements|()|).value) 
+	_protect
+		enc << json_encoder.new()
+		enc.generate_file(actual,file_path, _true)
+	_protection
+		stub_method_helper.restore_stubbed_method(hash_values_helper, :|fast_keys_and_elements()|) 
+	_endprotect 
+		
 _endmethod
 $
 
@@ -119,13 +184,7 @@ _method json_assert_mixin.assert_json_file(exp_json_fname, actual_json _optional
 	##
 	(str, filename) << _self.resource_file_as_string(exp_json_fname)
 	_self.last_expected_file_path << filename
-	(me, sorted_actual_json) <<  _self.assert_json(str, actual_json, msg, _scatter sort_data)
-	
-	_if _self.overwrite_expected_json_file?
-	_then
-		_self.generate_new_expected_file(filename, sorted_actual_json)
-	_endif
-	_return me
+	>> _self.assert_json(str, actual_json, msg, _scatter sort_data)
 _endmethod
 $
 _pragma(classify_level=debug)
@@ -142,7 +201,18 @@ _method json_assert_mixin.assert_json(exp_json, actual_json _optional msg _gathe
 	## Last key can be "*" e.g. {sort_proc, :contexts, :internals, "*"}
 	## which means that values of all keys will be sorted by sort_proc
 	##
-	>> _self.int!assert_json(exp_json, actual_json, _unset ,  msg, _scatter sort_data)
+	(me, sorted_actual_json) << _self.int!assert_json(exp_json, actual_json, _unset ,  msg, _scatter sort_data)
+		
+	_if _self.overwrite_expected_json_file?
+	_then
+		# We have to assume here that when EXP_JSON was read in that the the file was
+		# cached.  There's a chance that it wasn't and that this is a filename for an
+		# earlier test.  In which case the overwrite should be wildly wrong and
+		# hopefully be picked up in subsequent testing!
+		filename << _self.last_expected_file_path ^<< _unset
+		_self.generate_new_expected_file(filename, sorted_actual_json)
+	_endif
+	_return me, sorted_actual_json
 _endmethod
 $
 _pragma(classify_level=debug)
@@ -186,7 +256,19 @@ _method json_assert_mixin.assert_json_with_pre_processing(exp_json, actual_json,
 	## ACTUAL_JSON already parsed to a magik object as a parameter
 	## just before they are compared A_PROC is expected to return
 	## updated EXP_JSON, ACTUAL_JSON 
-	>> _self.int!assert_json(exp_json, actual_json, a_proc, msg, _scatter sort_data)
+	(me, sorted_actual_json) << _self.int!assert_json(exp_json, actual_json, a_proc, msg, _scatter sort_data)	
+		
+	_if _self.overwrite_expected_json_file?
+	_then
+		# We have to assume here that when EXP_JSON was read in that the the file was
+		# cached.  There's a chance that it wasn't and that this is a filename for an
+		# earlier test.  In which case the overwrite should be wildly wrong and
+		# hopefully be picked up in subsequent testing!
+		filename << _self.last_expected_file_path ^<< _unset
+		_self.generate_new_expected_file(filename, sorted_actual_json)
+	_endif
+	
+	_return me, sorted_actual_json
 _endmethod
 $
 
