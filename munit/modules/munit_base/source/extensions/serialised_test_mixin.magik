@@ -68,9 +68,11 @@ _method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional
 	## found on the queue back to the queue after finding the
 	## required value.  The default is true.
 
+	start          << date_time.now()
 	other_values   << rope.new()
 	timed_out?     << _false
 	wait_time      << wait_time.default( 200 )
+	wait_interval  << time_interval.new( 0, wait_time )
 
 	_loop
 
@@ -97,6 +99,7 @@ _method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional
 		_then 
 			other_values.add_last( value.copy() )
 		_endif
+		_if date_time.now() - st > wait_interval _then _leave _endif 
 	_endloop
 
 	_self.add_values_to_queue( other_values )
@@ -111,10 +114,12 @@ _pragma(classify_level=debug)
 _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, expected_id _optional wait_time)
 	## 
 	## 
-
+	
+	start          << date_time.now()
 	other_values   << rope.new()
 	timed_out?     << _false 
 	wait_time      << wait_time.default( 10000 )
+	wait_interval  << time_interval.new( 0, wait_time )
 
 	_loop 
 		value << _self.properties[:queue].get( wait_time )
@@ -139,6 +144,7 @@ _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, 
 		_else
 			other_values.add_last( value.copy() )
 		_endif
+		_if date_time.now() - st > wait_interval _then _leave _endif 
 	_endloop
 
 	_self.add_values_to_queue( other_values )
@@ -187,10 +193,11 @@ _private _method serialised_test_mixin.wait_for_task_to_complete( method_name, _
 	
 	write( "Waiting for ", method_name, ". wait_time: ", wait_time )
 
-	start        << date_time.now()
-	other_values << rope.new()
-	timed_out?   << _false
-	wait_time    << wait_time.default( 30000 )
+	start         << date_time.now()
+	other_values  << rope.new()
+	timed_out?    << _false
+	wait_time     << wait_time.default( 30000 )
+	wait_interval << time_interval.new( 0, wait_time )
 	
 	_loop 
 		value      << _self.properties[:queue].get( wait_time )
@@ -221,6 +228,8 @@ _private _method serialised_test_mixin.wait_for_task_to_complete( method_name, _
 		_else
 			other_values.add_last( value.copy() )
 		_endif
+		
+		_if date_time.now() - st > wait_interval _then _leave _endif 
 	_endloop
 
 	_self.add_values_to_queue( other_values )
