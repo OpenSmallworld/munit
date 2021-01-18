@@ -99,7 +99,7 @@ _method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional
 		_then 
 			other_values.add_last( value.copy() )
 		_endif
-		_if date_time.now() - st > wait_interval _then _leave _endif 
+		_if date_time.now() - start > wait_interval _then _leave _endif 
 	_endloop
 
 	_self.add_values_to_queue( other_values )
@@ -144,7 +144,7 @@ _private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, 
 		_else
 			other_values.add_last( value.copy() )
 		_endif
-		_if date_time.now() - st > wait_interval _then _leave _endif 
+		_if date_time.now() - start > wait_interval _then _leave _endif 
 	_endloop
 
 	_self.add_values_to_queue( other_values )
@@ -229,7 +229,7 @@ _private _method serialised_test_mixin.wait_for_task_to_complete( method_name, _
 			other_values.add_last( value.copy() )
 		_endif
 		
-		_if date_time.now() - st > wait_interval _then _leave _endif 
+		_if date_time.now() - start > wait_interval _then _leave _endif 
 	_endloop
 
 	_self.add_values_to_queue( other_values )
