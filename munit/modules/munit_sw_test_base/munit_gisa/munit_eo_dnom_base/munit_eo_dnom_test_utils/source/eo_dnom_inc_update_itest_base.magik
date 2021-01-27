@@ -22,7 +22,7 @@ $
 
 _pragma(classify_level=restricted)
 ## Module name with the golden files for initial export used to find the
-## differences in the incremaltal update export tests
+## differences in the incremental update export tests
 eo_dnom_inc_update_itest_base.define_shared_constant(:initial_export_module_name, :munit_eo_dnom_station_export_tests, :private)
 $
 
@@ -120,16 +120,16 @@ $
 _pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.present_goldenfiles(file_sets)
 	## Returns the self.potential_files() filled with the actual goldenfiles,
-	## e.g. lack of a schem_geo goldenfile, indicates that it
-	## should not be exported, and the lsit is _unset there,
-	## e.g. returns a rop of file_sets.size with a element
+	## e.g. a lack of the schem_geo goldenfile, indicates that it
+	## should not be exported, the list is _unset there,
+	## e.g. returns a rope of file_sets.size with elements:
 	## property_list:
 	## :substation 	"3_add_phase_cable.xml" 
 	## :internal 	"3_add_phase_cable_internal.xml" 
 	## :ortho_schematic 	unset 
 	## :geo_schematic 	unset 
 	##	
-	all_goldenfiles << sw_module_manager.module(_self.module_name).resource_files(:data, _true, _false)
+	all_goldenfiles << sw_module_manager.module(_self.module_name).resource_files(_self.resource_path, _true, _false)
 	goldenfiles << _self.potential_files(file_sets)	
 	_for file_set _over goldenfiles.fast_elements()
 	_loop
