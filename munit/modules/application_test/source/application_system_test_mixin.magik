@@ -27,7 +27,7 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_an_application( application_name _optional width, height, stub_alerts? )
-	## 
+	##
 	## Ensure that the required application (as specified by
 	## APPLICATION_NAME) is running.
 	## If WIDTH and HEIGHT are specified, the application's top frame will be set to
@@ -36,29 +36,29 @@ _method application_system_test_mixin.given_an_application( application_name _op
 	##
 	##     * If it is already running, the test will run
 	##     * If it is available but not yet running, it will be
-	##       started and the test will run 
+	##       started and the test will run
 	##     * If it is not available, the test will fail.
 	##
 
 	_if stub_alerts? _isnt _false
-	_then 
+	_then
 		_self.int!stub_alerts()
 	_endif
 
 	start << date_time.now()
 
-	_if _self.smooth_app_termination? _is _true 
+	_if _self.smooth_app_termination? _is _true
 	_then
 		stub_method_helper.replace_method(application, :only_one_application_available?, _proc () >> _false _endproc)
 		stub_method_helper.replace_method(application, :anything_running?, _proc () >> _true _endproc)
-	_endif 
+	_endif
 
 	# Make sure there is a queue for events
 	_if _self.properties[ :queue ] _is _unset
 	_then
 		_self.properties[ :queue ] << atomic_queue.new( 1019 )
 	_endif
-	
+
 	# Make sure the application is running
 	_if ( app << smallworld_product.application( application_name ) ) _is _unset
 	_then
@@ -71,7 +71,7 @@ _method application_system_test_mixin.given_an_application( application_name _op
 			    ds_environment.c_is_initialised? _is _false
 			_then
 				stub_method_helper.replace_method(licence_manager, :|check_licence_and_expiry()|, _proc () _endproc)
-			_endif 
+			_endif
 			app << app_def.int!start()
 			_self.wait_for_application_to_be_active( application_name )
 		_else
@@ -85,25 +85,25 @@ _method application_system_test_mixin.given_an_application( application_name _op
 		_if width _isnt _unset _orif height _isnt _unset
 		_then
 			top_frame.set_size( width, height )
-		_else 
+		_else
 			top_frame.maximized? << _self.properties[:frame_maximised?].default(_false)
-		_endif 
+		_endif
 		top_frame.top_canvas_container.add_dependent(_self)
-	_endif 
+	_endif
 
 	app.add_dependent(_self)
-  
+
 	_self.properties[ :application ] << app
 
 	write( "Completed: application startup. Duration: ", date_time.now() - start )
 	_if top_frame _isnt _unset
 	_then
 		write( tab_char, "Application size: ", top_frame.width, " x ", top_frame.height )
-	_endif 
+	_endif
 	write( "Starting test: ", _self.get_name() )
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
@@ -111,89 +111,89 @@ $
 _private _method application_system_test_mixin.given_a_case_application( app_name, soc_name )
 	## Start Case application with soc name (as specificied by the app_name and soc_name)
 	## This would start the application in the given soc_name,
-	## skipping the SOC selector dialog. 				
+	## skipping the SOC selector dialog.
 
 	app_def << smallworld_product.application_definition(app_name)
 	new_app_def << application_definition.new(app_def.application_name, app_def.application_class_name, :soc_name, soc_name, _scatter app_def.properties.for_scatter())
 	new_app_def.int!start()
 
 	app << new_app_def.application
-	
+
 	app.top_frame.maximized? << true
-  
+
 	_self.properties[ :application ] << app
-	
+
 	_self.wait_for_application_to_be_active(app_name)
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_an_embedded_editor( dataset_name, collection_name )
-	## 
+	##
 	##
 
 	collection << _self.dataset( dataset_name ).collections[ collection_name ]
 	editor << _self.editor_manager.display_embedded_editor_for_collection( collection )
 	_self.properties[ :editor ] << editor
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_an_embedded_editor_with_default_values( dataset_name, collection_name )
-	## 
+	##
 	##
 
 	_self.given_an_embedded_editor( dataset_name, collection_name ).
 		 when_clicking_set_defaults_button()
-	
-	>> _self 
-	
+
+	>> _self
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_proposed_editor_values( proposed_values )
-	## 
+	##
 	##
 
 	_self.properties[ :editor ].set_proposed_values( proposed_values )
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_a_trail_coordinate( x, y )
-	## 
+	##
 	##
 
 	_self.map_manager.current_map.trail.add_coordinate( coordinate.new( x, y ))
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.given_an_empty_trail()
-	## 
+	##
 	##
 
 	_self.map_manager.current_map.trail.empty()
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
@@ -231,15 +231,15 @@ _method application_system_test_mixin.given_an_alternative(alt_name,_optional da
 	ds.go_to_alternative(alt_name)
 	ds.switch(:write)
 
-	>> _self 
-	
-_endmethod 
+	>> _self
+
+_endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.get_item( id_path )
-	## 
+	##
 	## Return the UI widget matching the supplied string ID_PATH.
 
 	>> sw_swift_manager.get_item_with_path( id_path )
@@ -249,7 +249,7 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.get_item_with_identifier(tag, identifier, _gather keys_and_values)
-	## 
+	##
 	## Return the item of type TAG with identifier IDENTIFIER.
 	## Look on the top_canvas_container of
 	## .properties[:application], except if the :frame_title key is supplied.
@@ -261,11 +261,11 @@ _private _method application_system_test_mixin.get_item_with_identifier(tag, ide
 	##
 	## This method can return unset
 	##
-	
+
 	props << property_list.new_from_gathered(keys_and_values)
 	container << _self.container_for_frame(props[:frame_title])
 	props.remove_key(:frame_title)
-	
+
 	_for item _over container.get_items_of_type( tag ).fast_elements()
 	_loop
 		_if item.identifier = identifier
@@ -276,23 +276,23 @@ _private _method application_system_test_mixin.get_item_with_identifier(tag, ide
 	_endloop
 
 	>> found_item
-	
+
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_inserting_record()
-	## 
+	##
 	## Insert a record using a transaction
 	## This is the normal method to use.
-	## Use when_inserting_record_using_editor() when inserting into a frozen dataset e.g when inserting a spec   
+	## Use when_inserting_record_using_editor() when inserting into a frozen dataset e.g when inserting a spec
 	##
-	
+
 	# Need this in case the insert transaction needs to get data from the
 	# application - typically values of options
 	_dynamic !current_application!
 	!current_application! << _self.properties[:application]
-	
+
 	ed             << _self.properties[:editor]
 	a_collection   << ed.collection
 	data           << ed.get_proposed_field_values(:insert)
@@ -303,38 +303,38 @@ _method application_system_test_mixin.when_inserting_record()
 	_self.properties[:new_record] << new_record
 
 	>> _self
-	
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_inserting_record_using_editor()
-	## 
-	## For normal records use when_inserting_record() which runs a transaction.
-	## Use this method when inserting into a frozen dataset e.g when inserting a spec   
 	##
-	
+	## For normal records use when_inserting_record() which runs a transaction.
+	## Use this method when inserting into a frozen dataset e.g when inserting a spec
+	##
+
 	_dynamic !current_application!
 	!current_application! << _self.properties[:application]
-	
+
 	action << _self.insert_action()
 	_self.click_action_button(action)
-	
+
 	_for i _over 1.upto(5)
 	_loop
 		_if (new_record << _self.properties[:editor].current_object) _isnt _unset
 		_then
 			_self.properties[:new_record] << new_record
 			_leave
-		_else 
+		_else
 			_thisthread.sleep(1000)
 			write("Waiting for editor to populate - attempt ", i)
 		_endif
 	_endloop
-	
+
 	>> _self
-	
+
 _endmethod
 $
 
@@ -363,7 +363,7 @@ _method application_system_test_mixin.when_clicking_item( id_path, _optional new
 	_else
 		write( "Clicking on [", id_path, "] failed - item not found" )
 	_endif
-	
+
 	>> _self
 _endmethod
 $
@@ -372,7 +372,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_action( plugin_name, action_name,
 							    _optional new_frame_wait_time )
-	## 
+	##
 	## Click on the ACTION_NAME action of the PLUGIN_NAME plugin.
 	## This plugin is a plugin of .properties[ :application ]
 	##
@@ -381,18 +381,18 @@ _method application_system_test_mixin.when_clicking_action( plugin_name, action_
 	_self.click_action_button( action, _unset, new_frame_wait_time )
 
 	>> _self
-	
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_tab( tab_name _optional frame_title )
-	## 
-	## 
+	##
+	##
 
 	container << _self.container_for_frame( frame_title )
-	
+
 	_for item _over container.get_items_of_type( :tag!sw_tab_container ).fast_elements()
 	_loop @item
 
@@ -404,17 +404,17 @@ _method application_system_test_mixin.when_clicking_tab( tab_name _optional fram
 				tab       << item
 				_leave @item
 			_endif
-		_endloop 
-		
+		_endloop
+
 	_endloop
 
 	_self.properties[ :tab ] << tab
 	_self.properties[ :tab_label ] << tab_label
-	
+
 	_self.click_item( tab_label )
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
@@ -430,11 +430,11 @@ _method application_system_test_mixin.when_clicking_pulldown_menu_item_with_iden
 	_self.when_clicking_item_with_identifier( :tag!sw_pulldown_menu_item, identifier,
 						  :new_frame_wait_time, new_frame_wait_time.default(250),
 						  :frame_title, frame_title )
-	
+
 	_self.properties[ :pulldown_menu ] << _self.properties[ :click_item ].pulldown_menu
-	
-	>> _self 
-	
+
+	>> _self
+
 _endmethod
 $
 
@@ -446,14 +446,14 @@ _method application_system_test_mixin.when_clicking_item_pulldown_menu( id_path,
 	## tag!sw_pulldown_menu_item and uses an identifier. This
 	## method uses an ID path. Adds the .pulldown_menu from the the
 	## ID_PATH container to .properties[:pulldown_menu]
-	## 
+	##
 
 	_self.when_clicking_item( id_path, new_frame_wait_time.default(250) )
 
 	_self.properties[ :pulldown_menu ] << _self.properties[ :click_item ].pulldown_menu
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
@@ -462,14 +462,14 @@ _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_item_with_label( tag, label,
 								     _optional container, new_frame_wait_time ,
 								     set_focus?)
-	## 
-	##	
+	##
+	##
 
 	_if container _is _unset
-	_then 
+	_then
 		container << _self.properties[ :application ].top_frame.top_canvas_container
 	_endif
-	
+
 	_for item _over container.get_items_of_type( tag ).fast_elements()
 	_loop
 		_if item.responds_to?( :label ) _andif
@@ -492,7 +492,7 @@ _method application_system_test_mixin.when_clicking_item_with_label( tag, label,
 	_endif
 
 	>> _self
-	
+
 _endmethod
 $
 
@@ -500,16 +500,16 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_item_containing_label( tag, label,
 									   _optional container, new_frame_wait_time )
-	## 
-	##	
+	##
+	##
 
 	_if container _is _unset
-	_then 
+	_then
 		container << _self.properties[ :application ].top_frame.top_canvas_container
 	_endif
 
 	click_item << _unset
-	
+
 	_for item _over container.get_items_of_type( tag ).fast_elements()
 	_loop
 		label_item << item.get_items_with_text( label ).an_element()
@@ -529,7 +529,7 @@ _method application_system_test_mixin.when_clicking_item_containing_label( tag, 
 	_endif
 
 	>> _self
-	
+
 _endmethod
 $
 
@@ -537,7 +537,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_item_with_identifier( tag, identifier,
 									  _gather keys_and_values)
-	## 
+	##
 	## Click on the item of type TAG and with IDENTIFIER.
 	## The item is found on .properties[:application]'s top frame, unless the
 	## :frame_title is specified, in which case the item is found on the active
@@ -557,7 +557,7 @@ _method application_system_test_mixin.when_clicking_item_with_identifier( tag, i
 	## when_waiting_for_message_dialog_invocation_to_complete() after the test closes
 	## the dialog so the test will wait for the frame to deactivate.
 	##
-	
+
 	props << property_list.new_from_gathered(keys_and_values)
 	click_item << _self.get_item_with_identifier(tag, identifier, _scatter keys_and_values)
 
@@ -570,19 +570,19 @@ _method application_system_test_mixin.when_clicking_item_with_identifier( tag, i
 	_endif
 
 	>> _self
-	
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_in_canvas( id_path, x, y, _optional id )
-	## 
-	## 
+	##
+	##
 
 	a_canvas << _unset
 	top_con << _self.properties[ :application ].top_frame.top_canvas_container
-	
+
 	_for c _over top_con.all_canvases()
 	_loop
 		_if c.responds_to?( :get_identifier_path|()| ) _andif
@@ -592,12 +592,12 @@ _method application_system_test_mixin.when_clicking_in_canvas( id_path, x, y, _o
 			_leave
 		_endif
 	_endloop
-	
+
 	_if id _is _unset
 	_then
 		id << :left
 	_endif
-	
+
 	_self.handle_event( a_canvas, :button, id, x, y, :press, 0 )
 	_self.handle_event( a_canvas, :button, id, x, y, :release, 0 )
 
@@ -609,7 +609,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_expanding_tree_element( tree_id_or_path, a_string,
 								   _optional parent_string, expand? )
-	## 
+	##
 	## Expands the element displaying a string matching A_STRING.
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
@@ -620,7 +620,7 @@ _method application_system_test_mixin.when_expanding_tree_element( tree_id_or_pa
 	_then
 		dt.expanded? << expand?.default(_true)
 	_endif
-	
+
 	>> _self
 _endmethod
 $
@@ -628,12 +628,12 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_expanding_all_tree_elements( tree_id_or_path )
-	## 
+	##
 	## Expands all elements in the tree_item.
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
 	## path or the path of a container of the tree_item.
-	
+
 	a_tree_item << _self.get_tree_item( tree_id_or_path )
 	_if a_tree_item _is _unset
 	_then
@@ -644,7 +644,7 @@ _method application_system_test_mixin.when_expanding_all_tree_elements( tree_id_
 	_loop
 		dt.expand_fully()
 	_endloop
-	
+
 	>> _self
 _endmethod
 $
@@ -653,7 +653,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_path, a_string,
 								   _optional parent_string, modmask )
-	## 
+	##
 	## Selects the element displaying a string matching A_STRING.
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
@@ -684,16 +684,16 @@ _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_pa
 					_endloop
 				_endif
 				y << a_tree_item.int!ypos_for( index ) + renderer.half_row_height
-				
+
 				_self.handle_event(a_tree_item, :button, :left, x, y, :press, modmask.default(0))
 				_self.handle_event(a_tree_item, :button, :left, x, y, :release, modmask.default(0))
-				
+
 				_leave
 			_endif
 			index +<< 1
 		_endloop
 	_endif
-	
+
 	>> _self
 _endmethod
 $
@@ -702,7 +702,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_tree_contains_element( tree_id_or_path, a_string,
 								  _optional parent_string, selected? )
-	## 
+	##
 	## Asserts a tree_item contains an element displaying a string matching A_STRING.
 	## Optionally asserts the string displayed in the parent element.
 	## If SELECTED? is true assert that the element IS selected.
@@ -714,7 +714,7 @@ _method application_system_test_mixin.then_tree_contains_element( tree_id_or_pat
 
 	a_tree << _self.get_display_tree( tree_id_or_path, a_string, parent_string )
 
-	_if selected? _is _true 
+	_if selected? _is _true
 	_then
 		fail_str << write_string( "Tree element ", tree_id_or_path, " should be selected but isn't" )
 		_self.assert_true( a_tree.selected?, fail_str )
@@ -723,7 +723,7 @@ _method application_system_test_mixin.then_tree_contains_element( tree_id_or_pat
 		fail_str << write_string( "Tree element ", tree_id_or_path, " should not be selected but is" )
 		_self.assert_false( a_tree.selected?, fail_str )
 	_endif
-	
+
 	>> _self
 _endmethod
 $
@@ -731,7 +731,7 @@ $
 
 _pragma(classify_level=restricted)
 _method application_system_test_mixin.then_tree_contains_elements( tree_id_or_path, strings )
-	## 
+	##
 	## Asserts a tree_item contains a hierarchy of strings
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
@@ -748,7 +748,7 @@ _method application_system_test_mixin.then_tree_contains_elements( tree_id_or_pa
 	_for i _over 1.upto( strings.size - 1 )
 	_loop
 		_self.then_tree_contains_element( tree_id_or_path, strings[i+1], strings[i] )
-	_endloop 
+	_endloop
 
 	>> _self
 _endmethod
@@ -757,12 +757,12 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_number_of_rows_in_tree_is( tree_id_or_path, expected_rows )
-	## 
+	##
 	## Asserts the number of visible rows in a tree item is EXPECTED_ROWS
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
 	## path or the path of a container of the tree_item.
-	
+
 	a_tree_item << _self.get_tree_item( tree_id_or_path )
 	_if a_tree_item _is _unset
 	_then
@@ -774,11 +774,11 @@ _method application_system_test_mixin.then_number_of_rows_in_tree_is( tree_id_or
 	_loop
 		visible_trees +<< 1
 	_endloop
-	
+
 	_self.assert_equals( expected_rows, visible_trees,
 			     write_string( "Expected tree '", tree_id_or_path,
 					   "' to have ", expected_rows, " rows. #1" ) )
-	
+
 	>> _self
 _endmethod
 $
@@ -786,12 +786,12 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_number_of_selected_rows_in_tree_is( tree_id_or_path, expected_selected )
-	## 
+	##
 	## Asserts the number of selected rows in a tree item is EXPECTED_SELECTED
 	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
 	## path or the path of a container of the tree_item.
-	
+
 	a_tree_item << _self.get_tree_item( tree_id_or_path )
 	_if a_tree_item _is _unset
 	_then
@@ -804,13 +804,13 @@ _method application_system_test_mixin.then_number_of_selected_rows_in_tree_is( t
 		_if dt.selected?
 		_then
 			selected_trees +<< 1
-		_endif 
+		_endif
 	_endloop
-	
+
 	_self.assert_equals( expected_selected, selected_trees,
 			     write_string( "Expected tree '", tree_id_or_path,
 					   "' to have ", expected_selected, " rows selected. #1" ) )
-	
+
 	>> _self
 _endmethod
 $
@@ -818,41 +818,41 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_number_of_trees_matching( tree_id_or_path, a_string, expected )
-	## 
+	##
 	## Asserts the number of rows in a tree item that match A_STRING is EXPECTED
-	## 
+	##
 	## TREE_ID_OR_PATH can be the tree_item id or its identifier
 	## path or the path of a container of the tree_item.
-	
+
 	a_tree_item << _self.get_tree_item( tree_id_or_path )
 	_if a_tree_item _is _unset
 	_then
 		_return
 	_endif
-	
+
 	matches << _self.get_display_trees( a_tree_item, a_string )
 	fail_str << write_string( "Wrong number of instances of ", a_string, " - #1" )
 	_self.assert_equals( expected, matches.size, fail_str )
 
 	>> _self
-	
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.get_tree_item( tree_id_or_path )
-	## 
-	## Returns a tree_item with the specified id or identifier path. 
+	##
+	## Returns a tree_item with the specified id or identifier path.
 
 	a_tree_item << _unset
-	
+
 	a_container << _self.get_item( tree_id_or_path )
 
 	_if a_container.responds_to?( :|tag!tree_item| )
 	_then
 		a_tree_item << a_container
-		
+
 	_elif a_container.responds_to?( :|tag!sw_container_base| )
 	_then
 		_for c _over a_container.all_canvases()
@@ -884,7 +884,7 @@ _private _method application_system_test_mixin.get_tree_item( tree_id_or_path )
 			_endloop
 		_endloop
 	_endif
-	
+
 	fail_str << write_string( "Expected to find tree_item '", tree_id_or_path, "'" )
 	_self.assert_not_unset( a_tree_item, fail_str )
 
@@ -895,7 +895,7 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.get_display_trees( a_tree_item, a_string )
-	## 
+	##
 	## Returns all display_trees showing a string matching A_STRING.
 
 	matches << rope.new()
@@ -907,7 +907,7 @@ _private _method application_system_test_mixin.get_display_trees( a_tree_item, a
 			matches.add_last( dt )
 		_endif
 	_endloop
-	
+
 	>> matches
 _endmethod
 $
@@ -916,7 +916,7 @@ $
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.get_display_tree( tree_id_or_path, a_string,
 								 _optional parent_string )
-	## 
+	##
 	## Returns a display_tree showing a string matching A_STRING
 	## and optionally with a parent showing a string matching PARENT_STRING.
 
@@ -925,9 +925,9 @@ _private _method application_system_test_mixin.get_display_tree( tree_id_or_path
 	_then
 		_return
 	_endif
-	
+
 	matches << _self.get_display_trees( a_tree_item, a_string )
-	
+
 	result << matches.an_element()
 	fail_str << write_string( "Expected to find display_tree matching '", a_string, "'" )
 
@@ -956,20 +956,20 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_going_to_bounds( xmin, ymin, xmax, ymax )
-	## 
+	##
 	##
 
 	bounds << bounding_box.new( xmin, ymin, xmax, ymax )
 	_self.map_manager.goto( bounds )
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_the_map_has_finished_rendering(_optional proc_to_run)
-	## 
+	##
 	## Wait for the rendering to complete
 	## If proc_to_run is provided, execute this between starting to wait and completion
 	##
@@ -988,7 +988,7 @@ _method application_system_test_mixin.when_the_map_has_finished_rendering(_optio
 	_then
 		proc_to_run.invoke()
 	_endif
-	
+
 	# Wait for each view to finish rendering.  Wait for a maximum
 	# of 1 second per view
 	_self.remove_value_from_queue( :end_render )
@@ -1003,15 +1003,15 @@ _method application_system_test_mixin.when_the_map_has_finished_rendering(_optio
 		n_views +<< 1
 		view.sys!slot( :controller ).remove_dependent( _self )
 	_endloop
-	
-	>> _self 
-	
+
+	>> _self
+
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_refreshing_the_map()
-	## 
+	##
 	## Refresh the map and wait for the rendering to complete
 	##
 
@@ -1022,14 +1022,14 @@ _method application_system_test_mixin.when_refreshing_the_map()
 			_endproc
 
 	_self.when_the_map_has_finished_rendering(refresh_proc)
-	
+
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_set_defaults_button()
-	## 
-	## 
+	##
+	##
 
 	action << _self.properties[ :editor ].component( :field_lister ).action( :set_defaults )
 
@@ -1042,13 +1042,13 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_place_with_assets(new_id)
-	## 
-	## 
+	##
+	##
 
 	_self.properties[:editor].plugin(:swo_action_editor).action_framework.action(:place_with_assets).invoke()
 
 	_self.properties[new_id] << _self.properties[:editor].current_object
-	
+
 	>> _self
 
 _endmethod
@@ -1056,8 +1056,8 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_update_in_editor()
-	## 
-	## 
+	##
+	##
 
 	>> _self.when_clicking_action_in_editor(:update)
 
@@ -1066,15 +1066,15 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_browse_in_editor()
-	## 
-	## 
+	##
+	##
 
 	_self.when_clicking_action_in_editor(:browse)
 
 	_self.wait_for_task_to_complete(:|int!explorer_model_set_rwo_set()|, 20000)
-	
+
 	_self.properties[:explorer] << _self.properties[:application].plugin(:explorer)
-	
+
 	>> _self
 
 _endmethod
@@ -1086,20 +1086,20 @@ _method application_system_test_mixin.when_clicking_get_in_editor()
 	##
 
 	_self.queue << atomic_queue.new(1)
-	
+
 	_self.when_clicking_action_in_editor(:get)
 
 	_self.wait_for_task_to_complete(:|int!object_editor_get()|, 10000)
-	
+
 	>> _self
-	
+
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_clear_in_editor()
-	## 
-	## 
+	##
+	##
 
 	>> _self.when_clicking_action_in_editor(:clear)
 
@@ -1108,8 +1108,8 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_clicking_action_in_editor(action_name)
-	## 
-	## 
+	##
+	##
 
 	_self.properties[:editor].action(action_name).invoke()
 
@@ -1120,7 +1120,7 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_setting_value_in_text_item(id_path, new_text)
-       ## 
+       ##
        ## Set up Swift widget's VALUE to the NEW_TEXT.
        ## This method can be used to set values in the text fields.
        ## Text field should be ENABLED.
@@ -1130,9 +1130,9 @@ _method application_system_test_mixin.when_setting_value_in_text_item(id_path, n
        ## displayed in the Swift Explorer for widgets with a unique
        ## identifier path.
        ##
-       ## NEW_TEXT is string value provided to the Swift widget, 
+       ## NEW_TEXT is string value provided to the Swift widget,
        ## the widget should be enabled.
-       
+
        item << _self.get_item(id_path)
 
        _if item _isnt _unset
@@ -1144,13 +1144,13 @@ _method application_system_test_mixin.when_setting_value_in_text_item(id_path, n
        _endif
 
        >> _self
-       
+
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_setting_value_in_text_item_with_identifier(identifier, new_text, _optional frame_title)
-	## 
+	##
 	## Set up Swift widget's VALUE to the NEW_TEXT.
 	## This method can be used to set values in the text fields.
 	## Text field should be ENABLED.
@@ -1158,13 +1158,13 @@ _method application_system_test_mixin.when_setting_value_in_text_item_with_ident
 	##
 	## IDENTIFIER is the identifier of the widget to set the value for.
 	##
-	## NEW_TEXT is string value provided to the Swift widget, 
+	## NEW_TEXT is string value provided to the Swift widget,
 	## the widget should be enabled.
 	##
 	## FRAME_TITLE if supplied is the title of the frame on which
 	## to look for the widget.
 	##
-	
+
 	item << _self.get_item_with_identifier(:tag!sw_text_item, identifier, :frame_title, frame_title)
 
 	_if item _isnt _unset
@@ -1174,9 +1174,9 @@ _method application_system_test_mixin.when_setting_value_in_text_item_with_ident
 		condition.raise(:error, :string,
 				write_string("Failed to find component with identifier ", identifier))
 	_endif
-	
+
 	>> _self
-	
+
 _endmethod
 $
 
@@ -1189,7 +1189,7 @@ _method application_system_test_mixin.when_populating_editor_by_getting_record( 
 	## Action     : Use given_an_embedded_editor_populated_with() instead
 	## Deprecated : 06 April 2018
 	## -----------------------
-	## 
+	##
 	## Get the record(s) based on PROPERTIES.
 	## In the Absence of selecting objects from the map, the
 	## alternative is to Get the Record in the Editor and Click
@@ -1201,33 +1201,33 @@ _method application_system_test_mixin.when_populating_editor_by_getting_record( 
 	##
 	## Example: when_populating_editor_by_getting_record(:electric,  :sub_substation,
 	##                              property_list.new_with(:asset_id, "sanity_substation"))
-	##                                
 	##
-	
+	##
+
 	_self.given_an_embedded_editor( dataset_name,  collection_name ).
 		given_proposed_editor_values( properties )
 	_self.remove_value_from_queue( :task_complete )
 	_if id_path _isnt _unset
-	_then			   
-		 _self.when_clicking_item( id_path )	
-	_else			  		  
-		
+	_then
+		 _self.when_clicking_item( id_path )
+	_else
+
 	 	 _self.when_clicking_item_with_identifier(:tag!sw_button_item, :get)
-	_endif	
+	_endif
 
 	# Getting records happen in a separate thread. Wait for the
-	# task to complete. 
-	
+	# task to complete.
+
 	_self.wait_for_task_to_complete( :|int!object_editor_get()|, 500 )
-	
+
 	>> _self
-	
+
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_selecting_objects_in_the_map( rwos )
-	## 
+	##
 	## Set the current map selection to RWOS
 	##
 
@@ -1243,30 +1243,30 @@ _method application_system_test_mixin.when_selecting_objects_in_the_map( rwos )
 	_self.properties[ :application ].databus.make_data_available( :set_map_selection, { _unset, geoms })
 
 	>> _self
-	
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_going_to_inserted_record()
-	
+
 	## In the current map view, go to the primary spatial context
 	## of the record stored in .properties[:new_record]
 	##
 	## Raise a condition if:
 	## - There is no record in .properties[ :new_record ]
-	## - The record does not have a primary spatial context name 
+	## - The record does not have a primary spatial context name
 	##
-	
+
 	_if (record << _self.properties[ :new_record ]) _isnt _unset
-	_then 
+	_then
 		manager << _self.map_manager
 		mv << manager.current_map_view
 		app << _self.properties[ :application ]
-		
+
 		_if ( sc_name << app.get_primary_spatial_context_name_for( record )) _isnt _unset
-		_then 
+		_then
 			sc << app.get_spatial_context_for( record, sc_name )
 			mv.goto( sc )
 		_else
@@ -1275,16 +1275,16 @@ _method application_system_test_mixin.when_going_to_inserted_record()
 	_else
 		condition.raise( :user_error, :string, "No record to go to" )
 	_endif
-	
-	>> _self 
-	
+
+	>> _self
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_record_inserted( dataset_name, collection_name, field_name, value )
-	## 
+	##
 	## Find the record in the collection named COLLECTION_NAME with
 	## VALUE for the field named FIELD_NAME in the difference
 	## stream between the current view and the base view.
@@ -1292,16 +1292,16 @@ _method application_system_test_mixin.then_record_inserted( dataset_name, collec
 
 	ds_view    << _self.dataset( dataset_name )
 	collection << ds_view.collections[ collection_name ]
-	
-	base_view << ds_view.replicate( :base )
-	found?    << _false 
 
-	_protect 
+	base_view << ds_view.replicate( :base )
+	found?    << _false
+
+	_protect
 
 		stream << ds_difference_stream.new_on( collection, base_view.collections[ collection_name ] )
 
 		_loop
-			
+
 			( change, record, base_record ) << stream.get()
 			_if record _is _unset _then _leave _endif
 
@@ -1310,7 +1310,7 @@ _method application_system_test_mixin.then_record_inserted( dataset_name, collec
 			_then
 				found? << _true
 			_endif
-			
+
 		_endloop
 
 	_protection
@@ -1320,38 +1320,43 @@ _method application_system_test_mixin.then_record_inserted( dataset_name, collec
 	fail_str << write_string( "Expected record in ", collection_name, " with field ", field_name, " = ", value, " not found" )
 	_self.assert_true( found?, fail_str )
 
-	>> _self 
-		
+	>> _self
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_masthead_title_is( expected_title )
-	## 
+	##
 	##
 
-	title << _self.properties[ :application ].menubar.masthead_title
+	app << _self.properties[ :application ]
+	title << app.menubar.masthead_title
+	_if title _is _unset
+	_then
+		title << app.top_frame.title
+	_endif
 
-	fail_str << write_string( "The expected masthead title is ", newline_char, expected_title, newline_char )
+	fail_str << write_string( "The expected application title is ", newline_char, expected_title, newline_char )
 	fail_str << write_string( fail_str, "but it is", newline_char, title )
 
 	_self.assert_equals( expected_title, title, fail_str )
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_dataset_light_is( expected_colour )
-	## 
+	##
 	## EXPECTED_COLOUR is a symbol, either, :red, :orange or :green
 	##
 
 	top_container << _self.properties[ :application ].top_frame.top_canvas_container
-	
+
 	write_item << top_container.get_item( :db_access_write )
 	read_item  << top_container.get_item( :db_access_read  )
 	mixed_item << top_container.get_item( :db_access_mixed )
@@ -1363,7 +1368,7 @@ _method application_system_test_mixin.then_dataset_light_is( expected_colour )
 
 		fail_str << "The red light isn't red"
 		_self.assert_equals( read_item.image, red_light, fail_str )
-		
+
 	_elif expected_colour _is :green
 	_then
 		grey_items  << property_list.new_with( :red, read_item, :orange, mixed_item )
@@ -1371,14 +1376,14 @@ _method application_system_test_mixin.then_dataset_light_is( expected_colour )
 
 		fail_str << "The green light isn't green"
 		_self.assert_equals( write_item.image, green_light, fail_str )
-		
+
 	_else
 		grey_items   << property_list.new_with( :green, write_item, :red, read_item )
 		orange_light << smallworld_product.get_raster_image( :traffic_light_yellow, :ui_resources )
 
 		fail_str << "The orange light isn't orange"
 		_self.assert_equals( mixed_item.image, orange_light, fail_str )
-		
+
 	_endif
 
         grey_light << smallworld_product.get_raster_image( :traffic_light_grey, :ui_resources )
@@ -1388,8 +1393,8 @@ _method application_system_test_mixin.then_dataset_light_is( expected_colour )
 		_self.assert_equals( grey_item.image, grey_light, fail_str )
 	_endloop
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
@@ -1399,7 +1404,7 @@ _method application_system_test_mixin.then_editor_label_is( expected_string )
 
 	## This was unreliable and has been retired.
 	## It should be removed when all references (2 in EO) have been removed
-	
+
 	>> _self
 _endmethod
 $
@@ -1407,14 +1412,14 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_editor_field_displays( field_name, expected_string )
-	## 
-	## 
+	##
+	##
 
 	# FIXME - should check what is displayed in editor tree_item
-	
+
 	editor << _self.properties[ :editor ]
 	field_editor << editor.component( :field_lister ).field_editor( field_name )
-	
+
 	actual_string << _if ( actual << field_editor.field_item.value ) _isnt _unset
 			 _then
 				 >> actual.write_string
@@ -1423,7 +1428,7 @@ _method application_system_test_mixin.then_editor_field_displays( field_name, ex
 	fail_str << write_string( "Expected field " + field_name, " to have value '", expected_string,
 				  "' not '", actual_string.default(""), "'" )
 	_self.assert_equals( expected_string, actual_string, fail_str )
-	
+
 	>> _self
 _endmethod
 $
@@ -1431,7 +1436,7 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_editor_fields_display( expected_values )
-	## 
+	##
 	## EXPECTED_VALUES is a property list keyed on field name
 	##
 
@@ -1440,16 +1445,16 @@ _method application_system_test_mixin.then_editor_fields_display( expected_value
 		_self.then_editor_field_displays( field_name, expected_value )
 	_endloop
 
-	>> _self 
-	
+	>> _self
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.get_map_geoms()
-	## 
-	## 
+	##
+	##
 
 	manager << _self.map_manager
 	mv << manager.current_map_view
@@ -1467,11 +1472,11 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_record_is_shown_on_map( rwo )
-	## 
+	##
 	## Verify that the record inserted is available on the main map.
 
 	geoms << _self.get_map_geoms()
-	
+
 	_self.assert_true( geoms.rwo_set().includes?( rwo ),
 			   "Expect current map to show " + rwo.description() )
 
@@ -1481,18 +1486,18 @@ $
 
 
 _pragma(classify_level=debug)
-_method application_system_test_mixin.then_map_contains( rwo_collection_name, expected_number ) 
-	## 
+_method application_system_test_mixin.then_map_contains( rwo_collection_name, expected_number )
+	##
 	## Asserts the map contains the correct number of rwos from the
 	## specified collection.
-	
+
 	write( "THEN_MAP_CONTAINS disabled pending SWV-12956")
-	
+
 	# Make sure the map has finished rendering before asking the question
 	# _self.when_the_map_has_finished_rendering()
 
 	# geoms << _self.get_map_geoms()
-	
+
 	# actual_number << 0
 	# _for a_rwo _over geoms.rwo_set().fast_elements()
 	# _loop
@@ -1514,11 +1519,11 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_dialog_activated( plugin_name, dialog_name )
-	## 
+	##
 	## Verify whether a dialog is active/available on the screen.
 	## This also caches the dialog in .properties[:dialogs]
 	##
-	
+
 	a_plugin << _self.properties[ :application ].plugin( plugin_name )
 	_if a_plugin _isnt _unset
 	_then
@@ -1528,44 +1533,44 @@ _method application_system_test_mixin.then_dialog_activated( plugin_name, dialog
 	_if a_dialog _isnt _unset
 	_then
 		_self.add_dialog(plugin_name, dialog_name, a_dialog )
-	_endif 
-	
+	_endif
+
 	fail_string << write_string( "Dialog: ", dialog_name, " Not found from Plugin: ", plugin_name )
 	_self.assert_not_unset( a_dialog, fail_string )
 
-	>> _self  
+	>> _self
 
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_item_enabled?( id_path, expected_state, _optional frame_title )
-	## 
-	## Verify the state of a Swift widget, identified by the 
+	##
+	## Verify the state of a Swift widget, identified by the
 	## path string ID_PATH, is Enabled or Disabled.
-	## 
+	##
 	## ID_PATH can be found using get_identifier_path() and is
 	## displayed in the Object Spy for widgets with a unique
 	## identifier path.
 	##
-	## EXPECTED_STATE is enabled? attribute of the Swift widget 
+	## EXPECTED_STATE is enabled? attribute of the Swift widget
 	## which could either _true(Enable) or _false(Disable)
 
 	container << _self.container_for_frame( frame_title )
 	_if ( item << container.get_items( id_path ).an_element()) _is _unset
-	_then 
+	_then
 		item << _self.get_item( id_path )
 	_endif
-	
+
 	# If item could not be found get_item() will have raised an assert error
 	_if item _isnt _unset
-	_then 
+	_then
 		state << item.enabled?
 		fail_string << write_string("Expected state of ", item, " is ", expected_state,
 					    ". Actual is ", state)
 		_self.assert_equals(expected_state, state, fail_string)
 	_endif
-	
+
 	>> _self
 _endmethod
 $
@@ -1599,12 +1604,12 @@ _method application_system_test_mixin.then_pulldown_menu_has_labels(include_labe
 		_then
 			_leave
 		_endif
-	_endloop 
-	
+	_endloop
+
 	_self.assert_false(missing_labels?, fail_str)
 
 	>> _self
-	
+
 _endmethod
 $
 
@@ -1617,7 +1622,7 @@ _method application_system_test_mixin.then_pulldown_menu_doesnt_have_labels(excl
 	fail_str << write_string("Pulldown menu has extra items")
 
 	has_labels? << _false
-	
+
 	_for i_item _over _self.properties[:pulldown_menu].children.fast_elements()
 	_loop
 		has_labels? << exclude_labels.includes_by_equality?(i_item.label)
@@ -1625,13 +1630,13 @@ _method application_system_test_mixin.then_pulldown_menu_doesnt_have_labels(excl
 		_if has_labels?
 		_then
 			_leave
-		_endif 
-	_endloop 
+		_endif
+	_endloop
 
 	_self.assert_false(has_labels?, fail_str)
 
 	>> _self
-	
+
 _endmethod
 $
 
@@ -1639,26 +1644,26 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.scenario_insert_record( dataset_name, collection_name, proposed_values, expected_values )
-	## 
 	##
-	
+	##
+
 	>> _self.given_an_embedded_editor_with_default_values( dataset_name, collection_name ).
 		given_proposed_editor_values( proposed_values ).
-		
+
 		when_inserting_record().
 		when_going_to_inserted_record().
 
 		then_record_is_shown_on_map( _self.parameter_new_record() ).
-		then_editor_fields_display( expected_values )	
-	
+		then_editor_fields_display( expected_values )
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.parameter_new_record()
-	## 
-	## 
+	##
+	##
 
 	>> _self.properties[:new_record]
 _endmethod
@@ -1667,7 +1672,7 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.wait_for_application_to_be_active( app_name )
-	## 
+	##
 	##
 
 	start << date_time.now()
@@ -1679,15 +1684,15 @@ _private _method application_system_test_mixin.wait_for_application_to_be_active
 			#We've started.
 			_self.properties[ :application ] << app
 			_if _self.wait_for_application_threads? _isnt _false
-			_then 
+			_then
 				_self.wait_for_application_threads_to_finish()
-			_endif 
+			_endif
 			write( "Attempt ", i, " successful after ", date_time.now() - start )
 			write( "Application ", app_name, " is running." )
 			_leave
 		_endif
 		_thisthread.sleep(5000)
-	_endloop	
+	_endloop
 _endmethod
 $
 
@@ -1699,7 +1704,7 @@ _private _method application_system_test_mixin.dataset( ds_name )
 	##
 
 	>> gis_program_manager.databases[ds_name]
-	
+
 _endmethod
 $
 
@@ -1707,35 +1712,35 @@ $
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.click_action_button( action,
 								    _optional container, new_frame_wait_time )
-	## 
+	##
 	## Look through all the sw_button_items on the application's
 	## top container that has :model = ACTION.  Click on the first
 	## one found.
 	##
 
 	_if container _is _unset
-	_then 
+	_then
 		container << _self.properties[ :application ].top_frame.top_canvas_container
 	_endif
-	
+
 	_for item _over container.all_items()
 	_loop
-		
+
 		_if ( model << item.model ) = action _orif
 		    ( model.is_kind_of?( toolbar_action_proxy ) _andif
 		      model.real_subject = action )
 		_then
 			button << item
-			_leave 
+			_leave
 		_endif
-		
+
 	_endloop
 
 	_self.properties[ :action_button ] << button
 	_self.click_item( button, property_list.new_with(:new_frame_wait_time, new_frame_wait_time) )
 
 	>> _self
-	
+
 _endmethod
 $
 
@@ -1753,11 +1758,11 @@ _private _method application_system_test_mixin.click_item( item, _optional props
 	## :y - click location y coord - defaults to middle of ITEM
 	## :message_dialog_wait_id - indicates clicking item will invoke a message
 	##                  dialog. Identifier can be used later to wait for dialog to
-	##                  be closed. 
+	##                  be closed.
 	##
 
 	_if props _isnt _unset
-	_then	
+	_then
 		new_frame_wait_time << props[:new_frame_wait_time]
 		x << props[:x]
 		y << props[:y]
@@ -1777,7 +1782,7 @@ _private _method application_system_test_mixin.click_item( item, _optional props
 
 	top_container << item.top_container
 	(top_x, top_y) << item.location_in_window( top_container )
-	
+
 	x +<< top_x
 	y +<< top_y
 
@@ -1793,7 +1798,7 @@ _private _method application_system_test_mixin.click_item( item, _optional props
 		_self.remove_value_from_queue( :frame_active )
 		frame.add_dependent( _self, :frame_active )
 	_endif
-	
+
 	_self.handle_event( top_container, :button, :left, x, y, :release, 0, _unset, message_dialog_wait_id )
 
 	_if new_frame_wait_time _isnt _unset _orif message_dialog_wait_id _isnt _unset
@@ -1801,9 +1806,9 @@ _private _method application_system_test_mixin.click_item( item, _optional props
 		_self.wait_for_value_on_queue( :frame_active, _false, new_frame_wait_time )
 		frame.remove_dependent( _self )
 	_endif
-	
+
 	>> _self
-	
+
 _endmethod
 $
 
@@ -1811,7 +1816,7 @@ $
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.handle_event( a_canvas, category, id, x, y, func, modmask,
 							     _optional second_id, message_dialog_wait_id )
-	## 
+	##
 	##
 
 	a_canvas.add_dependent( _self )
@@ -1831,7 +1836,7 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 			a_canvas.top_frame.set_focus()
 			a_canvas.has_focus? << _true
 		_elif _not a_canvas.active?
-		_then 
+		_then
 			write( "ACTIVATE ", a_canvas, " for ", category, " ", id , " event at ", x, %,, y,
 			       " item: ", a_canvas.get_item_at( x,y) )
 			a_canvas.top_frame.activate()
@@ -1857,8 +1862,8 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.map_manager
-	## 
-	## 
+	##
+	##
 
 	>> _self.properties[ :application ].get_service_provider( :map_manager )
 _endmethod
@@ -1867,8 +1872,8 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.editor_manager
-	## 
-	## 
+	##
+	##
 
 	>> _self.properties[ :application ].get_service_provider( :editor_manager )
 _endmethod
@@ -1877,18 +1882,18 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.parameter_unique_id_string( id, prefix )
-	## 
+	##
 	## Set the .properties[ ID ] to "PREFIX" +
 	## system.elapsed_seconds()
 	##
 
 	_if _self.properties[ id ] _is _unset
-	_then 
+	_then
 		_self.properties[ id ] << write_string( prefix, system.elapsed_seconds().as_fixed_string( 10, 10 ))
 	_endif
 
 	>> _self.properties[ id ]
-	
+
 _endmethod
 $
 
@@ -1900,9 +1905,9 @@ _private _method application_system_test_mixin.parameter_editor_label_inserted()
 	## - 2 references in EO
 	## - Also redefinitions in pni_system_test_mixin should be removed
 	## - Also redefinitions in ftth_system_test_mixin should be removed
-	
+
 	>> "REDUNDANT"
-	
+
 _endmethod
 $
 
@@ -1914,43 +1919,43 @@ _private _method application_system_test_mixin.editor_label()
 	## - 1 in pni_system_test_mixin
 	## - 1 in ftth_system_test_mixin
 
-	
-	>> "REDUNDANT" 
-	
+
+	>> "REDUNDANT"
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.parameter_pulldown_menu_container
-	## 
+	##
 	##
 
 	_if ( menu << _self.properties[ :pulldown_menu ] ) _isnt _unset
 	_then
 		_return menu.top_container
 	_endif
-	
+
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.insert_action()
-	## 
+	##
 	## Return the insert action on the editor.
 	##
 	## This is the action named :insert
 	##
-	
+
 	>> _self.properties[ :editor ].action( :insert )
-	
+
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.close_dialogs()
-	## 
+	##
 	## Close any dialogs that are listed in the properties
 	## [:dialogs ] slot
 	##
@@ -1962,32 +1967,32 @@ _private _method application_system_test_mixin.close_dialogs()
 		_loop
 			dialog.close()
 		_endloop
-	_endif 
-	
+	_endif
+
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.add_dialog( plugin_name, dialog_name, a_dialog )
-	## 
+	##
 	## Add A_DIALOG to the properties
 	## [:dialogs ] slot
 	##
 
 	_if _self.properties[ :dialogs ] _is _unset
-	_then 
+	_then
 		_self.properties[ :dialogs ] << dual_key_a_table.new()
-	_endif 
+	_endif
 
 	_self.properties[ :dialogs ][plugin_name, dialog_name] << a_dialog
-	
+
 _endmethod
 $
 
 
 _pragma(classify_level=restricted,topic=MUnit)
 _private _method application_system_test_mixin.wait_for_threads_to_finish( task_owner )
-	## 
+	##
 	## Wait for all the tasks on TASK_OWNER to finish.
 	##
 	## Wait for 1 second and check if TASK_OWNER.thread_pool is
@@ -1997,29 +2002,29 @@ _private _method application_system_test_mixin.wait_for_threads_to_finish( task_
 	_loop
 		_if task_owner.task_runner().thread_pool.empty? _then _leave _endif
 		_thisthread.sleep( 1000 )
-	_endloop 
-	
+	_endloop
+
 _endmethod
 $
 
 _private _method application_system_test_mixin.wait_for_application_threads_to_finish()
-	
+
 	_if (a_task_owner<< _self.properties[ :application ]) _isnt _unset
-	_then 
+	_then
 		_self.wait_for_threads_to_finish( a_task_owner )
 		_if (a_task_owner<< a_task_owner.top_frame) _isnt _unset _andif
 		    (a_task_owner<< a_task_owner.top_canvas_container) _isnt _unset
-		_then 
+		_then
 			_self.wait_for_threads_to_finish( a_task_owner )
-		_endif 
+		_endif
 	_endif
-_endmethod 
+_endmethod
 $
 
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.get_components( _optional a_string, a_component, module_name )
-	## 
+	##
 	## Returns a rope of components with a name or class name
 	## matching A_STRING in the component A_COMPONENT.
 	##
@@ -2059,7 +2064,7 @@ _method application_system_test_mixin.get_components( _optional a_string, a_comp
 			       _then
 				       _return
 			       _endif
-			       
+
 			       _for i, c _over a_string.fast_keys_and_elements()
 			       _loop
 				       _if c _is %space
@@ -2067,9 +2072,9 @@ _method application_system_test_mixin.get_components( _optional a_string, a_comp
 					       a_string[i] << %*
 				       _endif
 			       _endloop
-			       
+
 			       end << a_string.size
-			       
+
 			       a_stream << internal_text_output_stream.new()
 			       _if a_string[1] _is %^
 			       _then
@@ -2085,13 +2090,13 @@ _method application_system_test_mixin.get_components( _optional a_string, a_comp
 				       a_stream.write( a_string.slice(start, end) )
 				       a_stream.put( %* )
 			       _endif
-			       
+
 			       _return a_stream.string
 		       _endproc
 
 	a_string << test_string( a_string )
 	module_name << test_string( module_name )
-	
+
 	results << rope.new()
 	done << set.new()
 
@@ -2108,12 +2113,12 @@ _method application_system_test_mixin.get_components( _optional a_string, a_comp
 			done.add( app )
 		_endloop
 	_endif
-	
+
 	types << property_list.new_with( :gui, _false )
 
 	_loop
 		_if a_queue.empty? _then _leave _endif
-		
+
 		c << a_queue.next()
 
 		_if ( a_string _is _unset _orif
@@ -2126,9 +2131,9 @@ _method application_system_test_mixin.get_components( _optional a_string, a_comp
 		_then
 			results.add_last( c )
 		_endif
-		
+
 		rel_items << _self.get_related_items( c, types )
-		
+
 		_for r _over rel_items.fast_elements()
 		_loop
 			_if _not done.includes?( r )
@@ -2138,7 +2143,7 @@ _method application_system_test_mixin.get_components( _optional a_string, a_comp
 			_endif
 		_endloop
 	_endloop
-	
+
 	>> results
 _endmethod
 $
@@ -2146,7 +2151,7 @@ $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.get_related_items( obj, _optional types )
-	## 
+	##
 	## Returns a set of objects related to the object OBJ.
 	##
 	## TYPES controls what relationships are considered and should
@@ -2172,11 +2177,11 @@ _method application_system_test_mixin.get_related_items( obj, _optional types )
 	_then
 		types << property_list.new()
 	_endif
-	
+
 	others << set.new()
 
 	gui? << types[:gui] _isnt _false
-	
+
 	_if types[:slots] _isnt _false _andif
 	    obj.responds_to?( :|sys!slot_names_and_values()| )
 	_then
@@ -2200,14 +2205,14 @@ _method application_system_test_mixin.get_related_items( obj, _optional types )
 			others.add( c )
 		_endloop
 	_endif
-	
+
 	_if types[:framework] _is _true _andif
 	    obj.responds_to?( :framework ) _andif
 	    obj.framework _isnt _unset
 	_then
 		others.add( obj.framework )
 	_endif
-	
+
 	_if types[:dialogs] _isnt _false _andif
 	    ( obj.is_kind_of?( gui_framework ) _orif
 	      obj.is_kind_of?( plugin ) )
@@ -2220,7 +2225,7 @@ _method application_system_test_mixin.get_related_items( obj, _optional types )
 			_endif
 		_endloop
 	_endif
-	
+
 	_if types[:dependents] _isnt _false
 	_then
 		_for d _over obj.dependents()
@@ -2232,7 +2237,7 @@ _method application_system_test_mixin.get_related_items( obj, _optional types )
 			_endif
 		_endloop
 	_endif
-	
+
 	_if types[:action_engine] _isnt _false _andif
 	    obj.responds_to?( :|tag!sw_item_base| )
 	_then
@@ -2254,7 +2259,7 @@ _method application_system_test_mixin.get_related_items( obj, _optional types )
 	_then
 		others.add( owner )
 	_endif
-	
+
 	>> others
 _endmethod
 $
@@ -2262,9 +2267,9 @@ $
 
 _pragma(classify_level=debug)
 _private _method application_system_test_mixin.container_for_frame(_optional frame_title)
-	## 
+	##
 	## Return the top_canvas_container of the active frame with
-	## title FRAME_TITLE. 
+	## title FRAME_TITLE.
 	##
 	## If this is not supplied, return the
 	## .properties[:application]'s top frame's top_canvas_container.
@@ -2273,10 +2278,10 @@ _private _method application_system_test_mixin.container_for_frame(_optional fra
 	##
 
 	_if _self.properties[ :application ] _isnt _unset
-	_then 
+	_then
 		container << _self.properties[ :application ].top_frame.top_canvas_container
 	_endif
-	
+
 	_if frame_title _isnt _unset
 	_then
 		_for top_container _over sw_swift_manager.active_top_containers().fast_elements()
@@ -2290,29 +2295,29 @@ _private _method application_system_test_mixin.container_for_frame(_optional fra
 	_endif
 
 	>> container
-	
+
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_waiting_for_message_dialog_invocation_to_complete( message_dialog_wait_id )
-	## 
+	##
 	##
 	wait_data << _self.properties[ message_dialog_wait_id ]
 
 	_if wait_data _isnt _unset
 	_then
 		(task, a_canvas, id) << (_scatter wait_data)
-		
+
 		task.get_results()
-		
+
 		_self.wait_for_event_on_queue( :event_handled, id )
-		
+
 		a_canvas.remove_dependent( _self )
 	_else
 		write("No data stored for message_dialog_wait_id: ", message_dialog_wait_id)
 	_endif
-	
+
 	>> _self
 _endmethod
 $
@@ -2321,7 +2326,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_label_item_with_identifier_has_value(identifier, expected_value,
 									       _optional frame_title)
-	## 
+	##
 	## Check a Swift widget's VALUE.
 	##
 	## IDENTIFIER is the identifier of the widget to check.
@@ -2332,9 +2337,9 @@ _method application_system_test_mixin.then_label_item_with_identifier_has_value(
 	## FRAME_TITLE if supplied is the title of the frame on which
 	## to look for the widget.
 	##
-	
+
 	>> _self.then_item_with_identifier_has_value(:tag!sw_label_item, identifier, expected_value, frame_title)
-	
+
 _endmethod
 $
 
@@ -2342,7 +2347,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_text_item_with_identifier_has_value(identifier, expected_value,
 									       _optional frame_title)
-	## 
+	##
 	## Check a Swift widget's VALUE.
 	##
 	## IDENTIFIER is the identifier of the widget to check.
@@ -2353,9 +2358,9 @@ _method application_system_test_mixin.then_text_item_with_identifier_has_value(i
 	## FRAME_TITLE if supplied is the title of the frame on which
 	## to look for the widget.
 	##
-	
+
 	>> _self.then_item_with_identifier_has_value(:tag!sw_text_item, identifier, expected_value, frame_title)
-	
+
 _endmethod
 $
 
@@ -2363,7 +2368,7 @@ $
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_item_with_identifier_has_value(tag, identifier, expected_value,
 									  _optional frame_title)
-	## 
+	##
 	## Check a Swift widget's VALUE.
 	##
 	## IDENTIFIER is the identifier of the widget to check.
@@ -2374,7 +2379,7 @@ _method application_system_test_mixin.then_item_with_identifier_has_value(tag, i
 	## FRAME_TITLE if supplied is the title of the frame on which
 	## to look for the widget.
 	##
-	
+
 	item << _self.get_item_with_identifier(tag, identifier, :frame_title, frame_title)
 
 	_self.assert_not_unset(item, write_string("Failed to find component with identifier ", identifier))
@@ -2384,9 +2389,9 @@ _method application_system_test_mixin.then_item_with_identifier_has_value(tag, i
 					 ", but it is ", item.value)
 		_self.assert_equals(expected_value, item.value, fail_str)
 	_endif
-	
+
 	>> _self
-	
+
 _endmethod
 $
 
@@ -2414,24 +2419,25 @@ _method application_system_test_mixin.then_styled_string_is( tree_id_or_path, a_
 	expected << rope.new_from_iter( expected_ss, :|fast_elements()| )
 	fail_str << "styled_string element mismatch at"
 	_self.assert_deep_equals( expected, actual, fail_str )
-	
+
 	>> _self
-	
+
 _endmethod
 $
 
-_pragma(classify_level=restricted)
+_pragma(classify_level=restricted)
+
 _method application_system_test_mixin.given_an_embedded_editor_populated_with( ds_name, table_name, field_values )
-        ## 
+        ##
         ## Populate the embedded editor with a record in table TABLE_NAME in
         ## dataset DS_NAME using field values in FIELD_VALUES.
         ##
         ## Example: given_an_embedded_editor_populated_with(:electric, :sub_substation,
         ## property_list.new_with(:asset_id, "sanity_substation"))
-        ##                                
+        ##
 
         _self.given_an_embedded_editor( ds_name,  table_name )
-	
+
 	app << _self.properties[:application]
 	db  << app.database
 	col << db.collection( ds_name, table_name )
@@ -2444,16 +2450,16 @@ _method application_system_test_mixin.given_an_embedded_editor_populated_with( d
 
 	edman << app.get_service_provider( :editor_manager )
 	edman.edit_object( rec )
-	        
+
         >> _self
-        
+
 _endmethod
 $
 
 _pragma(classify_level=restricted)
 _private _method application_system_test_mixin.int!set_text_item_value_with_callback(item, new_text)
-	## 
-	## 
+	##
+	##
 
 	# set the NEW_TEXT when ITEM is enabled.
 	_if item.enabled? _is _true
