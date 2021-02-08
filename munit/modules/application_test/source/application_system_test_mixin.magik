@@ -1023,6 +1023,7 @@ _method application_system_test_mixin.when_refreshing_the_map()
 
 	_self.when_the_map_has_finished_rendering(refresh_proc)
 
+	>> _self
 _endmethod
 $
 
