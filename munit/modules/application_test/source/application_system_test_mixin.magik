@@ -697,8 +697,8 @@ _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_pa
 	_if a_tree_item _is _unset _orif 
 		a_tree_item.selection.empty?
 	_then 
-		show("Failed to select ", a_string, " in ", tree_id_or_path)
-		show("Selected_dt: ", selected_dt, " Tree item: ", a_tree_item, " (x,y): (", x, ", ", y, ")")
+		show("Failed to select", a_string, "in", tree_id_or_path)
+		show("Selected_dt:", selected_dt, "Tree item:", a_tree_item, "(x,y): (", x, ", ", y, ")")
 	_endif 
 
 	>> _self
