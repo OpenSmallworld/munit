@@ -693,6 +693,13 @@ _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_pa
 			index +<< 1
 		_endloop
 	_endif
+	
+	_if a_tree_item _is _unset _orif 
+		a_tree_item.selection.empty?
+	_then 
+		show("Failed to select ", a_string, " in ", tree_id_or_path)
+		show("Selected_dt: ", selected_dt, " Tree item: ", a_tree_item, " (x,y): (", x, ", ", y, ")")
+	_endif 
 
 	>> _self
 _endmethod
@@ -1174,51 +1181,6 @@ _method application_system_test_mixin.when_setting_value_in_text_item_with_ident
 		condition.raise(:error, :string,
 				write_string("Failed to find component with identifier ", identifier))
 	_endif
-
-	>> _self
-
-_endmethod
-$
-
-_pragma(classify_level=deprecated)
-_method application_system_test_mixin.when_populating_editor_by_getting_record( dataset_name, collection_name,
-										properties, _optional id_path )
-	## -------Deprecated------
-	## Reason     : Tends to suffer from threading issues which result in timeouts
-	## Use instead: given_an_embedded_editor_populated_with()
-	## Action     : Use given_an_embedded_editor_populated_with() instead
-	## Deprecated : 06 April 2018
-	## -----------------------
-	##
-	## Get the record(s) based on PROPERTIES.
-	## In the Absence of selecting objects from the map, the
-	## alternative is to Get the Record in the Editor and Click
-	## Select Geometry button.
-	## Provide the search critieria as 'Properties'
-	##
-	## ID_PATH is ID_Path for the Get button. If it is not supplied
-	## the button with identifier :get will be clicked.
-	##
-	## Example: when_populating_editor_by_getting_record(:electric,  :sub_substation,
-	##                              property_list.new_with(:asset_id, "sanity_substation"))
-	##
-	##
-
-	_self.given_an_embedded_editor( dataset_name,  collection_name ).
-		given_proposed_editor_values( properties )
-	_self.remove_value_from_queue( :task_complete )
-	_if id_path _isnt _unset
-	_then
-		 _self.when_clicking_item( id_path )
-	_else
-
-	 	 _self.when_clicking_item_with_identifier(:tag!sw_button_item, :get)
-	_endif
-
-	# Getting records happen in a separate thread. Wait for the
-	# task to complete.
-
-	_self.wait_for_task_to_complete( :|int!object_editor_get()|, 500 )
 
 	>> _self
 
