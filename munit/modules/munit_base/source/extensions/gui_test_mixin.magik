@@ -276,9 +276,8 @@ _method gui_test_mixin.when_the_frame_is_closed(a_frame, _optional wait_time, de
 			_import a_frame
 			top_con << a_frame.top_canvas_container
 			_return _not a_frame.active? _andif
-				(top_con _is _unset _orif
-					(top_con.tasks_pending?() _isnt _true _andif
-						sw_gui_task_owner.tasks_pending?() _isnt _true))
+				(top_con _is _unset _orif top_con.tasks_pending?() _isnt _true) _andif
+				sw_gui_task_owner.tasks_pending?() _isnt _true
 		_endproc
 
 	# 'close' the frame
@@ -375,12 +374,8 @@ _method gui_test_mixin.ui_ready?(top_con)
 	## Returns whether the content of the canvas container TOP_CON is ready to use.
 	##
 
-	_if top_con.tasks_pending?() _is _true
-	_then
-		_return _false
-	_endif
-
-	_if _not top_con.can_redraw?
+	_if _not top_con.can_redraw? _orif
+		top_con.tasks_pending?() _is _true
 	_then
 		_return _false
 	_endif
@@ -398,8 +393,8 @@ _method gui_test_mixin.ui_ready?(top_con)
 		_endif
 	_endloop
 
-	_if top_con.tasks_pending?() _is _true _andif
-		sw_gui_task_owner.tasks_pending?() _isnt _true
+	_if top_con.tasks_pending?() _is _true _orif
+		sw_gui_task_owner.tasks_pending?() _is _true
 	_then
 		_return _false
 	_endif
