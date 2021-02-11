@@ -1,0 +1,404 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug)
+##
+## A test mixin to provide helper methods to wait for the UI to be ready to test.
+## These methods include:
+##   when_the_frame_is_activated()
+##   when_the_frame_with_title_is_active()
+##   when_the_dialog_is_active()
+##   when_the_frame_is_closed()
+##   when_the_menu_is_active()
+##   when_the_frame_is_resized()
+##   when_the_ui_is_ready()
+##   wait_for_check()
+##
+## The helper methods can be used in unit tests of the widgets, integration tests or systems tests.
+## The checks implemented here have no pre-requisites for simplicity - no additional slots,
+## dependencies, queues or knowledge of events are needed.
+##
+## UI test classes can inherit from test_case and this mixin.
+##
+def_mixin(:gui_test_mixin)
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.wait_for_check(test_proc, _optional wait_time, delay_time, max_attempts)
+	##
+	## Wait for the supplied test procedure to return true before continuing.
+	##
+	## TEST_PROC - a procedure to test for a desired status (e.g. a flag has been set or something
+	## exists).
+	## WAIT_TIME - delay (in seconds) between each test attempt (defaults to 0.1s).
+	## DELAY_TIME - initial delay (in seconds) before first attempt (defaults to 0.1s).
+	## MAX_ATTEMPTS - number of times to repeat the test (defaults to 20).
+	##
+
+	_local timer_task
+	_local wait_queue << atomic_queue.new(1)
+	_local count << 0
+
+	_if wait_time _is _unset
+	_then
+		wait_time << 0.1
+	_endif
+	_if delay_time _is _unset
+	_then
+		delay_time << 0.1
+	_endif
+	_if max_attempts _is _unset
+	_then
+		max_attempts << 20
+	_endif
+
+	timer_task << timer.schedule_fixed_delay(
+		_proc @wait_for_condition_timer()
+			_import timer_task, wait_queue, test_proc, count, max_attempts
+
+			done? << _false
+			count +<< 1
+
+			_try _with cond
+				done? << test_proc.invoke()
+			_when error
+				write(cond.report_contents_string)
+			_endtry
+
+			_if done? _is _true _orif count = max_attempts
+			_then
+				timer_task.cancel()
+				wait_queue.put(done?)
+			_endif
+		_endproc,
+		delay_time,
+		wait_time
+	)
+
+	result << wait_queue.get()
+	_if result _isnt _true
+	_then
+		time_out << delay_time + (wait_time * max_attempts)
+		_self.fail(write_string("Time out after ", time_out," s "))
+	_endif
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.when_the_ui_is_ready(_optional an_item, wait_time, delay_time, max_attempts)
+	##
+	## Wait for any UI tasks to complete in the canvas container for AN_ITEM (a widget or canvas
+	## container).
+	##
+
+	_local a_test << _self
+	_local test_proc
+
+	_if an_item _is _unset
+	_then
+		_local top_cons << sw_swift_manager.active_top_containers()
+
+		test_proc <<
+			_proc()
+				_import a_test, top_cons
+				done? << _true
+
+				_for tc _over top_cons.fast_elements()
+				_loop
+					_if _not a_test.ui_ready?(tc)
+					_then
+						done? << _false
+						_leave
+					_endif
+				_endloop
+
+				_return done?
+			_endproc
+	_else
+		_local top_con << an_item.top_container
+
+		test_proc <<
+			_proc()
+				_import a_test, top_con
+				_return top_con _is _unset _orif a_test.ui_ready?(top_con)
+			_endproc
+	_endif
+
+	_self.wait_for_check(
+		test_proc,
+		wait_time, delay_time, max_attempts
+	)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.when_the_frame_is_activated(_optional a_frame, wait_time, delay_time, max_attempts)
+	##
+	## Activates the specified frame and waits for it to be active and ready.
+	## Waits for a new frame to be active and ready if a frame is not specified (i.e. opening a new
+	## dialog).
+	##
+	## WAIT_TIME - delay (in seconds) between each test attempt (defaults to 0.1s).
+	## DELAY_TIME - initial delay (in seconds) before first attempt (defaults to 0.1s).
+	## MAX_ATTEMPTS - number of times to repeat the test (defaults to 50).
+
+	_if max_attempts _is _unset
+	_then
+		max_attempts << 50
+	_endif
+
+	_local a_test << _self
+	_local test_proc
+
+	_if a_frame _is _unset
+	_then
+		# Wait for a new canvas container to be ready
+		_local previous_top_cons << sw_swift_manager.active_top_containers()
+
+		test_proc <<
+			_proc()
+				_import a_test, previous_top_cons
+
+				current_top_cons << sw_swift_manager.active_top_containers()
+				new_top_con << current_top_cons.symmetric_difference(previous_top_cons).an_element()
+
+				_return new_top_con _isnt _unset _andif
+					new_top_con.top_frame.active? _andif
+					a_test.ui_ready?(new_top_con)
+			_endproc
+	_else
+		# Wait for the specified frame to be active and idle
+		test_proc <<
+			_proc()
+				_import a_test, a_frame
+				top_con << a_frame.top_canvas_container
+
+				_return a_frame.active? _andif
+					(top_con _is _unset _orif a_test.ui_ready?(top_con))
+			_endproc
+
+		a_frame.activate()
+	_endif
+
+	_self.wait_for_check(
+		test_proc,
+		wait_time, delay_time, max_attempts
+	)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.when_the_frame_with_title_is_active(title, _optional wait_time, delay_time, max_attempts)
+	##
+	## Waits for a frame with the supplied title string to be active and ready to use.
+	## Adjust the wait, delay and attempts if waiting for a complex dialog or application to start.
+	##
+	## WAIT_TIME - delay (in seconds) between each test attempt (defaults to 0.2s).
+	## DELAY_TIME - initial delay (in seconds) before first attempt (defaults to 0.2s).
+	## MAX_ATTEMPTS - number of times to repeat the test (defaults to 50).
+
+	_if wait_time _is _unset
+	_then
+		wait_time << 0.2
+	_endif
+	_if delay_time _is _unset
+	_then
+		delay_time << 0.2
+	_endif
+	_if max_attempts _is _unset
+	_then
+		max_attempts << 50
+	_endif
+
+	_local a_test << _self
+
+	test_proc <<
+		_proc()
+			_import a_test, title
+
+			current_top_cons << sw_swift_manager.active_top_containers()
+
+			_for tc _over current_top_cons.fast_elements()
+			_loop
+				a_frame << tc.top_frame
+				_if a_frame _isnt _unset _andif
+					a_frame.title = title _andif
+					a_frame.active? _andif
+					a_test.ui_ready?(tc)
+				_then
+					_return _true
+				_endif
+			_endloop
+
+			_return _false
+		_endproc
+
+	_self.wait_for_check(
+		test_proc,
+		wait_time, delay_time, max_attempts
+	)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.when_the_dialog_is_active(owner)
+	##
+	## Waits for the frame of the model or gui_framework to be active and ready.
+	## OWNER must respond to :top_frame.
+	##
+
+	a_frame << _if owner.responds_to?(:top_frame)
+		_then
+			>> owner.top_frame
+		_endif
+
+	_return _self.when_the_frame_is_activated(a_frame)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.when_the_frame_is_closed(a_frame, _optional wait_time, delay_time, max_attempts)
+	##
+	## Closes the specified frame and waits for UI tasks to complete.
+	##
+
+	test_proc <<
+		_proc()
+			_import a_frame
+			top_con << a_frame.top_canvas_container
+			_return _not a_frame.active? _andif
+				(top_con _is _unset _orif top_con.tasks_pending?() _isnt _true) _andif
+				sw_gui_task_owner.tasks_pending?() _isnt _true
+		_endproc
+
+	# 'close' the frame
+	a_frame.unrealise()
+	a_frame.active? << _false
+
+	_self.wait_for_check(
+		test_proc,
+		wait_time, delay_time, max_attempts
+	)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.when_the_menu_is_active(an_item, _optional wait_time, delay_time, max_attempts)
+	##
+	## Waits for the menu in the canvas container containing the specified widget AN_ITEM (a widget or
+	## canvas container) to be active and ready.
+	##
+
+	_local a_test << _self
+	_local top_con << an_item.top_container
+
+	_self.wait_for_check(
+		_proc()
+			_import a_test, top_con
+
+			_return top_con _is _unset _orif
+				((a_menu << a_test.perform_ui(top_con, :|get_menu()|)) _isnt _unset _andif
+					a_menu.active? _andif
+					a_test.ui_ready?(a_menu.top_canvas_container))
+		_endproc,
+		wait_time, delay_time, max_attempts
+	)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.when_the_frame_is_resized(a_frame, width, height
+		_optional wait_time, delay_time, max_attempts)
+	##
+	## Resizes the specified frame and waits for the UI to be ready.
+	##
+
+	_local a_test << _self
+	_local top_con << a_frame.top_canvas_container
+
+	a_frame.set_size(width, height)
+
+	_self.wait_for_check(
+		_proc()
+			_import a_test, top_con
+			_return top_con _is _unset _orif a_test.ui_ready?(top_con)
+		_endproc,
+		wait_time, delay_time, max_attempts
+	)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.perform_ui(receiver, method_name, _gather args)
+	##
+	## Performs the supplied method name on the UI widget receiver without creating a serialisation
+	## task.
+	## Can be used in a test to avoid any thread synchronisations issues.
+	##
+
+	_if _not receiver.responds_to?(:serialisation_thread_name)
+	_then
+		_return receiver.perform(method_name, _scatter args)
+	_endif
+
+	class_name << receiver.define_method_target.metadata[:class_name]
+	serialised_method_name << symbol.concatenation(receiver.serialisation_thread_name, :!, class_name, :!, method_name)
+
+	_if _not receiver.responds_to?(serialised_method_name)
+	_then
+		_return receiver.perform(method_name, _scatter args)
+	_endif
+
+	_return receiver.perform(serialised_method_name, _scatter args)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.ui_ready?(top_con)
+	##
+	## Returns whether the content of the canvas container TOP_CON is ready to use.
+	##
+
+	_if _not top_con.can_redraw? _orif
+		top_con.tasks_pending?() _is _true
+	_then
+		_return _false
+	_endif
+
+	_for an_item _over top_con.all_current_items()
+	_loop
+		_if _not an_item.can_redraw?
+		_then
+			_return _false
+		_endif
+		_if an_item.responds_to?(:|tag!sw_container_base|) _andif
+			an_item.sys!slot(:item_array) _is _unset
+		_then
+			_return _false
+		_endif
+	_endloop
+
+	_if top_con.tasks_pending?() _is _true _orif
+		sw_gui_task_owner.tasks_pending?() _is _true
+	_then
+		_return _false
+	_endif
+
+	_return _true
+_endmethod
+$
