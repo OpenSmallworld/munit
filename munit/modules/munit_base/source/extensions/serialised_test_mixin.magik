@@ -24,7 +24,7 @@ _method serialised_test_mixin.queue
 	##
 	##
 
-	>> _self.properties[ :queue ]
+	>> _self.properties[:queue]
 
 _endmethod
 $
@@ -32,10 +32,10 @@ $
 
 _pragma(classify_level=debug)
 _method serialised_test_mixin.queue << new_queue
-        ##
-        ##
+	##
+	##
 
-        _self.properties[:queue] << new_queue
+	_self.properties[:queue] << new_queue
 
 _endmethod
 $
@@ -61,95 +61,110 @@ $
 
 
 _pragma(classify_level=debug)
-_method serialised_test_mixin.wait_for_value_on_queue( expected_value, _optional copy_other_values?, wait_time )
+_method serialised_test_mixin.wait_for_value_on_queue(expected_value, _optional copy_other_values?, wait_time)
 	##
 	## If COPY_OTHER_VALUES is false, don't copy anything else
 	## found on the queue back to the queue after finding the
 	## required value.  The default is true.
 
-	start          << date_time.now()
-	other_values   << rope.new()
-	timed_out?     << _false
-	wait_time      << wait_time.default( 200 )
-	wait_interval  << time_interval.new( 0, wait_time )
+	start << date_time.now()
+	other_values << rope.new()
+	timed_out? << _false
+	wait_time << wait_time.default(200)
+	wait_interval << time_interval.new(0, wait_time)
+
+	_if _self.queue _is _unset
+	_then
+		_self.queue << atomic_queue.new(1019)
+	_endif
 
 	_loop
-
 		# Prevent the test from hanging while waiting for something on
 		# the queue.  Only wait for 200ms and then continue
 		_if system.vm_version = 3 # magikSF
 		_then
-			_self.force_value_on_queue( expected_value )
-			value << _self.properties[:queue].get()
+			_self.force_value_on_queue(expected_value)
+			value << _self.queue.get()
 		_else
-			value << _self.properties[:queue].get( wait_time )
+			value << _self.queue.get(wait_time)
 		_endif
 
 		timed_out? << value _is _unset
 
 		_if value = expected_value _orif
-		    timed_out? _orif
-		    value.eq?( expected_value ) _orif
-		    ( value.is_kind_of?( {} ) _andif
-		      value[1] _is expected_value )
+			timed_out? _orif
+			value.eq?(expected_value) _orif
+			(value.is_kind_of?({}) _andif
+				value[1] _is expected_value)
 		_then
 			_leave
+
 		_elif copy_other_values? _isnt _false
 		_then
-			other_values.add_last( value.copy() )
+			other_values.add_last(value.copy())
 		_endif
+
 		_if date_time.now() - start > wait_interval _then _leave _endif
 	_endloop
 
-	_self.add_values_to_queue( other_values )
+	_self.add_values_to_queue(other_values)
 
-	>> ( _self, timed_out? )
+	>> (_self, timed_out?)
 
 _endmethod
 $
 
 
 _pragma(classify_level=debug)
-_private _method serialised_test_mixin.wait_for_event_on_queue( expected_value, expected_id _optional wait_time)
+_private _method serialised_test_mixin.wait_for_event_on_queue(expected_value, expected_id _optional wait_time)
 	##
 	##
 
-	start          << date_time.now()
-	other_values   << rope.new()
-	timed_out?     << _false
-	wait_time      << wait_time.default( 10000 )
-	wait_interval  << time_interval.new( 0, wait_time )
+	start << date_time.now()
+	other_values << rope.new()
+	timed_out? << _false
+	wait_time << wait_time.default(10000)
+	wait_interval << time_interval.new(0, wait_time)
+
+	_if _self.queue _is _unset
+	_then
+		_self.queue << atomic_queue.new(1019)
+	_endif
 
 	_loop
-		value << _self.properties[:queue].get( wait_time )
+		value << _self.queue.get(wait_time)
 		timed_out? << value _is _unset
+
 		_if timed_out?
 		_then
 			_leave
-		_elif value.is_kind_of?( {} ) _andif
-		    value[1] _is :event_handled _andif
-		    value[2] _isnt _unset _andif
-		    value[2].id _is expected_id
+
+		_elif value.is_kind_of?({}) _andif
+			value[1] _is :event_handled _andif
+			value[2] _isnt _unset _andif
+			value[2].id _is expected_id
 		_then
 			_leave
 
-		_elif value.is_kind_of?( {} ) _andif
-		      value[1] _is :task_complete
+		_elif value.is_kind_of?({}) _andif
+			value[1] _is :task_complete
 		_then
 			# Do nothing, don't copy :task_complete notifications to the
 			# queue.  This is to prevent the queue from filling up with
 			# :task_complete notifications which will hang the tests if
 			# nothing else can be put on the queue.
 		_else
-			other_values.add_last( value.copy() )
+			other_values.add_last(value.copy())
 		_endif
+
 		_if date_time.now() - start > wait_interval _then _leave _endif
 	_endloop
 
-	_self.add_values_to_queue( other_values )
+	_self.add_values_to_queue(other_values)
 
 	_if timed_out?
-	_then _self.fail(write_string("Time out after ",wait_time," ms when waiting for ", expected_value, " / ",expected_id))
+	_then
+		_self.fail(write_string("Time out after ", wait_time, " ms when waiting for ", expected_value, " / ", expected_id))
 	_endif
 
 	>> timed_out?
@@ -397,7 +412,6 @@ _method serialised_test_mixin.when_the_frame_is_minimized( top_frame, minimized?
 
 	_if top_frame _isnt _unset
 	_then
-
 		_if _self.queue _is _unset
 		_then
 			_self.queue << atomic_queue.new( 1019 )
@@ -411,7 +425,6 @@ _method serialised_test_mixin.when_the_frame_is_minimized( top_frame, minimized?
 		_self.remove_value_from_queue( wait_value )
 		top_frame.minimized? << minimized?
 		_self.wait_for_value_on_queue( wait_value )
-
 	_endif
 
 	>> _self
@@ -426,7 +439,6 @@ _method serialised_test_mixin.when_the_frame_is_maximized(top_frame, maximized?,
 
 	_if top_frame _isnt _unset
 	_then
-
 		_if _self.queue _is _unset
 		_then
 			_self.queue << atomic_queue.new( 1019 )
@@ -440,7 +452,6 @@ _method serialised_test_mixin.when_the_frame_is_maximized(top_frame, maximized?,
 		_self.remove_value_from_queue( wait_value )
 		top_frame.maximized? << maximized?
 		_self.wait_for_value_on_queue( wait_value )
-
 	_endif
 
 	>> _self
