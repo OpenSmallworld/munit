@@ -1210,6 +1210,69 @@ _method application_system_test_mixin.when_selecting_objects_in_the_map( rwos )
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_selecting_objects_in_bounds(a_bounding_box _optional save_selection?)
+	##
+	## Set the current map selection to objects inside A_BOUNDING_BOX
+	##
+
+	map_man << _self.map_manager
+	mv      << map_man.current_map_view
+	geoms   << mv.get_selection_candidates(:within, a_bounding_box)
+
+	_self.properties[:application].databus.make_data_available(:set_map_selection, {_unset, geoms})
+	
+	_if save_selection? _is _true
+	_then 
+		_self.properties[:saved_selected_geometries] << map_man.current_map.current_selection
+		_self.properties[:saved_selected_rwos]       << map_man.current_map.current_selection.rwo_set()
+	_endif 
+	
+	>> _self
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_clearing_map_selection()
+	##
+	## Clear the current map selection
+	##
+	
+	_self.when_selecting_objects_in_the_map({})
+	
+	>> _self
+
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method application_system_test_mixin.when_going_to_record(record)
+	
+	## In the current map view, go to the primary spatial context
+	## of RECORD
+	##
+	## Raise a condition if:
+	## - The record does not have a primary spatial context name
+	##
+	
+	manager << _self.map_manager
+	mv << manager.current_map_view
+	app << _self.properties[ :application ]
+	
+	_if ( sc_name << app.get_primary_spatial_context_name_for( record )) _isnt _unset
+	_then
+		sc << app.get_spatial_context_for( record, sc_name )
+		mv.goto( sc )
+	_else
+		condition.raise( :user_error, :string, "No primary spatial context for " + record )
+	_endif
+	
+	>> _self
+	
+_endmethod
+$
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.when_going_to_inserted_record()
@@ -1224,17 +1287,7 @@ _method application_system_test_mixin.when_going_to_inserted_record()
 
 	_if (record << _self.properties[ :new_record ]) _isnt _unset
 	_then
-		manager << _self.map_manager
-		mv << manager.current_map_view
-		app << _self.properties[ :application ]
-
-		_if ( sc_name << app.get_primary_spatial_context_name_for( record )) _isnt _unset
-		_then
-			sc << app.get_spatial_context_for( record, sc_name )
-			mv.goto( sc )
-		_else
-			condition.raise( :user_error, :string, "No primary spatial context for " + record )
-		_endif
+		_self.when_going_to_record(record)
 	_else
 		condition.raise( :user_error, :string, "No record to go to" )
 	_endif
@@ -1447,6 +1500,18 @@ _method application_system_test_mixin.then_record_is_shown_on_map( rwo )
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method application_system_test_mixin.then_map_selection_size_is( expected )
+	
+	## Asserts the map selection size is EXPECTED
+	
+	actual << _self.map_manager.current_map.current_selection.size
+	fail_str << write_string("Expected ", expected, " geoms to be selected in the map but actual number is ", actual)
+	_self.assert_equals(expected, actual, fail_str)
+	
+	>> _self
+_endmethod
+$
 
 _pragma(classify_level=debug)
 _method application_system_test_mixin.then_map_contains( rwo_collection_name, expected_number )
@@ -2389,7 +2454,6 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-
 _method application_system_test_mixin.given_an_embedded_editor_populated_with( ds_name, table_name, field_values )
         ##
         ## Populate the embedded editor with a record in table TABLE_NAME in
@@ -2435,5 +2499,19 @@ _private _method application_system_test_mixin.int!set_text_item_value_with_call
 	_else
 		condition.raise(:error, :string, write_string("Unable to set the text because the item ", item, " is not enabled."))
 	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method application_system_test_mixin.when_choosing_spatial_context(name)
+	
+	## Use the spatial_context_chooser to switch the main map to the
+	## spatial_context named NAME
+	
+	sch_chooser << _self.map_manager.current_map_document_gui.plugin(:spatial_context_chooser)
+	sch_chooser.choose_spatial_context(name)
+
+	_return _self
+
 _endmethod
 $
