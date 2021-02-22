@@ -2508,6 +2508,9 @@ _method application_system_test_mixin.when_choosing_spatial_context(name)
 	## Use the spatial_context_chooser to switch the main map to the
 	## spatial_context named NAME
 	
+	_dynamic !current_application!
+	!current_application! << _self.properties[:application]
+
 	sch_chooser << _self.map_manager.current_map_document_gui.plugin(:spatial_context_chooser)
 	sch_chooser.choose_spatial_context(name)
 
