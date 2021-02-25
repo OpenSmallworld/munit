@@ -1204,6 +1204,7 @@ _method application_system_test_mixin.when_selecting_objects_in_the_map( rwos )
 	_endloop
 
 	_self.properties[ :application ].databus.make_data_available( :set_map_selection, { _unset, geoms })
+	_self.properties[:saved_selected_rwos] << _self.map_manager.current_map.current_selection.rwo_set()
 
 	>> _self
 
