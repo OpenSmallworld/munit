@@ -408,7 +408,11 @@ _method db_test_case.open_database(_optional ace_dir, open_case_views?)
 		smallworld_product.set_startup_option(:interactive?, _false)
 		smallworld_product.set_startup_option(:authorisation, :singleuser)
 		open_database(ace_loc)
-		gis_program_manager.authorisation_view.login("root", "")
+		av<< gis_program_manager.authorisation_view
+		_if av _isnt _unset
+		_then 
+			av.login("root", "")
+		_endif 
 
 		# Open up the CASE datasets
 		_if  open_case_views? _is _true
