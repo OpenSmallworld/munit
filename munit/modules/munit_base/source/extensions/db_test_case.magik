@@ -115,6 +115,7 @@ _method db_test_case.one_time_tear_down()
 		_endif 
 		gis_program_manager.reinitialise()
 		.db_created?<< _false
+		system.gc(_true)
 	_endif
         _super.one_time_tear_down()
 _endmethod
