@@ -108,7 +108,7 @@ _method db_test_case.one_time_tear_down()
         ##
         ## Subclass implemetations should always call _super.
 	##
-	_if .db_created?
+	_if .db_created? _orif .ds_views _isnt _unset
 	_then
 		_if .ds_views _isnt _unset
 		_then
@@ -129,15 +129,18 @@ _method db_test_case.one_time_tear_down()
 _endmethod
 $
 _pragma(classify_level=debug)
-_method db_test_case.searchpath_and_filenames(v)
+_private _method db_test_case.searchpath_and_filenames(v)
 	## 
 	## 
 	sp<< v.searchpath[1]
-	files<< simple_vector.new(v.files.size)
-	_for i _over 1.upto(files.size)
+	sz<< v.files.size
+	files<< simple_vector.new(sz + 2)
+	_for i _over 1.upto(sz)
 	_loop
 		files[i]<< v.files[i].name
 	_endloop
+	files[sz + 1]<< "case_dd.ds"
+	files[sz + 2]<< "case.ds"
 	>> sp, files
 _endmethod
 $
@@ -150,7 +153,7 @@ _private _method db_test_case.delete_files(sp, files)
 	_then
 		_return
 	_endif 
-	_try
+	_try 
 		_for f _over files.fast_elements()
 		_loop
 			ds_physical_file.new(sp, f,:dont_care).delete()
@@ -172,6 +175,7 @@ _method db_test_case.one_time_set_up()
         ## Subclass implementations should always call _super.
         ##
 	_super.one_time_set_up()
+
 	_if _self.ds_views.empty?
 	_then
 		_self.create_and_open_database()
@@ -442,36 +446,56 @@ _method db_test_case.open_database(_optional ace_dir, open_case_views?)
 	_then
 		ace_loc << system.getenv( "SW_ACE_DB_DIR")
 	_endif
+
+	open_database(ace_loc)
+
+	av<< gis_program_manager.authorisation_view
+	_if av _isnt _unset
+	_then 
+		av.login("root", "")
+	_endif 
+
+	# Open up the CASE datasets
+	_if open_case_views? _is _true
+	_then 
+		pred << predicate.eq(:type, "sw_case_manager")
+		case_ds_recs << gis_program_manager.ace_top_view.collections[:sw_gis!dataset].select(pred)
+		_for case_ds_rec _over case_ds_recs.fast_elements()
+		_loop 
+			case_name << case_ds_rec.partition.as_symbol()
+			gis_program_manager.open_datasets(case_name)
+		_endloop 
+	_endif	
+	>> _self.ds_views
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method db_test_case.run_in_ds_environment(a_method _gather args)
+	## 
+	## 
 	interactive<< smallworld_product.get_option(:interactive?)
 	auth<< smallworld_product.get_option(:authorisation)
+	vvmds<< smallworld_product.get_option(:vvmds)
+	vvmds_cmd<< smallworld_product.command_line_options[:vvmds]
 	_protect
 		# Open up the new database
+		_if _self.db_dir.index_of_seq("memory::") _is 1
+		_then 
+			smallworld_product.set_startup_option(:vvmds, _false)
+			smallworld_product.command_line_options[:vvmds]<< _false 
+		_endif 
 		smallworld_product.set_startup_option(:interactive?, _false)
 		smallworld_product.set_startup_option(:authorisation, :singleuser)
-		open_database(ace_loc)
-		av<< gis_program_manager.authorisation_view
-		_if av _isnt _unset
-		_then 
-			av.login("root", "")
-		_endif 
-
-		# Open up the CASE datasets
-		_if  open_case_views? _is _true
-		_then 
-			pred << predicate.eq(:type, "sw_case_manager")
-			case_ds_recs << gis_program_manager.ace_top_view.collections[:sw_gis!dataset].select(pred)
-			_for case_ds_rec _over case_ds_recs.fast_elements()
-			_loop 
-				case_name << case_ds_rec.partition.as_symbol()
-				gis_program_manager.open_datasets(case_name)
-			_endloop 
-		_endif		
+		
+		_return _self.perform(a_method _scatter args)
+		
 	_protection
 		smallworld_product.set_startup_option(:interactive?, interactive)
 		smallworld_product.set_startup_option(:authorisation, auth)
-	_endprotect
-
-	>> _self.ds_views
+		smallworld_product.set_startup_option(:vvmds, vvmds)
+		smallworld_product.command_line_options[:vvmds]<< vvmds_cmd
+	_endprotect	
 _endmethod
 $
 
@@ -504,11 +528,14 @@ _method db_test_case.create_and_open_database(_optional create_dataset_args, cre
 	##
 	## The directory containing the ACE is returned
 
-	ace_dir << _self.create_database(create_dataset_args, create_database_args)
+	
+	ace_dir << _self.run_in_ds_environment(:|create_database()|,
+					       create_dataset_args, create_database_args)
 
 	_if ace_dir _isnt _unset
-	_then 
-		_self.open_database(ace_dir, _self.open_case_views?)
+	_then
+		_self.run_in_ds_environment(:|open_database()|, ace_dir,
+					    _self.open_case_views?)
 	_endif 
 
 	>> _self.ds_views
