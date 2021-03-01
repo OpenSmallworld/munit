@@ -111,7 +111,15 @@ _method db_test_case.one_time_tear_down()
 	_if .db_created?
 	_then
 		_if .ds_views _isnt _unset
-		_then .ds_views.empty()
+		_then
+			_for v _over .ds_views.fast_elements()
+			_loop
+				(sp,files)<< _self.searchpath_and_filenames(v)
+				v.discard()
+				_self.delete_files(sp,files)
+			_endloop
+			.ds_views.empty()
+			.ds_views<< _unset 
 		_endif 
 		gis_program_manager.reinitialise()
 		.db_created?<< _false
@@ -120,6 +128,38 @@ _method db_test_case.one_time_tear_down()
         _super.one_time_tear_down()
 _endmethod
 $
+_pragma(classify_level=debug)
+_method db_test_case.searchpath_and_filenames(v)
+	## 
+	## 
+	sp<< v.searchpath[1]
+	files<< simple_vector.new(v.files.size)
+	_for i _over 1.upto(files.size)
+	_loop
+		files[i]<< v.files[i].name
+	_endloop
+	>> sp, files
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method db_test_case.delete_files(sp, files)
+	## if the view files were just in memory then remove them
+	##
+	_if sp _is _unset _orif sp.index_of_seq("memory::") _isnt 1
+	_then
+		_return
+	_endif 
+	_try
+		_for f _over files.fast_elements()
+		_loop
+			ds_physical_file.new(sp, f,:dont_care).delete()
+		_endloop
+	_when error
+	_endtry	
+_endmethod
+$
+
 _pragma(classify_level=advanced,topic=MUnit, usage=subclassable)
 _method db_test_case.one_time_set_up()
         ## 
