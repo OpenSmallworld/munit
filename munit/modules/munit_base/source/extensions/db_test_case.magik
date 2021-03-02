@@ -116,15 +116,16 @@ _method db_test_case.one_time_tear_down()
 			_loop
 				(sp,files)<< _self.searchpath_and_filenames(v)
 				v.discard()
-				_self.delete_files(sp,files)
+				_self.delete_db_files(sp,files)
 			_endloop
 			.ds_views.empty()
 			.ds_views<< _unset 
-		_endif 
+		_endif
+		_self.delete_db_dir()
 		gis_program_manager.reinitialise()
 		.db_created?<< _false
 		system.gc(_true)
-	_endif
+	_endifd
         _super.one_time_tear_down()
 _endmethod
 $
@@ -144,22 +145,39 @@ _private _method db_test_case.searchpath_and_filenames(v)
 	>> sp, files
 _endmethod
 $
+_pragma(classify_level=debug)
+_private _method db_test_case.delete_db_dir()
+	## 
+	## 
+	(sub_dir,dir) << system.pathname_components(_self.db_dir)
+	_if dir.index_of_seq("memory::") _isnt 1
+	_then
+		_return
+	_endif 
+	_try _with cond
+		ds_environment.delete_directory(dir,sub_dir,:incore, :recurse?, _true)	
+	_when error
+		write(_self, ".delete_db_dir() error: ", cond)
+	_endtry	
+_endmethod
+$
 
 _pragma(classify_level=debug)
-_private _method db_test_case.delete_files(sp, files)
+_private _method db_test_case.delete_db_files(sp, files)
 	## if the view files were just in memory then remove them
 	##
 	_if sp _is _unset _orif sp.index_of_seq("memory::") _isnt 1
 	_then
 		_return
 	_endif 
-	_try 
+	_try _with cond
 		_for f _over files.fast_elements()
 		_loop
 			ds_physical_file.new(sp, f,:dont_care).delete()
 		_endloop
 	_when error
-	_endtry	
+		write(_self, ".delete_db_files() error: ", cond)
+	_endtry
 _endmethod
 $
 
