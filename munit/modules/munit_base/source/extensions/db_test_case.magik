@@ -157,7 +157,7 @@ _private _method db_test_case.delete_db_dir()
 	_try _with cond
 		ds_environment.delete_directory(dir,sub_dir,:incore, :recurse?, _true)	
 	_when error
-		write(_self, ".delete_db_dir() error: ", cond)
+		write(_self, ".delete_db_dir() reason: ", cond.report_contents_string)
 	_endtry	
 _endmethod
 $
@@ -176,7 +176,7 @@ _private _method db_test_case.delete_db_files(sp, files)
 			ds_physical_file.new(sp, f,:dont_care).delete()
 		_endloop
 	_when error
-		write(_self, ".delete_db_files() error: ", cond)
+		write(_self, ".delete_db_files() reason: ", cond.report_contents_string)
 	_endtry
 _endmethod
 $
