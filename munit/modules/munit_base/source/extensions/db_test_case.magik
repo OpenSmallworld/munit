@@ -110,25 +110,33 @@ _method db_test_case.one_time_tear_down()
 	##
 	_if .db_created? _orif .ds_views _isnt _unset
 	_then
-		_if .ds_views _isnt _unset
-		_then
-			_for v _over .ds_views.fast_elements()
-			_loop
-				(sp,files)<< _self.searchpath_and_filenames(v)
-				v.discard()
-				_self.delete_db_files(sp,files)
-			_endloop
-			.ds_views.empty()
-			.ds_views<< _unset 
-		_endif
-		_self.delete_db_dir()
-		gis_program_manager.reinitialise()
-		.db_created?<< _false
-		system.gc(_true)
+		_self.tear_down_database()
 	_endif
         _super.one_time_tear_down()
 _endmethod
 $
+_pragma(classify_level=debug)
+_private _method db_test_case.tear_down_database()
+	## 
+	## 
+	_if .ds_views _isnt _unset
+	_then
+		_for v _over .ds_views.fast_elements()
+		_loop
+			(sp,files)<< _self.searchpath_and_filenames(v)
+			v.discard()
+			_self.delete_db_files(sp,files)
+		_endloop
+		.ds_views.empty()
+		.ds_views<< _unset 
+	_endif
+	_self.delete_db_dir()
+	gis_program_manager.reinitialise()
+	.db_created?<< _false
+	system.gc(_true)	
+_endmethod
+$
+
 _pragma(classify_level=debug)
 _private _method db_test_case.searchpath_and_filenames(v)
 	## 
@@ -409,6 +417,11 @@ _method db_test_case.create_database(_optional create_dataset_args, create_datab
 	## same as create_and_open_database() so see that method for
 	## details. 
 
+	_if _self.in_memory_db_dir?
+	_then
+		ds_environment.closedown_vvmds()
+	_endif 
+
 	_if (dataset_args << create_dataset_args) _is _unset _andif 
 	    _not create_database_args.default({}).includes?(:dataset_creators)
 	_then
@@ -498,7 +511,7 @@ _private _method db_test_case.run_in_ds_environment(a_method _gather args)
 	vvmds_cmd<< smallworld_product.command_line_options[:vvmds]
 	_protect
 		# Open up the new database
-		_if _self.db_dir.index_of_seq("memory::") _is 1
+		_if _self.in_memory_db_dir?
 		_then 
 			smallworld_product.set_startup_option(:vvmds, _false)
 			smallworld_product.command_line_options[:vvmds]<< _false 
@@ -514,6 +527,13 @@ _private _method db_test_case.run_in_ds_environment(a_method _gather args)
 		smallworld_product.set_startup_option(:vvmds, vvmds)
 		smallworld_product.command_line_options[:vvmds]<< vvmds_cmd
 	_endprotect	
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method db_test_case.in_memory_db_dir?
+	## 
+	## 
+	>> _self.db_dir.index_of_seq("memory::") _is 1
 _endmethod
 $
 
@@ -546,7 +566,6 @@ _method db_test_case.create_and_open_database(_optional create_dataset_args, cre
 	##
 	## The directory containing the ACE is returned
 
-	
 	ace_dir << _self.run_in_ds_environment(:|create_database()|,
 					       create_dataset_args, create_database_args)
 
