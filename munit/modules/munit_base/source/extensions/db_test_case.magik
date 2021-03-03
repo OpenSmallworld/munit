@@ -108,7 +108,7 @@ _method db_test_case.one_time_tear_down()
         ##
         ## Subclass implemetations should always call _super.
 	##
-	_if .db_created? _orif .ds_views _isnt _unset
+	_if .db_created?
 	_then
 		_self.tear_down_database()
 	_endif

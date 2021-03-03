@@ -308,6 +308,7 @@ _method database_test.one_time_tear_down()
 	_then 
 		_self.discard_clones()
 		gis_program_manager.reinitialise()
+		show("ds_environment.closedown_vvmds()")
 		ds_environment.closedown_vvmds()
 	_endif
 _endmethod
