@@ -308,8 +308,6 @@ _method database_test.one_time_tear_down()
 	_then 
 		_self.discard_clones()
 		gis_program_manager.reinitialise()
-		show("ds_environment.closedown_vvmds()")
-		ds_environment.closedown_vvmds()
 	_endif
 _endmethod
 $
@@ -357,57 +355,26 @@ _private _method database_test.check_correct_database_open()
             gis_program_manager.ace_top_view.searchpath.at_using_default("", 1) <> _self.database_path _orif
             ds_environment.concurrency_mode <> _self.concurrency_mode
         _then 
-		_self.run_in_ds_environment(:|open_database()|)
+                #
+                # Suppress witterage. Note that
+                # raw_swdp_manager.open_partition() forcibly witters to
+                # !terminal! and that easily can't be suppressed without hiding
+                # real errors. 
+                #
+                _handling information _with procedure 
+                _handling warning _with procedure
+                ds_environment.concurrency_mode << _self.concurrency_mode
+                smallworld_product.set_startup_option(:authorisation, :singleuser)
+                smallworld_product.set_startup_option(:login, "root")
+                gis_program_manager.reinitialise()
+
+                open_database({_self.database_path})
+		_self.database_opened? << _true
         _endif
-	_self.run_in_ds_environment(:|open_other_datasets()|)
-_endmethod
-$
-_pragma(classify_level=debug)
-_method database_test.open_database()
-	## 
-	## 
-	#
-	# Suppress witterage. Note that
-	# raw_swdp_manager.open_partition() forcibly witters to
-	# !terminal! and that easily can't be suppressed without hiding
-	# real errors. 
-	#
-	_handling information _with procedure 
-	_handling warning _with procedure
-
-	gis_program_manager.reinitialise()
-
-	open_database({_self.database_path})
-	_self.database_opened? << _true	
+        _self.open_other_datasets()
 _endmethod
 $
 
-_pragma(classify_level=debug)
-_private _method database_test.run_in_ds_environment(a_method _gather args)
-	## 
-	## 
-	interactive<< smallworld_product.get_option(:interactive?)
-	auth<< smallworld_product.get_option(:authorisation)
-	login<< smallworld_product.get_option(:login)
-	conc_mode<< ds_environment.concurrency_mode
-	_protect
-		smallworld_product.set_startup_option(:interactive?, _false)
-		smallworld_product.set_startup_option(:authorisation, :singleuser)
-		smallworld_product.set_startup_option(:login, "root")
-		ds_environment.concurrency_mode << _self.concurrency_mode
-		
-		_return _self.perform(a_method _scatter args)
-		
-	_protection
-		smallworld_product.set_startup_option(:interactive?, interactive)
-		smallworld_product.set_startup_option(:authorisation, auth)
-		_if login _isnt _unset 
-		_then smallworld_product.set_startup_option(:login, login)
-		_endif
-		ds_environment.concurrency_mode << conc_mode
-	_endprotect	
-_endmethod
-$
 
 _pragma(classify_level=debug)
 _method database_test.tear_down()
