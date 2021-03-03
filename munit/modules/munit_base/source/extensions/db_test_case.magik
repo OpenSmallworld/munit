@@ -520,7 +520,7 @@ _private _method db_test_case.run_in_ds_environment(a_method _gather args)
 		smallworld_product.set_startup_option(:interactive?, _false)
 		smallworld_product.set_startup_option(:authorisation, :singleuser)
 		
-		_return _self.perform(a_method _scatter args)
+		_return _self.perform_private(a_method _scatter args)
 		
 	_protection
 		smallworld_product.set_startup_option(:interactive?, interactive)
