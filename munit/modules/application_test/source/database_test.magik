@@ -366,9 +366,18 @@ _private _method database_test.check_correct_database_open()
                 ds_environment.concurrency_mode << _self.concurrency_mode
                 smallworld_product.set_startup_option(:authorisation, :singleuser)
                 smallworld_product.set_startup_option(:login, "root")
+		interactive?<< smallworld_product.get_option(:interactive?) _is _true 
+		_if interactive?
+		_then 
+			smallworld_product.set_startup_option(:interactive?, _false)
+		_endif
                 gis_program_manager.reinitialise()
 
                 open_database({_self.database_path})
+		_if interactive?
+		_then 
+			smallworld_product.set_startup_option(:interactive?, _true)
+		_endif
 		_self.database_opened? << _true
         _endif
         _self.open_other_datasets()
