@@ -108,6 +108,7 @@ _method db_test_case.one_time_tear_down()
         ##
         ## Subclass implemetations should always call _super.
 	##
+	_self.rollback_database()
 	_if .db_created?
 	_then
 		_self.tear_down_database()
@@ -115,6 +116,20 @@ _method db_test_case.one_time_tear_down()
         _super.one_time_tear_down()
 _endmethod
 $
+_pragma(classify_level=debug)
+_private _method db_test_case.rollback_database()
+	## 
+	## 
+	_for v _over _self.ds_views.fast_elements()
+	_loop
+		_if v.version_managed? _andif v.writable?
+		_then
+			v.rollback()
+		_endif 
+	_endloop
+_endmethod
+$
+
 _pragma(classify_level=debug)
 _private _method db_test_case.tear_down_database()
 	## 
@@ -498,6 +513,7 @@ _method db_test_case.open_database(_optional ace_dir, open_case_views?)
 			gis_program_manager.open_datasets(case_name)
 		_endloop 
 	_endif	
+	system.gc(_true)
 	>> _self.ds_views
 _endmethod
 $
