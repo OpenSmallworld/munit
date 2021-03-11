@@ -59,21 +59,19 @@ _method db_test_case.ds_views
 	## Return a property list of available databases which the
 	## tests can access.
 	##
-	## This will only included views that are version managed
-	##
+	## This will only return views that are version managed
 	## This means it will not return things like oracle databases,
 	## if you want them then use the databases method directly.
 	
-	databases << _self.databases
-	_for view_name, ds_view _over databases.keys_and_elements() # Not fast_keys_and_elements()!
+	ds_views<< property_list.new()
+	_for view_name, ds_view _over _self.databases.fast_keys_and_elements()
 	_loop
-		_if _not ds_view.version_managed?
+		_if ds_view _isnt _unset _andif ds_view.version_managed?
 		_then
-			databases.remove_key(view_name)
+			ds_views[view_name]<< ds_view
 		_endif 
 	_endloop 
-
-	>> databases
+	>> ds_views
 _endmethod
 $
 
