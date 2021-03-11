@@ -59,24 +59,19 @@ _method db_test_case.ds_views
 	## Return a property list of available databases which the
 	## tests can access.
 	##
-	## This will only included views that are registed in
-	## gis_program_manager.databases and which also appear in
-	## ds_environment.views.
-	##
+	## This will only return views that are version managed
 	## This means it will not return things like oracle databases,
 	## if you want them then use the databases method directly.
 	
-	databases << _self.databases
-	all_views << ds_environment.views
-	_for view_name, ds_view _over databases.keys_and_elements() # Not fast_keys_and_elements()!
+	ds_views<< property_list.new()
+	_for view_name, ds_view _over _self.databases.fast_keys_and_elements()
 	_loop
-		_if _not all_views.includes?(ds_view)
+		_if ds_view _isnt _unset _andif ds_view.version_managed?
 		_then
-			databases.remove_key(view_name)
+			ds_views[view_name]<< ds_view
 		_endif 
 	_endloop 
-
-	>> databases
+	>> ds_views
 _endmethod
 $
 
@@ -156,7 +151,10 @@ _pragma(classify_level=debug)
 _private _method db_test_case.searchpath_and_filenames(v)
 	## 
 	##
-	_if v.searchpath _is _unset _then _return _endif 
+	_if _not v.responds_to?(:searchpath) _orif
+	    v.searchpath _is _unset
+	_then _return
+	_endif
 	sp<< v.searchpath[1]
 	sz<< v.files.size
 	files<< simple_vector.new(sz + 2)
@@ -636,6 +634,10 @@ _method db_test_case.databases
 
 	_self.check_for_in_memory_database()
 	
+	_for name, a_view _over views.keys_and_elements()
+	_loop
+		_if a_view _is _unset _then views.remove_key(name) _endif 
+	_endloop
 	>> views
 _endmethod
 $
