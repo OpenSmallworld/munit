@@ -151,7 +151,10 @@ _pragma(classify_level=debug)
 _private _method db_test_case.searchpath_and_filenames(v)
 	## 
 	##
-	_if v.searchpath _is _unset _then _return _endif 
+	_if _not v.responds_to?(:searchpath) _orif
+	    v.searchpath _is _unset
+	_then _return
+	_endif
 	sp<< v.searchpath[1]
 	sz<< v.files.size
 	files<< simple_vector.new(sz + 2)
@@ -631,6 +634,10 @@ _method db_test_case.databases
 
 	_self.check_for_in_memory_database()
 	
+	_for name, a_view _over views.keys_and_elements()
+	_loop
+		_if a_view _is _unset _then views.remove_key(name) _endif 
+	_endloop
 	>> views
 _endmethod
 $
