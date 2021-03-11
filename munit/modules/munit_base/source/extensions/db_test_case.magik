@@ -59,24 +59,7 @@ _method db_test_case.ds_views
 	## Return a property list of available databases which the
 	## tests can access.
 	##
-	## This will only included views that are registed in
-	## gis_program_manager.databases and which also appear in
-	## ds_environment.views.
-	##
-	## This means it will not return things like oracle databases,
-	## if you want them then use the databases method directly.
-	
-	databases << _self.databases
-	all_views << ds_environment.views
-	_for view_name, ds_view _over databases.keys_and_elements() # Not fast_keys_and_elements()!
-	_loop
-		_if _not all_views.includes?(ds_view)
-		_then
-			databases.remove_key(view_name)
-		_endif 
-	_endloop 
-
-	>> databases
+	>> _self.databases
 _endmethod
 $
 
