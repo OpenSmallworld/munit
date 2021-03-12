@@ -108,6 +108,7 @@ _method db_test_case.one_time_tear_down()
 	_then
 		_self.tear_down_database()
 	_endif
+	_self.uncache_views(3)
         _super.one_time_tear_down()
 _endmethod
 $
@@ -143,7 +144,6 @@ _private _method db_test_case.tear_down_database()
 	_self.delete_db_dir()
 	gis_program_manager.reinitialise()
 	.db_created?<< _false
-	system.gc(_true)	
 _endmethod
 $
 
@@ -429,7 +429,10 @@ _method db_test_case.create_database(_optional create_dataset_args, create_datab
 
 	## Create a database but don't open it.  The arguments are the
 	## same as create_and_open_database() so see that method for
-	## details. 
+	## details.
+	# Suppress witterage
+	_handling information _with procedure 
+	_dynamic !output!<< internal_text_output_stream.new()
 
 	_if _self.in_memory_db_dir?
 	_then
@@ -486,12 +489,18 @@ _method db_test_case.open_database(_optional ace_dir, open_case_views?)
 	## directory. If OPEN_CASE_VIEWS? is true then all the CASE
 	## views are opened as well.
 
+	# Suppress witterage
+	_handling information _with procedure
+	_dynamic !output!<< internal_text_output_stream.new()
+	
 	# Pick up a default ACE location if we haven't been given one
 	_if (ace_loc << ace_dir) _is _unset
 	_then
 		ace_loc << system.getenv( "SW_ACE_DB_DIR")
 	_endif
 
+	_self.uncache_views(3)
+	
 	open_database(ace_loc)
 
 	av<< gis_program_manager.authorisation_view
@@ -510,9 +519,21 @@ _method db_test_case.open_database(_optional ace_dir, open_case_views?)
 			case_name << case_ds_rec.partition.as_symbol()
 			gis_program_manager.open_datasets(case_name)
 		_endloop 
-	_endif	
-	system.gc(_true)
+	_endif
+	
+	_self.uncache_views(1)
 	>> _self.ds_views
+_endmethod
+$
+_pragma(classify_level=restricted)
+_private _method db_test_case.uncache_views(gc_cnt)
+	## discard and uncache any unreferenced views
+	_over 1.upto(gc_cnt)
+	_loop
+		_thisthread.sleep(30)
+		system.gc(_true)		
+	_endloop	
+	_thisthread.sleep(30)
 _endmethod
 $
 
