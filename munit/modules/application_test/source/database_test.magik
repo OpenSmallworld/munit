@@ -355,14 +355,10 @@ _private _method database_test.check_correct_database_open()
             gis_program_manager.ace_top_view.searchpath.at_using_default("", 1) <> _self.database_path _orif
             ds_environment.concurrency_mode <> _self.concurrency_mode
         _then 
-                #
-                # Suppress witterage. Note that
-                # raw_swdp_manager.open_partition() forcibly witters to
-                # !terminal! and that easily can't be suppressed without hiding
-                # real errors. 
-                #
+                # Suppress witterage
                 _handling information _with procedure 
-                _handling warning _with procedure
+		_dynamic !output!<< internal_text_output_stream.new()
+		
                 ds_environment.concurrency_mode << _self.concurrency_mode
                 smallworld_product.set_startup_option(:authorisation, :singleuser)
                 smallworld_product.set_startup_option(:login, "root")
