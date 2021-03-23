@@ -219,7 +219,7 @@ _method qm_routine_test_mixin.test_run_autofix?()
 	_for error_code _over _self.error_codes.fast_elements()
 	_loop
 		expected << _self.run_autofix?(error_code)
-		actual << _self.routine_to_test.run_autofix?.includes?(error_code)
+		actual << _self.routine_to_test.sys!perform(:run_autofix?).includes?(error_code)
 		
 		fail_str << write_string("run_autofix?() for ", error_code,
 					 " should have returned '", expected,
