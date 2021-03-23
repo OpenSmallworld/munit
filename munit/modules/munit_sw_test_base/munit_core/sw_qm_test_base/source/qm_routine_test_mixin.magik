@@ -71,7 +71,7 @@ $
 _pragma(classify_level=restricted, topic={munit})
 _method qm_routine_test_mixin.run_autofix?(error_code)
 	##
-	## Does the routine run automaticaly autofix for error_code
+	## Does the routine run automatically autofix for error_code
 	##
 	
 	_if _self.routine_properties[:run_autofix?] _is _unset
