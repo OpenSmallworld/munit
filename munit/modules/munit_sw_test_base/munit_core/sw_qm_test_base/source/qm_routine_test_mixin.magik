@@ -69,6 +69,22 @@ _endmethod
 $
 
 _pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.run_autofix?(error_code)
+	##
+	## Does the routine run automatically autofix for error_code
+	##
+	
+	_if _self.routine_properties[:run_autofix?] _is _unset
+	_then 
+		_return _false
+	_else
+		_return _self.routine_properties[:run_autofix?][error_code]
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
 _method qm_routine_test_mixin.re_runnable?
 	##
 	## Is the routine have re-runnable?
@@ -186,6 +202,26 @@ _method qm_routine_test_mixin.test_autofix_available?()
 		actual << _self.routine_to_test.autofix_available?(error_code)
 		
 		fail_str << write_string("autofix_available?() for ", error_code,
+					 " should have returned '", expected,
+					 "' not '", actual, "'")
+		
+		_self.assert_is(expected, actual, fail_str)
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={munit})
+_method qm_routine_test_mixin.test_run_autofix?()
+	##
+	## Test the method autofix() is run autimatically for error codes
+	##
+
+	_for error_code _over _self.error_codes.fast_elements()
+	_loop
+		expected << _self.run_autofix?(error_code)
+		actual << _self.routine_to_test.sys!perform(:run_autofix?).includes?(error_code)
+		
+		fail_str << write_string("run_autofix?() for ", error_code,
 					 " should have returned '", expected,
 					 "' not '", actual, "'")
 		
