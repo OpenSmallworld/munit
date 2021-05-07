@@ -108,6 +108,11 @@ _method serialised_test_mixin.wait_for_value_on_queue(expected_value, _optional 
 	_endloop
 
 	_self.add_values_to_queue(other_values)
+	
+	_if timed_out?
+	_then
+		write("Timed out waiting for '", expected_value, "' after waiting for ", wait_time, "ms")
+	_endif
 
 	>> (_self, timed_out?)
 
