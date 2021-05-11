@@ -66,29 +66,38 @@ _method serialised_test_mixin.wait_for_value_on_queue(expected_value, _optional 
 	## If COPY_OTHER_VALUES is false, don't copy anything else
 	## found on the queue back to the queue after finding the
 	## required value.  The default is true.
-
-	start << date_time.now()
-	other_values << rope.new()
-	timed_out? << _false
-	wait_time << wait_time.default(200)
-	wait_interval << time_interval.new(0, wait_time)
-
+	
 	_if _self.queue _is _unset
 	_then
 		_self.queue << atomic_queue.new(1019)
 	_endif
 
-	_loop
-		# Prevent the test from hanging while waiting for something on
-		# the queue.  Only wait for 200ms and then continue
-		_if system.vm_version = 3 # magikSF
-		_then
-			_self.force_value_on_queue(expected_value)
-			value << _self.queue.get()
-		_else
-			value << _self.queue.get(wait_time)
-		_endif
+	timed_out? << _self.int!wait_for_value_on_queue(expected_value, _self.queue, copy_other_values?, wait_time)
+	
+	>> (_self, timed_out?)
 
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_private _method serialised_test_mixin.int!wait_for_value_on_queue(expected_value, queue, _optional copy_other_values?, wait_time)
+	##
+	## Wait for EXPECTED_VALUE on QUEUE.
+	##
+	## If COPY_OTHER_VALUES is false, don't copy anything else
+	## found on the queue back to the queue after finding the
+	## required value.  The default is true.
+	start << date_time.now(:milliseconds)
+	other_values << rope.new()
+	timed_out? << _false
+	wait_time << wait_time.default(200)
+	wait_interval << time_interval.new(0, wait_time)
+	end_time << start + wait_interval
+
+	_loop
+		value << queue.get(wait_time)
+		
 		timed_out? << value _is _unset
 
 		_if value = expected_value _orif
@@ -104,7 +113,11 @@ _method serialised_test_mixin.wait_for_value_on_queue(expected_value, _optional 
 			other_values.add_last(value.copy())
 		_endif
 
-		_if date_time.now() - start > wait_interval _then _leave _endif
+		_if date_time.now(:milliseconds) > end_time 
+		_then
+			timed_out? << _true
+			_leave
+		_endif
 	_endloop
 
 	_self.add_values_to_queue(other_values)
@@ -114,11 +127,10 @@ _method serialised_test_mixin.wait_for_value_on_queue(expected_value, _optional 
 		write("Timed out waiting for '", expected_value, "' after waiting for ", wait_time, "ms")
 	_endif
 
-	>> (_self, timed_out?)
+	>> timed_out?
 
 _endmethod
 $
-
 
 _pragma(classify_level=debug)
 _private _method serialised_test_mixin.wait_for_event_on_queue(expected_value, expected_id _optional wait_time)
