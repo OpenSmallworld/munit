@@ -112,7 +112,10 @@ _method eo_dnom_test_mixin.create_station_export_request()
 	# write the schematics files for tests
 	request.set_property( :export_schematics?,
 			      _self.properties[:export_schematics?].default(_true) )
-	
+
+	# export future network during tests
+	request.set_property( :export_future_network?,
+			      _self.properties[:export_future_network?].default(_false) )
 	_return request 
 _endmethod
 $
@@ -121,6 +124,15 @@ _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.given_export_station_internals(val)
 
 	_self.properties[:export_station_internals?] << val
+	
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_export_future_network(val)
+
+	_self.properties[:export_future_network?] << val
 	
 	_return _self 
 _endmethod
