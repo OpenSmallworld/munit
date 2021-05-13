@@ -81,7 +81,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method serialised_test_mixin.int!wait_for_value_on_queue(expected_value, queue, _optional copy_other_values?, wait_time)
+_private _method serialised_test_mixin.int!wait_for_value_on_queue(expected_value, a_queue, _optional copy_other_values?, wait_time)
 	##
 	## Wait for EXPECTED_VALUE on QUEUE.
 	##
@@ -96,7 +96,7 @@ _private _method serialised_test_mixin.int!wait_for_value_on_queue(expected_valu
 	end_time << start + wait_interval
 
 	_loop
-		value << queue.get(wait_time)
+		value << a_queue.get(wait_time)
 		
 		timed_out? << value _is _unset
 
@@ -120,7 +120,7 @@ _private _method serialised_test_mixin.int!wait_for_value_on_queue(expected_valu
 		_endif
 	_endloop
 
-	_self.add_values_to_queue(other_values, queue)
+	_self.add_values_to_queue(other_values, a_queue)
 	
 	_if timed_out?
 	_then
