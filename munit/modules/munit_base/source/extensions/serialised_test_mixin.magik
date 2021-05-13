@@ -272,12 +272,12 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method serialised_test_mixin.add_values_to_queue( values, queue )
+_private _method serialised_test_mixin.add_values_to_queue( values, a_queue )
 	##
 	##
 	_for value _over values.fast_elements()
 	_loop
-		queue.put( value, _true )
+		a_queue.put( value, _true )
 	_endloop
 
 _endmethod
