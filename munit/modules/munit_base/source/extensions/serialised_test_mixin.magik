@@ -81,7 +81,7 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method serialised_test_mixin.int!wait_for_value_on_queue(expected_value, queue, _optional copy_other_values?, wait_time)
+_private _method serialised_test_mixin.int!wait_for_value_on_queue(expected_value, a_queue, _optional copy_other_values?, wait_time)
 	##
 	## Wait for EXPECTED_VALUE on QUEUE.
 	##
@@ -96,7 +96,7 @@ _private _method serialised_test_mixin.int!wait_for_value_on_queue(expected_valu
 	end_time << start + wait_interval
 
 	_loop
-		value << queue.get(wait_time)
+		value << a_queue.get(wait_time)
 		
 		timed_out? << value _is _unset
 
@@ -120,7 +120,7 @@ _private _method serialised_test_mixin.int!wait_for_value_on_queue(expected_valu
 		_endif
 	_endloop
 
-	_self.add_values_to_queue(other_values)
+	_self.add_values_to_queue(other_values, a_queue)
 	
 	_if timed_out?
 	_then
@@ -177,7 +177,7 @@ _private _method serialised_test_mixin.wait_for_event_on_queue(expected_value, e
 		_if date_time.now() - start > wait_interval _then _leave _endif
 	_endloop
 
-	_self.add_values_to_queue(other_values)
+	_self.add_values_to_queue(other_values, _self.properties[:queue])
 
 	_if timed_out?
 	_then
@@ -263,7 +263,7 @@ _private _method serialised_test_mixin.wait_for_task_to_complete( method_name, _
 		_if date_time.now() - start > wait_interval _then _leave _endif
 	_endloop
 
-	_self.add_values_to_queue( other_values )
+	_self.add_values_to_queue( other_values , _self.properties[:queue])
 
 	_return timed_out?
 
@@ -272,12 +272,12 @@ $
 
 
 _pragma(classify_level=debug)
-_private _method serialised_test_mixin.add_values_to_queue( values )
+_private _method serialised_test_mixin.add_values_to_queue( values, a_queue )
 	##
 	##
 	_for value _over values.fast_elements()
 	_loop
-		_self.properties[:queue].put( value, _true )
+		a_queue.put( value, _true )
 	_endloop
 
 _endmethod
@@ -327,7 +327,7 @@ _private _method serialised_test_mixin.remove_value_from_queue( remove_value )
 
 	_endloop
 
-	_self.add_values_to_queue( other_values )
+	_self.add_values_to_queue( other_values, _self.properties[:queue] )
 
 _endmethod
 $
@@ -356,7 +356,7 @@ _private _method serialised_test_mixin.remove_event_from_queue( remove_event_id 
 
 		_endloop
 
-		_self.add_values_to_queue( other_values )
+		_self.add_values_to_queue( other_values, _self.properties[:queue] )
 	_endif
 
 _endmethod
@@ -389,7 +389,7 @@ _private _method serialised_test_mixin.remove_completed_task_from_queue(method_n
 
 		_endloop
 
-		_self.add_values_to_queue( other_values )
+		_self.add_values_to_queue( other_values, _self.properties[:queue] )
 	_endif
 
 _endmethod
