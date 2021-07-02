@@ -195,6 +195,58 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method gui_test_mixin.when_the_frame_is_closed(a_frame, _optional wait_time, delay_time, max_attempts)
+	##
+	## Closes the specified frame and waits for UI tasks to complete.
+	##
+
+	test_proc <<
+		_proc()
+			_import a_frame
+			top_con << a_frame.top_canvas_container
+			_return _not a_frame.active? _andif
+				(top_con _is _unset _orif top_con.tasks_pending?() _isnt _true) _andif
+				sw_gui_task_owner.tasks_pending?() _isnt _true
+		_endproc
+
+	# 'close' the frame
+	a_frame.unrealise()
+	a_frame.active? << _false
+
+	_self.wait_for_check(
+		test_proc,
+		wait_time, delay_time, max_attempts
+	)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.when_the_frame_is_resized(a_frame, width, height
+		_optional wait_time, delay_time, max_attempts)
+	##
+	## Resizes the specified frame and waits for the UI to be ready.
+	##
+
+	_local a_test << _self
+	_local top_con << a_frame.top_canvas_container
+
+	a_frame.set_size(width, height)
+
+	_self.wait_for_check(
+		_proc()
+			_import a_test, top_con
+			_return top_con _is _unset _orif a_test.ui_ready?(top_con)
+		_endproc,
+		wait_time, delay_time, max_attempts
+	)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method gui_test_mixin.when_the_frame_with_title_is_active(title, _optional wait_time, delay_time, max_attempts)
 	##
 	## Waits for a frame with the supplied title string to be active and ready to use.
@@ -250,6 +302,67 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method gui_test_mixin.when_the_dialog_is_activated(owner, _optional wait_time, delay_time, max_attempts, _gather args)
+	##
+	## Activates the supplied model or gui_framework and waits for the UI to be ready.
+	## OWNER must respond to activate().
+
+	_local a_test << _self
+
+	test_proc <<
+		_proc()
+			_import a_test, owner
+
+			_return (a_frame << owner.top_frame) _isnt _unset _andif
+				a_frame.active? _andif
+				((top_con << a_frame.top_canvas_container) _is _unset _orif
+					a_test.ui_ready?(top_con))
+		_endproc
+
+	owner.activate(_scatter args)
+
+	_self.wait_for_check(
+		test_proc,
+		wait_time, delay_time, max_attempts
+	)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.when_the_dialog_is_closed(owner, _optional wait_time, delay_time, max_attempts)
+	##
+	## Closes the supplied model or gui_framework and waits for the UI to be ready.
+	## OWNER must respond to wm_close().
+
+	_local a_frame << owner.top_frame
+	_if a_frame _is _unset
+	_then
+		_return _self
+	_endif
+
+	test_proc <<
+		_proc()
+			_import a_frame
+			top_con << a_frame.top_canvas_container
+			_return _not a_frame.active? _andif
+				(top_con _is _unset _orif top_con.tasks_pending?() _isnt _true) _andif
+				sw_gui_task_owner.tasks_pending?() _isnt _true
+		_endproc
+
+	owner.wm_close()
+
+	_self.wait_for_check(
+		test_proc,
+		wait_time, delay_time, max_attempts
+	)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method gui_test_mixin.when_the_dialog_is_active(owner)
 	##
 	## Waits for the frame of the model or gui_framework to be active and ready.
@@ -262,34 +375,6 @@ _method gui_test_mixin.when_the_dialog_is_active(owner)
 		_endif
 
 	_return _self.when_the_frame_is_activated(a_frame)
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method gui_test_mixin.when_the_frame_is_closed(a_frame, _optional wait_time, delay_time, max_attempts)
-	##
-	## Closes the specified frame and waits for UI tasks to complete.
-	##
-
-	test_proc <<
-		_proc()
-			_import a_frame
-			top_con << a_frame.top_canvas_container
-			_return _not a_frame.active? _andif
-				(top_con _is _unset _orif top_con.tasks_pending?() _isnt _true) _andif
-				sw_gui_task_owner.tasks_pending?() _isnt _true
-		_endproc
-
-	# 'close' the frame
-	a_frame.unrealise()
-	a_frame.active? << _false
-
-	_self.wait_for_check(
-		test_proc,
-		wait_time, delay_time, max_attempts
-	)
-
-	_return _self
 _endmethod
 $
 
@@ -311,30 +396,6 @@ _method gui_test_mixin.when_the_menu_is_active(an_item, _optional wait_time, del
 				((a_menu << a_test.perform_ui(top_con, :|get_menu()|)) _isnt _unset _andif
 					a_menu.active? _andif
 					a_test.ui_ready?(a_menu.top_canvas_container))
-		_endproc,
-		wait_time, delay_time, max_attempts
-	)
-
-	_return _self
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method gui_test_mixin.when_the_frame_is_resized(a_frame, width, height
-		_optional wait_time, delay_time, max_attempts)
-	##
-	## Resizes the specified frame and waits for the UI to be ready.
-	##
-
-	_local a_test << _self
-	_local top_con << a_frame.top_canvas_container
-
-	a_frame.set_size(width, height)
-
-	_self.wait_for_check(
-		_proc()
-			_import a_test, top_con
-			_return top_con _is _unset _orif a_test.ui_ready?(top_con)
 		_endproc,
 		wait_time, delay_time, max_attempts
 	)
