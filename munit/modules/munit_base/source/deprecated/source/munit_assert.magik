@@ -119,22 +119,6 @@ _endmethod
 $
 
 _pragma(classify_level=deprecated,topic=MUnit)
-_method munit_assert.assert_is( expected , actual, _optional a_string)
-	## DEPRECATED! 
-
-	>> _self.assert( actual , :is , expected , a_string , :assert_is )
-_endmethod
-$
-
-_pragma(classify_level=deprecated,topic=MUnit)
-_method munit_assert.assert_is_not( expected , actual, _optional a_string)
-	## DEPRECATED! 
-
-	>> _self.assert( actual , :isnt , expected , a_string , :assert_is_not )
-_endmethod
-$
-
-_pragma(classify_level=deprecated,topic=MUnit)
 _method munit_assert.assert_delta(expected, actual, delta, _optional a_string)
 	## DEPRECATED! 
 
@@ -293,33 +277,6 @@ _method munit_assert.eq?( expected, actual, _optional a_string)
 	
 	>> _self.assert( actual , :|eq?()| , expected , a_string , :assert_eq? )
 _endmethod
-$
-
-_pragma(classify_level=deprecated,topic=MUnit)
-_method munit_assert.assert_not_unset( actual, _optional a_string)
-	## DEPRECATED!
-	
-	>> _self.assert( actual , :isnt , _unset, a_string , :assert_eq? )
-_endmethod
-$
-
-
-_pragma(classify_level=deprecated,topic=MUnit)
-_method munit_assert.assert_true(a_boolean, _optional a_string)
- 	## DEPRECATED!
- 	## Look to new implementation of ASSERT method on assert.
-	
- 	>> _self.assert( a_boolean , :is , _true , a_string , :assert_true )
-_endmethod
-$
-
-_pragma(classify_level=deprecated,topic=MUnit)
- _method munit_assert.assert_unset(an_object, _optional a_string)
- 	## DEPRECATED!
- 	## Look to new implementation of ASSERT method on assert.
-
- 	>> _self.assert( an_object , :is , _unset , a_string , :assert_unset )
- _endmethod
 $
 
 _pragma(classify_level=deprecated,topic=MUnit)
