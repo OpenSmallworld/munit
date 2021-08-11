@@ -103,6 +103,38 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.given_deterministic_project_ids()
+	## 
+	## Stub out the project ID creation logic so that it returns a deterministic
+	## result that can be used in golden file comparisons. Without this, the project
+	## ID will contain the scheme name, which is dependent on the machine name and
+	## time the tests are run
+	##
+	_local test_framework << _self
+	stub_method_helper.replace_method(eo_dnom_mapper,
+		:|project_id_for_schemes()|,
+		_proc(schemes)
+			_import test_framework
+			_local nondeterministic_project_id << _self.saved!project_id_for_schemes(schemes)
+			_local latest_scheme << schemes.as_sorted_collection(_proc (o1, o2) _return o1.erfasst_am > o2.erfasst_am _endproc).an_element()
+
+			_if test_framework.properties[:design].name = latest_scheme.name
+			_then
+				# This is the project created as part of the test, check the standard method would
+				# have returned something, then return a deterministic value
+				test_framework.assert_not_unset(nondeterministic_project_id, "Expected the default project ID to not be unset")
+				_return write_string(test_framework.class_name(), " - mock_scheme")
+			_else
+				# Return the original value
+				_return nondeterministic_project_id
+			_endif
+		_endproc
+	)	
+	>> _self 	
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.potential_files(file_sets)
 	##
 	sets << rope.new(file_sets.size)
@@ -250,9 +282,39 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_inc_update_itest_base.when_design_differences_are_exported()
+_method eo_dnom_inc_update_itest_base.given_design_changes_have_been_published()
 	##
-	_super.when_design_differences_are_exported()
+	## Merge up all changes in the current design, this puts the design in the
+	## same state as if all changes before have been published and sent to the
+	## ADMS
+	##
+	_self.publish_design(_false)
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.when_design_differences_are_exported_via_proposed_export()
+	##
+	## Export design differences using the proposed export workflow
+	##
+	>> _self.when_design_differences_are_exported(:proposed)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.when_design_differences_are_exported_via_as_built_export()
+	##
+	## Export design differences using the as-built export workflow
+	##
+	>> _self.when_design_differences_are_exported(:as_built)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.when_design_differences_are_exported(_optional export_type)
+	##
+	_super.when_design_differences_are_exported(export_type)
 
 	_self.get_calculated_diff_files();
 	

@@ -184,7 +184,7 @@ $
 
 _pragma(classify_level=debug)
 _method inc_update_itest_helper.remove_asset(installation, asset)
-
+	##
 	installation.remove_assets(rwo_set.new_with(asset))
 
 _endmethod
@@ -192,8 +192,16 @@ $
 
 _pragma(classify_level=debug)
 _method inc_update_itest_helper.propose_remove_asset(installation, asset)
-
+	##
 	installation.propose_remove_assets(rwo_set.new_with(asset))
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.propose_remove_installation(installation)
+	##
+	record_transaction.new_update(installation, property_list.new_with(:status, "Proposed Remove")).run()
 
 _endmethod
 $
