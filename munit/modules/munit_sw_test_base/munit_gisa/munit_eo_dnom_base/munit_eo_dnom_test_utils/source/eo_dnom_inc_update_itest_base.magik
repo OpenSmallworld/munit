@@ -294,6 +294,18 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.given_design_changes_have_been_posted()
+	##
+	## Merge up all changes in the current design, this puts the design in the
+	## same state as if all changes before have been posted and sent to the
+	## ADMS
+	##
+	_self.post_design(_false)
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.when_design_differences_are_exported_via_proposed_export()
 	##
 	## Export design differences using the proposed export workflow
