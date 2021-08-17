@@ -790,14 +790,14 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_gisa_base_test_case.when_design_differences_are_exported()
+_method eo_gisa_base_test_case.when_design_differences_are_exported(_optional export_type)
 	##
 	##
 	# Dont stop cloning exchange job records
 	stub_method_helper.replace_method(sw_cim_metadata_engine, :|clone_exchange_job_record()|, :new_exchange_job_id)
 	stub_method_helper.replace_method(sw_cim_metadata_engine, :|update_exchange_job_with_metadata()|, _unset)
 	_self.commit_and_merge_all_views()
-	.properties[ :resulting_request ] << _self.export_differences_from_current_design_locally()
+	.properties[ :resulting_request ] << _self.export_differences_from_current_design_locally(export_type)
 	>> _self
 _endmethod
 $
@@ -830,3 +830,48 @@ _private _method eo_gisa_base_test_case.get_circuit(circuit_id)
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.discard_cim_change_detector_replicas_cache()
+	# Removes DM top replicas from the cim_change_detector, in
+	# order to inject a different DM top for the test.
+	# There is no other way than to dig into the plugin slot.
+	# Method created based on the behaviour present at gisa rev
+	# e55e18fb3fafe5e82c2b7e109c09a640cfe3ca29.
+	# see cim_change_detector_engine.init_views_for_scheme() called
+	# from the cim_change_detector_engine.changes_for_current_scheme()
+	# Discarding the cache again, in the tear_down(), will cause the
+	# cache to be repopulated with its original values.
+	replicas << _self.application().plugin(:cim_change_detector).sys!slot(:engine).sys!slot(:top_views)
+	_if replicas _isnt _unset
+	_then
+		_for replica _over replicas.fast_elements()
+		_loop
+			replica.discard()
+		_endloop
+		replicas.empty()
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.stub_design_top_alternative_path()
+	##
+	## Stub the DM's top alternative path as the parent's design one.
+	## That way, the top view for the test can be altered within the
+	## scope of the test case.
+	##
+	
+	_local alternative_paths << _self.properties[:design].parent.alternative_paths()
+	stub_method_helper.replace_method(swg_dsn_user_alternative_control,
+					  :|design_top_alternative_path()|,
+					  _proc(dataset_name)@stubbed_design_top_alternative_path
+						  _import alternative_paths
+						  _if(paths << alternative_paths[dataset_name]) _isnt _unset
+						  _then
+							  _return write_string_with_separator(paths, %|, %|)
+						  _else
+							  _return _self.saved!design_top_alternative_path(dataset_name)
+						  _endif						  
+					  _endproc)
+_endmethod
+$
