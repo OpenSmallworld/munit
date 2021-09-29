@@ -9,12 +9,17 @@ def_slotted_exemplar(:test_failure,
 	{ :failed_test,      _unset },
 	{ :raised_condition, _unset },
 	{ :traceback,        _unset },
-	{ :traceback_text,   _unset }
+	{ :traceback_text,   _unset },
+	{ :test_failure_result_prop, _unset}
 })
 $
 
 _pragma(classify_level=debug)
 test_failure.define_slot_access( :traceback, :read, :public )
+$
+
+_pragma(classify_level=debug)
+test_failure.define_slot_access( :test_failure_result_prop, :read, :public )
 $
 
 _pragma(classify_level=basic,topic=MUnit)
@@ -31,6 +36,12 @@ _private _method test_failure.init( a_test , a_condition )
 
 	.failed_test << a_test
 	.raised_condition << a_condition
+	
+	_if !test_failure_result_prop! _isnt _unset
+	_then 
+		.test_failure_result_prop << !test_failure_result_prop!.copy()
+	_endif 
+	
 	_self.init_traceback_text()
 
 	_self.log_failure()

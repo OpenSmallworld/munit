@@ -1,3 +1,4 @@
+globals
 framework/
 extensions/
 runner/
