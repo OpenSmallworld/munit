@@ -403,7 +403,7 @@ _pragma(classify_level=debug)
 _method json_assert_mixin.json_test_failures()
 	## 
 	## 
-	_return _self.failures_of_type(:json_comparison)	
+	_return _self.result_failures_of_type(:json_comparison)	
 _endmethod
 $
 

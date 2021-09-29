@@ -80,7 +80,7 @@ _pragma(classify_level=debug)
 _method xml_assert_mixin.xml_test_failures()
 	## 
 	## 
-	_return _self.failures_of_type(:xml_comparison)	
+	_return _self.result_failures_of_type(:xml_comparison)	
 _endmethod
 $
 

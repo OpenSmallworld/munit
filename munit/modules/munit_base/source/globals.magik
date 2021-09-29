@@ -5,6 +5,6 @@ $
 ## Used as dynamic variable to pass additional failure data to
 ## test_failure instance in case of assertion failure.
 ## Property should contain key ':type' with a symbol value specifying the type
-## of result. Type can be used to access specific failures by method test_case.test_failures_of_type(a_type)  
+## of result. Type can be used to access specific failures by method test_case.result_failures_of_type(a_type)  
 _global !test_failure_result_prop! << _unset 
 $

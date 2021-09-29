@@ -666,7 +666,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
-_method test_case.test_failures()
+_method test_case.result_failures()
 	## 
 	##
 	_if .test_result  _is _unset
@@ -678,7 +678,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted,topic=MUnit)
-_method test_case.test_failures_of_type(a_type)
+_method test_case.result_failures_of_type(a_type)
 	## 
 	##
 	l_vec << rope.new()
