@@ -27,11 +27,22 @@ def_slotted_exemplar(:network_builder,
 $
 
 _pragma(classify_level=debug, topic={munit})
-_method network_builder.new(view_name, _optional world)
+gto_network_builder.define_shared_constant(:dataset, 
+	:gis,
+	_false)
+$
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.new(_optional view_name,  world)
 	## 
 	## Return a new instance of the network_builder.
 	##
 
+	_if view_name _is _unset
+	_then
+		view_name << _self.dataset
+	_endif
+	
+	
 	>> _clone.init(view_name, world)
 _endmethod
 $
@@ -71,6 +82,42 @@ _method network_builder.network_tree
 	>> .network_tree
 _endmethod
 $
+
+_pragma(classify_level=debug, topic={munit})
+_method network_builder.ds_view
+	## 
+	## Return the value of the .ds_view slot
+	##
+
+	>> .ds_view
+	
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_private _method network_builder.current_world(_optional properties)
+	## if !current_world! is set returns it, otherwise
+	## returns a world based on the geometry passed in PROPERTIES
+	## if these is such or .ds_view.world 
+	_dynamic !current_world!
+	
+	_if (current_world << !current_world!) _is _unset 
+	_then 	
+		_for e _over properties.default({}).fast_elements()
+		_loop
+			_if e.is_kind_of?(pseudo_geometry) _andif
+			    (current_world << e.world) _isnt _unset 
+			_then
+				_leave
+		_endif
+		_finally
+			current_world << .ds_view.world			
+		_endloop
+	_endif	
+	>> current_world	
+_endmethod
+$
+
 
 _pragma(classify_level=debug, topic={munit})
 _private _method network_builder.add_to_network_tree(chain)
