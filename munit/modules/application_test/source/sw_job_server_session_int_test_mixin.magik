@@ -7,6 +7,19 @@ def_mixin(:sw_job_server_session_int_test_mixin, {})
 $
 
 _pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.one_time_tear_down()
+	##
+	##
+
+	_if (app << _self.properties[:app]) _isnt _unset 
+	_then
+		app.close()
+	_endif 
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method sw_job_server_session_int_test_mixin.test_window_system_is_not_set()
 	## 
 	##
@@ -50,11 +63,23 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.test_job_server_is_running()
+	##
+	##
+	
+	_self.given_an_application()
+	_self.assert_true(job_server_framework.job_server.running?, "Job Server is not running.")
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method sw_job_server_session_int_test_mixin.int!test_expected_plugins_are_available(expected_plugins)
 	## 
 	##
 
-	_if (app << smallworld_product.applications.an_element()) _isnt _unset
+	_self.given_an_application()
+	_if (app << _self.properties[:app]) _isnt _unset
 	_then
 		_for plugin_name, plugin_class _over expected_plugins.fast_keys_and_elements()
 		_loop
@@ -69,5 +94,22 @@ _method sw_job_server_session_int_test_mixin.int!test_expected_plugins_are_avail
 	_else
 		_self.fail("Application is not started.")
 	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_gisa_job_server_session_int_test_mixin.given_an_application()
+	##
+	##
+
+	_if (app << smallworld_product.applications.an_element()) _is _unset 
+	_then 
+		app << smallworld_product.application_definition(_self.application_name).start()
+	_endif
+
+	_self.properties[:app] << app
+
+	>> _self
+
 _endmethod
 $
