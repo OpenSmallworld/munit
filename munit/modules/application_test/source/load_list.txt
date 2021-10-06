@@ -6,3 +6,5 @@ design_manager_system_test_mixin
 database_test
 application_test
 design_manager_test_case
+
+sw_job_server_session_int_test_mixin
