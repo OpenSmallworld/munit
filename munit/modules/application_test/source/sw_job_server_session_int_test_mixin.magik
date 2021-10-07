@@ -49,14 +49,14 @@ _method sw_job_server_session_int_test_mixin.test_application_is_started()
 	## 
 	##
 
-	actual   << app.application_name
 	_if (app << smallworld_product.applications.an_element()) _isnt _unset
 	_then
+		actual   << app.application_name
 		expected << _self.application_name
 		fail_str << write_string("Wrong application started. Expected: ", expected, "Actual: ", actual) 
 		_self.assert_equals(expected, actual, fail_str)
 	_else
-		_self.fail("Application ", actual, " is not started.")
+		_self.fail("Application is not started.")
 	_endif
 
 _endmethod
@@ -74,14 +74,14 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method sw_job_server_session_int_test_mixin.int!test_expected_plugins_are_available(expected_plugins)
+_method sw_job_server_session_int_test_mixin.test_expected_plugins_are_available()
 	## 
 	##
 
 	_self.given_an_application()
 	_if (app << _self.properties[:app]) _isnt _unset
 	_then
-		_for plugin_name, plugin_class _over expected_plugins.fast_keys_and_elements()
+		_for plugin_name, plugin_class _over _self.expected_plugins.fast_keys_and_elements()
 		_loop
 			_if (plugin << app.component(plugin_name)) _isnt _unset
 			_then
@@ -98,7 +98,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method sw_gisa_job_server_session_int_test_mixin.given_an_application()
+_method sw_job_server_session_int_test_mixin.given_an_application()
 	##
 	##
 
