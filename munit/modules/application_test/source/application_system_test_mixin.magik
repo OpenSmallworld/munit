@@ -2056,7 +2056,7 @@ _private _method application_system_test_mixin.wait_for_application_threads_to_f
 	_then
 		_self.wait_for_threads_to_finish( a_task_owner )
 		_if (a_task_owner<< a_task_owner.top_frame) _isnt _unset _andif
-		    (a_task_owner<< a_task_owner.top_canvas_container) _isnt _unset
+		    (a_task_owner<< a_task_owner.top_canvas_container.serialisation_task_owner()) _isnt _unset
 		_then
 			_self.wait_for_threads_to_finish( a_task_owner )
 		_endif
