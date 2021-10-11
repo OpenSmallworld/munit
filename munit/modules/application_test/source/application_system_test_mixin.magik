@@ -2043,7 +2043,7 @@ _private _method application_system_test_mixin.wait_for_threads_to_finish( task_
 	##
 
 	_loop
-		_if task_owner.task_runner().thread_pool.empty? _then _leave _endif
+		_if _not task_owner.task_runner().tasks_pending? _then _leave _endif
 		_thisthread.sleep( 1000 )
 	_endloop
 
