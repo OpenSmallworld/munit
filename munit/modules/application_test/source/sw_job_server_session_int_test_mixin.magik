@@ -109,9 +109,9 @@ _method sw_job_server_session_int_test_mixin.given_an_application()
 
 	_if (app << smallworld_product.applications.an_element()) _is _unset 
 	_then 
-		app << smallworld_product.application_definition(_self.application_name).start()
-	_endif
-
+		smallworld_product.application_definition(_self.application_name).start()
+		app << smallworld_product.applications.an_element()
+	_endif	
 	_self.properties[:app] << app
 
 	>> _self
