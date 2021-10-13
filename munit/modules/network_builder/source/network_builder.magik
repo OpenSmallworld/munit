@@ -27,7 +27,7 @@ def_slotted_exemplar(:network_builder,
 $
 
 _pragma(classify_level=debug, topic={munit})
-gto_network_builder.define_shared_constant(:dataset, 
+network_builder.define_shared_constant(:dataset, 
 	:gis,
 	_false)
 $
