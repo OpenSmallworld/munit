@@ -103,10 +103,10 @@ _private _method network_builder.current_world(_optional properties)
 	
 	_if (current_world << !current_world!) _is _unset 
 	_then 	
-		_for e _over properties.default({}).fast_elements()
+		_for prop _over properties.default({}).fast_elements()
 		_loop
-			_if e.is_kind_of?(pseudo_geometry) _andif
-			    (current_world << e.world) _isnt _unset 
+			_if prop.is_kind_of?(pseudo_geometry) _andif
+			    (current_world << prop.world) _isnt _unset 
 			_then
 				_leave
 		_endif
