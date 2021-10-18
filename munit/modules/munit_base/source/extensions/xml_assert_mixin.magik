@@ -60,10 +60,10 @@ _pragma(classify_level=debug)
 _private _method xml_assert_mixin.assert_xml_decoded(expected, actual, msg, _gather sort_paths)
 	## 
 	##
-	_dynamic !test_failure_result_prop!
+	_dynamic !test_failure_data!
 	_if _not _self.compare_xml(expected, actual, _scatter sort_paths)
 	_then
-		!test_failure_result_prop! << property_list.new_with(
+		!test_failure_data! << property_list.new_with(
 					      :type, :xml_comparison,
 					      :expected, expected,
 					      :actual, actual)
@@ -97,12 +97,26 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method xml_assert_mixin.xml_failure_values(a_failure)
+	## 
+	## 
+	_if (a_result_prop << a_failure.test_failure_data) _isnt _unset
+	_then
+		a_actual_result << a_result_prop[:actual]
+		a_expected_result << a_result_prop[:expected]
+	_endif
+	_return a_actual_result, a_expected_result
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method xml_assert_mixin.print_xml_test_failure(a_failure)
 	## 
-	## 
-	_if (a_result_prop << a_failure.test_failure_result_prop) _isnt _unset _andif
-	    (a_actual_result << a_result_prop[:actual]) _isnt _unset _andif
-	    (a_expected_result << a_result_prop[:expected]) _isnt _unset 
+	##
+	( a_actual_result,
+	  a_expected_result) << _self.xml_failure_values(a_failure)
+	_if a_actual_result _isnt _unset _andif
+	    a_expected_result _isnt _unset 
 	_then
 		enc<< simple_xml
 		str<< stream.default(!output!)

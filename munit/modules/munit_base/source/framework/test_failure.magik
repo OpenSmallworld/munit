@@ -10,7 +10,7 @@ def_slotted_exemplar(:test_failure,
 	{ :raised_condition, _unset },
 	{ :traceback,        _unset },
 	{ :traceback_text,   _unset },
-	{ :test_failure_result_prop, _unset}
+	{ :test_failure_data, _unset}
 })
 $
 
@@ -19,7 +19,7 @@ test_failure.define_slot_access( :traceback, :read, :public )
 $
 
 _pragma(classify_level=debug)
-test_failure.define_slot_access( :test_failure_result_prop, :read, :public )
+test_failure.define_slot_access( :test_failure_data, :read, :public )
 $
 
 _pragma(classify_level=basic,topic=MUnit)
@@ -37,9 +37,21 @@ _private _method test_failure.init( a_test , a_condition )
 	.failed_test << a_test
 	.raised_condition << a_condition
 	
-	_if !test_failure_result_prop! _isnt _unset
-	_then 
-		.test_failure_result_prop << !test_failure_result_prop!.copy()
+	_if !test_failure_data! _isnt _unset
+	_then
+		_if !test_failure_data!.inherits_from?(externally_keyed_collection_mixin)
+		_then
+			_if !test_failure_data![:type] _is  _unset
+			_then
+				write("** !test_failure_data! should include a key ':type' with a symbol value specifying the type of the data. Type can be used to access specific failures by method test_case.result_failures_of_type(a_type). This message is raised in method test_failure.init(). Current !test_failure_data! value:")
+				print(!test_failure_data!)
+			_endif 
+			.test_failure_data << !test_failure_data!.copy()
+		_else
+			write("** !test_failure_data! must be a property_list, hash_table or concurrent_hash_map. This message is raised in method test_failure.init(). Current !test_failure_data! value:")
+			write(!test_failure_data!.class_name)
+			print(!test_failure_data!)
+		_endif 
 	_endif 
 	
 	_self.init_traceback_text()

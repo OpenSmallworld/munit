@@ -684,7 +684,7 @@ _method test_case.result_failures_of_type(a_type)
 	l_vec << rope.new()
 	_for a_failure _over _self.result_failures().fast_elements()
 	_loop
-		_if (l_prop << a_failure.test_failure_result_prop) _isnt _unset _andif
+		_if (l_prop << a_failure.test_failure_data) _isnt _unset _andif
 		    l_prop[:type] = a_type
 		_then
 			l_vec.add(a_failure)

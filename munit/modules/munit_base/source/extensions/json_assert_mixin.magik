@@ -321,7 +321,7 @@ _pragma(classify_level=debug)
 _private _method json_assert_mixin.assert_json_decoded(expected, actual, msg)
 	## 
 	##
-	_dynamic !test_failure_result_prop!
+	_dynamic !test_failure_data!
 	delta<< _self.numbers_tolerance[:delta]
 	relative?<< _self.numbers_tolerance[:relative]
 	msg<< msg.default("Json assertion failed. On test instance <" + _self.get_name().write_string + "> ( can be retrieved by method a_test << a_suite.test_for_name(:" + _self.get_name().write_string + ") ) check:" + newline_char +
@@ -331,7 +331,7 @@ _private _method json_assert_mixin.assert_json_decoded(expected, actual, msg)
 	      "a_test.overwrite_expected_json_file_for_failure( a_test.failures_of_type(:json_comparison)[1] )"
 		  )
 	# To do: Code should be restructured to pass value of expected_file_path as argument
-	!test_failure_result_prop! << property_list.new_with(
+	!test_failure_data! << property_list.new_with(
 					      :type, :json_comparison,
 					      :expected, expected,
 					      :actual, actual,
@@ -420,18 +420,33 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method json_assert_mixin.json_failure_values(a_failure)
+	## 
+	## 
+	_if (a_result_prop << a_failure.test_failure_data) _isnt _unset
+	_then
+		a_actual_result << a_result_prop[:actual]
+		a_expected_result << a_result_prop[:expected]
+		a_file_name << a_result_prop[:expected_file_path]
+	_endif
+	_return a_actual_result, a_expected_result, a_file_name  
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method json_assert_mixin.print_json_test_failure(a_failure)
 	## 
-	## 
-	_if (a_result_prop << a_failure.test_failure_result_prop) _isnt _unset _andif
-	    (a_actual_result << a_result_prop[:actual]) _isnt _unset _andif
-	    (a_expected_result << a_result_prop[:expected]) _isnt _unset _andif	
-	    (a_file_name << a_result_prop[:expected_file_path].default("unknown")) _isnt _unset
+	##
+	( a_actual_result,
+	  a_expected_result,
+	  a_file_name) << _self.json_failure_values(a_failure)
+	_if a_actual_result _isnt _unset _andif
+	    a_expected_result _isnt _unset
 	_then
 		enc<< json_encoder.new()
 		str<< stream.default(!output!)
 		str.write("expected",newline_char)
-		str.write(a_file_name,newline_char)
+		str.write(a_file_name.default("unknown"),newline_char)
 		str.write(enc.generate_string(a_expected_result))
 		str.write(newline_char,"actual",newline_char)
 		str.write(enc.generate_string(a_actual_result),newline_char)
@@ -459,9 +474,12 @@ _method json_assert_mixin.overwrite_expected_json_file_for_failure(a_failure)
 	## This should be called following a test failure, where something has changed
 	## meaning that the expected file requires updating.
 	##
-	_if (a_result_prop << a_failure.test_failure_result_prop) _isnt _unset _andif
-	    (a_actual_result << a_result_prop[:actual]) _isnt _unset _andif
-	    (a_file_name << a_result_prop[:expected_file_path]) _isnt _unset
+	( a_actual_result,
+	  a_expected_result,
+	  a_file_name) << _self.json_failure_values(a_failure)
+	
+	_if a_actual_result _isnt _unset _andif
+	    a_file_name _isnt _unset
 	_then
 		_self.generate_new_expected_file(
 			a_actual_result,
