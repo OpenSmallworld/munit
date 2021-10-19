@@ -43,7 +43,6 @@ _pragma(classify_level=debug)
 _method sw_logger_test_mixin.save_log_procs_data()
 	##
 
-	write(_self.logger_class)
 	_self.properties[:old_log_procs] << concurrent_hash_map.new_from(_self.logger_class.sys!perform(:log_procs))
 	_self.logger_class.sys!perform(:log_procs).empty()
 	
@@ -248,7 +247,7 @@ $
 _pragma(classify_level=debug)
 _method sw_logger_test_mixin.then_printed_report_is(exp_text)
 	##
-
+	
 	_self.assert_equals(exp_text, _self.properties[:report],
 			    "Report is not as expected: #1")
 	
