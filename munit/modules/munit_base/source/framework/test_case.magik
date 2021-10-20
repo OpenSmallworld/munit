@@ -664,3 +664,32 @@ _method test_case.unsorted_tests()
 	   _endif 
 _endmethod
 $
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.result_failures()
+	## 
+	##
+	_if .test_result  _is _unset
+	_then
+		_return {}
+	_endif 
+	_return .test_result.failures_for_test(_self)
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_case.result_failures_of_type(a_type)
+	## 
+	##
+	l_vec << rope.new()
+	_for a_failure _over _self.result_failures().fast_elements()
+	_loop
+		_if (l_prop << a_failure.test_failure_data) _isnt _unset _andif
+		    l_prop[:type] = a_type
+		_then
+			l_vec.add(a_failure)
+		_endif 
+	_endloop
+	_return l_vec	
+_endmethod
+$
