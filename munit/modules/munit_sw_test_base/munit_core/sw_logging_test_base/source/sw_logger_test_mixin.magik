@@ -15,17 +15,16 @@ sw_logger_test_mixin.define_shared_constant(:logger_class, _unset, :public)
 $
 
 _pragma(classify_level=debug)
-_method sw_logger_test_mixin.stub_log_output()
+_method sw_logger_test_mixin.stub_log_output(class, id)
 	##
 
 	_local props << _self.properties
 	
-	# Stubbing simple_file_log.log() affects both simple_file_log (used for text
-	# logging) and simple_json_log.  
-	stub_method_helper.replace_method(simple_file_log, :|log()|,
+	stub_method_helper.replace_method(class, :|log()|,
 					  _proc(_gather things)
 							_import props
-						  	props[:last_log] << things
+							_import id
+						  	props[id] << things
 					  _endproc)
 _endmethod
 $
@@ -44,10 +43,7 @@ _method sw_logger_test_mixin.save_log_procs_data()
 	##
 
 	_self.properties[:old_log_procs] << concurrent_hash_map.new_from(_self.logger_class.sys!perform(:log_procs))
-	_self.logger_class.sys!perform(:log_procs).empty()
-	
 	_self.properties[:old_log_proc_status] << concurrent_hash_map.new_from(_self.logger_class.log_proc_status)
-	_self.logger_class.log_proc_status.empty()	
 _endmethod
 $
 
@@ -172,15 +168,15 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method sw_logger_test_mixin.then_last_log_is(exp_level, exp_data)
+_method sw_logger_test_mixin.then_last_log_is(log_id, exp_level, exp_data)
 	##
 
-	_if _self.properties[:last_log] _isnt _unset
+	_if _self.properties[log_id] _isnt _unset
 	_then 
-		_self.assert_equals(exp_level, _self.properties[:last_log][1],
+		_self.assert_equals(exp_level, _self.properties[log_id][1],
 				    "Wrong level of last log: #1")
 		
-		_self.assert_deep_equals(exp_data, _self.properties[:last_log][2],
+		_self.assert_deep_equals(exp_data, _self.properties[log_id][2],
 					 "Wrong data of last log: #1")
 	_else
 		_self.fail("No data was logged.")
@@ -191,10 +187,10 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method sw_logger_test_mixin.then_nothing_was_logged()
+_method sw_logger_test_mixin.then_nothing_was_logged(log_id)
 	##
 
-	_self.assert_unset(_self.properties[:last_log], "Something was logged while it should not be.")
+	_self.assert_unset(_self.properties[log_id], "Something was logged while it should not be.")
 	
 	_return _self 
 _endmethod
