@@ -118,3 +118,23 @@ _method sw_job_server_session_int_test_mixin.given_an_application()
 
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.test_job_server_logger_is_registered()
+	##
+	##
+	
+	_self.assert_not_unset(log_manager.get_loggers[:job_server],
+			       "Job Server logger is not registered.")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.test_sw_job_server_logging_module_is_loaded()
+	##
+	##
+	
+	_self.assert_not_unset(sw_module_manager.module(:sw_job_server_logging).loaded?,
+			       "sw_job_server_logging module is not loaded.")
+_endmethod
+$

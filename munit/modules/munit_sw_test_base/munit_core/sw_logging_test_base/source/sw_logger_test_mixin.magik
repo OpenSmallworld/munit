@@ -1,0 +1,270 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted, topic={munit})
+##
+## Mixin with common test methods for loggers.
+##
+def_mixin(:sw_logger_test_mixin)
+$
+
+_pragma(classify_level=debug)
+## This shared constant defines tested logger class.
+sw_logger_test_mixin.define_shared_constant(:logger_class, _unset, :public)
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.set_up()
+	##
+	
+	_self.save_log_manager_loggers()
+	_self.save_log_procs_data()	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.tear_down()
+	##
+	
+	_self.revert_log_manager_loggers()
+	_self.revert_log_procs_data()	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.stub_log_output(class, id)
+	##
+
+	_local props << _self.properties
+	
+	stub_method_helper.replace_method(class, :|log()|,
+					  _proc(_gather things)
+							_import props
+							_import id
+						  	props[id] << things
+					  _endproc)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.save_log_manager_loggers()
+	##
+	
+	_self.properties[:old_loggers] << concurrent_hash_map.new_from(log_manager.get_loggers)
+	log_manager.get_loggers.empty()	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.save_log_procs_data()
+	##
+
+	_self.properties[:old_log_procs] << concurrent_hash_map.new_from(_self.logger_class.sys!perform(:log_procs))
+	_self.properties[:old_log_proc_status] << concurrent_hash_map.new_from(_self.logger_class.log_proc_status)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.revert_log_manager_loggers()
+	##
+	
+	log_manager.get_loggers.empty()
+	log_manager.get_loggers.add_all(_self.properties[:old_loggers])
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.revert_log_procs_data()
+	##
+	
+	_self.logger_class.sys!perform(:log_procs).empty()
+	_self.logger_class.sys!perform(:log_procs).add_all(_self.properties[:old_log_procs])
+
+	_self.logger_class.log_proc_status.empty()
+	_self.logger_class.log_proc_status.add_all(_self.properties[:old_log_proc_status])
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.given_a_registered_log(label, level, class, prefix, ext)
+	##
+	## Registers log based on given parameters.
+	##
+
+	stream << rolling_log_stream.new(:filename_prefix, prefix,
+					 :filename_extension, ext)
+	
+	log << class.new(label, stream, _true)
+	log.set_level(level)
+	
+	framework << logging_framework.new(log)
+	
+	log_manager.add_logger(label, framework)	
+
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.given_a_log_proc(name, value)
+	##
+	## Method creates parameterless log proc that returns VALUE.
+	##
+
+	_self.properties[name] << _proc()
+					  _import value
+					  _return value
+				  _endproc
+	
+	_return _self	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.when_register_log_proc_is_called_for(proc_name)
+	##
+
+	_self.logger_class.register_log_proc(proc_name, _self.properties[proc_name])
+	
+	_return _self	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.when_enable_log_proc_is_called_for(proc_name)
+	##
+
+	_try _with cond
+		_self.logger_class.enable_log_proc(proc_name)
+	_when missing_log_proc
+		_self.properties[:missing_log_proc_raised?] << _true
+	_endtry
+	
+	_return _self	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.when_disable_log_proc_is_called_for(proc_name)
+	##
+
+	_try _with cond
+		_self.logger_class.disable_log_proc(proc_name)
+	_when missing_log_proc
+		_self.properties[:missing_log_proc_raised?] << _true
+	_endtry
+	
+	_return _self	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.when_log_method_is_called_with(method_name, _gather args)
+	##
+
+	_self.logger_class.perform(method_name, _scatter args)
+	
+	_return _self 
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.when_report_log_procs_is_called()
+	##
+
+	_dynamic !output!
+	!output! << wraparound_text_output_stream.new(500)
+
+	_self.logger_class.report_log_procs()
+
+	_self.properties[:report] << !output!.string
+	
+	_return _self	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.then_last_log_is(log_id, exp_level, exp_data)
+	##
+
+	_if _self.properties[log_id] _isnt _unset
+	_then 
+		_self.assert_equals(exp_level, _self.properties[log_id][1],
+				    "Wrong level of last log: #1")
+		
+		_self.assert_deep_equals(exp_data, _self.properties[log_id][2],
+					 "Wrong data of last log: #1")
+	_else
+		_self.fail("No data was logged.")
+	_endif
+	
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.then_nothing_was_logged(log_id)
+	##
+
+	_self.assert_unset(_self.properties[log_id], "Something was logged while it should not be.")
+	
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.then_log_proc_is_registered(proc_name)
+	##
+
+	_self.assert_not_unset(_self.logger_class.sys!perform(:log_procs)[proc_name],
+			       "Log proc " + proc_name + " not registered.")
+	
+	_return _self	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.then_log_proc_status_is(proc_name, exp_status)
+	##
+
+	_self.assert_equals(exp_status, _self.logger_class.log_proc_status[proc_name],
+			    "Wrong status for log proc " + proc_name + ": #1")
+	
+	_return _self	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.then_missing_log_proc_condition_was_raised()
+	##
+
+	_self.assert_true(_self.properties[:missing_log_proc_raised?],
+			  "Condition was not raised.")
+	
+	_return _self	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.then_missing_logger_condition_was_raised()
+	##
+
+	_self.assert_true(_self.properties[:missing_logger_raised?],
+			  "Condition was not raised.")
+	
+	_return _self	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.then_printed_report_is(exp_text)
+	##
+	
+	_self.assert_equals(exp_text, _self.properties[:report],
+			    "Report is not as expected: #1")
+	
+	_return _self	
+_endmethod
+$
