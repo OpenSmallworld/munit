@@ -407,3 +407,17 @@ _method test_suite.unsorted_tests()
 	>> .tests.default({})
 _endmethod
 $
+
+_pragma(classify_level=restricted,topic=MUnit)
+_method test_suite.test_for_name(a_name)
+	## 
+	## 
+	_for a_test _over _self.tests()
+	_loop
+		_if a_test.get_name() = a_name
+		_then
+			_return a_test
+		_endif 
+	_endloop 
+_endmethod
+$
