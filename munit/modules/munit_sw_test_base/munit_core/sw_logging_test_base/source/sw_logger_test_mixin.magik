@@ -6,12 +6,30 @@ _pragma(classify_level=restricted, topic={munit})
 ##
 ## Mixin with common test methods for loggers.
 ##
-def_mixin(:sw_logger_test_mixin, {})
+def_mixin(:sw_logger_test_mixin)
 $
 
 _pragma(classify_level=debug)
 ## This shared constant defines tested logger class.
 sw_logger_test_mixin.define_shared_constant(:logger_class, _unset, :public)
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.set_up()
+	##
+	
+	_self.save_log_manager_loggers()
+	_self.save_log_procs_data()	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_logger_test_mixin.tear_down()
+	##
+	
+	_self.revert_log_manager_loggers()
+	_self.revert_log_procs_data()	
+_endmethod
 $
 
 _pragma(classify_level=debug)
@@ -94,10 +112,10 @@ _method sw_logger_test_mixin.given_a_log_proc(name, value)
 	## Method creates parameterless log proc that returns VALUE.
 	##
 
-	_self.properties[name] << log_proc << _proc()
-						      _import value
-						      _return value
-					      _endproc
+	_self.properties[name] << _proc()
+					  _import value
+					  _return value
+				  _endproc
 	
 	_return _self	
 _endmethod
