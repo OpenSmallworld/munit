@@ -248,17 +248,6 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method sw_logger_test_mixin.then_missing_logger_condition_was_raised()
-	##
-
-	_self.assert_true(_self.properties[:missing_logger_raised?],
-			  "Condition was not raised.")
-	
-	_return _self	
-_endmethod
-$
-
-_pragma(classify_level=debug)
 _method sw_logger_test_mixin.then_printed_report_is(exp_text)
 	##
 	
