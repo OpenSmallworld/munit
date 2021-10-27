@@ -2,35 +2,74 @@
 _package sw
 $
 
-
 _pragma(classify_level=debug,topic={MUnit, Test})
 ## This dummy application can be used to set
 ## !current_application! for integration tests that access
 ## preference values (e.g. while running business rules) but
 ## don't need a running application for anything else.
-def_slotted_exemplar ( :dummy_application, {}, {:sw_component} )
+##
+## By default business rules are switched on.
+## If code needs to be run with business rules switched off, simply call
+## disable_business_rules() on the dummy_application instance. See the code that
+## creates data for eo_qm_electric_routines_itests
+def_slotted_exemplar( :dummy_application, {}, {:sw_component})
 $
 
-
 _pragma(classify_level=debug,topic={MUnit, Test})
-_method dummy_application.get_service_provider ( name )
-	##
-	## Return the eo_options_plugin if NAME is :eo_options.
-	##
+_method dummy_application.get_service_provider(name)
 	
-	_if name _is :eo_options _then
+	## If NAME is :eo_options return eo_options_plugin
+	## If name is :swo_business_rules return self
+	
+	_if name _is :eo_options 
+	_then
 		_return eo_options_plugin
+	_elif name _is :swo_business_rules
+	_then 
+		_return _self
 	_endif
 	
 _endmethod
 $
 
-
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method dummy_application.dispatch_message()
-	## 
+	
 	## Dummy method
-	##
+	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method dummy_application.get_preference(pref)
+	
+	## Return :vaidate_business_rules preference
+	## If not set explicitly business rules are enabled
+	
+	_if pref _is :validate_business_rules
+	_then 
+		_return .properties[:validate_business_rules].default(_true)
+	_endif 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method dummy_application.enable_business_rules()
+	
+	## Switch on business rules
+	
+	.properties[:validate_business_rules] << _true
+	
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method dummy_application.disable_business_rules()
+	
+	## Switch off business rules
+	
+	.properties[:validate_business_rules] << _false
 	
 _endmethod
 $
