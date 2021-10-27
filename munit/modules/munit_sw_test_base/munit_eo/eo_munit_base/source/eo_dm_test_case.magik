@@ -734,10 +734,11 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dm_test_case.stub_get_option(_gather keys_and_values)
+_method eo_dm_test_case.stub_get_option(a_class, _gather keys_and_values)
 	
-	## Add default values for options that are required by tests that use an
-	## application that does not have include the options plugin
+	## Stub the get_option() method on A_CLASS to return the values provided in KEYS_AND_VALUES
+	## This is intended to be used by tests that use an application that does not include
+	## the options plugin.
 	## For example:
 	## To return :ed_structure_tolerance and :et_structure+_tolerance as 35' and :eo_auto_attach as true
 	## tol << unit_value.new( 35, :feet )
@@ -745,7 +746,7 @@ _method eo_dm_test_case.stub_get_option(_gather keys_and_values)
 	
 	_local data << property_list.new_from_gathered(keys_and_values)
 	
-	stub_method_helper.replace_method( eo_structure_manager, :|get_option()|, 
+	stub_method_helper.replace_method( a_class, :|get_option()|, 
 		_proc(option) 
 			_import data
 			_return data[option]
