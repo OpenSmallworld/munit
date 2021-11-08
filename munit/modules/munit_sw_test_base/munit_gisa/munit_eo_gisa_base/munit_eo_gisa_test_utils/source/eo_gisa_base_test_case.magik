@@ -15,10 +15,6 @@ _pragma(classify_level=basic)
 eo_gisa_base_test_case.define_slot_externally_writable( :specs )
 $
 
-_pragma(classify_level=basic)
-eo_gisa_base_test_case.define_slot_access(:test_output_path, :read, :public)
-$
-
 _pragma(classify_level=debug)
 ## Max number of attempts when trying to switch the frozen file
 ## to write mode before it fails
@@ -919,7 +915,7 @@ _method eo_gisa_base_test_case.given_file_transfer_mode_is_used(endpoint_name)
 	stub_method_helper.replace_method(system, :temp_directory_name,
 						  _proc()
 							  _import me
-							  _return me.test_output_path
+							  _return me.sys!slot(:test_output_path)
 						  _endproc)
 
 	_return _self 
