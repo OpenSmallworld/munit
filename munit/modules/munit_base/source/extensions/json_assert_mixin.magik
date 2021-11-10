@@ -482,8 +482,8 @@ _method json_assert_mixin.overwrite_expected_json_file_for_failure(a_failure)
 	    a_file_name _isnt _unset
 	_then
 		_self.generate_new_expected_file(
-			a_actual_result,
-			a_file_name)
+			a_file_name,
+			a_actual_result)
 	_endif 
 _endmethod
 $
