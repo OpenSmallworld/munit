@@ -11,7 +11,7 @@ def_slotted_exemplar(:eo_gisa_base_test_case,
 {:eo_dm_test_case})
 $
 
-_pragma(classify_level=basic)
+_pragma(classify_level=debug)
 eo_gisa_base_test_case.define_slot_externally_writable( :specs )
 $
 
