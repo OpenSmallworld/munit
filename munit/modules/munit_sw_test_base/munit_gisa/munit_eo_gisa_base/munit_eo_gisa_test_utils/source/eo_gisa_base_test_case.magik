@@ -897,7 +897,7 @@ _method eo_gisa_base_test_case.given_file_transfer_mode_is_used(endpoint_name)
 					  _endproc)
 
 	# Stub file output mode to :web_endpoint.
-	stub_method_helper.replace_method(sw_cim_properties_helper, :file_output_mode,
+	stub_method_helper.replace_method(sw_cim_properties_helper, :output_mode,
 						  _proc()
 							  _return :web_endpoint
 						  _endproc)
