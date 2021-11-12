@@ -1,0 +1,218 @@
+#% text_encoding = iso8859_1
+_package sw
+##
+##> Name:         munit_test_eval_execution_tree_plugin.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         30. Aug 2016
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_eval_execution_tree_plugin)
+#$
+_pragma(classify_level=restricted)
+##
+def_slotted_exemplar(:munit_test_eval_execution_tree_plugin,
+        {
+		{:tree, _unset},
+		{:display_tree_prop, _unset},
+		{:marked_dt, _unset}
+	},
+	{:plugin})
+$
+
+_pragma(classify_level=restricted, topic={explorer_view_plugin})
+munit_test_eval_execution_tree_plugin.define_shared_constant( :databus_consumer_data_types,
+	## Defines the databus consumer types 
+	{:execution_tree_selection
+	},
+	:public )
+$
+
+	
+_pragma(classify_level=restricted)
+_method munit_test_eval_execution_tree_plugin.init(_gather p_args)
+	## 
+	## 
+	_super.init(_scatter p_args)
+	.display_tree_prop << concurrent_hash_map.new()
+	_return _self 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_execution_tree_plugin.build_gui(p_container)
+	## 
+	## 
+	l_con << sw_container.new(p_container, _unset, 1,
+				  :default_col_alignment, :fill,
+				  :default_row_alignment, :fill
+			      )
+
+	.tree  << tree_item.new(l_con,
+				:model, _self,
+				:aspect, :test_eval_execution_tree,
+				:select_notifier,          handler.new( _self, :|tree_item_select()| ),
+				:double_click_notifier,    handler.new( _self, :|tree_item_double_click()| ),
+				:column_allow_visibility_change?, _false,
+			#	:key_pressed_notifier,     :handle_tree_key_press|()|,
+				:edit_on_click?,           _false,
+				:visible_rows, 6,
+				:show_focus?,              _true,
+				:distribute_spare_width,   :always,
+				:mode, :one,
+				:row_alignment,            :fill,
+				:col_alignment,            :fill
+			    )
+	_return l_con
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_execution_tree_plugin.sw_databus_data_available( data_type_name, p_data )
+	## 
+	## Notification method for information put on the databus.
+	##
+	_if data_type_name _is :execution_tree_selection 
+	_then 
+		_self.refresh_tree()
+	_endif
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_execution_tree_plugin.refresh_tree()
+	## 
+	##
+
+	_self.changed( :test_eval_execution_tree, :refresh )
+	
+	_if .tree _isnt _unset
+	_then 
+		.tree.redraw()
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_execution_tree_plugin.redraw_tree()
+	## 
+	## 
+
+	
+	_if .tree _isnt _unset
+	_then 
+		.tree.redraw()
+	_endif 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_execution_tree_plugin.current_display_tree()
+	## 
+	## 
+	_if .tree _isnt _unset
+	_then
+		_return .tree.selection.an_element()
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_execution_tree_plugin.test_eval_execution_tree
+	## 
+	##
+
+	l_vec << rope.new()
+	l_pos << 0
+
+	l_plugin << _self.framework.plugin(:munit_test_eval_tree)
+	_if l_plugin _is _unset 
+	_then
+		_return l_vec
+	_endif
+	l_dt << l_plugin.current_display_tree()
+	l_prop << property_list.new()
+
+	_if l_dt _isnt _unset _andif
+	    (l_dt.value[:type] _is :execution _orif
+	     l_dt.value[:type] _is :historic)
+	_then
+		_if l_dt.value[:type] _isnt :historic
+		_then 
+			_for i_test_dt _over l_dt.key.child_test_display_trees()
+			_loop
+				_if (l_status_vec << l_prop[i_test_dt.key.status]) _is _unset 
+				_then
+					l_status_vec << l_prop[i_test_dt.key.status] << rope.new()
+				_endif
+				l_status_vec.add(i_test_dt)
+			_endloop
+			_for i_status, i_dt_vec _over l_prop.fast_keys_and_elements()
+			_loop
+				l_sc << sorted_collection.new(i_dt_vec.size,
+							      _proc(el1, el2)
+								      _return el1.key.name() _cf el2.key.name()
+							      _endproc)
+				l_sc.add_all(i_dt_vec)
+				l_dt_vec << rope.new_from(l_sc)
+				l_dt << display_tree.new(i_status,
+							 property_list.new_with(
+								 :name, i_status,
+								 :size, l_dt_vec.size
+								       ),
+							 _unset,
+							 l_dt_vec)
+				l_dt.styled_string << {:value, :name,
+						       :purple,
+						       :value, :size}
+				l_vec.add(l_dt)
+				_if l_prop.size = 1
+				_then
+					l_dt.expanded? << _true
+				_endif 
+			_endloop
+		_else
+			l_dt_vec << rope.new()
+			_for i_test_dt _over l_dt.key.child_test_display_trees()
+			_loop
+				l_dt_vec.add(i_test_dt)
+				
+			_endloop
+			l_sc << sorted_collection.new_from(l_dt_vec,
+							   _proc(el1, el2)
+								   _return el2.key.execution_object.date_object() _cf el1.key.execution_object.date_object()
+							   _endproc )
+			l_vec.add_all_last(l_sc)
+		_endif 
+	_endif
+	_return l_vec
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_execution_tree_plugin.tree_item_select(p_dt_selection)
+	## 
+	##
+	
+	_self.databus_make_data_available(:test_tree_selection, p_dt_selection)
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_execution_tree_plugin.tree_item_double_click(p_dt)
+	## 
+	##
+_endmethod
+$
+

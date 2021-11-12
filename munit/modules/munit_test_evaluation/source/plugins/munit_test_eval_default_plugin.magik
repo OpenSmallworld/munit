@@ -1,0 +1,89 @@
+#% text_encoding = iso8859_1
+# ************************************************************
+
+_package sw
+$
+#remex(:munit_test_eval_default_plugin)
+#$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar(:munit_test_eval_default_plugin,
+	{
+		{:label_item, _unset}
+	},
+:plugin )
+$
+
+_pragma(classify_level=restricted)
+munit_test_eval_default_plugin.define_shared_constant( :databus_consumer_data_types,
+
+						     { :refresh },
+						     :public )
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_default_plugin.build_gui( container, _optional xml_element)
+	##
+	## Builds the GUI in CONTAINER for the rwo_set_plugin.
+
+
+
+	# Store the internally used tree_item (to be able to use
+	# extended API on tree_item).
+
+	l_con << sw_container.new(container, _unset, 1, 
+				 :default_col_alignment, :centre,
+				 :default_row_alignment, :centre
+		       )
+	.label_item << sw_label_item.new(l_con,
+					 _self.message(:no_detail_output)
+				     )
+
+	_return l_con
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_default_plugin.can_handle_selection?(p_selection)
+	## 
+	##
+	_return _true, _false
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_default_plugin.output_gained_focus()
+	## 
+	## 
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_default_plugin.output_lost_focus()
+	## 
+	## 
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_default_plugin.tree_entry_selected(p_entry)
+	## 
+	## 
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_default_plugin.update_gui()
+	## 
+	## 
+	
+_endmethod
+$
+
+

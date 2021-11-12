@@ -1,0 +1,268 @@
+#% text_encoding = iso8859_1
+# ************************************************************ 
+#							       
+# (c) 2005-2012 General Electric Company. All Rights Reserved. 
+#							       
+# ************************************************************ 
+_package sw
+_pragma(classify_level=basic, topic={explorer_view_plugin})
+##
+## A plug-in that is capable of handling multiple output type
+## plugins, and can switch to a required output plugin on
+## demand. The plugin handles multiple plugins 
+##
+def_slotted_exemplar( :munit_test_eval_output_stack_plugin,
+{
+	{ :plugin_data,
+	  # The XML data defined with the plug-in
+	  _unset },
+	
+	{ :plugins,
+	  # The plug-ins making up the output views
+	  _unset },
+	
+	{ :stack,
+	  # The stack the output views are built on.
+	  _unset }
+},
+{ :plugin })
+$
+
+_pragma(classify_level=restricted, topic={explorer_view_plugin})
+munit_test_eval_output_stack_plugin.define_shared_constant( :databus_consumer_data_types,
+					       ## Defines the databus consumer types 
+					       {:test_tree_selection, :execution_tree_selection
+					       },
+					       :public )
+$
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_method munit_test_eval_output_stack_plugin.process_plugin_data( xml_element )
+	##
+	## Process the plugin's data to determine which other plug-ins
+	## need to be handled by this interaction_input_plugin.
+	##
+	
+	.plugin_data << rope.new()
+	
+	_for plugin_data _over xml_element.elements.elements()
+	_loop
+		_if plugin_data.type _is :handle
+		_then
+			name  << plugin_data.attribute(:plugin_name).as_symbol()
+
+			.plugin_data.add( name )
+		_endif
+	_endloop
+
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_method munit_test_eval_output_stack_plugin.post_init_plugins()
+	##
+	## Called when all plug-ins have been initialised. Will set up
+	## the views for the output plugin.
+	##
+
+	_if .plugins _is _unset 
+	_then
+		_local actual_plugins << property_list.new()
+		
+		_for plugin_name _over .plugin_data.fast_elements()
+		_loop
+			_if (plugin << _self.framework.plugin( plugin_name ) ) _is _unset
+			_then
+				write(_self.message(:cant_find_plugin, plugin_name ))
+				_continue 
+			_endif
+
+		#	plugin.owner << _self 
+			actual_plugins[ plugin.class_name ] << plugin
+		_endloop 
+		
+		.plugins << actual_plugins
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_method munit_test_eval_output_stack_plugin.init_actions()
+	##
+	## Initialises the actions dependent on the plug-ins this
+	## plug-in needs to handle
+	##
+
+	_super.init_actions()
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_method munit_test_eval_output_stack_plugin.current_plugin
+	##
+	## Returns the current plugin visible
+	## 
+
+	>> _if .stack _isnt _unset 
+	   _then
+		   >> .plugins[ .stack.value ]
+	   _endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_private _method munit_test_eval_output_stack_plugin.process_xml_width_height( xml_element )
+	##
+	## Processes the XML_ELEMENT and derives width and height from
+	## it. 
+	## 
+	_local width << 100
+	_local height << 100
+
+	_for key, val _over xml_element.attributes.fast_keys_and_elements()
+	_loop
+		_if key = "width"
+		_then
+			width << val.as_number()
+		_elif key = "height"
+		_then
+			height << val.as_number()
+		_endif 
+	_endloop
+	
+	>> (width, height) 
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_method munit_test_eval_output_stack_plugin.build_gui( container, _optional xml_element)
+	##
+	## Builds the GUI in CONTAINER for the input plugin. 
+	##
+	(width, height) << _self.process_xml_width_height( xml_element )
+
+	.stack << window_stack.new( container )
+	.stack.width << width
+	
+	_for key, plugin _over .plugins.fast_keys_and_elements()
+	_loop
+		rc << rowcol.new( .stack, _unset, 1, :pixel, 
+				  :default_row_alignment, :fill, 
+				  :default_col_alignment, :fill )
+		.stack.add_named_child( rc, key )
+		rc.resize_x? << _true
+		rc.resize_y? << _true
+		plugin.build_gui( rc )
+	_endloop
+
+	>> .stack
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_method munit_test_eval_output_stack_plugin.set_view( a_view_name )
+	##
+	## Sets the view identified by A_VIEW_NAME as the current view
+	## in the input plugin's GUI.
+	##
+
+	_if .stack _isnt _unset #_andif
+	   # .stack.value _isnt a_view_name
+	_then
+		_if .stack.value _isnt a_view_name
+		_then
+			# Store the current plugin
+			previous_plugin << _self.current_plugin
+		_endif
+	
+
+		# Set new plugin visible
+		.stack.value << a_view_name
+
+		# Notify lost focus
+		_if previous_plugin _isnt _unset 
+		_then
+			previous_plugin.output_lost_focus()
+		_endif
+
+		# Notify gained focus
+		_if (current_plugin << _self.current_plugin) _isnt _unset 
+		_then		
+			current_plugin.output_gained_focus()
+		_endif
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_private _method munit_test_eval_output_stack_plugin.activate_view_for_selection( selection )
+	##
+	## Sets the focus to the correct output view dependent on the
+	## content of SELECTION. The output view that can handle the
+	## SELECTION will be made active.
+	##
+
+
+	# Only set a new output view when the selection was activated
+	_local set_type << _unset 
+	_for type, plugin _over .plugins.fast_keys_and_elements()
+	_loop
+		(can_handle?, prefered?) << plugin.can_handle_selection?( selection )
+		_if can_handle? _is _false
+		_then
+			_continue
+		_endif 
+		_if prefered?
+		_then
+			# This is the prefered plug-in for displaying the
+			# selection. Make it current and leave
+			_self.set_view( type )
+			_leave
+		_elif can_handle? _andif set_type _is _unset 
+		_then
+			set_type << type
+		_endif
+	_finally
+		# There is no prefered plug-in. Display the plug-in that was
+		# capable of handling the selection.
+		_self.set_view( set_type )
+	_endloop
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_method munit_test_eval_output_stack_plugin.request_focus( a_view )
+	##
+	## Will make A_VIEW the current output view. 
+	##
+
+	_self.set_view( a_view.view_output_type )
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_method munit_test_eval_output_stack_plugin.sw_databus_data_available( data_type_name, p_data )
+	## 
+	## Notification method for information put on the databus.
+	##
+	_if data_type_name _is :test_tree_selection _orif
+	    data_type_name _is :execution_tree_selection
+	_then 
+
+		_self.activate_view_for_selection(p_data)
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={interaction_view_plugin})
+_method munit_test_eval_output_stack_plugin.refresh_output()
+	## 
+	## 
+	_if (l_plugin << _self.current_plugin) _isnt _unset
+	_then
+		l_plugin.update_gui()
+	_endif 
+_endmethod
+$

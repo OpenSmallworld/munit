@@ -1,0 +1,154 @@
+#% text_encoding = iso8859_1
+_package sw
+
+##
+##> Name:         munit_test_change_execution_object.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         31. Oct 2020
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_change_execution_object)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_change_execution_object,
+        {
+		{:parent_object, _unset},
+		{:execution_object, _unset},
+		{:changed_case_prop, _unset},
+		{:display_tree, _unset}
+	},
+	{})
+$
+_pragma(classify_level=restricted)
+munit_test_change_execution_object.define_slot_access(
+	:execution_object,
+	:writable)
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_change_execution_object.new(p_parent_object,
+					     p_execution_object,
+					     p_changed_case_prop
+					 )
+	##
+	##
+	_return _clone.init(p_parent_object,
+			    p_execution_object,
+			    p_changed_case_prop
+		       )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_change_execution_object.init(p_parent_object,
+					      p_execution_object,
+					      p_changed_case_prop
+			       )
+	## 
+	##
+	.execution_object << p_execution_object
+	.parent_object << p_parent_object
+	.changed_case_prop << p_changed_case_prop
+	_return _self 	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_change_execution_object.as_display_tree()
+	## 
+	##
+	_if (l_dt << .display_tree) _is _unset
+	_then
+		l_dt << .display_tree << _self.create_display_tree()
+	_endif
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_change_execution_object.create_display_tree()
+	## 
+	##
+	
+	l_value << _self.value_prop()
+	l_dt << display_tree.new(_self, l_value)
+	l_dt.styled_string << {
+				      :value, :date,
+				      :purple,
+				      :value, :evaluation_string
+			      }
+
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_change_execution_object.execution_object_vec()
+	## 
+	## 
+	_return .execution_object.execution_object_vec
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_change_execution_object.value_prop()
+	## 
+	##
+	_return property_list.new_with(:date, .execution_object.date(),
+				       :type, :execution,
+				       :evaluation_string, _self.evaluation_string_short()
+			      )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_change_execution_object.evaluation_string_short()
+	## 
+	## 
+	l_string << ""
+	_for i_type, i_vec _over .changed_case_prop.fast_keys_and_elements()
+	_loop
+		_if _not l_string.empty?
+		_then
+			l_string +<< ", "
+		_endif
+		l_string +<< _self.message(i_type, i_vec.size)	
+	_endloop
+	_return l_string
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_iter _method munit_test_change_execution_object.child_test_display_trees()
+	## 
+	## 
+	_for i_type, i_vec _over .changed_case_prop.fast_keys_and_elements()
+	_loop
+		_for i_case_object _over i_vec.fast_elements()
+		_loop
+			i_case_object.current_mode << :change
+			i_case_object.change_type << i_type
+			_loopbody(i_case_object.as_display_tree())
+		_endloop 
+	_endloop 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_change_execution_object.message(p_message, _gather p_args)
+	## 
+	## 
+	_return message_handler(:munit_test_change_execution_object).human_string(p_message, _unset, _scatter p_args)
+_endmethod
+$

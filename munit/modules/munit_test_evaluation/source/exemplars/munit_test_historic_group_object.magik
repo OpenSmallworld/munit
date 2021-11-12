@@ -1,0 +1,149 @@
+#% text_encoding = iso8859_1
+_package sw
+##
+##> Name:         munit_test_historic_group_object.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         31. Oct 2020
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_historic_group_object)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_historic_group_object,
+        {
+		{:parent_object, _unset},
+		{:test_object_prop, _unset},
+		{:display_tree, _unset}
+	},
+	{})
+$
+
+_pragma(classify_level=restricted)
+munit_test_historic_group_object.define_slot_access(
+	:parent_object,
+	:readable)
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_group_object.new(p_parent_object)
+	##
+	##
+	_return _clone.init(p_parent_object)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_group_object.init(p_parent_object
+			       )
+	## 
+	##
+	.parent_object << p_parent_object
+	_return _self 	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_group_object.as_display_tree()
+	## 
+	##
+	_if (l_dt << .display_tree) _is _unset
+	_then
+		l_dt << .display_tree << _self.create_display_tree()
+	_endif
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_group_object.directory()
+	## 
+	## 
+	_return _self.parent_object.directory()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_group_object.test_object_prop()
+	## 
+	## 
+	_if .test_object_prop
+	_then
+		.test_object_prop << _self.get_test_object_prop()
+	_endif
+	_return .test_object_prop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_group_object.get_test_object_prop()
+	## 
+	## 
+	l_prop << property_list.new()
+	
+	_for i_test_name, i_execution_prop _over _self.parent_object.sorted_test_and_execution_prop()
+	_loop
+		l_test_object << munit_test_class_object.new(_self,
+							   i_test_name,
+							   i_execution_prop[:directory],
+							   i_execution_prop[:execution_vec])
+		l_prop[i_test_name] << l_test_object
+	_endloop
+	_return l_prop
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_group_object.create_display_tree()
+	## 
+	##
+	l_value << _self.value_prop()
+	l_dt << display_tree.new(_self, l_value)
+	l_dt.styled_string << {:image, {:historic, :munit_test_evaluation},
+			       :value, :name}
+	l_dt.set_children_method(_self, :child_dt_vec|()|)
+	_return l_dt
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_group_object.child_dt_vec()
+	## 
+	## 
+	l_test_object_prop << _self.parent_object.test_object_prop()
+	l_vec << rope.new_for(l_test_object_prop.size)
+	_for i_test_object _over l_test_object_prop.fast_elements()
+	_loop
+		l_vec.add(munit_test_historic_class_object.new(_self, i_test_object).as_display_tree())
+	_endloop
+	_return l_vec
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_group_object.value_prop()
+	## 
+	##
+	_return property_list.new_with(:name, _self.message(:tree_name),
+				       :type, :historic_group
+			      )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_group_object.message(p_message)
+	## 
+	## 
+	_return message_handler(:munit_test_historic_group_object).human_string(p_message, _unset)
+_endmethod
+$

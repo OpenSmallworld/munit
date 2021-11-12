@@ -1,0 +1,170 @@
+#% text_encoding = iso8859_1
+_package sw
+##
+##> Name:         munit_test_eval_tree_plugin.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         30. Aug 2016
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_eval_tree_plugin)
+#$
+_pragma(classify_level=restricted)
+##
+def_slotted_exemplar(:munit_test_eval_tree_plugin,
+        {
+		{:tree, _unset},
+		{:display_tree_prop, _unset},
+		{:marked_dt, _unset}
+	},
+	{:plugin})
+$
+
+
+	
+_pragma(classify_level=restricted)
+_method munit_test_eval_tree_plugin.init(_gather p_args)
+	## 
+	## 
+	_super.init(_scatter p_args)
+	.display_tree_prop << concurrent_hash_map.new()
+	_return _self 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_tree_plugin.build_gui(p_container)
+	## 
+	## 
+	l_con << sw_container.new(p_container, _unset, 1,
+				  :default_col_alignment, :fill,
+				  :default_row_alignment, :fill
+			      )
+
+	.tree  << tree_item.new(l_con,
+				:model, _self,
+				:aspect, :test_eval_tree,
+				:select_notifier,          handler.new( _self, :|tree_item_select()| ),
+				:double_click_notifier,    handler.new( _self, :|tree_item_double_click()| ),
+				:column_allow_visibility_change?, _false,
+			#	:key_pressed_notifier,     :handle_tree_key_press|()|,
+				:edit_on_click?,           _false,
+				:visible_rows, 6,
+				:show_focus?,              _true,
+				:distribute_spare_width,   :always,
+				:mode, :one,
+				:row_alignment,            :fill,
+				:col_alignment,            :fill
+			    )
+	_return l_con
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_tree_plugin.refresh_tree()
+	## 
+	##
+	_self.changed( :test_eval_tree, :refresh )
+	
+	_if .tree _isnt _unset
+	_then 
+		.tree.redraw()
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_tree_plugin.redraw_tree()
+	## 
+	## 
+	
+	_if .tree _isnt _unset
+	_then 
+		.tree.redraw()
+	_endif 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_tree_plugin.current_display_tree()
+	## 
+	## 
+	_if .tree _isnt _unset
+	_then
+		_return .tree.selection.an_element()
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_tree_plugin.test_eval_tree
+	## 
+	##
+	l_vec << rope.new()
+	l_pos << 0
+
+
+	_for i_dir _over _self.eval_directories()
+	_loop
+		l_dt << _self.create_display_tree(i_dir)
+		_if l_dt _isnt _unset 
+		_then
+			l_vec.add(l_dt)
+		_endif
+		l_dt.expanded? << _true 
+	_endloop
+
+	_return l_vec
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_tree_plugin.create_display_tree(p_dir
+						     )
+	## 
+	##
+	l_object << munit_test_directory_object.new(p_dir,  _self.framework.test_name_set)
+	l_dt << l_object.as_display_tree()
+	_return l_dt
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_iter _method munit_test_eval_tree_plugin.eval_directories()
+	## 
+	## 
+	_for i_dir _over _self.framework.test_storage_dir_vec().fast_elements()
+	_loop
+		_loopbody(i_dir)
+	_endloop 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_tree_plugin.tree_item_select(p_dt_selection)
+	## 
+	##
+	
+
+	_self.databus_make_data_available(:execution_tree_selection, p_dt_selection)
+	
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_tree_plugin.tree_item_double_click(p_dt)
+	## 
+	##
+	
+_endmethod
+$

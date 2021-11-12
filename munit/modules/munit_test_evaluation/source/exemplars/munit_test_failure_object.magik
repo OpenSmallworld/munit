@@ -1,0 +1,311 @@
+#% text_encoding = iso8859_1
+_package sw
+
+##
+##> Name:         munit_test_failure_object.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         31. Oct 2020
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_failure_object)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_failure_object,
+        {
+		{:data, _unset},
+		{:case_object, _unset},
+		{:display_tree, _unset}
+	},
+	{})
+$
+_pragma(classify_level=restricted)
+munit_test_failure_object.define_slot_access(
+	:data,
+	:writable)
+$
+
+
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.new(p_data, p_case_object)
+	##
+	##
+
+	_return _clone.init(p_data, p_case_object)
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.init(p_data,
+				  p_case_object
+			       )
+	## 
+	##
+	.data << p_data
+	.case_object << p_case_object
+	_return _self 	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.as_display_tree()
+	## 
+	##
+	_if (l_dt << .display_tree) _is _unset
+	_then
+		l_dt << .display_tree << _self.create_display_tree()
+	_endif
+	_return l_dt
+	
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.with_failure_data?()
+	## 
+	## 
+	_return .data[:test_failure_data] _isnt _unset 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.with_comparison_data?()
+	## 
+	##
+	_return _self.with_failure_data?() _andif
+		(.data[:test_failure_data][:type] = "json_comparison" _orif
+		 .data[:test_failure_data][:type] = "xml_comparison")
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.detail_prop
+	## 
+	##
+	_return .data[:test_failure_data]
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.expected_text()
+	## 
+	##
+	_if (l_prop << _self.detail_prop) _isnt _unset
+	_then 
+		_if (l_prop[:type] = "json_comparison") _andif 
+		    (l_expected << l_prop[:expected]) _isnt _unset 
+		_then
+			_return _self.json_string_for_text_window(l_expected)
+		_endif
+		_if (l_prop[:type] = "xml_comparison") _andif 
+		    (l_expected << l_prop[:expected]) _isnt _unset 
+		_then
+			_return _self.xml_string_for_text_window(l_expected)
+		_endif
+	_endif 
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.expected_file_path()
+	## 
+	##
+	_if (l_prop << _self.detail_prop) _isnt _unset
+	_then 
+		_if (l_expected << l_prop[:expected_file_path]) _isnt _unset
+		_then
+			_return l_expected
+		_endif 
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.actual_text_string()
+	## 
+	##
+	_if (l_prop << _self.detail_prop) _isnt _unset
+	_then 
+		_if (l_prop[:type] = "json_comparison") _andif 
+		    (l_actual << l_prop[:actual]) _isnt _unset 
+		_then
+			_return l_actual
+		_endif
+		_if (l_prop[:type] = "xml_comparison") _andif 
+		    (l_actual << l_prop[:actual]) _isnt _unset 
+		_then
+			_return l_actual
+		_endif
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.actual_text()
+	## 
+	##
+	_if (l_prop << _self.detail_prop) _isnt _unset
+	_then 
+		_if (l_prop[:type] = "json_comparison") _andif 
+		    (l_actual << l_prop[:actual]) _isnt _unset 
+		_then
+			_return _self.json_string_for_text_window(l_actual)
+		_endif
+		_if (l_prop[:type] = "xml_comparison") _andif 
+		    (l_actual << l_prop[:actual]) _isnt _unset 
+		_then
+			_return _self.xml_string_for_text_window(l_actual)
+		_endif
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.json_string_for_text_window(p_string)
+	## 
+	## 
+	l_enc << json_encoder.new()
+	_return l_enc.generate_string(p_string, _true )	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.xml_string_for_text_window(p_string)
+	## 
+	##
+	l_stream << internal_text_output_stream.new()
+	l_enc << simple_xml
+	_try 
+		l_enc.write_element_on(l_stream, p_string)
+	_when error
+		_return p_string
+	_endtry  
+	l_string << l_stream.string
+	_return l_string
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.create_display_tree()
+	## 
+	##
+	l_value << _self.value_prop()
+	l_dt << display_tree.new(_self, l_value)
+	_if _self.with_failure_data?()
+	_then
+		l_colour << :red
+	_else
+		l_colour << :black
+	_endif
+	l_dt.styled_string << {l_colour,
+			       :value, :content,
+			       :purple,
+			       :value, :additional_info,
+			       :blue,
+			       :value, :failure_type
+			      }
+
+	_return l_dt
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.value_prop()
+	## 
+	##
+	l_type << .data[:type]
+	l_prop <<  property_list.new_with(
+			   :type, :failure,
+			   :failure_type, l_type,
+			   :content, _self.content_short(),
+			   :additional_info, _self.additional_info()
+				 )
+	_return l_prop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.content_short()
+	## 
+	##
+	_return .data[:condition][:content_string]
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.additional_info()
+	## 
+	## 
+	_if .data[:type] = "error"
+	_then
+		_return .data[:condition][:name].default("")
+	_endif
+	_return ""
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.name()
+	## 
+	## 
+	_return .data[:name]
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.taxonomy()
+	## 
+	##
+	_if (l_vec << .data[:condition][:taxonomy]) _isnt _unset
+	_then
+		l_string << ""
+		_for i_value _over l_vec.fast_elements()
+		_loop
+			_if _not l_string.empty?
+			_then
+				l_string +<< ", "
+			_endif
+			l_string +<< i_value
+		_endloop 
+		_return l_string
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.name()
+	## 
+	## 
+	_return .data[:condition][:name]
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.content_string_text() 
+	## 
+	_return .data[:condition][:content_string]
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_failure_object.traceback_text() 
+	## 
+	_return .data[:full_traceback_text]
+_endmethod
+$

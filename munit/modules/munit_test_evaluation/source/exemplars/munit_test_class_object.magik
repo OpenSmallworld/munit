@@ -1,0 +1,216 @@
+#% text_encoding = iso8859_1
+_package sw
+
+##
+##> Name:         munit_test_class_object.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         31. Oct 2020
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_class_object)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_class_object,
+        {
+		{:parent_object, _unset},
+		{:execution_object_vec, _unset},
+		{:directory, _unset},
+		{:name, _unset},
+		{:display_tree, _unset}
+	},
+	{})
+$
+
+_pragma(classify_level=restricted)
+munit_test_class_object.define_slot_access(
+	:name,
+	:writable)
+$
+_pragma(classify_level=restricted)
+munit_test_class_object.define_slot_access(
+	:execution_object_vec,
+	:writable)
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.new(p_parent_object,
+				  p_name,
+				  p_directory,
+				  p_execution_vec
+				  
+			      )
+	##
+	##
+	_return _clone.init(p_parent_object,
+			    p_name,
+			    p_directory,
+			    p_execution_vec
+		       )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.init(p_parent_object,
+				   p_name,
+				   p_directory,
+				   p_execution_vec
+			       )
+	## 
+	##
+	.parent_object << p_parent_object
+	.directory << p_directory
+	.name << p_name
+	.execution_object_vec << _self.create_execution_object_vec(p_execution_vec)
+	_return _self 	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.full_directory()
+	## 
+	## 
+	_return .directory
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.create_execution_object_vec(p_execution_vec)
+	## 
+	##
+	l_vec << rope.new_for(p_execution_vec.size)
+	_for i_execution _over p_execution_vec.fast_elements()
+	_loop
+		l_test_object << munit_test_execution_object.new(_self, i_execution)
+		l_vec.add(l_test_object)	
+	_endloop
+	l_sc << sorted_collection.new(l_vec.size, _proc(el1, el2)
+							  _if (date2 << el2.date_object()) _is _unset 
+							  _then
+								  _return _true
+							  _elif (date1 << el1.date_object()) _is _unset 
+							  _then
+								  _return _false
+							  _else
+								  _return date2 _cf date1
+							  _endif 
+					    _endproc)
+	l_sc.add_all(l_vec)
+	l_vec << rope.new_from(l_sc)
+	_return l_vec
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.as_display_tree()
+	## 
+	##
+	_if (l_dt << .display_tree) _is _unset
+	_then
+		l_dt << .display_tree << _self.create_display_tree()
+	_endif
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.create_display_tree()
+	## 
+	##
+	l_value << _self.value_prop()
+	l_dt << display_tree.new(_self, l_value)
+	l_dt.styled_string << {:value, :name,
+			       :purple,
+			       :value, :size,
+			       :blue,
+			       :value, :time_span
+			      }
+	l_dt.set_children_method(_self, :child_dt_vec|()|)
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.child_dt_vec()
+	## 
+	## 
+	l_vec << rope.new_for(.execution_object_vec.size)
+	_for i_object _over .execution_object_vec.fast_elements()
+	_loop
+		l_vec.add(i_object.as_display_tree())
+	_endloop
+	_return l_vec
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.time_span_string()
+	## 
+	##
+	_for i_execution_object _over .execution_object_vec.fast_elements()
+	_loop 
+		l_date << i_execution_object.date_object()
+		_if l_date _isnt _unset
+		_then
+			_if l_min_date _is _unset _orif
+			    l_min_date > l_date
+			_then
+				l_min_date << l_date
+			_endif
+			_if l_max_date _is _unset _orif
+			    l_max_date < l_date
+			_then
+				l_max_date << l_date
+			_endif
+		_endif
+	_endloop
+	_if l_max_date _isnt _unset
+	_then
+		l_result << write_string(date.new_from(l_min_date), " - ",
+					 date.new_from(l_max_date))
+	_else
+		l_result << ""
+	_endif
+	_return l_result
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.value_prop()
+	## 
+	##
+	_return property_list.new_with(:name, .name,
+				       :type, :class,
+				       :size, .execution_object_vec.size,
+				       :time_span, _self.time_span_string()				       
+			      )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.last_execution()
+	## 
+	## 
+	_return .execution_object_vec.first
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_class_object.directory_object()
+	## 
+	## 
+	_return .parent_object.directory_object()
+_endmethod
+$

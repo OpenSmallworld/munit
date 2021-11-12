@@ -1,0 +1,347 @@
+#% text_encoding = iso8859_1
+_package sw
+
+##
+##> Name:         munit_test_directory_object.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         31. Oct 2020
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_directory_object)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_directory_object,
+        {
+		{:name, _unset},
+		{:test_name_set, _unset },
+		{:test_name_vec, _unset},
+		{:test_name_prop, _unset},
+		{:run_group, _unset},
+		{:historic_group, _unset},
+		{:change_group, _unset},
+		{:case_change_group, _unset},
+		{:display_tree, _unset}
+	},
+	{})
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.new(p_name, _optional p_test_name_set)
+	##
+	##
+	_return _clone.init(p_name, p_test_name_set)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.init(p_name,
+				       p_test_name_set
+			       )
+	## 
+	##
+	.name << p_name
+	.test_name_set << p_test_name_set
+	_return _self 	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.as_display_tree()
+	## 
+	##
+	_if (l_dt << .display_tree) _is _unset
+	_then
+		l_dt << .display_tree << _self.create_display_tree()
+	_endif
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.create_display_tree()
+	## 
+	##
+	l_value << _self.value_prop()
+	l_dt << display_tree.new(_self, l_value)
+	l_dt.styled_string << {:image, {:folder, :munit_test_evaluation},
+			       :value, :name}
+	l_run_group << _self.run_group()
+	l_run_group_dt << l_run_group.create_display_tree()
+	l_run_group_dt.parent << l_dt
+	l_historic_group << _self.historic_group()
+	l_historic_group_dt << l_historic_group.create_display_tree()
+	l_historic_group_dt.parent << l_dt
+	l_change_group << _self.change_group()
+	l_change_group_dt << l_change_group.create_display_tree()
+	l_change_group_dt.parent << l_dt
+	l_case_change_group << _self.case_change_group()
+	l_case_change_group_dt << l_case_change_group.create_display_tree()
+	l_case_change_group_dt.parent << l_dt
+	l_dt.expanded? << _true 
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.historic_group()
+	## 
+	## 
+	_if .historic_group _is _unset
+	_then
+		.historic_group << _self.get_historic_group()
+	_endif
+	_return .historic_group
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.get_historic_group()
+	## 
+	## 
+	_return munit_test_historic_group_object.new(_self)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.change_group()
+	## 
+	## 
+	_if .change_group _is _unset
+	_then
+		.change_group << _self.get_change_group()
+	_endif
+	_return .change_group
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.get_change_group()
+	## 
+	## 
+	_return munit_test_change_group_object.new(_self)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.case_change_group()
+	## 
+	## 
+	_if .case_change_group _is _unset
+	_then
+		.case_change_group << _self.get_case_change_group()
+	_endif
+	_return .case_change_group
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.get_case_change_group()
+	## 
+	## 
+	_return munit_test_case_change_group_object.new(_self)
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.run_group()
+	## 
+	## 
+	_if .run_group _is _unset
+	_then
+		.run_group << _self.get_run_group()
+	_endif
+	_return .run_group
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.get_run_group()
+	## 
+	## 
+	_return munit_test_run_group_object.new(_self)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.value_prop()
+	## 
+	##
+	_return property_list.new_with(:name, .name,
+				       :type, :directory
+			      )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.directory()
+	## 
+	## 
+	_return .name
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.test_name_vec()
+	## 
+	## 
+	_if .test_name_vec _is _unset
+	_then
+		.test_name_vec << _self.get_test_name_vec()
+	_endif
+	_return .test_name_vec
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.get_test_name_vec()
+	## 
+	##
+	l_vec << rope.new()
+	l_test_prop << _self.test_name_prop()
+	_for i_key _over l_test_prop.sorted_by_key().fast_keys()
+	_loop
+		l_vec.add(i_key)
+	_endloop
+	_return l_vec
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.test_name_prop()
+	## 
+	## 
+	_if .test_name_prop _is _unset
+	_then
+		.test_name_prop << _self.get_test_name_prop()
+	_endif
+	_return .test_name_prop
+_endmethod
+$
+_pragma(classify_level=restricted)
+_iter _method munit_test_directory_object.sorted_test_and_execution_prop()
+	## 
+	##
+	l_prop << _self.test_name_prop()
+	_for i_name _over _self.test_name_vec().fast_elements()
+	_loop
+		_loopbody(i_name, l_prop[i_name])
+	_endloop 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.get_test_name_prop()
+	## 
+	##
+	l_prop << property_list.new()
+	_for i_dir _over _self.test_execution_directories(_self.directory())
+	_loop
+		(l_execution, l_test_dir) << system.pathname_components(i_dir)
+		l_test_class << system.pathname_components(l_test_dir)
+		l_test_class << l_test_class.as_symbol()
+		_if (l_class_prop << l_prop[l_test_class]) _is _unset
+		_then
+			l_class_prop << l_prop[l_test_class] << property_list.new_with(:directory, l_test_dir,
+										       :execution_vec, rope.new())
+		_endif
+		l_class_prop[:execution_vec].add(l_execution)
+	_endloop
+	_return l_prop	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_iter _method munit_test_directory_object.test_execution_directories(p_directory)
+	## 
+	## 
+	l_dir << directory_channel.new(p_directory)
+	_loop
+		l_child_dir << l_dir.get_full()
+		_if l_child_dir _is _unset 
+		_then
+			_leave 
+		_endif
+		_if file_status.new(l_child_dir).basic_type _is :directory
+		_then
+			_if _self.with_test_overview?(l_child_dir)
+			_then
+				_loopbody(l_child_dir)
+			_else
+				_for i_dir _over _self.test_execution_directories(l_child_dir)
+				_loop
+					_loopbody(i_dir)
+				_endloop
+			_endif
+		_endif
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.with_test_overview?(p_dir)
+	## 
+	##
+	_return _self.test_overview_file(p_dir) _isnt _unset 	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.test_overview_file(p_dir)
+	## 
+	##
+	_return _self.get_file(p_dir, "overview.json")	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.get_file(p_dir, p_name)
+	## 
+	##
+	l_filename << system.pathname_from_components(p_name, p_dir)
+	_if system.file_exists?(l_filename)
+	_then
+		_return l_filename
+	_endif 	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.test_object_prop()
+	## 
+	##
+	_return .run_group.test_object_prop()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.test_name_set()
+	## 
+	## 
+	_return .test_name_set
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_directory_object.directory_object()
+	## 
+	## 
+	_return _self
+_endmethod
+$
+

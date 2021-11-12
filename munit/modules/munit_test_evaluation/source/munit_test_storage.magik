@@ -1,0 +1,346 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_storage,
+        {
+	},
+	{})
+$
+
+_pragma(classify_level=restricted)
+munit_test_storage.define_shared_variable(
+	:default_base_directory,
+	"c:\munit_test_eval",
+	:public)
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.base_directory
+	_if (l_dir << system.getenv("munit_test_eval_base_directory")) _is _unset
+	_then
+		l_dir << _self.default_base_directory
+	_endif
+	_return l_dir
+_endmethod 
+$
+
+			
+_pragma(classify_level=restricted)
+_method munit_test_storage.store_suite(p_suite, _optional p_base_directory)
+	## 
+	##
+	l_test_prop << _self.test_prop(p_suite)
+	l_res_vec << rope.new()
+	_for i_test_class, i_test_vec _over l_test_prop.fast_keys_and_elements()
+	_loop
+		l_path << _self.store_tests(i_test_class, i_test_vec, p_base_directory)
+		l_res_vec.add(l_path)
+	_endloop
+	_return l_res_vec
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.store_tests(p_test_class, p_test_vec, _optional p_base_directory)
+	## 
+	##
+	l_encoder << json_encoder.new(_proc(p_data)
+					      _if p_data.is_kind_of?(simple_xml_thing)
+					      _then
+						      l_enc << simple_xml
+						      l_stream << internal_text_output_stream.new()
+						      l_enc.write_element_on(l_stream, p_data)
+						      _return _true, l_stream.string
+					      _endif 
+					      _return _false 
+				      _endproc 
+				  )
+	l_test_result << p_test_vec.an_element().sys!slot(:test_result)
+	l_dir << _self.new_json_directory( p_test_vec.an_element(),
+					   p_base_directory)
+	l_file << system.pathname_from_components("meta.json", l_dir)
+	l_prop << _self.test_meta_data()
+	l_encoder.generate_file(l_prop, l_file, _false)
+	l_file << system.pathname_from_components("module.json", l_dir)
+	l_prop << _self.test_module_data(p_test_class, p_test_vec)
+	l_encoder.generate_file(l_prop, l_file, _false)
+	l_file << system.pathname_from_components("overview.json", l_dir)
+	l_prop << _self.test_overview(l_test_result)
+	l_encoder.generate_file(l_prop, l_file, _false)	
+	
+	l_prop << equality_property_list.new()
+
+
+	_for i_test _over p_test_vec.fast_elements()
+	_loop
+		l_test_prop << _self.single_test_data(i_test, l_test_result)
+		l_prop[l_test_prop[:name]] << l_test_prop
+		_if _self.with_detail_info?(i_test, l_test_result)
+		_then
+			_if l_sub_test_dir _is _unset
+			_then
+				l_sub_test_dir << system.pathname_from_components("details", l_dir)
+				system.mkdir(l_sub_test_dir)
+			_endif
+			(l_detail_prop, l_filename) << _self.test_detail_info(i_test, l_test_result)
+			
+			l_file << system.pathname_from_components(l_filename, l_sub_test_dir)
+		
+		
+			l_encoder.generate_file(l_detail_prop, l_file)
+			
+		_endif
+			
+	_endloop
+	
+	
+	l_file << system.pathname_from_components("list.json", l_dir)
+	l_encoder.generate_file(l_prop, l_file, _false)
+	_return l_dir
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.single_test_data(p_test, p_test_result)
+	## 
+	## 
+	l_prop << property_list.new()
+	l_prop[:name] << p_test.get_name()
+	_if p_test_result _isnt _unset
+	_then 
+		l_prop[:test_errored?] << p_test_result.test_errored?(p_test)
+		l_prop[:test_failed?] << p_test_result.test_failed?(p_test)
+		l_prop[:test_failures] << p_test_result.failures_for_test(p_test).size
+	_endif
+	_self.test_specific_main_data(p_test, p_test_result, l_prop)
+	_return l_prop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.with_detail_info?(p_test, p_test_result) 
+	## 
+	## 
+	_if p_test_result _isnt _unset
+	_then
+		_return _not p_test_result.failures_for_test(p_test).empty? _orif
+			_self.with_test_specific_data?(p_test, p_test_result)
+	_endif
+	_return _false 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.test_detail_info(p_test, p_test_result)
+	## 
+	## 
+	l_prop << property_list.new()
+	l_name << p_test.get_name()
+	l_vec << p_test_result.failures_for_test(p_test)
+	l_prop[:test_failures] << rope.new_for(l_vec.size)
+	_for i_failure _over l_vec.fast_elements()
+	_loop
+		l_prop[:test_failures].add(_self.test_failure_data(i_failure))
+	_endloop
+	_self.add_test_specific_data(p_test, p_test_result, l_prop)
+	_return l_prop, l_name + ".json"
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.test_specific_main_data(p_test, p_test_result, p_prop)
+	## 
+	## 
+	_if p_test.responds_to?(:|storage!specific_main_data()|)
+	_then
+		p_test.storage!specific_main_data(p_test_result, p_prop)
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.with_test_specific_data?(p_test, p_test_result)
+	## 
+	## 
+	_if p_test.responds_to?(:|storage!with_specific_data?()|)
+	_then
+		_return p_test.storage!with_specific_data?(p_test_result)
+	_endif
+	_return _false 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.add_test_specific_data(p_test, p_test_result, p_prop)
+	## 
+	##
+	_if p_test.responds_to?(:|storage!store_data()|)
+	_then
+		p_test.storage!store_data(p_prop, p_test_result)
+	_endif 
+
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.test_failure_data(p_failure)
+	## 
+	## 
+	l_prop << property_list.new()
+	l_prop[:type] << _if p_failure.is_failure?()
+			 _then
+				 >> "failure"
+			 _else
+				 >> "error"
+			 _endif
+	l_prop[:condition] << _self.condition_data(p_failure.raised_condition())
+	l_prop[:test_failure_data] << p_failure.test_failure_data
+	l_prop[:full_traceback_text] << p_failure.full_traceback_text()
+	
+	_return l_prop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.condition_data(p_condition)
+	## 
+	## 
+	l_prop << property_list.new()
+	_if p_condition _isnt _unset
+	_then
+		l_prop[:name] << p_condition.name
+		l_prop[:taxonomy] << p_condition.taxonomy
+		l_prop[:category] << p_condition.category
+		l_prop[:content_string] << p_condition.report_contents_string	
+	_endif
+	_return l_prop
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.test_module_data(p_test_class, p_test_vec)
+	## 
+	## 
+	l_module_name << p_test_vec.an_element().module_name
+	l_module << sw_module_manager.module(l_module_name)
+	l_product << l_module.product
+	_return property_list.new_with(
+			:test_class_name, p_test_class,
+			:module_name, l_module_name,
+			:product_name, l_product.name,
+			:product_directory, l_product.directory
+			      )
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.test_meta_data()
+	## 
+	## 
+
+	_return property_list.new_with(
+			 :host_name, system.host_name,
+			 :os_revision, system.os_revision,
+			 :date, date_time.now(),
+			 :gis_user, gis_program_manager.login_name,
+			 :system_user, system.user_name,
+			 :ace_db_dir, system.getenv(:sw_session_ace_db_dir)
+			       )
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method munit_test_storage.test_overview(p_test_result)
+	## 
+	## 
+	l_prop << property_list.new()
+	l_prop[:date] << date_time.now()
+	_if p_test_result _isnt _unset
+	_then		
+		l_prop[:run_count] <<  p_test_result.run_count()
+		l_prop[:assert_count] << p_test_result.assert_count()
+		l_prop[:failure_count] << p_test_result.failure_count()
+		l_prop[:error_count] << p_test_result.error_count()
+	_endif
+	_return l_prop
+		
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.test_prop(p_suite)
+	## 
+	##
+	l_prop << property_list.new()
+	_for i_test _over p_suite.tests()
+	_loop
+		_if (l_vec << l_prop[i_test.class_name]) _is _unset
+		_then
+			l_vec << l_prop[i_test.class_name] << equality_set.new()	
+		_endif
+		l_vec.add(i_test)
+	_endloop
+	_return l_prop
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.new_json_directory(p_test, _optional p_base_directory)
+	## 
+	##
+	_if p_base_directory _is _unset
+	_then 
+		l_dir << _self.base_directory
+	_else
+		l_dir << p_base_directory
+	_endif 
+	l_dir << _self.create_dir(l_dir)
+
+	l_module_name << p_test.module_name
+	l_module << sw_module_manager.module(l_module_name)
+	l_product << l_module.product
+	l_test_class_name << p_test.class_name
+	l_dir << _self.create_dir( system.pathname_from_components(l_product.name, l_dir))
+	l_dir << _self.create_dir( system.pathname_from_components(l_module_name, l_dir))
+	l_dir << _self.create_dir( system.pathname_from_components(l_test_class_name, l_dir))
+	l_date_folder_name << _self.date_folder_name()
+	l_dir << _self.create_dir( system.pathname_from_components(l_date_folder_name, l_dir))	
+	
+	_return l_dir
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.create_dir(p_dir)
+	## 
+	## 
+	_if _not system.file_exists?(p_dir)
+	_then
+		system.mkdir(p_dir)
+	_endif
+	_return p_dir
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_storage.date_folder_name()
+	## 
+	## 
+	l_format_string << "#Y#m#d_#H#M#S"
+	l_format << date_time_format.new(:date_format_string, l_format_string)
+	_return l_format.format(date_time.now(:milliseconds))
+_endmethod
+$

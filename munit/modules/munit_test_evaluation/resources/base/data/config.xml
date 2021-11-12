@@ -1,0 +1,29 @@
+<!-- ************************************************************ -->
+<!--                                                              -->
+<!-- (c) 2005-2012 General Electric Company. All Rights Reserved. -->
+<!--                                                              -->
+<!-- ************************************************************ -->
+
+<config>
+    <plugins>
+	<plugin name="munit_test_eval_tree" class_name="munit_test_eval_tree_plugin">
+	    <properties>
+	    </properties>
+	</plugin>
+	<plugin name="munit_test_eval_execution_tree" class_name="munit_test_eval_execution_tree_plugin">
+	    <properties>
+	    </properties>
+	</plugin>
+
+	<plugin name="munit_test_eval_comparison" class_name="munit_test_eval_comparison_plugin"/>
+	<plugin name="munit_test_eval_failure" class_name="munit_test_eval_failure_plugin"/>
+	<plugin name="munit_test_eval_default" class_name="munit_test_eval_default_plugin"/>
+	<plugin name="munit_test_eval_output_stack" class_name="munit_test_eval_output_stack_plugin"> 
+	  <plugin_data>
+	      <handle plugin_name="munit_test_eval_default" />
+	      <handle plugin_name="munit_test_eval_comparison" />
+	      <handle plugin_name="munit_test_eval_failure" />
+	  </plugin_data>
+	</plugin>
+    </plugins>
+</config>

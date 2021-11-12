@@ -1,0 +1,6 @@
+munit_test_eval_tree_plugin
+munit_test_eval_execution_tree_plugin
+munit_test_eval_output_stack_plugin
+munit_test_eval_default_plugin
+munit_test_eval_comparison_plugin
+munit_test_eval_failure_plugin

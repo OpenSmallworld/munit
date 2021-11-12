@@ -1,0 +1,341 @@
+#% text_encoding = iso8859_1
+_package sw
+
+##
+##> Name:         munit_test_case_object.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         31. Oct 2020
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_case_object)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_case_object,
+        {
+		{:data, _unset},
+		{:execution_object, _unset},
+		{:detail_prop, _unset},
+		{:current_mode, _unset},
+		{:change_type, _unset},
+		{:detail_directory, _unset},
+		{:display_tree_prop, _unset}
+	},
+	{})
+$
+_pragma(classify_level=restricted)
+munit_test_case_object.define_slot_access(
+	:data,
+	:writable)
+$
+_pragma(classify_level=restricted)
+munit_test_case_object.define_slot_access(
+	:execution_object,
+	:writable)
+$
+
+
+_pragma(classify_level=restricted)
+munit_test_case_object.define_slot_access(
+	:change_type,
+	:writable)
+$
+
+_pragma(classify_level=restricted)
+munit_test_case_object.define_slot_access(
+	:current_mode,
+	:writable)
+$
+
+
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.new(p_execution_object, p_data, p_detail_directory)
+	##
+	##
+
+	_return _clone.init(p_execution_object, p_data, p_detail_directory)
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.init(p_execution_object,
+				  p_data,
+				  p_detail_directory
+			     )
+	## 
+	##
+	.execution_object << p_execution_object
+	.data << p_data
+	.display_tree_prop << property_list.new()
+	.detail_directory << p_detail_directory
+	_return _self 	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.as_display_tree()
+	## 
+	##
+	_if (l_dt << .display_tree_prop[_self.current_mode]) _is _unset
+	_then
+		l_dt << .display_tree_prop[_self.current_mode] << _self.create_display_tree()
+	_endif
+	_return l_dt
+	
+
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.create_display_tree()
+	## 
+	##
+	l_value << _self.value_prop()
+	l_dt << display_tree.new(_self, l_value)
+	_if _self.with_comparison_data?()
+	_then
+		l_colour << :red
+	_else
+		l_colour << :black
+	_endif
+	_if _self.current_mode _is :change _orif
+	    _self.current_mode _is :change_historic
+	_then
+		l_dt.styled_string << {
+					      :image, {_self.change_type, _self.module_name},
+					      l_colour,
+					      :value, :display_name,
+					      :purple,
+					      :value, :status
+				      }
+	_else 
+		l_dt.styled_string << {l_colour,
+				       :value, :display_name,
+				       :purple,
+				       :value, :status
+				      }
+	_endif 
+	l_dt.set_children_method(_self, :test_failure_dts|()|)
+	l_dt.children? << .data[:test_failures] _isnt _unset _andif
+			  .data[:test_failures] > 0
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.test_failure_dts()
+	## 
+	##
+	l_prop << _self.detail_prop
+	l_res_vec << rope.new()
+	
+	_for i_failure _over l_prop[:test_failures].default({}).fast_elements()
+	_loop
+		l_object << munit_test_failure_object.new(i_failure, _self)
+		l_dt << l_object.as_display_tree()
+		l_res_vec.add(l_dt)
+	_endloop
+
+	_return l_res_vec
+	
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method munit_test_case_object.number_test_failures()
+	## 
+	## 
+	_return .data[:test_failures]
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.execution_date()
+	## 
+	## 
+	_return .execution_object.date()
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.value_prop()
+	## 
+	##
+	_if _self.current_mode _is :historic _orif
+	    _self.current_mode _is :change_historic
+	_then
+		l_display_name << _self.execution_date()
+	_else 
+		l_display_name << _self.name()
+	_endif 
+	l_prop <<  property_list.new_with(:display_name, l_display_name,
+					  :type, :case,
+					  :status, _self.status
+				 )
+
+	_return l_prop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.name()
+	## 
+	##
+	
+	_return .data[:name]
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.expected_text()
+	## 
+	##
+
+	_if (l_failed << _self.detail_prop[:failed_json_assertion]) _isnt _unset _andif
+	    (l_expected << l_failed[:expected]) _isnt _unset
+	_then
+		_return _self.json_string_for_text_window(l_expected)
+	_endif
+	_if (l_failed << _self.detail_prop[:failed_xml_assertion]) _isnt _unset _andif
+	    (l_expected << l_failed[:expected]) _isnt _unset 
+	_then
+		_return _self.xml_string_for_text_window(l_expected)
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.expected_file_path()
+	## 
+	## 
+	_if (l_failed << _self.detail_prop[:failed_json_assertion]) _isnt _unset _andif
+	    (l_expected << l_failed[:expected_file_path]) _isnt _unset
+	_then
+		_return l_expected
+	_endif
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.with_comparison_data?()
+	## 
+	## 
+	_return .data[:with_comparison_data?] _is _true 
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method munit_test_case_object.actual_text_string()
+	## 
+	## 
+	_if (l_failed << _self.detail_prop[:failed_json_assertion]) _isnt _unset _andif
+	    (l_actual << l_failed[:actual]) _isnt _unset 
+	_then
+		_return l_actual
+	_endif 
+	_if (l_failed << _self.detail_prop[:failed_xml_assertion]) _isnt _unset _andif
+	    (l_actual << l_failed[:actual]) _isnt _unset 
+	_then
+		_return l_actual
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.actual_text()
+	## 
+	## 
+	_if (l_failed << _self.detail_prop[:failed_json_assertion]) _isnt _unset _andif
+	    (l_actual << l_failed[:actual]) _isnt _unset 
+	_then
+		_return _self.json_string_for_text_window(l_actual)
+	_endif
+	_if (l_failed << _self.detail_prop[:failed_xml_assertion]) _isnt _unset _andif
+	    (l_actual << l_failed[:actual]) _isnt _unset 
+	_then
+		_return _self.xml_string_for_text_window(l_actual)
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.json_string_for_text_window(p_string)
+	## 
+	## 
+	l_enc << json_encoder.new()
+	_return l_enc.generate_string(p_string, _true )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.xml_string_for_text_window(p_string)
+	## 
+	##
+	l_stream << internal_text_output_stream.new()
+	l_enc << simple_xml
+	_try 
+		l_enc.write_element_on(l_stream, p_string)
+	_when error
+		_return p_string
+	_endtry  
+	l_string << l_stream.string
+	_return l_string
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.status
+	## 
+	## 
+	_if .data[:test_errored?] _is _true
+	_then
+		_return :error
+	_elif .data[:test_failed?] _is _true
+	_then
+		_return :failure
+	_else
+		_return :passed
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.read_detail_prop()
+	## 
+	## 
+	l_name << _self.name()
+	l_filename << system.pathname_from_components(l_name + ".json", .detail_directory)
+	_if system.file_exists?(l_filename)
+	_then
+		l_decoder << json_decoder.new()
+		l_prop << l_decoder.parse_file(l_filename)
+	_else
+		l_prop << property_list.new()
+	_endif
+	_return l_prop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_case_object.detail_prop
+	## 
+	## 
+	_if .detail_prop _is _unset
+	_then
+		.detail_prop << _self.read_detail_prop()
+	_endif
+	_return .detail_prop
+_endmethod
+$
