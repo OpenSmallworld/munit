@@ -11,6 +11,7 @@ def_slotted_exemplar(:eo_gisa_base_test_case,
 {:eo_dm_test_case})
 $
 
+_pragma(classify_level=debug)
 eo_gisa_base_test_case.define_slot_externally_writable( :specs )
 $
 
@@ -873,5 +874,89 @@ _method eo_gisa_base_test_case.stub_design_top_alternative_path()
 							  _return _self.saved!design_top_alternative_path(dataset_name)
 						  _endif						  
 					  _endproc)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.given_file_transfer_mode_is_used(endpoint_name)
+	##
+	## Sets file transfer mode for test case.
+	##
+
+	_local props << _self.properties
+	
+	props[:executed_requests] << rope.new()
+	# Stub outbound_request.execute() to grab all outgoing
+	# requests.
+	stub_method_helper.replace_method(outbound_request,
+					  :|execute()|,
+					  _proc (type)
+						  _import props
+						  props[:executed_requests].add_last({type, _self})
+						  _return obj(:status_code, 200, :data, "")
+					  _endproc)
+
+	# Stub file output mode to :web_endpoint.
+	stub_method_helper.replace_method(sw_cim_properties_helper, :output_mode,
+						  _proc()
+							  _return :web_endpoint
+						  _endproc)
+
+	# Stub output path to be given endpoint name.
+	stub_method_helper.replace_method(sw_cim_properties_helper, :output_path,
+						  _proc()
+							  _import endpoint_name
+							  _return endpoint_name
+						  _endproc)
+
+	_local me << _self
+	# Stub system.temp_directory_name to point to newly created
+	# test folder - to enable cleanup when test is done.
+	stub_method_helper.replace_method(system, :temp_directory_name,
+						  _proc()
+							  _import me
+							  _return me.sys!slot(:test_output_path)
+						  _endproc)
+
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.then_all_files_were_transferred_to_endpoint(endpoint_name)
+	##
+	## Checks if all files were transferred to given endpoint.
+	##
+
+	all_files << rope.new()
+	transferred_files << rope.new()
+	
+	_for property_name _over {:output_files,
+				  :gml_output_filenames,
+				  :emi_output_filenames}.fast_elements()
+	_loop
+		_if (filenames << .properties[:export_request].get_property(property_name)) _isnt _unset
+		_then
+			_for filename _over filenames.fast_elements()
+			_loop
+				_if filename _isnt _unset
+				_then 
+					all_files.add_last(filename)
+				_endif
+			_endloop
+		_endif
+	_endloop	
+
+	_for request_data _over .properties[:executed_requests].fast_elements()
+	_loop
+		_if request_data[2].end_point = endpoint_name
+		_then
+			transferred_files.add_last(request_data[2].body)
+		_endif
+	_endloop
+
+	_self.assert_deep_equals(all_files, transferred_files, "Not all files were transferred: #1")
+	
+	_return _self 
 _endmethod
 $
