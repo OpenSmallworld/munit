@@ -951,7 +951,11 @@ _method eo_gisa_base_test_case.then_all_files_were_transferred_to_endpoint(endpo
 	_loop
 		_if request_data[2].end_point = endpoint_name
 		_then
-			transferred_files.add_last(request_data[2].body)
+			transferred_files.add_last(request_data[2].filename)
+			
+			_self.assert_equals(request_data[2].get_parameter(:filename),
+					    system.pathname_components(request_data[2].filename),
+					    "Filename parameter of request was set incorrectly: #1")
 		_endif
 	_endloop
 
