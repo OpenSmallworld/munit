@@ -1,0 +1,218 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=basic, usage={debug})
+##
+## A mixin providing the ability to test that, in situations where the
+## expectation is that a session's database should only be being accessed by
+## vvmds sessions, that no session is breaking that rule.
+##
+## This is to be used to detect those rogue processes, or people, because any
+## writes under the feet of a VVMDS session can cause datastore errors and shutdowns.
+##
+## Inherit from this mixin and define a test calling .check_vvmds_session(), e.g.
+## _pragma(classify_level=debug,topic={EO})
+## def_slotted_exemplar ( :vvmds_check,	{},	{:test_case, :vvmds_check_mixin})
+## $
+## _pragma(classify_level=basic, usage={debug})
+## _method vvmds_check.test_database_setup()
+## 	    _self.int!test_vvmds_session(:ace_view, :electric, :design_admin)
+## _endmethod
+## $
+def_mixin(:vvmds_check_mixin)
+$
+
+
+_pragma(classify_level=basic, usage={debug})
+_private _method vvmds_check_mixin.int!test_vvmds_session(_gather view_names)
+	##
+	## Will fail if this session is not configured as VVMDS or,
+	## any of the named views' files are currently being accessed by a session that
+	## appears to be making writes.
+	##
+	## swmfs_list is used in the checking and if a writer is suspected, then the
+	## whole output of the process will be included in the error message for
+	## further scrutiny.
+	##
+	vvmds? << ds_environment.vvmds?
+	_self.assert_true(vvmds?, "This session is not a VVMDS one - is that ok?")
+		
+	writers? << _false
+	msg << write_string("Unexpected writers to this database", newline_char,
+		"If this database is NOT EXPECTED to be opened in VVMDS mode then ignore this.", newline_char,
+		"See the >0 entries in the Writes column and investigate those sessions and why are they writing to this database", newline_char
+	)
+	
+	_for ds _over _self.views_for_vvmds_check(view_names)
+	_loop
+		_for writer?, output _over _self.check_all_files_for_other_writers_in_view(ds)
+		_loop
+            _if writer?
+            _then
+                writers? << _true
+                msg +<< output
+			_endif
+		_endloop
+		
+	_endloop
+	
+	_self.assert_false(writers?, msg)
+_endmethod
+$
+
+_pragma(classify_level=basic, usage={debug})
+_private _iter _method vvmds_check_mixin.views_for_vvmds_check(view_names)
+	##
+	## Iteratively returns the cached view for each named in VIEW_NAMES
+	## Can be one a key from gis_program_manager.databases, or a slot, e.g.
+	## .ace_view, on gpm
+	##
+	_for view_name _over view_names.elements()
+	_loop
+		_if (a_view << gis_program_manager.databases[view_name]) _is _unset
+		_then
+			_try
+				a_view << gis_program_manager.perform(view_name)
+			_when error
+				#Do nothing
+			_endtry
+		_endif
+		
+        _if a_view _isnt _unset
+        _then
+			_loopbody(a_view)
+		_endif
+    _endloop
+_endmethod
+$
+
+_pragma(classify_level=basic, usage={debug})
+_method vvmds_check_mixin.check_view_for_other_writers(ds_view)
+	## Non-test check - use interactively to test DS_VIEW
+	_for writer?, output _over _self.check_all_files_for_other_writers_in_view(ds_view)
+	_loop
+		write(writer?)
+		write(output)
+	_endloop
+	
+_endmethod
+$
+
+_pragma(classify_level=basic, usage={debug})
+_private _iter _method vvmds_check_mixin.check_all_files_for_other_writers_in_view(a_view)
+	##
+	_for file _over a_view.files.elements()
+	_loop
+		_loopbody (_scatter _allresults _self.check_file_for_other_writers(file, 1))
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=basic, usage={debug})
+_private _method vvmds_check_mixin.check_file_for_other_writers(file, str)
+	##
+	## Uses swmfs_list process to report any current sessions that have written
+	## to FILE
+	##
+	result << _self.call_swmfs_list_for_file(file)
+	writers? << _self.parse_swmfs_list_results_for_writers(result, str)
+	_return writers?, result
+_endmethod
+$
+
+_pragma(classify_level=basic, usage={debug})
+_private _method vvmds_check_mixin.call_swmfs_list_for_file(file)
+	##
+	## Uses swmfs_list to report any current sessions for FILE
+	##
+	_dynamic !output!
+	
+	#Work out the dir and name args
+	logical_file << file.current_logical_file
+	dir_comps << logical_file.directory.split_by(":")
+	dir << write_string("//", _scatter dir_comps)
+	cmd << write_string("swmfs_list -detail ", dir, " ", logical_file.leafname)
+	
+	out << !output!
+	!output! << itos << internal_text_output_stream.new()
+	_protect
+		system.do_command(cmd)
+	_protection
+		!output! << out
+	_endprotect
+	
+	_return itos.string
+_endmethod
+$
+
+_pragma(classify_level=basic, usage={debug})
+_private _method vvmds_check_mixin.parse_swmfs_list_results_for_writers(result_string)
+	##
+	## Parse the results of swmfs_list, RESULT_STRING, in an attempt to spot any
+	## writes. This assumes that the process's output will not change, has the
+	## writes column after the 2nd ")" in the header line and that the session rows
+	## are aligned with the header.  What can go wrong!?
+	##
+	## All we do when a writer is suspected is to return true and let the caller
+	## decide what to do.
+	##
+	## An example of swmfs_list output
+	## 	swmfs_list -detail //cbglindb02/storage/automated_comms_db/network_update/scalability/ds_admin ace.ds
+	## UNIX server cbglindb02, Universal time Mon Nov 22 10:11:42 2021.
+	## File //cbglindb02/storage/automated_comms_db/network_update/scalability/ds_admin ace.ds is running:
+	## Thread id 3316524800, Time 218:53:57, CPU time 206793s, Requests 594374.
+	## Client                          Time       Requests         Reads          Writes       Extends    Flushes    Locks        State
+	## ------------------------------  ---------  ---------------  -------------  -----------  ---------  ---------  -----------  -------
+	## sw-cloud-user@core-sts-task-management-deployment-   21:43:23      74 (    74)     51 (   51)     0 (   0)    0 (  0)    0 (  0)     6 (   6)  idle
+	## sw-cloud-user@pnissm-async-deployment-c7bff6f45-5r   02:51:53    1151 (  1151)   1060 ( 1060)     0 (   0)    0 (  0)    0 (  0)    12 (  12)  idle
+	## sw-cloud-user@pnissm-deployment-68c8849555-6kvst   02:51:52    1165 (  1165)   1075 ( 1075)     0 (   0)    0 (  0)    0 (  0)    12 (  12)  idle
+	## sw-cloud-user@pnissm-deployment-66ccf8b987-v95pj   00:00:36     101 (   101)     58 (   58)     0 (   0)    0 (  0)    0 (  0)    12 (  12)  idle
+	## jeremy@jeremyn-cbg - swmfs_list   00:00:00      11 (    11)      0 (    0)     0 (   0)    0 (  0)    0 (  0)     0 (   0)  listing
+	##
+
+	str << result_string.read_stream()
+	_for i _over 1.upto(20)
+	_loop
+		l << str.get_line()
+		_if l.index_of_seq("Client") _is 1
+		_then
+			_leave
+		_endif
+	_endloop
+	
+	l << str.get_line()
+	_if l.index_of_seq("------") _isnt 1
+	_then
+		_return str
+	_endif
+	
+	_loop
+		l << str.get_line()
+		_if l _is _unset _orif
+			l.empty?
+		_then
+			_leave
+		_endif
+		
+		#We're now at the list of current sessions
+		#The writes are 5th columnists here - which should be after the 2nd ")",
+		#ending at the 3rd
+		read_index << l.index_of(character.from_value(41))
+		write_index << l.index_of(character.from_value(41), read_index+1)
+		extends_index << l.index_of(character.from_value(41), write_index+1)
+		write_slice << l.slice(write_index+1, extends_index)
+		_for split _over write_slice.numbers_and_strings().elements()
+		_loop
+			_if (n << split.as_number()) _isnt _unset _andif
+				n > 0
+			_then
+				#We've found a write!
+				_return _true
+			_endif
+		_endloop
+	_endloop
+	_return _false
+	
+_endmethod
+$
