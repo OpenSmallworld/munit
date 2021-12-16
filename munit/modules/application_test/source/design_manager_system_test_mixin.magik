@@ -519,6 +519,7 @@ _private _method design_manager_system_test_mixin.go_to_job_queue_test_alternati
 
 	_if _not job_queue_view.alternative_path.empty?
 	_then
+		job_queue_view.commit()
 		job_queue_view.goto_top_alternative()
 	_endif
 	
