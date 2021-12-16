@@ -9,14 +9,6 @@ def_mixin( :json_assert_mixin, { :assert_helper_mixin, :nested_properties_assert
 $
 
 _pragma(classify_level=debug)
-## property list with keys :actual, :expected & :expected_file_path holding data
-## from the last failed assertion
-json_assert_mixin.define_shared_constant(:last_failed_json_assertion, 
-	property_list.new_with(:expected, _unset, :actual, _unset, :expected_file_path, _unset), 
-	:public)
-$
-
-_pragma(classify_level=debug)
 ## Tests asserting contents of golden files should cache the path to that file
 ## here to enable it to be referenced down the line
 json_assert_mixin.define_shared_variable(:last_expected_file_path, _unset, :readonly)
@@ -47,37 +39,6 @@ json_assert_mixin.define_shared_constant(:numbers_tolerance,
 	property_list.new_with(:delta, 1e-7, 
 			       :relative, _true ),
 	_true )
-$
-
-_pragma(classify_level=debug)
-_method json_assert_mixin.print_last_failed_json_assertion(_optional stream)
-	## prints :actual and :expected last_failed_json_assertion as a
-	## string to STREAM (defaults to !output!)
-	## 
-	enc<< json_encoder.new()
-	str<< stream.default(!output!)
-	str.write("expected",newline_char)
-	str.write(_self.last_failed_json_assertion[:expected_file_path],newline_char)
-	str.write(enc.generate_string(_self.last_failed_json_assertion[:expected]))
-	str.write(newline_char,"actual",newline_char)
-	str.write(enc.generate_string(_self.last_failed_json_assertion[:actual]),newline_char)
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method json_assert_mixin.overwrite_expected_file_for_last_test_failure()
-	##
-	## This should be called following a test failure, where something has changed
-	## meaning that the expected file requires updating.
-	##
-	## Once overwritten the files will need examining for differences, probably
-	## after prettifying.
-	##
-	_self.generate_new_expected_file(
-		_self.last_failed_json_assertion[:expected_file_path],
-		_self.last_failed_json_assertion[:actual]
-	)
-_endmethod
 $
 
 _pragma(classify_level=restricted)
@@ -360,21 +321,23 @@ _pragma(classify_level=debug)
 _private _method json_assert_mixin.assert_json_decoded(expected, actual, msg)
 	## 
 	##
+	_dynamic !test_failure_data!
 	delta<< _self.numbers_tolerance[:delta]
 	relative?<< _self.numbers_tolerance[:relative]
-	msg<< msg.default("Json assertion failed. Run "+_self.get_name()+
-			" again alone and then check "+ newline_char +
-			_self.class_name+".last_failed_json_assertion, or call " + newline_char +
-			_self.class_name+".print_last_failed_json_assertion() or use " + newline_char +
-			_self.class_name+".overwrite_expected_file_for_last_test_failure()"
-		)
-
-	_if _not _self.assert_deep_equals( expected, actual, msg, delta, relative? )
-	_then
-		_self.last_failed_json_assertion[:expected]<< expected
-		_self.last_failed_json_assertion[:actual]<< actual
-		_self.last_failed_json_assertion[:expected_file_path] << _self.last_expected_file_path
-	_endif
+	msg<< msg.default("Json assertion failed. On test instance <" + _self.get_name().write_string + "> ( can be retrieved by method a_test << a_suite.test_for_name(:" + _self.get_name().write_string + ") ) check:" + newline_char +
+	      "a_test.json_test_failures() or " + newline_char +
+	      "a_test.print_json_test_failures() or " + newline_char +
+	      "a_test.overwrite_expected_json_files() or " + newline_char +
+	      "a_test.overwrite_expected_json_file_for_failure( a_test.failures_of_type(:json_comparison)[1] )"
+		  )
+	# To do: Code should be restructured to pass value of expected_file_path as argument
+	!test_failure_data! << property_list.new_with(
+					      :type, :json_comparison,
+					      :expected, expected,
+					      :actual, actual,
+					      :expected_file_path, _self.last_expected_file_path)
+	
+	_self.assert_deep_equals( expected, actual, msg, delta, relative? )
 	
 _endmethod
 $
@@ -436,3 +399,91 @@ _private _method json_assert_mixin.sort_collection(parent, key, sort_proc)
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method json_assert_mixin.json_test_failures()
+	## 
+	## 
+	_return _self.result_failures_of_type(:json_comparison)	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method json_assert_mixin.print_json_test_failures()
+	## 
+	## 
+	a_failure_vec << _self.json_test_failures()
+	_for a_failure _over a_failure_vec.fast_elements()
+	_loop
+		_self.print_json_test_failure(a_failure)
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method json_assert_mixin.json_failure_values(a_failure)
+	## 
+	## 
+	_if (a_result_prop << a_failure.test_failure_data) _isnt _unset
+	_then
+		a_actual_result << a_result_prop[:actual]
+		a_expected_result << a_result_prop[:expected]
+		a_file_name << a_result_prop[:expected_file_path]
+	_endif
+	_return a_actual_result, a_expected_result, a_file_name  
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method json_assert_mixin.print_json_test_failure(a_failure)
+	## 
+	##
+	( a_actual_result,
+	  a_expected_result,
+	  a_file_name) << _self.json_failure_values(a_failure)
+	_if a_actual_result _isnt _unset _andif
+	    a_expected_result _isnt _unset
+	_then
+		enc<< json_encoder.new()
+		str<< stream.default(!output!)
+		str.write("expected",newline_char)
+		str.write(a_file_name.default("unknown"),newline_char)
+		str.write(enc.generate_string(a_expected_result))
+		str.write(newline_char,"actual",newline_char)
+		str.write(enc.generate_string(a_actual_result),newline_char)
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method json_assert_mixin.overwrite_expected_json_files()
+	##
+	## This should be called following a test failure, where something has changed
+	## meaning that the expected file requires updating.
+	## 
+	_for a_failure _over _self.json_test_failures().fast_elements()
+	_loop
+		_self.overwrite_expected_json_file_for_failure(a_failure)
+	_endloop 	
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method json_assert_mixin.overwrite_expected_json_file_for_failure(a_failure)
+	##
+	## This should be called following a test failure, where something has changed
+	## meaning that the expected file requires updating.
+	##
+	( a_actual_result,
+	  a_expected_result,
+	  a_file_name) << _self.json_failure_values(a_failure)
+	
+	_if a_actual_result _isnt _unset _andif
+	    a_file_name _isnt _unset
+	_then
+		_self.generate_new_expected_file(
+			a_file_name,
+			a_actual_result)
+	_endif 
+_endmethod
+$

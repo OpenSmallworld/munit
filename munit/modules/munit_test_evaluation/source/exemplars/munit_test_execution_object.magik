@@ -1,0 +1,255 @@
+#% text_encoding = iso8859_1
+_package sw
+
+##
+##> Name:         munit_test_execution_object.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         31. Oct 2020
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_execution_object)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_execution_object,
+        {
+		{:execution_folder, _unset},
+		{:parent_object, _unset},
+		{:cache_data_prop, _unset},
+		{:case_object_prop, _unset},
+		{:display_tree, _unset}
+	},
+	{})
+$
+_pragma(classify_level=restricted)
+munit_test_execution_object.define_slot_access(
+	:execution_folder,
+	:writable)
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.new(p_parent_object, p_execution_folder)
+	##
+	##
+	_return _clone.init(p_parent_object, p_execution_folder)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.init(p_parent_object, p_execution_folder)
+	## 
+	##
+	.parent_object << p_parent_object
+	.execution_folder << p_execution_folder
+	.cache_data_prop << property_list.new()
+	_return _self 	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.full_directory()
+	## 
+	## 
+	_return system.pathname_from_components(.execution_folder, .parent_object.full_directory())
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.as_display_tree()
+	## 
+	##
+	_if (l_dt << .display_tree) _is _unset
+	_then
+		l_dt << .display_tree << _self.create_display_tree()
+	_endif
+	_return l_dt
+	
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.create_display_tree()
+	## 
+	##
+	l_value << _self.value_prop()
+	l_dt << display_tree.new(_self, l_value)
+	l_dt.styled_string << {:value, :date,
+			       :purple,
+			       :value, :evaluation_string
+			      }
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.reset()
+	## 
+	##
+	.cache_data_prop.empty()
+	.case_object_prop << _unset 
+	.display_tree << _unset 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.value_prop()
+	## 
+	##
+	_return property_list.new_with(:date, _self.date(),
+				       :type, :execution,
+				       :evaluation_string, _self.evaluation_string_short()
+			      )
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.date()
+	## 
+	##
+	l_date << _self.date_object()
+	_return l_date.write_string
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.date_object()
+	## 
+	## 
+	_return _self.data_of_type(:overview)[:date]
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.evaluation_string_short()
+	## 
+	##
+	l_prop << _self.data_of_type(:overview)
+	_if l_prop[:run_count] _is _unset 
+	_then
+		_return "--"
+	_endif
+	_return write_string(l_prop[:run_count], " / ",
+			     l_prop[:assert_count], " / ",
+			     l_prop[:failure_count], " / ",
+			     l_prop[:error_count])
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.data_of_type(p_type)
+	## 
+	## 
+	_if (l_prop << .cache_data_prop[p_type]) _is _unset 
+	_then
+		l_prop << _self.data_prop(p_type)
+		.cache_data_prop[p_type] << l_prop
+	_endif
+	_return l_prop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.case_object_prop
+	## 
+	## 
+	_if .case_object_prop _is _unset 
+	_then
+		.case_object_prop << _self.read_case_object_prop()
+		
+	_endif
+	_return .case_object_prop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.test_name_set()
+	## 
+	## 
+	_return _self.directory_object().test_name_set()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.directory_object()
+	## 
+	## 
+	_return .parent_object.directory_object()
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.read_case_object_prop()
+	## 
+	##
+	l_prop << _self.data_of_type(:list)
+	l_res_prop << property_list.new(l_prop.size)
+	l_dir << system.pathname_from_components("details", _self.full_directory())
+	l_test_name_set << _self.test_name_set() 
+	_for i_name, i_data _over l_prop.fast_keys_and_elements()
+	_loop
+		_if l_test_name_set _isnt _unset
+		_then
+			_if _not l_test_name_set.includes?(i_name)
+			_then
+				_continue
+			_endif
+		_endif 
+		l_object << munit_test_case_object.new(_self, i_data, l_dir)
+		l_res_prop[i_name] << l_object
+	_endloop
+	_return l_res_prop
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.data_prop(p_type)
+	## 
+	## 
+		
+	l_file << _self.get_file_for_type(p_type)
+	_if l_file _isnt _unset
+	_then
+		l_decoder << json_decoder.new()
+		_return l_decoder.parse_file(l_file)
+	_else
+		_return property_list.new()
+	_endif
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_execution_object.get_file_for_type(p_name)
+	## 
+	##
+	l_filename << write_string(p_name,
+				   ".json")
+	l_file << system.pathname_from_components(l_filename, _self.full_directory())
+	_if system.file_exists?(l_file)
+	_then
+		_return l_file
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_iter _method munit_test_execution_object.child_test_display_trees()
+	## 
+	## 
+	_for i_case_object _over _self.case_object_prop.fast_elements()
+	_loop
+		i_case_object.current_mode << :execution
+		_loopbody(i_case_object.as_display_tree())
+	_endloop 
+_endmethod
+$

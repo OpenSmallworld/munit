@@ -18,3 +18,4 @@ nested_properties_assert_mixin
 json_assert_mixin
 xml_assert_mixin
 stub_dm_api_mixin
+vvmds_check_mixin

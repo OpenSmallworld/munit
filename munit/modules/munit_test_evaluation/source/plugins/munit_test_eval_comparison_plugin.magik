@@ -1,0 +1,218 @@
+#% text_encoding = iso8859_1
+# ************************************************************
+
+_package sw
+$
+#remex(:munit_test_eval_comparison_plugin)
+#$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar(:munit_test_eval_comparison_plugin,
+	{
+		{:case_object,_unset},
+		{:focus?, _unset},
+		{:expected_text_window, _unset},
+		{:actual_text_window, _unset},
+		{:dir_text_item, _unset}
+	},
+	:plugin )
+$
+
+_pragma(classify_level=restricted)
+munit_test_eval_comparison_plugin.define_shared_constant(
+	:databus_consumer_data_types,
+	{ :refresh },
+	:public )
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.init_actions()
+	## 
+	## 
+	_self.add_action(
+		sw_action.new(:overwrite_expected_result,
+			      :caption, _self.message(:overwrite_expected_result),
+			      :image, {:overwrite_expected_result, _self.module_name},
+			      :engine, _self,
+			      :action_message, :|overwrite_expected_result()|)
+	      )
+
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.build_gui( container, _optional xml_element)
+	##
+	## Builds the GUI in CONTAINER for the rwo_set_plugin.
+
+
+
+
+	l_con << sw_container.new(container, _unset, 1, 
+				  :default_col_alignment, :fill,
+				  :default_row_alignment, :fill
+			      )
+	l_toolbar_con << sw_toolbar_container.new( l_con )
+	l_toolbar << l_toolbar_con.create_toolbar()
+	_self.action(:overwrite_expected_result).place_control_on(l_toolbar, :toolbar)
+
+	l_text_con << sw_container.new(l_con, _unset, 1, 
+				  :default_col_alignment, :fill,
+				  :default_row_alignment, :fill,
+				  :row_resize_values, {0,1,0,1,0}
+				   )
+	sw_label_item.new(l_text_con, _self.message(:expected_result), :col_alignment, :left)
+	.expected_text_window << sw_text_window.new(l_text_con)
+	sw_label_item.new(l_text_con, _self.message(:actual_result), :col_alignment, :left)
+	.actual_text_window << sw_text_window.new(l_text_con)	
+	l_dir_con << sw_container.new(l_text_con, 1, _unset, 
+				  :default_col_alignment, :fill,
+				  :row_alignment, :top
+				  )
+	sw_label_item.new(l_dir_con, _self.message(:result_file))
+	.dir_text_item << sw_text_item.new(l_dir_con, :enabled?, _false)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.set_case_object(p_case_object)
+	## 
+	## 
+	.case_object << p_case_object
+	_self.update_gui()
+#	_self.refresh_tree()
+	_self.manage_actions()	
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.update_gui()
+	## 
+	## 
+	.expected_text_window.text << _self.expected_text()
+	.expected_text_window.set_position(0,0)
+	.actual_text_window.text << _self.actual_text()
+	.actual_text_window.set_position(0,0)
+	.dir_text_item.value << _self.expected_file_path()
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.expected_file_path()
+	## 
+	## 
+	_return .case_object.expected_file_path()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.expected_text()
+	## 
+	## 
+	_return .case_object.expected_text()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.actual_text()
+	## 
+	## 
+	_return .case_object.actual_text()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.actual_text_string()
+	## 
+	## 
+	_return .case_object.actual_text_string()
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.manage_actions()
+	##
+	##
+	l_path << .case_object.expected_file_path()
+	_if l_path _isnt _unset
+	_then 
+		(l_file, l_dir) << system.pathname_components(l_path)
+	_endif 
+	_self.action(:overwrite_expected_result).enabled? << .case_object _isnt _unset _andif
+							     l_dir _isnt _unset _andif
+							     system.file_exists?(l_dir)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.overwrite_expected_result()
+	## 
+	## 
+	l_expected_path << !current_package![:json_verticle_integration_test_base].sys!perform(:generate_new_expected_file|()|,
+											       _self.expected_file_path(),
+											       _self.actual_text_string())
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.output_gained_focus()
+	## 
+	## 
+	.focus? << _true 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.output_lost_focus()
+	## 
+	## 
+	.focus? << _false 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.can_handle_selection?(p_selection)
+	## 
+	##
+	
+	_if (l_dt << p_selection.an_element()) _isnt _unset _andif
+	    l_dt.value[:type] = :failure _andif
+	    l_dt.key.with_comparison_data?()
+	_then
+		_self.set_case_object(l_dt.key)
+		_return _true, _true
+	_endif
+	_return _false, _false 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.select_result_when_finished?()
+	## 
+	## 
+	_if .focus? _isnt _true
+	_then
+		_return _false
+	_endif
+	_if _self.action(:lock_view).value _is _true
+	_then
+		_return _false
+	_endif 
+	_return _true 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_comparison_plugin.refresh_list()
+	## 
+	## 
+	.case_object.reset()
+
+_endmethod
+$

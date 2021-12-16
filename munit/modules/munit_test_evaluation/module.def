@@ -1,0 +1,21 @@
+#% text_encoding = iso8859_1
+##----------------------------------------------------------------------------------------
+##
+## GIT HydroS Consult GmbH
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+##----------------------------------------------------------------------------------------
+
+munit_test_evaluation 1
+
+description
+	Test evaluation framework.
+end
+
+requires
+	component_framework
+end

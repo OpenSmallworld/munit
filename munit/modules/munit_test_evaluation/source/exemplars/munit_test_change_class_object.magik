@@ -1,0 +1,187 @@
+#% text_encoding = iso8859_1
+_package sw
+
+##
+##> Name:         munit_test_change_class_object.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         31. Oct 2020
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_change_class_object)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_change_class_object,
+        {
+		{:parent_object, _unset},
+		{:class_object, _unset},
+		{:display_tree, _unset}
+	},
+	{})
+$
+_pragma(classify_level=restricted)
+munit_test_change_class_object.define_slot_access(
+	:class_object,
+	:writable)
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_change_class_object.new(p_parent_object,
+					   p_class_object)
+	##
+	##
+	_return _clone.init(p_parent_object,
+			    p_class_object)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_change_class_object.init(p_parent_object,
+					    p_class_object
+			       )
+	## 
+	##
+	.class_object << p_class_object
+	.parent_object << p_parent_object
+	_return _self 	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_change_class_object.as_display_tree()
+	## 
+	##
+	_if (l_dt << .display_tree) _is _unset
+	_then
+		l_dt << .display_tree << _self.create_display_tree()
+	_endif
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_change_class_object.create_display_tree()
+	## 
+	##
+	l_value << _self.value_prop()
+	l_dt << display_tree.new(_self, l_value)
+	l_dt.styled_string << {
+				      :value, :name,
+				      :purple,
+				      :value, :size,
+				      :blue,
+				      :value, :time_span
+			      }
+
+	l_dt.set_children_method(_self, :change_case_trees|()|)
+	l_dt.children? << _not _self.execution_object_vec().empty?
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_change_class_object.execution_object_vec()
+	## 
+	## 
+	_return .class_object.execution_object_vec
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_change_class_object.value_prop()
+	## 
+	##
+	_return property_list.new_with(:name, .class_object.name,
+				       :size, _self.execution_object_vec().size,
+				       :type, :change_class,
+				       :time_span, .class_object.time_span_string()
+			      )
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_change_class_object.change_case_trees()
+	## 
+	##
+	l_test_prop << equality_hash_table.new()
+	l_execution_vec << _self.execution_object_vec()
+	l_res_vec << rope.new()
+	_for i_pos _over range(1, l_execution_vec.size - 1)
+	_loop
+		
+		l_execution << l_execution_vec[i_pos]
+	
+	#	l_prev_case_prop << l_prev_execution.case_object_prop
+		l_changed_case_prop << property_list.new()
+		_for i_name, i_case_object _over l_execution.case_object_prop.fast_keys_and_elements()
+		_loop
+			l_prev_case << _self.previous_case_for(i_name, l_execution_vec, i_pos + 1)
+			_if l_prev_case _is _unset 
+			_then
+				l_type << :new
+			_else
+				l_type << _self.compare_with_prev(i_case_object, l_prev_case)
+			_endif
+			_if l_type _isnt _unset
+			_then 
+				_if (l_vec << l_changed_case_prop[l_type]) _is _unset
+				_then
+					l_vec << l_changed_case_prop[l_type] << rope.new()			
+				_endif
+				l_vec.add(i_case_object)
+			_endif
+			
+		_endloop
+		
+		_if _not l_changed_case_prop.empty?
+		_then
+			l_change_execution << munit_test_change_execution_object.new(_self, l_execution, l_changed_case_prop)
+			
+			l_res_vec.add(l_change_execution.as_display_tree())
+		_endif 
+	_endloop
+	 
+	_return l_res_vec
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_change_class_object.previous_case_for(p_name, p_execution_vec, p_position)
+	## 
+	## 
+	_for i_pos _over range(p_position, p_execution_vec.size)
+	_loop
+		l_execution << p_execution_vec[i_pos]
+		_if (l_case << l_execution.case_object_prop[p_name]) _isnt _unset
+		_then
+			_return l_case
+		_endif 
+	_endloop 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_change_class_object.compare_with_prev(p_case_object, p_prev_case_object)
+	## 
+	## 
+	_if p_case_object.status ~= p_prev_case_object.status
+	_then
+		_return :change_to_ + p_case_object.status
+	_endif
+	_if p_case_object.number_test_failures() ~= p_prev_case_object.number_test_failures()
+	_then
+		_return :change_number_failures
+	_endif 
+_endmethod
+$

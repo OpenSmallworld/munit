@@ -1,0 +1,11 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+## Used as dynamic variable to pass additional failure data to
+## test_failure instance in case of assertion failure.
+## Failure data is expected to be a property list with a key ':type' with a
+## symbol value specifying the type of the data. Type can be used to access
+## specific failures by method test_case.result_failures_of_type(a_type).  
+_global !test_failure_data! << _unset 
+$

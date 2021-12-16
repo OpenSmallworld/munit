@@ -1,0 +1,140 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=debug)
+def_mixin(:sw_job_server_session_int_test_mixin, {})
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.tear_down()
+	##
+	##
+
+	_if (app << smallworld_product.applications.an_element()) _isnt _unset 
+	_then
+		app.close()
+	_endif 
+	
+	# Wait for the job server to terminate
+	_while job_server_framework.job_server.running?
+	_loop
+		_thisthread.sleep(100)
+	_endloop 
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.test_window_system_is_not_set()
+	## 
+	##
+	
+	_self.assert_unset(!window_system!,
+			   "!window_system! global value is set while it should be unset.")
+	
+	_self.assert_equals(system.window_system,
+			    :none,
+			    "Wrong value of system.window_system: #1")	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.int!test_logger_is_registered(logger_name)
+	## 
+	## Check that the log_manager has a logger registered called LOGGER_NAME
+	
+	fail_str << write_string("log_manager does not have a logger named ", logger_name, " registered.")
+	_self.assert_not_unset(log_manager.get_logger(logger_name), fail_str)
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.test_only_one_application_configured_in_session()
+	## 
+	##
+	
+	_if (actual << smallworld_product.command_line_options[:application]) _isnt _unset
+	_then
+		expected << _self.application_name
+		fail_str << write_string("Wrong application started. Expected: ", expected, "Actual: ", actual) 
+		_self.assert_equals(expected, actual, fail_str)
+	_else
+		_self.fail("Application is not started.")
+	_endif
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.test_job_server_is_running()
+	##
+	##
+	
+	_self.given_an_application()
+	_self.assert_true(job_server_framework.job_server.running?, "Job Server is not running.")
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.test_expected_plugins_are_available()
+	## 
+	##
+
+	_self.given_an_application()
+	_if (app << _self.properties[:app]) _isnt _unset
+	_then
+		_for plugin_name, plugin_class _over _self.expected_plugins.fast_keys_and_elements()
+		_loop
+			_if (plugin << app.component(plugin_name)) _isnt _unset
+			_then
+				_self.assert_equals(plugin_class, plugin.class_name,
+						    "Plugin " + plugin_name + " is of wrong class: #1")
+			_else
+				_self.fail("Plugin not available: " + plugin_name)
+			_endif
+		_endloop
+	_else
+		_self.fail("Application is not started.")
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.given_an_application()
+	##
+	##
+
+	_if (app << smallworld_product.applications.an_element()) _is _unset 
+	_then 
+		smallworld_product.application_definition(_self.application_name).start()
+		app << smallworld_product.applications.an_element()
+	_endif	
+	_self.properties[:app] << app
+
+	>> _self
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.test_job_server_logger_is_registered()
+	##
+	##
+	
+	_self.assert_not_unset(log_manager.get_loggers[:job_server],
+			       "Job Server logger is not registered.")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.test_sw_job_server_logging_module_is_loaded()
+	##
+	##
+	
+	_self.assert_not_unset(sw_module_manager.module(:sw_job_server_logging).loaded?,
+			       "sw_job_server_logging module is not loaded.")
+_endmethod
+$

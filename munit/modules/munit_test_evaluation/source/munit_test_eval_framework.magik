@@ -1,0 +1,199 @@
+#% text_encoding = iso8859_1
+_package sw
+##
+##> Name:         munit_test_eval_framework.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         27. Oct 2016
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_eval_framework)
+#$
+
+_pragma(classify_level=restricted)
+##
+def_slotted_exemplar(:munit_test_eval_framework,
+        {
+		{:test_storage_dir_vec, _unset},
+		{:test_name_set, _unset},
+		{:json_data, _unset}
+	},
+	{:gui_framework})
+$
+
+_pragma(classify_level=restricted, topic={explorer_view_plugin})
+munit_test_eval_framework.define_shared_constant(
+	:databus_consumer_data_types,
+	## Defines the databus consumer types 
+	{:tree_selection},
+	:public )
+$
+
+_pragma(classify_level=restricted, topic={explorer_view_plugin})
+munit_test_eval_framework.define_slot_access(
+	:test_name_set,
+	:readable)
+$
+
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.start(_optional p_test_dir_vec, p_test_name_set, _gather p_args)
+	## 
+	##
+
+	l_test_eval_framework << _self.new(:test_eval_framework, _unset, p_test_dir_vec, p_test_name_set, _scatter p_args)
+	l_test_eval_framework.activate()
+	_return l_test_eval_framework
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.post_activation(_gather p_args)
+	## 
+	## 
+	_super.post_activation(_scatter p_args)
+	_self.manage_actions()
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.refresh_tree()
+	## 
+	##
+
+	_self.plugin(:munit_test_eval_tree).refresh_tree()
+
+	_self.manage_actions()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.refresh_task_tree()
+	## 
+	## 
+	_self.plugin(:munit_test_eval_task).refresh_tree()
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.redraw_tree()
+	## 
+	## 
+	_self.plugin(:munit_test_eval_tree).redraw_tree()
+	_self.manage_actions()
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.new(p_name, p_parent,
+				    _optional p_test_storage_dir_vec,
+				    p_test_name_set,
+				    _gather p_args)
+	## 
+	## 
+	_return _clone.init(p_name, p_parent,
+			    p_test_storage_dir_vec,
+			    p_test_name_set,
+			    p_args)
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.init(p_name,
+				     p_parent,
+				     p_test_storage_dir_vec,
+				     p_test_name_set,
+				     p_arg_vec)
+	## 
+	##
+
+	_super.init(p_name, p_parent, _scatter p_arg_vec)
+	.test_storage_dir_vec << p_test_storage_dir_vec
+	.test_name_set << p_test_name_set
+	_return _self 
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.init_actions()
+	##
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.select_tree_of_key(p_configuration,
+						p_key)
+	## 
+	## 
+	_self.plugin(:munit_test_eval_tree).select_tree_of_key(p_configuration,
+							  p_key)
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.manage_actions()
+	## 
+	##
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.exit()
+	##
+	_self.suspend()
+
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.post_build_gui()
+	##
+	_super.post_build_gui()
+	_self.update_test_eval_title()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.update_test_eval_title()
+	##
+	_self.title << _self.message(:title, "test")
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.close(_gather p_args)
+	## 
+	##
+
+	_super.close(_scatter p_args)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_framework.test_storage_dir_vec()
+	## 
+	## 
+	_if .test_storage_dir_vec _isnt _unset _andif
+	    _not .test_storage_dir_vec.empty?
+	_then
+		_return .test_storage_dir_vec
+	_endif
+	_return {!current_package![:munit_test_storage].base_directory}
+_endmethod
+$

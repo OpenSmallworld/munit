@@ -1,0 +1,189 @@
+#% text_encoding = iso8859_1
+_package sw 
+$
+
+_pragma(classify_level=debug, topic={munit})
+##
+## This mixin defines the API to use the network builder to
+## create geometries.
+##
+## This mixin should not be used on its own.  Its children
+## should be used.
+##
+## It is expected that classes inheriting from this mixin
+## defines the following shared constant:
+## - start_coord       : Used as origin point
+##
+def_mixin(:geometry_builder_mixin)
+$
+
+
+_pragma(classify_level=debug,topic={EO})
+# In meters
+geometry_builder_mixin.define_shared_variable(:default_length, 10, :public)
+$
+
+_pragma(classify_level=debug,topic={EO})
+# Scale factor from nominal coordinate system to DB coordinate system
+geometry_builder_mixin.define_shared_variable(:scale_factor, 1000, :public)
+$
+
+_pragma(classify_level=debug, topic={munit})
+_method geometry_builder_mixin.route_relative_to_start(_optional x, y, direction)
+	## 
+	## Return a sector rope that starts at X, Y and goes in
+	## DIRECTION.
+	##
+	## X and Y are in metres.  These values are converted to
+	## millimeters. 
+	##
+	## DIRECTION can be :north, :east, :south or :west.
+	##
+	## The default for X and Y is 0 and the default for direction
+	## is :east.
+	##
+	
+	(abs_x, abs_y) << _self.int!convert_coordinate(x.default(0), y.default(0))
+
+	>> _self.int!route_line(abs_x, abs_y, direction)
+_endmethod
+$
+
+_pragma(classify_level=debug, topic={munit})
+_private _method geometry_builder_mixin.int!route_line(x, y, _optional direction)
+	##
+	## Return a sector geometry starting at X, Y and going in
+	## DIRECTION. X and Y have already been scaled to the DB
+	## coordinate system.
+	## 
+	## DIRECTION can be :north, :east, :south or :west and defaults
+	## to :east
+	##
+	x2 << x
+	y2 << y
+
+	length << _self.default_length * _self.scale_factor
+	
+	# The database units are :mm
+	_if   direction _is :north 
+	_then 
+		y2 << y + length
+	_elif direction _is :south 
+	_then 
+		y2 << y - length
+	_elif direction _is :west  
+	_then 
+		x2 << x - length
+	_elif direction _is :north_east
+	_then
+		x2 << x + length
+		y2 << y + length
+	_elif direction _is :north_west
+	_then
+		x2 << x - length
+		y2 << y + length
+	_elif direction _is :south_east
+	_then
+		x2 << x + length
+		y2 << y - length
+	_elif direction _is :south_west
+	_then
+		x2 << x - length
+		y2 << y - length
+	_else 
+		x2 << x + length
+	_endif
+	
+	>> sector.new_with_xy ( x, y, x2, y2 )	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method geometry_builder_mixin.two_point_route(x1, y1, x2, y2)
+	## 
+	##
+
+	>> _self.multi_point_route({x1, y1, x2, y2})
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method geometry_builder_mixin.multi_point_route(coord_pairs)
+	##
+	## COORD_PAIRS is a collection of coordinate values (i.e. x1,
+	## y1, x2, y2, ..., xn, yn).
+	## 
+
+	abs_coords << rope.new()
+	_for x, y _over coord_pairs.fast_elements_in_pairs()
+	_loop
+		(abs_x, abs_y) << _self.int!convert_coordinate(x, y)
+		abs_coords.add_last(abs_x)
+		abs_coords.add_last(abs_y)
+	_endloop
+	
+	>> sector.new_with_xy ( _scatter abs_coords )
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method geometry_builder_mixin.get_point(x, y)
+	## 
+	##
+	(abs_x, abs_y) << _self.int!convert_coordinate(x, y)
+
+	_return pseudo_point.new_at(coordinate.new(abs_x, abs_y))
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method geometry_builder_mixin.int!convert_coordinate(x, y)
+	## 
+	## 
+	abs_x << x * _self.scale_factor + _self.start_coord.x
+	abs_y << y * _self.scale_factor + _self.start_coord.y
+	>> abs_x, abs_y
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method geometry_builder_mixin.get_rectangle(tl_x, tl_y, br_x, br_y)
+	## 
+	## 
+	diagonal << _self.two_point_route(tl_x, tl_y, br_x, br_y)
+	box << diagonal.bounds
+	>> pseudo_area.new(box)
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_private _method geometry_builder_mixin.get_rectangle_centred(x, y, half_width, _optional half_height)
+	## 
+	##
+
+	(abs_x, abs_y) << _self.int!convert_coordinate(x, y)
+	half_height    << half_height.default(half_width)
+	
+	box << bounding_box.new_centred(abs_x, abs_y,
+					half_width * _self.scale_factor,
+					half_height * _self.scale_factor)
+	
+	>> pseudo_area.new(box)
+	
+_endmethod
+$
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method geometry_builder_mixin.internal_two_point_route(x1, y1, x2, y2)
+	## 
+	##
+	
+	route << sector.new_with_xy(x1, y1, x2, y2)
+	route << sector_rope.new_with(route).transformed(transform.scale(_self.scale_factor))
+
+	>> route
+	
+_endmethod
+$

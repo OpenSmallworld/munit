@@ -128,11 +128,12 @@ _private _method remote_test_runner.get_new_test(address, port, step_id)
 		_if connection _isnt _unset
 		_then
 
-			connection.output.put_signed_int(step_id.size)
-			connection.output.put_ascii_chars(step_id)
-			connection.output.flush()
-
 			_try _with error_variable
+				
+				connection.output.put_signed_int(step_id.size)
+				connection.output.put_ascii_chars(step_id)
+				connection.output.flush()
+
 				# Get the module name
 				module_name << _self.get_name_from_connection(connection)
 				
@@ -142,11 +143,11 @@ _private _method remote_test_runner.get_new_test(address, port, step_id)
 					test_name << _self.get_name_from_connection(connection)
 				_endif
 			_when error
+				show("Got: ", module_name, test_name)
 				_if module_name _isnt :done
 				_then
 					show("Problem getting new test: ", error_variable.report_contents_string)
-					show("Got: ", module_name, test_name)
-					condition.raise(error_variable.name, _scatter error_variable.data)
+					condition.raise(error_variable.name, _scatter error_variable.data)					
 				_endif
 			_endtry
 			

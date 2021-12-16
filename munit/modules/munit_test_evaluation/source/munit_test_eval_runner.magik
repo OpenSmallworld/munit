@@ -1,0 +1,81 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+#remex(:munit_test_eval_runner)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_eval_runner,
+        {
+		{:test_runner, _unset},
+		{:start_evaluation?, _unset}
+	},
+	{})
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_runner.new(_optional p_test_runner, p_start_evaluation?)
+	## 
+	## 
+	_return _clone.init(p_test_runner, p_start_evaluation?)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_runner.init(p_test_runner, p_start_evaluation?)
+	## 
+	## 
+	.test_runner << p_test_runner
+	.start_evaluation? << p_start_evaluation?
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_runner.run(p_test, _optional p_directory, _gather p_suite_args)
+	## 
+	##
+	_if p_test.responds_to?(:suite|()|)
+	_then
+		_if p_test.exemplar = p_test
+		_then 
+			l_suite << p_test.suite()
+		_else
+			l_suite << p_test
+		_endif 
+	_else
+		l_suite << p_test
+	_endif 
+	_self.test_runner().int!run(l_suite, _scatter p_suite_args)
+	l_path_vec << munit_test_storage.store_suite(l_suite, p_directory)
+	_if .start_evaluation? _is _true
+	_then
+		l_test_name_set << set.new()
+		_for i_test _over l_suite.tests()
+		_loop
+			l_test_name_set.add(i_test.get_name())
+		_endloop
+		l_res_path_vec << l_path_vec.map(_proc(el)
+							 _return system.pathname_up(el)
+						 _endproc)
+		munit_test_eval_framework.start(l_res_path_vec, l_test_name_set)
+	_endif 	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_runner.test_runner()
+	## 
+	## 
+	_if .test_runner _isnt _unset
+	_then
+		_return .test_runner
+	_else
+		_return test_runner.new()
+	_endif 
+_endmethod
+$
+

@@ -1,0 +1,176 @@
+#% text_encoding = iso8859_1
+# ************************************************************
+
+_package sw
+$
+#remex(:munit_test_eval_failure_plugin)
+#$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar(:munit_test_eval_failure_plugin,
+	{
+		{:failure_object,_unset},
+		{:focus?, _unset},
+		{:name_text_item, _unset},
+		{:taxonomy_text_item, _unset},
+		{:content_string_text_window, _unset},
+		{:traceback_text_window, _unset}
+	},
+	:plugin )
+$
+
+_pragma(classify_level=restricted)
+munit_test_eval_failure_plugin.define_shared_constant(
+	:databus_consumer_data_types,
+	{ :refresh },
+	:public )
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.init_actions()
+	## 
+	## 
+
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.build_gui( container, _optional xml_element)
+	##
+	## Builds the GUI in CONTAINER for the rwo_set_plugin.
+
+
+
+
+	l_con << sw_container.new(container, _unset, 1, 
+				  :default_col_alignment, :fill,
+				  :default_row_alignment, :fill,
+				  :row_resize_values, {0,1}
+			      )
+
+	l_dir_con << sw_container.new(l_con, _unset, 2, 
+				  :default_col_alignment, :fill,
+				  :row_alignment, :top,
+				  :col_spacing, 8,
+				  :col_resize_values, {0, 1},
+				  :default_col_alignment, :left
+				  
+				  )
+	sw_label_item.new(l_dir_con, _self.message(:name))
+	.name_text_item << sw_text_item.new(l_dir_con, :enabled?, _false, :col_alignment, :fill)
+	sw_label_item.new(l_dir_con, _self.message(:taxonomy))
+	.taxonomy_text_item << sw_text_item.new(l_dir_con, :enabled?, _false, :col_alignment, :fill)	
+	
+	l_text_con << sw_container.new(l_con, _unset, 1, 
+				  :default_col_alignment, :fill,
+				  :default_row_alignment, :fill,
+				  :row_resize_values, {0,0.3,0,0.7}
+				   )
+	sw_label_item.new(l_text_con, _self.message(:content_string), :col_alignment, :left)
+	.content_string_text_window << sw_text_window.new(l_text_con)
+	sw_label_item.new(l_text_con, _self.message(:traceback), :col_alignment, :left)
+	.traceback_text_window << sw_text_window.new(l_text_con)	
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.set_failure_object(p_failure_object)
+	## 
+	## 
+	.failure_object << p_failure_object
+	_self.update_gui()
+#	_self.refresh_tree()
+	_self.manage_actions()	
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.update_gui()
+	## 
+	## 
+	.content_string_text_window.text << _self.content_string_text()
+	.content_string_text_window.set_position(0,0)
+	.traceback_text_window.text << _self.traceback_text()
+	.traceback_text_window.set_position(0,0)
+	.name_text_item.value << _self.name()
+	.taxonomy_text_item.value << _self.taxonomy()
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.name()
+	## 
+	## 
+	_return .failure_object.name()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.taxonomy()
+	## 
+	## 
+	_return .failure_object.taxonomy()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.content_string_text()
+	## 
+	## 
+	_return .failure_object.content_string_text()
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.traceback_text()
+	## 
+	## 
+	_return .failure_object.traceback_text()
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.manage_actions()
+	## 
+	##
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.output_gained_focus()
+	## 
+	## 
+	.focus? << _true 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.output_lost_focus()
+	## 
+	## 
+	.focus? << _false 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_eval_failure_plugin.can_handle_selection?(p_selection)
+	## 
+	##
+	
+	_if (l_dt << p_selection.an_element()) _isnt _unset _andif
+	    l_dt.value[:type] = :failure 
+	_then
+		_self.set_failure_object(l_dt.key)
+		_return _true, _true
+	_endif
+	_return _false, _false 
+_endmethod
+$
+

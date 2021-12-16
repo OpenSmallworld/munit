@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<gui>
+    <work_area>
+      <paned_window side_by_side="yes" width="1000" height="325" dynamic="yes" cell_spacing="2" col_resize_values="1,1,1">
+	<plugin plugin_name="munit_test_eval_tree" width="330"/>
+	<plugin plugin_name="munit_test_eval_execution_tree" width="330"/>
+	<plugin plugin_name="munit_test_eval_output_stack" width="330"/>
+      </paned_window>
+    </work_area>
+</gui>

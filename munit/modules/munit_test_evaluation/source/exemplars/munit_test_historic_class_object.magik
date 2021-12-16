@@ -1,0 +1,152 @@
+#% text_encoding = iso8859_1
+_package sw
+
+##
+##> Name:         munit_test_historic_class_object.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         31. Oct 2020
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_historic_class_object)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_historic_class_object,
+        {
+		{:parent_object, _unset},
+		{:class_object, _unset},
+		{:display_tree, _unset}
+	},
+	{})
+$
+_pragma(classify_level=restricted)
+munit_test_historic_class_object.define_slot_access(
+	:class_object,
+	:writable)
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_class_object.new(p_parent_object,
+					   p_class_object)
+	##
+	##
+	_return _clone.init(p_parent_object,
+			    p_class_object)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_class_object.init(p_parent_object,
+					    p_class_object
+			       )
+	## 
+	##
+	.class_object << p_class_object
+	.parent_object << p_parent_object
+	_return _self 	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_class_object.as_display_tree()
+	## 
+	##
+	_if (l_dt << .display_tree) _is _unset
+	_then
+		l_dt << .display_tree << _self.create_display_tree()
+	_endif
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_class_object.create_display_tree()
+	## 
+	##
+	l_value << _self.value_prop()
+	l_dt << display_tree.new(_self, l_value)
+	l_dt.styled_string << {
+				      :value, :name,
+				      :purple,
+				      :value, :size,
+				      :blue,
+				      :value, :time_span
+			      }
+
+	l_dt.set_children_method(_self, :historic_case_trees|()|)
+	l_dt.children? << _not _self.execution_object_vec().empty?
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_class_object.execution_object_vec()
+	## 
+	## 
+	_return .class_object.execution_object_vec
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_class_object.value_prop()
+	## 
+	##
+	_return property_list.new_with(:name, .class_object.name,
+				       :size, _self.execution_object_vec().size,
+				       :type, :historic_class,
+				       :time_span, .class_object.time_span_string()
+			      )
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_class_object.historic_case_trees()
+	## 
+	##
+	l_test_prop << equality_hash_table.new()
+	_for i_execution_object _over _self.execution_object_vec().fast_elements()
+	_loop
+		_for i_name, i_case_object _over i_execution_object.case_object_prop.fast_keys_and_elements()
+		_loop
+			_if (l_vec << l_test_prop[i_name]) _is _unset
+			_then
+				l_vec << l_test_prop[i_name] << rope.new()			
+			_endif
+			l_vec.add(i_case_object)
+		_endloop 
+	_endloop
+	l_res_vec << rope.new_for(l_test_prop.size)
+	_for i_case_name, i_test_vec _over l_test_prop.fast_keys_and_elements()
+	_loop
+		l_test_historic_object << munit_test_historic_object.new(_self, i_case_name, i_test_vec)
+		
+		l_res_vec.add(l_test_historic_object.create_display_tree())
+
+	_endloop
+	l_sc << sorted_collection.new(l_res_vec.size, _proc(el1, el2)
+							     _return el1.key.name _cf el2.key.name
+					       _endproc)
+	l_sc.add_all(l_res_vec)
+	l_res_vec << rope.new_from(l_sc)
+	 
+	_return l_res_vec
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_class_object.last_execution()
+	## 
+	## 
+	_return .class_object.last_execution()
+_endmethod
+$

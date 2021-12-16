@@ -1,0 +1,178 @@
+#% text_encoding = iso8859_1
+_package sw
+
+##
+##> Name:         munit_test_historic_object.magik
+##
+##> Author:       Uli Nädelin
+##
+##> Date:         31. Oct 2020
+##
+## Copyright (C)  GIT HydroS Consult GmbH.
+##                Freiburg, Germany.
+##                http://www.hydrosconsult.de
+##                All Rights Reserved.
+##
+#remex(:munit_test_historic_object)
+#$
+_pragma(classify_level=restricted)
+##
+##
+def_slotted_exemplar(:munit_test_historic_object,
+        {
+		{:case_vec, _unset},
+		{:historic_class_object, _unset},
+		{:name, _unset},
+		{:display_tree, _unset}
+	},
+	{})
+$
+_pragma(classify_level=restricted)
+munit_test_historic_object.define_slot_access(
+	:case_vec,
+	:writable)
+$
+
+_pragma(classify_level=restricted)
+munit_test_historic_object.define_slot_access(
+	:name,
+	:writable)
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_object.new(p_historic_class_object,
+				       p_name,
+				       p_case_vec)
+	##
+	##
+	_return _clone.init(p_historic_class_object,
+			    p_name,
+			    p_case_vec)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_object.init(p_historic_class_object,
+					p_name,
+					p_case_vec
+			       )
+	## 
+	##
+	.historic_class_object << p_historic_class_object
+	.case_vec << p_case_vec
+	.name << p_name
+
+	_return _self 	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_object.as_display_tree()
+	## 
+	##
+	_if (l_dt << .display_tree) _is _unset
+	_then
+		l_dt << .display_tree << _self.create_display_tree()
+	_endif
+	_return l_dt
+	
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_object.create_display_tree()
+	## 
+	##
+	l_value << _self.value_prop()
+	l_dt << display_tree.new(_self, l_value)
+	l_dt.styled_string << {
+				      :value, :name,
+				      :blue,
+				      :value, :number_test_string,
+				      :image, {_self.last_status_symbol(), :munit_test_evaluation}
+			      }
+	_return l_dt
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_object.last_status_symbol()
+	## 
+	## 
+	l_last_execution << .historic_class_object.last_execution()
+	_if l_last_execution _is _unset
+	_then
+		_return :default
+	_endif
+	l_test_case << l_last_execution.case_object_prop[.name]
+	_if l_test_case _is _unset
+	_then 
+		_return :test_not_available
+	_else
+		_return l_test_case.status
+	_endif 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_object.value_prop()
+	## 
+	##
+	_return property_list.new_with(:name, .name,
+				       :evaluation, _self.evaluation_string(),
+				       :type, :historic,
+				       :number_test_string, _self.number_test_string(),
+				       :status, _self.status()
+			      )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_object.number_test_string()
+	## 
+	## 
+	_return _self.message(:number_test_string, .case_vec.size, .historic_class_object.execution_object_vec().size)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_object.message(p_message, _gather p_args)
+	## 
+	## 
+	_return message_handler(:munit_test_historic_object).human_string(p_message, _unset, _scatter p_args)
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_object.evaluation_string()
+	## 
+	## 
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method munit_test_historic_object.status()
+	## 
+	## 
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_iter _method munit_test_historic_object.child_test_display_trees()
+	## 
+	## 
+	_for i_case_object _over .case_vec.fast_elements()
+	_loop
+		i_case_object.current_mode << :historic
+		_loopbody(i_case_object.as_display_tree())
+	_endloop 
+_endmethod
+$
+
