@@ -629,11 +629,6 @@ _method db_test_case.databases
 
 	# Cache a collection to hold the views we find
 	_if (views << .ds_views) _is _unset _then views << .ds_views << property_list.new() _endif
-	
-	_if ds_environment.views.size < 0
-	_then 
-		ds_environment.views.empty()
-	_endif
 
 	# Not got started yet
 	_if ds_environment.views.empty? _orif
