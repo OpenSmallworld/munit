@@ -209,7 +209,7 @@ _method sw_job_server_session_int_test_mixin.given_test_null_job_in_job_queue()
 
 	stub_method_helper.replace_method(job, :ds!version,
 					  _proc() _return 123 _endproc)
-	stub_method_helper.replace_method(job, :user_id_field_value,
+	stub_method_helper.replace_method(job, :user,
 					  _proc() _return "test_user" _endproc)	
 	stub_method_helper.replace_method(sw_job_engine, :|get_server_identifier()|,
 					  _proc() _return "test_server" _endproc)	
