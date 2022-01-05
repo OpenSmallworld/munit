@@ -237,8 +237,11 @@ _pragma(classify_level=debug)
 _method sw_job_server_session_int_test_mixin.then_log_content_is(exp_string)
 	##
 	##
+
+	exp_data << json_decoder.new().parse_string((%[ + exp_string.trim_spaces() + %]).substitute_character(%newline, %,))
+	act_data << json_decoder.new().parse_string((%[ + _self.properties[:log_stream].string.trim_spaces() + %]).substitute_character(%newline, %,))
 	
-	_self.assert_equals(exp_string, _self.properties[:log_stream].string, "Log is incorrect: #1")
+	_self.assert_deep_equals(exp_data, act_data, "Log is incorrect: #1")
 
 	_return _self
 _endmethod
