@@ -375,10 +375,10 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method gui_test_mixin.when_the_dialog_is_closed(owner, _optional wait_time, delay_time, max_attempts)
+_method gui_test_mixin.when_the_dialog_is_closed(owner, _optional wait_time, delay_time, max_attempts, close_message)
 	##
 	## Closes the supplied model or gui_framework and waits for the UI to be ready.
-	## OWNER must respond to wm_close().
+	## OWNER must respond to wm_close() or CLOSE_MESSAGE if supplied.
 
 	_local a_frame << owner.top_frame
 	_if a_frame _is _unset
@@ -394,8 +394,9 @@ _method gui_test_mixin.when_the_dialog_is_closed(owner, _optional wait_time, del
 				(top_con _is _unset _orif top_con.tasks_pending?() _isnt _true) _andif
 				sw_gui_task_owner.tasks_pending?() _isnt _true
 		_endproc
-
-	owner.wm_close()
+	
+	close_message << close_message.default(:|wm_close()|)
+	owner.perform(close_message)
 
 	_self.wait_for_check(
 		test_proc,
@@ -403,6 +404,17 @@ _method gui_test_mixin.when_the_dialog_is_closed(owner, _optional wait_time, del
 	)
 
 	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method gui_test_mixin.when_the_dialog_is_suspended(owner, _optional wait_time, delay_time, max_attempts)
+	##
+	## Suspends the supplied model or gui_framework and waits for the UI to be
+	## ready.
+	
+	>> _self.when_the_dialog_is_closed(owner, wait_time, delay_time, max_attempts, :|suspend()|)
+	
 _endmethod
 $
 
