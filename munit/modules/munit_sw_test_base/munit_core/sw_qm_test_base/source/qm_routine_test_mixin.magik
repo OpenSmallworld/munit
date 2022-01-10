@@ -615,3 +615,49 @@ _private _method qm_routine_test_mixin.set_up_trace_results(rwo, _gather keys_an
 	
 _endmethod
 $
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method qm_routine_test_mixin.when_i_run_routine()
+
+	## 
+	##
+
+	_for an_object_type, an_object _over _self.routine_properties[:objects].fast_keys_and_elements()
+	_loop
+		_self.routine_properties[:results][an_object_type] << _self.run_routine_on(an_object)
+	_endloop
+
+	>> _self 
+		
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method qm_routine_test_mixin.then_routine_raises_flags(flag)
+
+	## 
+	## If the argument is 'unset', then no flag is expected
+	
+	flag_properties_expected << {}
+		
+	_for an_object_type, an_object _over _self.routine_properties[:objects].fast_keys_and_elements()
+	_loop
+		_if flag _isnt _unset
+		_then
+			objects    << equality_set.new_with(an_object)
+			
+			flag_properties_expected << {property_list.new_with(
+							     :objects, objects,
+							     :error_code, flag,
+							     :severity, _self.severity_for_error_code(flag))}
+		_endif
+		
+		_self.check_flag_data(flag_properties_expected,
+				      _self.routine_properties[:results][an_object_type], an_object_type )
+	_endloop
+
+	>> _self 
+	
+_endmethod
+$
