@@ -3,7 +3,7 @@ _package sw
 $
 
 _pragma(classify_level=debug)
-def_mixin(:sw_job_server_session_int_test_mixin, {})
+def_mixin(:sw_job_server_session_int_test_mixin, {:json_assert_mixin})
 $
 
 _pragma(classify_level=debug)
@@ -22,9 +22,10 @@ _method sw_job_server_session_int_test_mixin.tear_down()
 		_thisthread.sleep(100)
 	_endloop
 
-	_if _self.properties[:old_log_stream] _isnt _unset
+	_if _self.properties[:old_stream] _isnt _unset
 	_then
-		logger.sys!slot(:logger).sys!slot(:stream) << _self.properties[:old_log_stream]
+		logger << log_manager.get_loggers[:job_server]
+		logger.sys!slot(:logger).sys!slot(:stream) << _self.properties[:old_stream]
 	_endif
 
 	job_server_framework.job_server.set_types_and_groups(_unset)
@@ -179,11 +180,11 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method sw_job_server_session_int_test_mixin.given_stubbed_logging_output_for(logger_name)
+_method sw_job_server_session_int_test_mixin.given_stubbed_logging_output_for_job_server()
 	##
 	##
 
-	logger << log_manager.get_loggers[logger_name]
+	logger << log_manager.get_loggers[:job_server]
 	old_stream << logger.sys!slot(:logger).sys!slot(:stream)
 	new_stream << _self.properties[:log_stream] << wraparound_text_output_stream.new(10000)
 	_self.properties[:old_stream] << old_stream
@@ -234,14 +235,14 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method sw_job_server_session_int_test_mixin.then_log_content_is(exp_string)
+_method sw_job_server_session_int_test_mixin.then_log_content_is_correct(file_name)
 	##
+	## FILE_NAME - the file with expected JSON content
 	##
 
-	exp_data << json_decoder.new().parse_string((%[ + exp_string.trim_spaces() + %]).substitute_character(%newline, %,))
-	act_data << json_decoder.new().parse_string((%[ + _self.properties[:log_stream].string.trim_spaces() + %]).substitute_character(%newline, %,))
+	act_json << (%[ + _self.properties[:log_stream].string.trim_spaces() + %]).substitute_character(%newline, %,)
 	
-	_self.assert_deep_equals(exp_data, act_data, "Log is incorrect: #1")
+	_self.assert_json_file(file_name, act_json, "Log is incorrect: #1")
 
 	_return _self
 _endmethod
@@ -258,49 +259,25 @@ _method sw_job_server_session_int_test_mixin.given_job_engine_types_and_groups(t
 _endmethod
 $
 
-_pragma(classify_level=debug)
-_method sw_job_server_session_int_test_mixin.get_string_from_resource_file(file_name)
-	##
-	##
-
-	full_fname << smallworld_product.get_resource_file(file_name, :data,
-							   sw_job_server_session_int_test_mixin.module_name)
-
-	input << external_text_input_stream.new(full_fname, :utf8)
-	string << ""
-	
-	_protect
-		_loop
-			vec << input.get_n(1000)
-			string +<< vec
-			_if vec.size < 1000 _then _leave _endif 
-		_endloop	
-	_protection
-		_if input _isnt _unset _then input.close() _endif 
-	_endprotect
-	
-	_return string
-_endmethod
-$
 
 _pragma(classify_level=debug)
 _method sw_job_server_session_int_test_mixin.test_job_server_logging()
 	##
 	##
 
-	exp_log << _self.get_string_from_resource_file("log.json")
+	_self.given_an_application()
 	
 	_if log_manager.get_loggers[:job_server] _isnt _unset
 	_then
 		_self.
 			given_job_engine_is_stopped().
-			given_stubbed_logging_output_for(:job_server).
+			given_stubbed_logging_output_for_job_server().
 			given_job_engine_types_and_groups({"null"}).
 			given_test_null_job_in_job_queue().
 			when_job_engine_is_started().
 			when_test_job_is_processed().
 			when_job_engine_is_stopped().
-			then_log_content_is(exp_log)
+			then_log_content_is_correct("log.json")
 	_else	
 		_self.fail("Job Server logger is not registered.")
 	_endif
@@ -314,5 +291,18 @@ _method sw_job_server_session_int_test_mixin.test_sw_job_server_logging_module_i
 	
 	_self.assert_not_unset(sw_module_manager.module(:sw_job_server_logging).loaded?,
 			       "sw_job_server_logging module is not loaded.")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.assert_json_file(exp_json_fname, actual_json _optional msg _gather sort_data)
+	##
+	## Changes module name that is used for getting resource files.
+	##
+	(str, filename) << _self.resource_file_as_string(exp_json_fname,
+							 _unset,
+							 sw_job_server_session_int_test_mixin.module_name)
+	_self.last_expected_file_path << filename
+	>> _self.assert_json(str, actual_json, msg, _scatter sort_data)
 _endmethod
 $
