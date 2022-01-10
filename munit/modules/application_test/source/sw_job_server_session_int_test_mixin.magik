@@ -180,21 +180,6 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method sw_job_server_session_int_test_mixin.given_stubbed_logging_output_for_job_server()
-	##
-	##
-
-	logger << log_manager.get_loggers[:job_server]
-	old_stream << logger.sys!slot(:logger).sys!slot(:stream)
-	new_stream << _self.properties[:log_stream] << wraparound_text_output_stream.new(10000)
-	_self.properties[:old_stream] << old_stream
-	logger.sys!slot(:logger).sys!slot(:stream) << new_stream
-
-	_return _self
-_endmethod
-$
-
-_pragma(classify_level=debug)
 _method sw_job_server_session_int_test_mixin.given_test_null_job_in_job_queue()
 	##
 	##
@@ -240,7 +225,7 @@ _method sw_job_server_session_int_test_mixin.then_log_content_is_correct(file_na
 	## FILE_NAME - the file with expected JSON content
 	##
 
-	act_json << (%[ + _self.properties[:log_stream].string.trim_spaces() + %]).substitute_character(%newline, %,)
+	act_json << _self.get_last_four_entries_from_job_server_log_file()
 	
 	_self.assert_json_file(file_name, act_json, "Log is incorrect: #1")
 
@@ -249,9 +234,48 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.get_last_four_entries_from_job_server_log_file()
+	##
+	## Gets last four lines from job server log.
+	##
+
+	stream << log_manager.get_loggers[:job_server].sys!slot(:logger).sys!slot(:stream)
+	stream.sys!slot(:stream).flush()
+	current_file << stream.sys!slot(:current_file)
+	
+	four_lines << rope.new()
+	file << external_text_input_stream.new(current_file)
+	_protect
+		_loop
+			line << file.get_line()
+			
+			_if line _is _unset
+			_then
+				_leave
+			_endif
+			
+			_if _not line.empty?
+			_then
+				four_lines.add_last(line)
+			_endif
+
+			_if four_lines.size > 4
+			_then
+				four_lines.remove_first()
+			_endif
+		_endloop
+	_protection
+		file.close()
+	_endprotect
+	
+	_return %[ + four_lines.join_as_strings(%,) + %]
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method sw_job_server_session_int_test_mixin.given_job_engine_types_and_groups(types)
 	##
-	##
+	## 
 	
 	job_server_framework.job_server.set_types_and_groups(types)
 
@@ -263,6 +287,8 @@ $
 _pragma(classify_level=debug)
 _method sw_job_server_session_int_test_mixin.test_job_server_logging()
 	##
+	## Checks if Job Server logging works fine and writes correct
+	## log entries to a log file.
 	##
 
 	_self.given_an_application()
@@ -271,7 +297,6 @@ _method sw_job_server_session_int_test_mixin.test_job_server_logging()
 	_then
 		_self.
 			given_job_engine_is_stopped().
-			given_stubbed_logging_output_for_job_server().
 			given_job_engine_types_and_groups({"null"}).
 			given_test_null_job_in_job_queue().
 			when_job_engine_is_started().
