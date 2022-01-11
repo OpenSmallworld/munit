@@ -22,12 +22,6 @@ _method sw_job_server_session_int_test_mixin.tear_down()
 		_thisthread.sleep(100)
 	_endloop
 
-	_if _self.properties[:old_stream] _isnt _unset
-	_then
-		logger << log_manager.get_loggers[:job_server]
-		logger.sys!slot(:logger).sys!slot(:stream) << _self.properties[:old_stream]
-	_endif
-
 	job_server_framework.job_server.set_types_and_groups(_unset)
 _endmethod
 $
