@@ -3,7 +3,7 @@ _package sw
 $
 
 _pragma(classify_level=debug)
-def_mixin(:sw_job_server_session_int_test_mixin, {})
+def_mixin(:sw_job_server_session_int_test_mixin, {:json_assert_mixin})
 $
 
 _pragma(classify_level=debug)
@@ -20,8 +20,9 @@ _method sw_job_server_session_int_test_mixin.tear_down()
 	_while job_server_framework.job_server.running?
 	_loop
 		_thisthread.sleep(100)
-	_endloop 
+	_endloop
 
+	job_server_framework.job_server.set_types_and_groups(_unset)
 _endmethod
 $
 
@@ -130,11 +131,197 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.given_job_engine_is_stopped()
+	##
+	##
+
+	job_server_framework.job_server.stop()
+
+	# Wait for the job server to terminate
+	_while job_server_framework.job_server.running?
+	_loop
+		_thisthread.sleep(100)
+	_endloop 
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.when_job_engine_is_started()
+	##
+	##
+	
+	job_server_framework.job_server.start()
+
+	# Wait for the job server to terminate
+	_while _not job_server_framework.job_server.running?
+	_loop
+		_thisthread.sleep(100)
+	_endloop 
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.when_job_engine_is_stopped()
+	##
+	##
+	
+	_return _self.given_job_engine_is_stopped()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.given_test_null_job_in_job_queue()
+	##
+	##
+
+	stub_method_helper.replace_method(date_time,
+					  :|now()|,
+					  _proc()
+						  _return date_time.new_from_components(2022, 1, 1, _unset,
+											12, 0, 0, _unset, _unset)
+					  _endproc)
+
+	job << _self.properties[:null_job] << job_server_framework.job_server.create_new_job(:type, :null)
+
+	stub_method_helper.replace_method(job, :ds!version,
+					  _proc() _return 123 _endproc)
+	stub_method_helper.replace_method(job, :user,
+					  _proc() _return "test_user" _endproc)	
+	stub_method_helper.replace_method(sw_job_engine, :|get_server_identifier()|,
+					  _proc() _return "test_server" _endproc)	
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.when_test_job_is_processed()
+	##
+	##
+	
+	# Wait for the job to be processed
+	_while _not (_self.properties[:null_job].status = "Completed")
+	_loop
+		_thisthread.sleep(100)
+	_endloop 	
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.then_log_content_is_correct(file_name)
+	##
+	## FILE_NAME - the file with expected JSON content
+	##
+
+	act_json << _self.get_last_four_entries_from_job_server_log_file()
+	
+	_self.assert_json_file(file_name, act_json, "Log is incorrect: #1")
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.get_last_four_entries_from_job_server_log_file()
+	##
+	## Gets last four lines from job server log.
+	##
+
+	stream << log_manager.get_loggers[:job_server].sys!slot(:logger).sys!slot(:stream)
+	stream.sys!slot(:stream).flush()
+	current_file << stream.sys!slot(:current_file)
+	
+	four_lines << rope.new()
+	file << external_text_input_stream.new(current_file)
+	_protect
+		_loop
+			line << file.get_line()
+			
+			_if line _is _unset
+			_then
+				_leave
+			_endif
+			
+			_if _not line.empty?
+			_then
+				four_lines.add_last(line)
+			_endif
+
+			_if four_lines.size > 4
+			_then
+				four_lines.remove_first()
+			_endif
+		_endloop
+	_protection
+		file.close()
+	_endprotect
+	
+	_return %[ + four_lines.join_as_strings(%,) + %]
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.given_job_engine_types_and_groups(types)
+	##
+	## 
+	
+	job_server_framework.job_server.set_types_and_groups(types)
+
+	_return _self
+_endmethod
+$
+
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.test_job_server_logging()
+	##
+	## Checks if Job Server logging works fine and writes correct
+	## log entries to a log file.
+	##
+
+	_self.given_an_application()
+	
+	_if log_manager.get_loggers[:job_server] _isnt _unset
+	_then
+		_self.
+			given_job_engine_is_stopped().
+			given_job_engine_types_and_groups({"null"}).
+			given_test_null_job_in_job_queue().
+			when_job_engine_is_started().
+			when_test_job_is_processed().
+			when_job_engine_is_stopped().
+			then_log_content_is_correct("log.json")
+	_else	
+		_self.fail("Job Server logger is not registered.")
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method sw_job_server_session_int_test_mixin.test_sw_job_server_logging_module_is_loaded()
 	##
 	##
 	
 	_self.assert_not_unset(sw_module_manager.module(:sw_job_server_logging).loaded?,
 			       "sw_job_server_logging module is not loaded.")
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method sw_job_server_session_int_test_mixin.assert_json_file(exp_json_fname, actual_json _optional msg _gather sort_data)
+	##
+	## Changes module name that is used for getting resource files.
+	##
+	(str, filename) << _self.resource_file_as_string(exp_json_fname,
+							 _unset,
+							 sw_job_server_session_int_test_mixin.module_name)
+	_self.last_expected_file_path << filename
+	>> _self.assert_json(str, actual_json, msg, _scatter sort_data)
 _endmethod
 $
