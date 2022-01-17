@@ -405,7 +405,7 @@ _method gui_test_mixin.when_the_dialog_is_closed(owner, _optional wait_time, del
 		_endproc
 	
 	close_message << close_message.default(:|wm_close()|)
-	close_message.send_to(a_frame)
+	close_message.send_to(owner)
 
 	_self.wait_for_check(
 		test_proc,
