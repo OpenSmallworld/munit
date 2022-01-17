@@ -139,7 +139,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method gui_test_mixin.when_the_frame_is_activated(_optional a_frame, wait_time, delay_time, max_attempts)
+_method gui_test_mixin.when_the_frame_is_activated(_optional a_frame, wait_time, delay_time, max_attempts, activate_method)
 	##
 	## Activates the specified frame and waits for it to be active and ready.
 	## Waits for a new frame to be active and ready if a frame is not specified (i.e. opening a new
@@ -148,6 +148,8 @@ _method gui_test_mixin.when_the_frame_is_activated(_optional a_frame, wait_time,
 	## WAIT_TIME - delay (in seconds) between each test attempt (defaults to 0.1s).
 	## DELAY_TIME - initial delay (in seconds) before first attempt (defaults to 0.1s).
 	## MAX_ATTEMPTS - number of times to repeat the test (defaults to 50).
+	## ACTIVATE_METHOD - the method performed on A_FRAME to activate it (defaults
+	## to activate())
 
 	_if max_attempts _is _unset
 	_then
@@ -184,7 +186,7 @@ _method gui_test_mixin.when_the_frame_is_activated(_optional a_frame, wait_time,
 					(top_con _is _unset _orif a_test.ui_ready?(top_con))
 			_endproc
 
-		a_frame.activate()
+		activate_method.default(:|activate()|).send_to(a_frame)
 	_endif
 
 	_self.wait_for_check(
@@ -268,9 +270,11 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method gui_test_mixin.when_the_frame_is_closed(a_frame, _optional wait_time, delay_time, max_attempts)
+_method gui_test_mixin.when_the_frame_is_closed(a_frame, _optional wait_time, delay_time, max_attempts, close_method)
 	##
-	## Closes the specified frame and waits for UI tasks to complete.
+	## Closes the specified frame and waits for UI tasks to complete.  If
+	## CLOSE_METHOD is supplied, perform that on A_FRAME, else call unrealise() and
+	## active? << false on A_FRAME
 	##
 
 	test_proc <<
@@ -283,8 +287,13 @@ _method gui_test_mixin.when_the_frame_is_closed(a_frame, _optional wait_time, de
 		_endproc
 
 	# 'close' the frame
-	a_frame.unrealise()
-	a_frame.active? << _false
+	_if close_method _is _unset 
+	_then 
+		a_frame.unrealise()
+		a_frame.active? << _false
+	_else
+		close_method.send_to(a_frame)
+	_endif 
 
 	_self.wait_for_check(
 		test_proc,
@@ -396,7 +405,7 @@ _method gui_test_mixin.when_the_dialog_is_closed(owner, _optional wait_time, del
 		_endproc
 	
 	close_message << close_message.default(:|wm_close()|)
-	owner.perform(close_message)
+	close_message.send_to(a_frame)
 
 	_self.wait_for_check(
 		test_proc,
