@@ -4,11 +4,40 @@ $
 
 def_slotted_exemplar(:remote_test_runner,
 	{
-		{:retry?, _unset}
+		{:retry?, _unset},
+		{:module_name, _unset},
+		{:test_name, _unset},
+		{:done?, _unset}
 	},
 	{:xml_test_runner})
 $
 
+_pragma(classify_level=debug)
+_method remote_test_runner.done? << done?
+	## 
+	##
+	
+	.done? << done?
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method remote_test_runner.module_name << name
+	## 
+	##
+	
+	.module_name << name
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method remote_test_runner.test_name << name
+	## 
+	##
+	
+	.test_name << name
+_endmethod
+$
 
 _pragma(classify_level=debug)
 _method remote_test_runner.run_remote(address, port, step_id)
@@ -24,23 +53,28 @@ _method remote_test_runner.run_remote(address, port, step_id)
 
 	_loop
 		
-		(module_name, test_name) << _self.get_new_test(address, port, step_id)
+		_self.get_new_test(address, port, step_id)
 
-		_if module_name _is :done _then _leave _endif
-
-		show("Running tests in class: ", module_name, test_name)
+		_if .module_name _is :done _orif 
+			.test_name _is :done 
+		_then 
+			_leave 
+		_endif
+		
+		_thisthread.sleep(100)
+		show("Running tests in class: ", .module_name, .test_name)
 
 		count +<< 1
 
-		_if _not sw_module_manager.module(module_name).loaded?
+		_if _not sw_module_manager.module(.module_name).loaded?
 		_then 
-			sw_module_manager.load_module(module_name)
+			sw_module_manager.load_module(.module_name)
 		_endif
 		
-		(test, identifier) << tf.test_and_identifier(module_name, test_name)
+		(test, identifier) << tf.test_and_identifier(.module_name, .test_name)
 
 		_self.properties[:output_identifier] << identifier
-		a_stream << _self.new_stream(identifier, test_name + "_" + system.host_name)
+		a_stream << _self.new_stream(identifier, .test_name + "_" + system.host_name)
 		
 		_protect
 			test_start << date_time.now(:milliseconds)
@@ -48,7 +82,7 @@ _method remote_test_runner.run_remote(address, port, step_id)
 			new_runner.int!run(test)
 			a_stream.flush()
 			time << date_time.now(:milliseconds) - test_start
-			test_time << write_string("Test ", module_name, "___", test_name, " ran in ", time)
+			test_time << write_string("Test ", .module_name, "___", .test_name, " ran in ", time)
 			test_times.add_last(test_time)
 		_protection
 			a_stream.close()
@@ -89,6 +123,12 @@ _private _method remote_test_runner.connect(address, port)
 
 	count << 0
 	_loop 
+		_if .done? _is _true 
+		_then 
+			connection << _unset
+			_leave 
+		_endif 
+		
 		_try
 			connection << tcpip_connection.new(address, port)
 			.retry? << _false
@@ -122,7 +162,8 @@ _private _method remote_test_runner.get_new_test(address, port, step_id)
 
 	_protect
 		
-		module_name << :done
+		.module_name << :done
+		.test_name   << _unset
 		connection  << _self.connect(address, port)
 
 		_if connection _isnt _unset
@@ -135,16 +176,16 @@ _private _method remote_test_runner.get_new_test(address, port, step_id)
 				connection.output.flush()
 
 				# Get the module name
-				module_name << _self.get_name_from_connection(connection)
+				_self.get_name_from_connection(connection, :module_name)
 				
 				# Get the test name
-				_if module_name _isnt :done
+				_if .module_name _isnt :done
 				_then 
-					test_name << _self.get_name_from_connection(connection)
+					_self.get_name_from_connection(connection, :test_name)
 				_endif
 			_when error
-				show("Got: ", module_name, test_name)
-				_if module_name _isnt :done
+				show("Got: ", .module_name, .test_name)
+				_if .module_name _isnt :done
 				_then
 					show("Problem getting new test: ", error_variable.report_contents_string)
 					condition.raise(error_variable.name, _scatter error_variable.data)					
@@ -156,31 +197,52 @@ _private _method remote_test_runner.get_new_test(address, port, step_id)
 	_protection
 		_self.close_connection(connection)
 	_endprotect
-
-	>> (module_name, test_name)
 	
 _endmethod
 $
 
-
 _pragma(classify_level=debug)
-_private _method remote_test_runner.get_name_from_connection(connection)
+_private _method remote_test_runner.get_name_from_connection(connection, name_slot)
 	## 
 	##
 	
-	nchars << connection.input.get_signed_int()
-	_if nchars _isnt _unset
-	_then
-		name << connection.input.get_ascii_chars(nchars).as_symbol()
-	_else
+	name_queue << atomic_queue.new(1)
+	task << sw_generic_task_owner.do_work(_self, :|do_get_name_from_connection()|, connection, name_slot, name_queue)
+	
+	# Wait for a second to get a name from the queue
+	something << name_queue.get(1000)
+	_if something _is _unset 
+	_then 
+		task.cancel()
+	_endif 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method remote_test_runner.do_get_name_from_connection(connection, name_slot, name_queue)
+	## 
+	##
+	
+	_if .done? _is _true 
+	_then 
 		name << :done
-	_endif
+	_else 
+		nchars << connection.input.get_signed_int()
+		_if nchars _isnt _unset
+		_then
+			name << connection.input.get_ascii_chars(nchars).as_symbol()
+		_else
+			name << :done
+		_endif
 
-	# Acknowledge to the server that the message was read
-	connection.output.put_signed_int(1)
-	connection.output.flush()
-
-	>> name
+		# Acknowledge to the server that the message was read
+		connection.output.put_signed_int(1)
+		connection.output.flush()
+	_endif 
+	
+	_self.perform(name_slot.with_chevron, name)
+	name_queue.put(1)
 	
 _endmethod
 $
