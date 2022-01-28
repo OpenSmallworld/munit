@@ -189,11 +189,19 @@ _private _method json_assert_mixin.int!assert_json(exp_json, actual_json, a_proc
 		_self.fail( write_string(msg," Cannot parse actual JSON string: " , actual_json, newline_char, str.string))
 		_return _self 
 	_endtry
+
 	_if exp_json.is_kind_of?(handler)
 	_then
 		exp_json<< exp_json()
+	_endif
+
+	_if exp_json.is_string?
+	_then
+		expected<< decoder.parse_string(exp_json)
+	_else
+		#Will assume we have a property_list already - probably from the handler
+		expected << exp_json
 	_endif 
-	expected<< decoder.parse_string(exp_json)
 
 	_for sort_data_el _over sort_data.elements()
 	_loop
