@@ -4,11 +4,20 @@ $
 
 def_slotted_exemplar(:remote_test_runner,
 	{
-		{:retry?, _unset}
+		{:retry?, _unset},
+		{:done?, _unset}
 	},
 	{:xml_test_runner})
 $
 
+_pragma(classify_level=debug)
+_method remote_test_runner.done? << done?
+	##
+	##
+	
+	.done? << done?
+_endmethod
+$
 
 _pragma(classify_level=debug)
 _method remote_test_runner.run_remote(address, port, step_id)
