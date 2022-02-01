@@ -344,6 +344,7 @@ _method test_case.tear_down()
 	_self.stubbed_alerts.empty()	
 	
 	# Stop all job servers and wait for them to terminate
+	show("Stopping job servers: ", sw_job_engine.all_job_engines)
 	_for je _over sw_job_engine.all_job_engines.fast_elements()
 	_loop 
 		je.stop()
@@ -355,6 +356,7 @@ _method test_case.tear_down()
 			_thisthread.sleep(100)
 			cnt +<< 1
 		_endloop
+		show(:stopped, je, cnt)
 	_endloop 
 	
 	stub_method_helper.restore_stubbed_methods()
