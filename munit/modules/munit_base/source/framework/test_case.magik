@@ -359,7 +359,9 @@ _method test_case.tear_down()
 		show(:stopped, je, cnt)
 	_endloop 
 	
+	show("Done stopping job servers")
 	stub_method_helper.restore_stubbed_methods()
+	show("Done restoring methods")
 	
 _endmethod
 $
