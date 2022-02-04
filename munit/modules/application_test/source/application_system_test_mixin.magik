@@ -2040,10 +2040,13 @@ _private _method application_system_test_mixin.wait_for_threads_to_finish( task_
 	##
 	## Wait for 1 second and check if TASK_OWNER.thread_pool is
 	## empty.
+	## It is generally expected that TASK_OWNER inherits from
+	## sw_task_owner, but if it does not, this will just return.
 	##
 
 	_loop
-		_if _not task_owner.task_runner().tasks_pending? _then _leave _endif
+		_if _not task_owner.inherits_from?(sw_task_owner) _orif 
+		    _not task_owner.task_runner().tasks_pending? _then _leave _endif
 		_thisthread.sleep( 1000 )
 	_endloop
 
