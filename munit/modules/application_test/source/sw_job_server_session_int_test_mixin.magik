@@ -198,10 +198,12 @@ _method sw_job_server_session_int_test_mixin.when_test_job_is_processed()
 	##
 	
 	# Wait for the job to be processed
-	_while _not (_self.properties[:null_job].status = "Completed")
+	status << _self.properties[:null_job].status
+	_while _not (status = "Completed") _andif 
+		_not (status = "ABANDONED")
 	_loop
 		_thisthread.sleep(100)
-		show(:job_status, _self.properties[:null_job].status)
+		show(:job_status, status)
 	_endloop 	
 
 	_return _self
