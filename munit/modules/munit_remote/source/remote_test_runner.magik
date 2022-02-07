@@ -33,9 +33,7 @@ _method remote_test_runner.run_remote(address, port, step_id)
 
 	_loop
 		
-		show("Get new test")
 		(module_name, test_name) << _self.get_new_test(address, port, step_id)
-		show("Got new test: ", module_name, test_name)
 
 		_if module_name _is :done _then _leave _endif
 
@@ -57,13 +55,10 @@ _method remote_test_runner.run_remote(address, port, step_id)
 			test_start << date_time.now(:milliseconds)
 			new_runner << _self.new(a_stream, _scatter _self.properties.for_scatter())
 			new_runner.int!run(test)
-			show("Done running tests in class: ", module_name, test_name)
 			a_stream.flush()
-			show("flushed stream")
 			time << date_time.now(:milliseconds) - test_start
 			test_time << write_string("Test ", module_name, "___", test_name, " ran in ", time)
 			test_times.add_last(test_time)
-			show("Added time string")
 		_protection
 			a_stream.close()
 		_endprotect
@@ -72,8 +67,7 @@ _method remote_test_runner.run_remote(address, port, step_id)
 			     new_runner _isnt _unset _andif
 			     new_runner.test_result _isnt _unset _andif 
 			     new_runner.test_result.error_count() = 0 _andif
-			new_runner.test_result.failure_count() = 0
-		show("Done test loop")
+					 new_runner.test_result.failure_count() = 0
 				
 	_endloop
 
