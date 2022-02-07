@@ -67,7 +67,7 @@ _method remote_test_runner.run_remote(address, port, step_id)
 			     new_runner _isnt _unset _andif
 			     new_runner.test_result _isnt _unset _andif 
 			     new_runner.test_result.error_count() = 0 _andif
-			     new_runner.test_result.failure_count() = 0
+					 new_runner.test_result.failure_count() = 0
 				
 	_endloop
 

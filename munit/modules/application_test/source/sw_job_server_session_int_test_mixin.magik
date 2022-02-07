@@ -15,12 +15,6 @@ _method sw_job_server_session_int_test_mixin.tear_down()
 	_then
 		app.close()
 	_endif 
-	
-	# Wait for the job server to terminate
-	_while job_server_framework.job_server.running?
-	_loop
-		_thisthread.sleep(100)
-	_endloop
 
 	job_server_framework.job_server.set_types_and_groups(_unset)
 _endmethod
@@ -204,9 +198,12 @@ _method sw_job_server_session_int_test_mixin.when_test_job_is_processed()
 	##
 	
 	# Wait for the job to be processed
-	_while _not (_self.properties[:null_job].status = "Completed")
+	status << _self.properties[:null_job].status
+	_while _not (status = "Completed") _andif 
+		_not (status = "ABANDONED")
 	_loop
 		_thisthread.sleep(100)
+		show(:job_status, status)
 	_endloop 	
 
 	_return _self
