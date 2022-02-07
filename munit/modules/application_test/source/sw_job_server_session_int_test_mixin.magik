@@ -198,7 +198,6 @@ _method sw_job_server_session_int_test_mixin.when_test_job_is_processed()
 	##
 	
 	# Wait for the job to be processed
-	cnt < 0
 	_while _not (_self.properties[:null_job].status = "Completed")
 	_loop
 		_thisthread.sleep(100)
