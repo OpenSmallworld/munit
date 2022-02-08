@@ -136,7 +136,6 @@ _method sw_job_server_session_int_test_mixin.given_job_engine_is_stopped()
 	_loop
 		_thisthread.sleep(100)
 	_endloop 
-	show(:stopped_job_server, job_server_framework.job_server)
 
 	_return _self
 _endmethod
@@ -154,7 +153,6 @@ _method sw_job_server_session_int_test_mixin.when_job_engine_is_started()
 	_loop
 		_thisthread.sleep(100)
 	_endloop 
-	show(:started_job_server, job_server_framework.job_server)
 
 	_return _self
 _endmethod
@@ -201,11 +199,11 @@ _method sw_job_server_session_int_test_mixin.when_test_job_is_processed()
 	
 	# Wait for the job to be processed
 	status << _self.properties[:null_job].status
-	show(:processing_job, job_server_framework.job_server, status)
 	_while _not (status = "Completed") _andif 
 		_not (status = "ABANDONED")
 	_loop
 		_thisthread.sleep(100)
+		status << _self.properties[:null_job].status
 		show(:job_status, status)
 	_endloop 	
 
