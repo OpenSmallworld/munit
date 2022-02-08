@@ -343,22 +343,6 @@ _method test_case.tear_down()
 	_endif
 	_self.stubbed_alerts.empty()	
 	
-	# Stop all job servers and wait for them to terminate
-	job_engines << rope.new_from(sw_job_engine.all_job_engines)
-	job_engines.add_last(job_server_framework.job_server)
-	_for je _over job_engines.fast_elements()
-	_loop 
-		je.stop()
-		cnt << 0
-		# Only wait for a maximum of 1 minute to prevent the test from hanging if
-		# something goes wrong with stopping the job engine.
-		_while je.running? _andif cnt < 600
-		_loop
-			_thisthread.sleep(100)
-			cnt +<< 1
-		_endloop
-	_endloop 
-	
 	stub_method_helper.restore_stubbed_methods()
 	
 _endmethod
