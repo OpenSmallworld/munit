@@ -182,7 +182,7 @@ $
 _pragma(classify_level=advanced,topic=MUnit)
 _method test_case.run_bare()
 	## Runs the bare test sequence.
-
+	
         _self.one_time_behaviour()
 	_protect
 		_self.set_up()
@@ -343,25 +343,7 @@ _method test_case.tear_down()
 	_endif
 	_self.stubbed_alerts.empty()	
 	
-	# Stop all job servers and wait for them to terminate
-	show("Stopping job servers: ", sw_job_engine.all_job_engines)
-	_for je _over sw_job_engine.all_job_engines.fast_elements()
-	_loop 
-		je.stop()
-		cnt << 0
-		# Only wait for a maximum of 2 seconds to prevent the test from hanging if
-		# something goes wrong with stopping the job engine.
-		_while je.running? _andif cnt < 20
-		_loop
-			_thisthread.sleep(100)
-			cnt +<< 1
-		_endloop
-		show(:stopped, je, cnt)
-	_endloop 
-	
-	show("Done stopping job servers")
 	stub_method_helper.restore_stubbed_methods()
-	show("Done restoring methods")
 	
 _endmethod
 $
