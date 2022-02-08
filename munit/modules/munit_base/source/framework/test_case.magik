@@ -182,7 +182,8 @@ $
 _pragma(classify_level=advanced,topic=MUnit)
 _method test_case.run_bare()
 	## Runs the bare test sequence.
-
+	
+	show(:run_test, _self, .name)
         _self.one_time_behaviour()
 	_protect
 		_self.set_up()
@@ -349,14 +350,14 @@ _method test_case.tear_down()
 	_loop 
 		je.stop()
 		cnt << 0
-		# Only wait for a maximum of 2 seconds to prevent the test from hanging if
+		# Only wait for a maximum of 1 minute to prevent the test from hanging if
 		# something goes wrong with stopping the job engine.
-		_while je.running? _andif cnt < 20
+		_while je.running? _andif cnt < 600
 		_loop
 			_thisthread.sleep(100)
 			cnt +<< 1
 		_endloop
-		show(:stopped, je, cnt)
+		show(:stopped, je, cnt, _self, .name)
 	_endloop 
 	
 	show("Done stopping job servers")
