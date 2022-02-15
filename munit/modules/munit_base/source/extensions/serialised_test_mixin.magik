@@ -442,6 +442,8 @@ _method serialised_test_mixin.when_the_frame_is_minimized( top_frame, minimized?
 		_self.remove_value_from_queue( wait_value )
 		top_frame.minimized? << minimized?
 		_self.wait_for_value_on_queue( wait_value )
+		
+		_self.when_the_ui_is_ready()
 	_endif
 
 	>> _self
@@ -469,6 +471,8 @@ _method serialised_test_mixin.when_the_frame_is_maximized(top_frame, maximized?,
 		_self.remove_value_from_queue( wait_value )
 		top_frame.maximized? << maximized?
 		_self.wait_for_value_on_queue( wait_value )
+		
+		_self.when_the_ui_is_ready()
 	_endif
 
 	>> _self
