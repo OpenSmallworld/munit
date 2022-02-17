@@ -42,7 +42,12 @@ database_test.define_shared_variable(:database_path,
         ##
         "cbgsun11:/swdev/databases/dev_ds_500/ds/ds_admin", :public)
 $
-
+_pragma(classify_level=debug)
+database_test.define_shared_variable(:vvmds?,
+        ##
+        ## If this is true then it will force vvmds mode in the concurrency_mode :multi_user.
+	_true, :public)
+$
 
 _pragma(classify_level=debug)
 database_test.define_shared_variable(:concurrency_mode,
@@ -52,7 +57,6 @@ database_test.define_shared_variable(:concurrency_mode,
         ##
         :multi_user, :public)
 $
-
 
 _pragma(classify_level=debug)
 ## This shared variable indicates if a database was opened by
@@ -367,6 +371,10 @@ _private _method database_test.check_correct_database_open()
 		_then 
 			smallworld_product.set_startup_option(:interactive?, _false)
 		_endif
+		_if  _self.vvmds? _andif ds_environment.concurrency_mode _is :multi_user
+		_then 
+			smallworld_product.set_startup_option( :vvmds_temp_dir, _true )
+		_endif 
                 gis_program_manager.reinitialise()
 
                 open_database({_self.database_path})
