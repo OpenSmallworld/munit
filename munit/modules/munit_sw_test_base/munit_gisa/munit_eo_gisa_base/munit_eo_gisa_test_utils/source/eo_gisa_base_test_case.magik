@@ -964,3 +964,73 @@ _method eo_gisa_base_test_case.then_all_files_were_transferred_to_endpoint(endpo
 	_return _self 
 _endmethod
 $
+
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.given_updated_schematics_in_design()
+	##
+	## Updates all schematics that are exported to DNOM for all
+	## records changed in the design.
+	##
+	
+	_if (engine << _self.properties[:schematic_engine]) _is _unset
+	_then
+		engine << schematic_engine.new(:test_engine, _self)
+		_self.properties[:schematic_engine] << engine
+	_endif
+	
+	_self.properties[:schematic_update_transactions] << transactions << rope.new()
+	schematic_names << schematic_names.default(sw_dnom_properties_helper.schematic_names.keys)
+	design_changes << _self.application().databus.request_data(:eo_design_changes).default({})
+	
+	_for schematic_name _over schematic_names.fast_elements()
+	_loop
+		schematic << _self.get_an_eo_object(:schematic, :name, schematic_name)
+		objects_to_update << equality_set.new()
+
+		_for change _over design_changes.fast_elements()
+		_loop
+			_if (rec << change.current_record) _isnt _unset _andif
+			    (schematic.definition().should_be_schematic_node?(rec) _orif
+			     schematic.definition().should_be_schematic_link?(rec))
+			_then
+				objects_to_update.add(rec)
+			_endif
+		_endloop
+		
+		_if _not objects_to_update.empty?
+		_then
+			schem_objects_to_update << equality_set.new()
+			_for object _over objects_to_update.fast_elements()
+			_loop
+				schem_objects_to_update.add_all(object.schematic_records_for_schematic(schematic))
+			_endloop
+			objects_to_update.add_all(schem_objects_to_update)
+			
+			# Sort all objects that need update to order them
+			# deterministically.
+			objects_to_update << objects_to_update.as_sorted_collection(_proc (o1, o2)
+											    >> o1.id < o2.id
+										    _endproc)
+			
+			transactions.add(engine.update_schematic(objects_to_update, schematic))
+		_endif
+	_endloop
+
+	# Set deterministic ids for all inserted or cloned schematic
+	# records.
+	_for ds_tr _over transactions.fast_elements()
+	_loop
+		_for rec_tr _over ds_tr.record_transactions()
+		_loop 
+			_if rec_tr.operation _is :insert _orif
+			    rec_tr.operation _is :clone
+			_then
+				_self.set_id(rec_tr.result)
+			_endif
+		_endloop
+	_endloop
+	
+	_return _self 
+_endmethod
+$
