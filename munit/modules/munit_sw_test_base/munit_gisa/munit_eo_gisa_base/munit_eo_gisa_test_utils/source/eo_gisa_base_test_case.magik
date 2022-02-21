@@ -967,10 +967,14 @@ $
 
 
 _pragma(classify_level=debug)
-_method eo_gisa_base_test_case.given_updated_schematics_in_design()
+_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional excluded_circuit_ids)
 	##
 	## Updates all schematics that are exported to DNOM for all
 	## records changed in the design.
+	##
+	## EXCLUDED_CIRCUIT_IDS - A collection of circuit ids to be
+	## excluded. Schematics won't be updated for Objects that
+	## belong to one of these circuits.
 	##
 	
 	_if (engine << _self.properties[:schematic_engine]) _is _unset
@@ -992,7 +996,10 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design()
 		_loop
 			_if (rec << change.current_record) _isnt _unset _andif
 			    (schematic.definition().should_be_schematic_node?(rec) _orif
-			     schematic.definition().should_be_schematic_link?(rec))
+			     schematic.definition().should_be_schematic_link?(rec)) _andif
+			    (excluded_circuit_ids _is _unset _orif
+			     (_not excluded_circuit_ids.eq_includes?(rec.circuit_id) _andif
+			      _not excluded_circuit_ids.eq_includes?(rec.circuit_id2)))
 			_then
 				objects_to_update.add(rec)
 			_endif
