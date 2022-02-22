@@ -967,14 +967,10 @@ $
 
 
 _pragma(classify_level=debug)
-_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional excluded_circuit_ids)
+_method eo_gisa_base_test_case.given_updated_schematics_in_design()
 	##
 	## Updates all schematics that are exported to DNOM for all
 	## records changed in the design.
-	##
-	## EXCLUDED_CIRCUIT_IDS - A collection of circuit ids to be
-	## excluded. Schematics won't be updated for Objects that
-	## belong to one of these circuits.
 	##
 	
 	_if (engine << _self.properties[:schematic_engine]) _is _unset
@@ -985,42 +981,55 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional excl
 	
 	_self.properties[:schematic_update_transactions] << transactions << rope.new()
 	schematic_names << schematic_names.default(sw_dnom_properties_helper.schematic_names.keys)
-	design_changes << _self.application().databus.request_data(:eo_design_changes).default({})
 	
+	additions      << valid_record_set.new()
+	updates        << valid_record_set.new()
+	design_changes << _self.application().databus.request_data(:eo_design_changes).default({})
+	qm_routines    << _self.application().get_service_provider(:quality_manager).engine.get_routines_for_activity(:eo_qm_schematics)
+
 	_for schematic_name _over schematic_names.fast_elements()
 	_loop
 		schematic << _self.get_an_eo_object(:schematic, :name, schematic_name)
-		objects_to_update << equality_set.new()
 
 		_for change _over design_changes.fast_elements()
 		_loop
-			_if (rec << change.current_record) _isnt _unset _andif
-			    (schematic.definition().should_be_schematic_node?(rec) _orif
-			     schematic.definition().should_be_schematic_link?(rec)) _andif
-			    (excluded_circuit_ids _is _unset _orif
-			     (_not excluded_circuit_ids.eq_includes?(rec.circuit_id) _andif
-			      _not excluded_circuit_ids.eq_includes?(rec.circuit_id2)))
+			rec << change.current_record
+			_if _not  rec.is_kind_of?(ds_record) _orif
+			    _not rec.is_valid?
 			_then
-				objects_to_update.add(rec)
+				_continue
+			_endif
+		
+			_if engine.is_network_record_on_schematic?(rec, schematic) _orif
+			    rec.is_schematic_record?
+			_then
+				updates.add(rec)
+			_else
+				additions.add(rec)
 			_endif
 		_endloop
-		
-		_if _not objects_to_update.empty?
+
+		objects_to_add << _self.int!run_qm(qm_routines, schematic, additions, _false)
+		objects_to_update << _self.int!run_qm(qm_routines, schematic, updates, _true)
+
+		_if _not objects_to_add.empty? _orif
+		    _not objects_to_update.empty?
 		_then
-			schem_objects_to_update << equality_set.new()
-			_for object _over objects_to_update.fast_elements()
-			_loop
-				schem_objects_to_update.add_all(object.schematic_records_for_schematic(schematic))
-			_endloop
-			objects_to_update.add_all(schem_objects_to_update)
+			objects << valid_record_set.new_from(objects_to_add.keys)
+			objects.add_all(objects_to_update.keys)
 			
+			_for sch_rec _over objects_to_update.fast_keys()	
+			_loop	
+				objects.add_all(sch_rec.network_records)	
+			_endloop
+
 			# Sort all objects that need update to order them
 			# deterministically.
-			objects_to_update << objects_to_update.as_sorted_collection(_proc (o1, o2)
-											    >> o1.id < o2.id
-										    _endproc)
+			objects << objects.as_sorted_collection(_proc (o1, o2)
+									>> o1.id < o2.id
+								_endproc)
 			
-			transactions.add(engine.update_schematic(objects_to_update, schematic))
+			transactions.add(engine.update_schematic(objects, schematic))
 		_endif
 	_endloop
 
@@ -1039,5 +1048,57 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional excl
 	_endloop
 	
 	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method eo_gisa_base_test_case.int!run_qm(qm_routines, schematic, sources, use_sch?)
+	##
+	## Runs given QM_ROUTINES on SOURCES for SCHEMATIC.
+	##
+	
+	records << hash_table.new()
+	data    << property_list.new_with(:schematics, equality_set.new_with(schematic))
+	_for rec _over sources.fast_elements()
+	_loop
+		_for routine _over qm_routines.fast_elements()
+		_loop
+			_if routine.can_run_on?(rec)
+			_then
+				_handling qm_flag _with _self.int!qm_flag_handler(records, routine, use_sch?, schematic)
+				routine.run(rec, data)
+			_endif
+		_endloop
+	_endloop
+	_return records	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method eo_gisa_base_test_case.int!qm_flag_handler(records, a_routine, use_sch?, schematic)
+	##
+	## Handles QM flags that are created by routines.
+	##
+	
+	>> _proc@schematic_validator_qm_flag_handler(cond)
+		   _import records, a_routine, use_sch?, schematic
+		   data    << property_list.new_from_gathered(cond.data)
+		   objects << data[:objects]
+		   props   << data[:properties]
+		   reason  << a_routine.error_description(props[:error_code])
+		   _for obj _over objects.elements()
+		   _loop
+			   _if use_sch? _andif 
+			       _not obj.is_schematic_record?
+			   _then 
+				   _for sch_rec _over obj.schematic_records_for_schematic(schematic).fast_elements()
+				   _loop
+					   records[sch_rec] << reason
+				   _endloop
+			   _else
+				   records[obj] << reason
+			   _endif 
+		   _endloop
+	   _endproc
 _endmethod
 $
