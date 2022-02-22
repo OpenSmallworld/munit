@@ -25,7 +25,7 @@ _pragma(classify_level=debug)
 ## This shared constant controls if temp folder created for
 ## currently running test will be deleted in tear down
 ## process.
-eo_gisa_base_test_case.define_shared_constant( :delete_temp_folder_in_tear_down?, _true, :public )
+eo_gisa_base_test_case.define_shared_constant( :delete_temp_folder_in_tear_down?, _false, :public )
 $
 
 _pragma(classify_level=debug,topic={MUnit, Test})
@@ -1028,13 +1028,17 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design()
 			objects << objects.as_sorted_collection(_proc (o1, o2)
 									>> o1.id < o2.id
 								_endproc)
-			
+			write(1)
+			print(objects)
 			transactions.add(engine.update_schematic(objects, schematic))
+			write(2)
+			print(transactions)
 		_endif
 	_endloop
 
 	# Set deterministic ids for all inserted or cloned schematic
 	# records.
+	write(3)
 	_for ds_tr _over transactions.fast_elements()
 	_loop
 		_for rec_tr _over ds_tr.record_transactions()
@@ -1042,6 +1046,7 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design()
 			_if rec_tr.operation _is :insert _orif
 			    rec_tr.operation _is :clone
 			_then
+				write(rec_tr.result)
 				_self.set_id(rec_tr.result)
 			_endif
 		_endloop
