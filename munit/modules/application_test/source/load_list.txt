@@ -7,4 +7,5 @@ database_test
 application_test
 design_manager_test_case
 
-sw_job_server_session_int_test_mixin
+sw_job_server_test_mixin
+sw_job_server_session_itest
