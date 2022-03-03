@@ -967,10 +967,14 @@ $
 
 
 _pragma(classify_level=debug)
-_method eo_gisa_base_test_case.given_updated_schematics_in_design()
+_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional schematic_names)
 	##
 	## Updates all schematics that are exported to DNOM for all
 	## records changed in the design.
+	##
+	## SCHEMATIC_NAMES - when provided then only given schematics
+	##                   will be updated. Defaults to:
+	##                   sw_dnom_properties_helper.schematic_names.keys 
 	##
 	
 	_if (sv << _self.properties[:schematic_validator]) _is _unset
