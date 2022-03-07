@@ -964,3 +964,89 @@ _method eo_gisa_base_test_case.then_all_files_were_transferred_to_endpoint(endpo
 	_return _self 
 _endmethod
 $
+
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional schematic_names)
+	##
+	## Updates all schematics that are exported to DNOM for all
+	## records changed in the design.
+	##
+	## SCHEMATIC_NAMES - when provided then only given schematics
+	##                   will be updated. Defaults to:
+	##                   sw_dnom_properties_helper.schematic_names.keys 
+	##
+	
+	sv << _self.get_schematic_validation_tool()
+
+	stub_method_helper.replace_method(sv, :|show_alert()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|show_results_gui()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|manage_progress_dialog()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|initialise_results()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|changed()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|set_progress_counts()|, _proc () _endproc)
+	
+	_self.properties[:schematic_update_transactions] << transactions << rope.new()
+	schematic_names << schematic_names.default(sw_dnom_properties_helper.schematic_names.keys)
+	
+	_for schematic_name _over schematic_names.fast_elements()
+	_loop
+		schematic << _self.get_an_eo_object(:schematic, :name, schematic_name)
+		sv.action(:schematic_chooser).value << schematic
+		sv.action(:source_chooser).value << :design_changes
+		sv.populate_lists()
+
+		stub_method_helper.replace_method(sv.sys!perform(:schematic_engine), :|update_schematic()|,
+						  _proc (objects, schematic)
+							  # Sort all objects that need update to order them
+							  # deterministically.
+							  sort_proc << _proc (o1, o2)
+									       >> o1.id < o2.id
+								       _endproc
+							  _return _self.saved!update_schematic(objects.as_sorted_collection(sort_proc), schematic)
+						  _endproc)
+		
+		sv.update()
+		transactions.add(sv.sys!slot(:transaction))
+	_endloop
+
+	_self.set_deterministic_updated_schematic_ids(transactions)
+
+	sv.close()
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.get_schematic_validation_tool()
+	##
+	## Return the schematic validation dialog
+	##
+	_if (sv << _self.properties[:schematic_validator]) _is _unset
+	_then
+		_self.application().sys!slot(:components)[:schematics].action(:validate_schematic).execute_action()
+		sv << _self.application().sys!slot(:components)[:schematics].sys!perform(:|get_dialog()|, :validator)
+	_endif
+	_return sv 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.set_deterministic_updated_schematic_ids(transactions)
+	##
+	## Set deterministic ids for all inserted or cloned schematic
+	## records in TRANSACTIONS
+	##
+	_for ds_tr _over transactions.fast_elements()
+	_loop
+		_for rec_tr _over ds_tr.record_transactions()
+		_loop 
+			_if rec_tr.operation _is :insert _orif
+			    rec_tr.operation _is :clone
+			_then
+				_self.set_id(rec_tr.result)
+			_endif
+		_endloop
+	_endloop
+_endmethod
+$
