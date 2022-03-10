@@ -206,7 +206,7 @@ _private _method gui_framework_test_mixin.get_top_container_of_frame_with_title(
 	## If mulitple frames with title FRAME_TITLE exist, the first one found will be
 	## returned.
 	## 
-	_for top_container _over sw_swift_manager.active_top_containers().fast_elements()
+	_for top_container _over sw_swift_manager.active_top_containers().elements()
 	_loop
 		_if top_container.top_frame.title = frame_title
 		_then
