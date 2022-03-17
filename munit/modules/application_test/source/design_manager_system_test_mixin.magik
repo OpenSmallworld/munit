@@ -93,7 +93,8 @@ _method design_manager_system_test_mixin.given_a_top_level_design(project_name, 
 	## Create a new design named DESIGN_NAME in project named PROJECT_NAME
 	## The new design has no parent design.
 	##
-	design << _self.int!given_a_new_design(project_name, design_name)
+	design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
+			:|int!given_a_new_design()|, {project_name, design_name})
 	_self.properties[design_name.as_symbol()] << design
 	_self.properties[:project] << design.project
 
@@ -112,7 +113,8 @@ _method design_manager_system_test_mixin.given_a_new_design(project_name, design
 	##
 	parent_design << swg_dsn_admin_engine.active_scheme
 	
-	design << _self.int!given_a_new_design(project_name, design_name, parent_design, xmin, ymin, xmax, ymax)
+	design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
+			:|int!given_a_new_design()|, {project_name, design_name})
 	_self.properties[:design] << design
 	_self.properties[:project] << design.project
 
@@ -314,7 +316,7 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 		job_queue_view << _self.go_to_writable_job_view_test_alternative()
 		
 		swg_dsn_admin_engine.activate_scheme( scheme )
-		swg_dsn_admin_engine.find_and_perform_transition( scheme, scheme.status, next_state )
+		swg_dsn_admin_engine.perform_short_transaction(_unset, :|find_and_perform_transition()|, {scheme, scheme.status, next_state} )
 		
 		done_proc << _proc()
 				     _import scheme, next_state
@@ -476,7 +478,7 @@ _private _method design_manager_system_test_mixin.delete_project()
 	_if ( project << _self.properties[ :project ] ) _isnt _unset
 	_then
 		swg_dsn_admin_engine.activate_design( _unset )
-		swg_dsn_admin_engine.delete_project( project, _true )
+		swg_dsn_admin_engine.perform_short_transaction(_unset, :|delete_project()|, {project, _true} )
 		swg_dsn_admin_engine.rollforward()
 	_endif
 	

@@ -101,6 +101,15 @@ _method eo_dm_test_case.current_application()
 _endmethod
 $
 
+_pragma(classify_level=restricted,topic=MUnit)
+_method eo_dm_test_case.set_up()
+	##
+	##
+	
+	_super.set_up()	
+	.properties[:application] << _self.int!get_current_application()
+_endmethod
+$
 
 _pragma(classify_level=restricted,topic=MUnit)
 _method eo_dm_test_case.tear_down()
@@ -577,7 +586,7 @@ _private _method eo_dm_test_case.run_merge_and_post_scheme(keep_temporary_data?)
 			  :interactive?, _false,
 			  :keep_temporary_data?, keep_temporary_data?)
 	
-	swg_dsn_admin_engine.merge_and_post_scheme(params, scheme)	
+	swg_dsn_admin_engine.perform_short_transaction(_unset, :|merge_and_post_scheme()|, {params, scheme})	
 _endmethod
 $
 

@@ -129,7 +129,7 @@ _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 _method design_manager_test_case.set_up()
 	## 
 	##
-
+	
 	.properties << property_list.new()
 
 	_if _not _self.design_tab_updates_required?
