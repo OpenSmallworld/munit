@@ -274,7 +274,7 @@ _method design_manager_test_case.one_time_tear_down()
 	## 
 	##
 
-	swg_dsn_admin_engine.activate_design( _unset )
+	swg_dsn_admin_engine.clear_current_design()
 	_super.one_time_tear_down()
 	
 _endmethod
