@@ -976,12 +976,14 @@ _method design_manager_test_case.when_creating_child_design( child_design_name )
 	swg_dsn_admin_engine.save_design_changes()
 
 	design_name  << write_string( child_design_name, "-", system.host_name )
-	_if ( child_design << _self.get_existing_test_design( _self.project_name, design_name )) _isnt _unset
-	_then
-		swg_dsn_admin_engine.delete_scheme( child_design )
-	_endif
-	
-	_self.given_a_design( _self.project_name, design_name )
+	_lock _self.properties[ :parent_design ]
+		_if ( child_design << _self.get_existing_test_design( _self.project_name, design_name )) _isnt _unset
+		_then
+			swg_dsn_admin_engine.delete_scheme( child_design )
+		_endif
+		
+		_self.given_a_design( _self.project_name, design_name )
+	_endlock
 
 	.properties[ :child_design ] << swg_dsn_admin_engine.active_scheme
 	.properties[ child_design_name.as_symbol() ] << .properties[ :child_design ]
