@@ -707,6 +707,7 @@ _private _method design_manager_test_case.load_required_cos()
 		module << sw_module_manager.module( _self.module_name )
 		_try
 			co_file << module.get_resource_file(_self.cu_config_file_to_load,"data" )
+			show(:loading_cost_objects, ds_config_view, ds_config_view.mode, ds_config_view.current_writer, ds_config_view.alternative_path)
 			ds_config_view.switch(:write)
 			_self.load_co_dump()
 			ds_config_view.commit()
