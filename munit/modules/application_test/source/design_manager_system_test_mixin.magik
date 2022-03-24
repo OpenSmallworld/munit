@@ -113,11 +113,8 @@ _method design_manager_system_test_mixin.given_a_new_design(project_name, design
 	##
 	parent_design << swg_dsn_admin_engine.active_scheme
 	
-	lock_design << parent_design.default(_self)
-	_lock lock_design
-		design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
+	design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
 			:|int!given_a_new_design()|, {project_name, design_name, parent_design}, :suppress_auto_locking?, _true)
-	_endlock
 	_self.properties[:design] << design
 	_self.properties[:project] << design.project
 
