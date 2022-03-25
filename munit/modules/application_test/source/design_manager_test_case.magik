@@ -703,12 +703,23 @@ _private _method design_manager_test_case.load_required_cos()
 	    _self.module_name _isnt _unset
 	_then
 		_self.setup_design_config_view()	
+		ds_config_view << cost_object_library.design_config_view
 		module << sw_module_manager.module( _self.module_name )
 		_try
 			co_file << module.get_resource_file(_self.cu_config_file_to_load,"data" )
-			ds_config_view << cost_object_library.design_config_view	
+			ds_config_view.switch(:write)
+			count << 0
+			_while ds_config_view.mode _is :readonly _andif 
+				count < 100
+			_loop 			
+				_thisthread.sleep(100)
+				ds_config_view.switch(:write)
+				count +<< 1
+			_endloop
 			show(:loading_cost_objects, ds_config_view, ds_config_view.mode, ds_config_view.current_writer, ds_config_view.alternative_path)
 			_self.load_co_dump()
+			ds_config_view.commit()
+			ds_config_view.switch(:readonly)	
 
 			# refresh the CO cache
 			_self.refresh_cost_object_library()
@@ -878,7 +889,7 @@ _private _method  design_manager_test_case.int!given_co_definition_with_code( co
 	_if cu_def _is _unset
 	_then
 		ds_config_view << cost_object_library.design_config_view	
-		ds_config_view.perform_in_short_transaction(_self, :|load_required_cos()|)
+		_self.load_required_cos()
 	_endif
 	
 	cu_def <<  cost_object_library.get_for_code(co_code,type)

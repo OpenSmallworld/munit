@@ -318,10 +318,19 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 		swg_dsn_admin_engine.activate_scheme( scheme )
 		swg_dsn_admin_engine.perform_short_transaction(_unset, :|find_and_perform_transition()|, {scheme, scheme.status, next_state}, :suppress_auto_locking?, _true)
 		
-		done_proc << _proc()
-				     _import scheme, next_state
-				     >>scheme.status = next_state
-			     _endproc
+		done_proc << 
+			_proc()
+				_import scheme, next_state
+				count << 0
+				_while scheme.status ~= next_state _andif 
+					count < 200
+				_loop
+					_thisthread.sleep(100)
+					count +<< 1
+				_endloop 
+				show(:done, scheme.status, next_state, count)
+				>> _true
+			_endproc
 		_self.run_job_manager_jobs(done_proc)
 	_protection
 		_self.ensure_job_view_is_in_top_alternative()
@@ -367,14 +376,51 @@ _method design_manager_system_test_mixin.run_job_manager_jobs(_optional done_pro
 	##
 
 	je << _self.job_engine()
-	_loop
-		jobs << je.find_and_run_next_jobs()
-		_if done_proc _isnt _unset
-		_then
-			_if done_proc() _then _leave _endif
+	started? << _self.ensure_job_engine_running(je, _true)
+	
+	_protect 
+		_loop
+			jobs << je.find_and_run_next_jobs()
+			show(:jobs, jobs, je)
+			_if done_proc _isnt _unset
+			_then
+				_if done_proc() _then _leave _endif
+			_endif
+			_if jobs.empty? _then _leave _endif
+		_endloop
+	_protection 
+		_if started? _is _true 
+		_then 
+			_self.ensure_job_engine_running(je, _false)
 		_endif
-		_if jobs.empty? _then _leave _endif
+	_endprotect 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method design_manager_system_test_mixin.ensure_job_engine_running(je, running?)
+	##
+	## Make sure the job engine is running or not, depending on the value of
+	## RUNNING? 
+	##
+
+	count << 0
+	_while je.running? ~= running? _andif 
+		count < 100
+	_loop
+		_if running?
+		_then 
+			je.start()
+			started? << _true
+		_else 
+			je.stop()
+		_endif
+		_thisthread.sleep(100)
+		count +<< 1
 	_endloop
+	
+	>> started?
+	
 _endmethod
 $
 
