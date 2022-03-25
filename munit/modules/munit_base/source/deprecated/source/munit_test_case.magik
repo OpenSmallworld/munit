@@ -142,15 +142,3 @@ _method munit_test_case.minor_name
 	>> _self.get_name()
 _endmethod
 $
-
-_pragma(classify_level=deprecated,topic=MUnit)
-_method munit_test_case.infrastructure?
-
-	>> _self _is sw:munit_test_case
-_endmethod
-$
-
-
-
-
-
