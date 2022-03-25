@@ -113,8 +113,22 @@ _method design_manager_system_test_mixin.given_a_new_design(project_name, design
 	##
 	parent_design << swg_dsn_admin_engine.active_scheme
 	
-	design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
+	# If more than one test client started running tests from the same module, it
+	# is possible that both tests check that the project does not exist yet.  Both
+	# try to create the project, but only the first one succeeds.  In this case,
+	# retry creating the design.
+	_try _with cond 
+		design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
 			:|int!given_a_new_design()|, {project_name, design_name, parent_design}, :suppress_auto_locking?, _true)
+	_when pseudo_key_exists
+		_if .properties[:retried?] _is _unset 
+		_then 
+			_self.given_a_new_design(project_name, design_name, xmin, ymin, xmax, ymax)
+			.properties[:retried?] << _true 
+		_else 
+			cond.raise(cond.name, _scatter cond.data)
+		_endif 
+	_endtry
 	_self.properties[:design] << design
 	_self.properties[:project] << design.project
 
@@ -130,8 +144,6 @@ _private _method design_manager_system_test_mixin.int!given_a_new_design(project
 	## Create a new design with name DESIGN_NAME in the project
 	## with name PROJECT_NAME  which can be either new or an
 	## existing project.
-	## This method will fail if a design with DESIGN_NAME exists
-	## already.
 	## 
 	_try _with cond
 		
