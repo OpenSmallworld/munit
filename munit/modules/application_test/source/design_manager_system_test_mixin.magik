@@ -335,7 +335,7 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 				_import scheme, next_state
 				count << 0
 				_while scheme.status ~= next_state _andif 
-					count < 400
+					count < 1000
 				_loop
 					_thisthread.sleep(100)
 					count +<< 1
