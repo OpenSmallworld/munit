@@ -124,6 +124,16 @@ _method design_manager_test_case.properties
 _endmethod
 $
 
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.properties << properties
+	## 
+	##
+
+	.properties << properties
+	
+_endmethod
+$
+
 
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 _method design_manager_test_case.set_up()
