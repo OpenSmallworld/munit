@@ -121,12 +121,13 @@ _method design_manager_system_test_mixin.given_a_new_design(project_name, design
 		design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
 			:|int!given_a_new_design()|, {project_name, design_name, parent_design}, :suppress_auto_locking?, _true)
 	_when pseudo_key_exists
-		show(:design_existied_already, _self.properties[:retried?])
+		show(:design_existied_already, _self.properties[:retried?], project_name, design_name, .properties[:project], .properties[:design])
 		_if _self.properties[:retried?] _is _unset 
 		_then 
 			_self.properties[:retried?] << _true 
-			design << _self.given_a_design(project_name, design_name, xmin, ymin, xmax, ymax)
-			show(:tried_again, design)
+			_self.given_a_design(project_name, design_name, xmin, ymin, xmax, ymax)
+			show(:tried_again, .properties[:design])
+			_return _self
 		_else 
 			cond.raise(cond.name, _scatter cond.data)
 		_endif 
@@ -483,7 +484,19 @@ _private _method design_manager_system_test_mixin.get_or_create_project( project
 			bounds  << manager.current_map_view.current_view_bounds
 		_endif
 		job_attributes << property_list.new_with(:job_type, _self.properties[:state_model_name].default( _self.default_state_model_name ) )
-		project  << swg_dsn_admin_engine.create_project( project_name, _self.ds_view_names, bounds.as_sector_rope(), job_attributes )
+		_try _with cond
+			project  << swg_dsn_admin_engine.create_project( project_name, _self.ds_view_names, bounds.as_sector_rope(), job_attributes )
+		_when error 
+			_if _self.properties[:retried_project?] _is _unset 
+			_then 
+				_self.properties[:retried_project?] << _true
+				project << _self.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
+				show(:tried_again, project)
+				_return project
+			_else 
+				cond.raise(cond.name, _scatter cond.data)
+			_endif
+		_endtry 
 		
 	_endif
 
