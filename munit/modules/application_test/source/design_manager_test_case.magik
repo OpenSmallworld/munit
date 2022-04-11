@@ -661,7 +661,8 @@ _private _method design_manager_test_case.check_writable_access( design )
 
 		desc << write_string( "Unable to get write access to the design ", scheme.name, ". ",
 				      "Instead, the access mode was ", ac_mode, ". ",
-				      "Failed to get write access because ", act_read_reason_msg )
+				      "Failed to get write access because ", act_read_reason_msg, 
+							". Design status is ", scheme.status )
 		_self.assert_is( :write, ac_mode, desc )
 	_endif
 _endmethod

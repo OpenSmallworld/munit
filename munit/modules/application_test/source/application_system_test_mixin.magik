@@ -1865,6 +1865,8 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 							     _optional second_id, message_dialog_wait_id )
 	##
 	##
+	
+	_self.when_the_ui_is_ready()
 
 	a_canvas.add_dependent( _self )
 
