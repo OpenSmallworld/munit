@@ -309,6 +309,7 @@ _private _method db_test_case.go_to_alternative(a_ds_view, alternative_name)
 			a_ds_view.spawn(alternative_name)
 		_when db_thing_already_exists
 			_self.go_to_alternative(a_ds_view, alternative_name)
+			_return
 		_endtry 
 	_endif
 	

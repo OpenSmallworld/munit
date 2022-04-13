@@ -683,12 +683,13 @@ _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_pa
 				_endif
 				y << a_tree_item.int!ypos_for( index ) + renderer.half_row_height
 				
-				# Try selecting it a couple of times
-				_for index _over range(1, 2)
+				# Try selecting it a few times
+				_for index _over range(1, 5)
 				_loop 
 					_self.handle_event(a_tree_item, :button, :left, x, y, :press, modmask.default(0))
 					_self.handle_event(a_tree_item, :button, :left, x, y, :release, modmask.default(0))
 					_if _not a_tree_item.selection.empty? _then _leave _endif 
+					_thisthread.sleep(100)
 					show("Try selecting again...")
 				_endloop 
 
