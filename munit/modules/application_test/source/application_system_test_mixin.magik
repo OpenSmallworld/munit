@@ -1867,7 +1867,7 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 	##
 	##
 	
-	_self.when_the_ui_is_ready()
+	_self.when_the_ui_is_ready(a_canvas)
 
 	a_canvas.add_dependent( _self )
 
