@@ -314,7 +314,7 @@ _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _private _method test_case.stub_get_writable_dd_extension()
 	## 
 	## When test run in parallel, there could be a clash when two sessions both try
-	## to get a writable dd extension.  Try 5 times with a wait of 100ms nbetween
+	## to get a writable dd extension.  Try 5 times with a wait of 100ms between
 	## retries to get a writable dd extension view.
 	##
 	## The method is only stubbed if _self.stub_get_writable_dd_extension? is true.
@@ -336,9 +336,9 @@ _private _method test_case.stub_get_writable_dd_extension()
 						my_error << cond
 					_endtry 
 				_finally 
-					show("Failed to get a writable dd extension")
 					_if my_error _isnt _unset
 					_then 
+						write("Failed to get a writable dd extension")
 						my_error.continue_handling()
 					_endif 
 				_endloop

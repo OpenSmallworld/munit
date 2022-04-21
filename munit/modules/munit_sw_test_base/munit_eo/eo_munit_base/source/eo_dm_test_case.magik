@@ -633,39 +633,9 @@ _method eo_dm_test_case.run_bare()
 	_endif
 	
 	!current_application! << _self.int!get_current_application()
-	
-	_self.stub_get_writable_dd_extension()
 
 	_super.run_bare()
 _endmethod
-$
-
-_pragma(classify_level=debug, topic={Munit})
-_private _method eo_dm_test_case.stub_get_writable_dd_extension()
-	##
-	##
-
-	stub_method_helper.replace_method(ds_version_view, :|get_writable_dd_extension()|,
-		_proc()
-			count << 0
-			_loop 
-				_try _with cond
-					count +<< 1
-					_if count > 100 _orif 
-						dd_ext _isnt _unset 
-					_then 
-						_leave 
-					_endif
-					dd_ext << _self.saved!get_writable_dd_extension()
-				_when dd_extension_no_write_access
-					count +<< 1
-					_thisthread.sleep(100)
-				_endtry
-			_endloop
-			>> dd_ext
-		_endproc)
-	
-_endmethod 
 $
 
 _pragma(classify_level=debug)

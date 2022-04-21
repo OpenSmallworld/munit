@@ -727,7 +727,6 @@ _private _method design_manager_test_case.load_required_cos()
 				ds_config_view.switch(:write)
 				count +<< 1
 			_endloop
-			show(:loading_cost_objects, ds_config_view, ds_config_view.mode, ds_config_view.current_writer, ds_config_view.alternative_path)
 			_self.load_co_dump()
 			ds_config_view.commit()
 			ds_config_view.switch(:readonly)	

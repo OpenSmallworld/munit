@@ -121,14 +121,12 @@ _method design_manager_system_test_mixin.given_a_new_design(project_name, design
 		design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
 			:|int!given_a_new_design()|, {project_name, design_name, parent_design, xmin, ymin, xmax, ymax}, :suppress_auto_locking?, _true)
 	_when pseudo_key_exists
-		show(:design_existied_already, _self.properties[:retried?], project_name, design_name, _self.properties[:project], _self.properties[:design])
 		_if _self.properties[:retried?] _is _unset 
 		_then 
 			_self.properties[:retried?] << _true 
 			# Wait 30 seconds to allow the other test to populate the design
 			_thisthread.sleep(30000)
 			_self.given_a_design(project_name, design_name, xmin, ymin, xmax, ymax)
-			show(:tried_again, _self.properties[:design])
 			_return _self
 		_else 
 			cond.raise(cond.name, _scatter cond.data)
@@ -334,21 +332,8 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 		
 		swg_dsn_admin_engine.activate_scheme( scheme )
 		swg_dsn_admin_engine.perform_short_transaction(_unset, :|find_and_perform_transition()|, {scheme, scheme.status, next_state}, :suppress_auto_locking?, _true)
-		
-		# done_proc << 
-		# 	_proc()
-		# 		_import scheme, next_state
-		# 		count << 0
-		# 		_while scheme.status ~= next_state _andif 
-		# 			count < 10000
-		# 		_loop
-		# 			_thisthread.sleep(100)
-		# 			count +<< 1
-		# 		_endloop 
-		# 		show(:done, scheme.status, next_state, count)
-		# 		>> _true
-		# 	_endproc
-		_self.run_job_manager_jobs(done_proc)
+
+		_self.run_job_manager_jobs()
 	_protection
 		_self.ensure_job_view_is_in_top_alternative()
 	_endprotect
@@ -398,7 +383,6 @@ _method design_manager_system_test_mixin.run_job_manager_jobs(_optional done_pro
 	_protect 
 		_loop
 			jobs << je.find_and_run_next_jobs()
-			show(:jobs, jobs, je)
 			_if done_proc _isnt _unset
 			_then
 				_if done_proc() _then _leave _endif
@@ -415,7 +399,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method design_manager_system_test_mixin.ensure_job_engine_running(je, running?)
+_private _method design_manager_system_test_mixin.ensure_job_engine_running(je, running?)
 	##
 	## Make sure the job engine is running or not, depending on the value of
 	## RUNNING? 
@@ -495,7 +479,6 @@ _private _method design_manager_system_test_mixin.get_or_create_project( project
 				# Wait 30 seconds to allow the other test to populate the design
 				_thisthread.sleep(30000)
 				project << _self.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
-				show(:tried_again, project)
 				_return project
 			_else 
 				cond.raise(cond.name, _scatter cond.data)
