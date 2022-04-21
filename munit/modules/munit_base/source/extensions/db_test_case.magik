@@ -286,20 +286,8 @@ _private _method db_test_case.goto_test_alternatives()
 		    a_path.last ~= _self.class_name.write_string
 		_then
 			a_ds_view.goto_top_alternative()
-			
-			_if _not a_ds_view.has_alternative?( _self.main_testing_alternative_name )
-			_then
-				a_ds_view.spawn( _self.main_testing_alternative_name )
-			_endif
-			
-			a_ds_view.go_to_alternative( _self.main_testing_alternative_name , :write )
-			
-			_if _not a_ds_view.has_alternative?( _self.class_name )
-			_then
-				a_ds_view.spawn( _self.class_name )
-			_endif
-			
-			a_ds_view.go_to_alternative( _self.class_name , :write )
+			_self.go_to_alternative(a_ds_view, _self.main_testing_alternative_name)
+			_self.go_to_alternative(a_ds_view, _self.class_name)
 
 			_if _not a_ds_view.writable?
 			_then
@@ -307,6 +295,26 @@ _private _method db_test_case.goto_test_alternatives()
 			_endif 
 		_endif 
 	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=restricted,topic=MUnit)
+_private _method db_test_case.go_to_alternative(a_ds_view, alternative_name)
+	##
+	##
+			
+	_if _not a_ds_view.has_alternative?(alternative_name)
+	_then
+		_try
+			a_ds_view.spawn(alternative_name)
+		_when db_thing_already_exists
+			_self.go_to_alternative(a_ds_view, alternative_name)
+			_return
+		_endtry 
+	_endif
+	
+	a_ds_view.go_to_alternative(alternative_name, :write)
+	
 _endmethod
 $
 

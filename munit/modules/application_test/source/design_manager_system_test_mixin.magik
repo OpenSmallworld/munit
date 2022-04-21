@@ -93,7 +93,8 @@ _method design_manager_system_test_mixin.given_a_top_level_design(project_name, 
 	## Create a new design named DESIGN_NAME in project named PROJECT_NAME
 	## The new design has no parent design.
 	##
-	design << _self.int!given_a_new_design(project_name, design_name)
+	design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
+			:|int!given_a_new_design()|, {project_name, design_name, _unset, xmin, ymin, xmax, ymax}, :suppress_auto_locking?, _true)
 	_self.properties[design_name.as_symbol()] << design
 	_self.properties[:project] << design.project
 
@@ -112,7 +113,25 @@ _method design_manager_system_test_mixin.given_a_new_design(project_name, design
 	##
 	parent_design << swg_dsn_admin_engine.active_scheme
 	
-	design << _self.int!given_a_new_design(project_name, design_name, parent_design, xmin, ymin, xmax, ymax)
+	# If more than one test client started running tests from the same module, it
+	# is possible that both tests check that the project does not exist yet.  Both
+	# try to create the project, but only the first one succeeds.  In this case,
+	# retry creating the design.
+	_try _with cond 
+		design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
+			:|int!given_a_new_design()|, {project_name, design_name, parent_design, xmin, ymin, xmax, ymax}, :suppress_auto_locking?, _true)
+	_when pseudo_key_exists
+		_if _self.properties[:retried?] _is _unset 
+		_then 
+			_self.properties[:retried?] << _true 
+			# Wait 30 seconds to allow the other test to populate the design
+			_thisthread.sleep(30000)
+			_self.given_a_design(project_name, design_name, xmin, ymin, xmax, ymax)
+			_return _self
+		_else 
+			cond.raise(cond.name, _scatter cond.data)
+		_endif 
+	_endtry
 	_self.properties[:design] << design
 	_self.properties[:project] << design.project
 
@@ -128,8 +147,6 @@ _private _method design_manager_system_test_mixin.int!given_a_new_design(project
 	## Create a new design with name DESIGN_NAME in the project
 	## with name PROJECT_NAME  which can be either new or an
 	## existing project.
-	## This method will fail if a design with DESIGN_NAME exists
-	## already.
 	## 
 	_try _with cond
 		
@@ -314,13 +331,9 @@ _method design_manager_system_test_mixin.when_transitioning_design_to_next_state
 		job_queue_view << _self.go_to_writable_job_view_test_alternative()
 		
 		swg_dsn_admin_engine.activate_scheme( scheme )
-		swg_dsn_admin_engine.find_and_perform_transition( scheme, scheme.status, next_state )
-		
-		done_proc << _proc()
-				     _import scheme, next_state
-				     >>scheme.status = next_state
-			     _endproc
-		_self.run_job_manager_jobs(done_proc)
+		swg_dsn_admin_engine.perform_short_transaction(_unset, :|find_and_perform_transition()|, {scheme, scheme.status, next_state}, :suppress_auto_locking?, _true)
+
+		_self.run_job_manager_jobs()
 	_protection
 		_self.ensure_job_view_is_in_top_alternative()
 	_endprotect
@@ -365,14 +378,50 @@ _method design_manager_system_test_mixin.run_job_manager_jobs(_optional done_pro
 	##
 
 	je << _self.job_engine()
-	_loop
-		jobs << je.find_and_run_next_jobs()
-		_if done_proc _isnt _unset
-		_then
-			_if done_proc() _then _leave _endif
+	started? << _self.ensure_job_engine_running(je, _true)
+	
+	_protect 
+		_loop
+			jobs << je.find_and_run_next_jobs()
+			_if done_proc _isnt _unset
+			_then
+				_if done_proc() _then _leave _endif
+			_endif
+			_if jobs.empty? _then _leave _endif
+		_endloop
+	_protection 
+		_if started? _is _true 
+		_then 
+			_self.ensure_job_engine_running(je, _false)
 		_endif
-		_if jobs.empty? _then _leave _endif
+	_endprotect 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method design_manager_system_test_mixin.ensure_job_engine_running(je, running?)
+	##
+	## Make sure the job engine is running or not, depending on the value of
+	## RUNNING? 
+	##
+
+	count << 0
+	_while je.running? ~= running? _andif 
+		count < 100
+	_loop
+		_if running?
+		_then 
+			je.start()
+			started? << _true
+		_else 
+			je.stop()
+		_endif
+		_thisthread.sleep(100)
+		count +<< 1
 	_endloop
+	
+	>> started?
+	
 _endmethod
 $
 
@@ -421,7 +470,20 @@ _private _method design_manager_system_test_mixin.get_or_create_project( project
 			bounds  << manager.current_map_view.current_view_bounds
 		_endif
 		job_attributes << property_list.new_with(:job_type, _self.properties[:state_model_name].default( _self.default_state_model_name ) )
-		project  << swg_dsn_admin_engine.create_project( project_name, _self.ds_view_names, bounds.as_sector_rope(), job_attributes )
+		_try _with cond
+			project  << swg_dsn_admin_engine.create_project( project_name, _self.ds_view_names, bounds.as_sector_rope(), job_attributes )
+		_when error 
+			_if _self.properties[:retried_project?] _is _unset 
+			_then 
+				_self.properties[:retried_project?] << _true
+				# Wait 30 seconds to allow the other test to populate the design
+				_thisthread.sleep(30000)
+				project << _self.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
+				_return project
+			_else 
+				cond.raise(cond.name, _scatter cond.data)
+			_endif
+		_endtry 
 		
 	_endif
 
@@ -476,7 +538,7 @@ _private _method design_manager_system_test_mixin.delete_project()
 	_if ( project << _self.properties[ :project ] ) _isnt _unset
 	_then
 		swg_dsn_admin_engine.activate_design( _unset )
-		swg_dsn_admin_engine.delete_project( project, _true )
+		swg_dsn_admin_engine.perform_short_transaction(_unset, :|delete_project()|, {project, _true}, :suppress_auto_locking?, _true )
 		swg_dsn_admin_engine.rollforward()
 	_endif
 	
