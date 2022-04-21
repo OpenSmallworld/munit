@@ -321,7 +321,7 @@ _private _method test_case.stub_get_writable_dd_extension()
 	## The default is false
 	##
 	
-	_if _self.stub_get_writable_dd_extension? is _true
+	_if _self.stub_get_writable_dd_extension? _is _true
 	_then 
 		stub_method_helper.replace_method(ds_version_view, :|get_writable_dd_extension()|,
 			_proc()
