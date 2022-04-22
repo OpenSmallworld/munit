@@ -487,6 +487,18 @@ _pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.int!assert_xml_files_not_equal( reference_filename, actual_pathname)
 	## 
 	##
+
+	_try
+		# Check if reference_filename can be retrieved from resources.
+		smallworld_product.get_resource_file(reference_filename,
+						     _self.resource_path,
+						     _self.module_name)
+	_when resource_not_found_in_module_error
+		# If reference_filename does not exist and actual_pathname is
+		# given then we can assume that files are not equal.
+		_return 
+	_endtry
+	
 	(same_file?, report_file) << _self.compare_xml_files(reference_filename , actual_pathname)
 
 	_self.assert_false( same_file?, "The output file unexpectedly matches the reference file" )	

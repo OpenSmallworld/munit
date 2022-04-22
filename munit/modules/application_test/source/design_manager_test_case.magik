@@ -138,7 +138,7 @@ _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 _method design_manager_test_case.set_up()
 	## 
 	##
-	
+
 	.properties << property_list.new()
 
 	_if _not _self.design_tab_updates_required?
@@ -283,7 +283,7 @@ _method design_manager_test_case.one_time_tear_down()
 	## 
 	##
 
-	swg_dsn_admin_engine.clear_current_design()
+	swg_dsn_admin_engine.activate_design( _unset )
 	_super.one_time_tear_down()
 	
 _endmethod
@@ -660,8 +660,7 @@ _private _method design_manager_test_case.check_writable_access( design )
 
 		desc << write_string( "Unable to get write access to the design ", scheme.name, ". ",
 				      "Instead, the access mode was ", ac_mode, ". ",
-				      "Failed to get write access because ", act_read_reason_msg, 
-							". Design status is ", scheme.status )
+				      "Failed to get write access because ", act_read_reason_msg )
 		_self.assert_is( :write, ac_mode, desc )
 	_endif
 _endmethod
@@ -712,8 +711,8 @@ _private _method design_manager_test_case.load_required_cos()
 	_if _self.cu_config_file_to_load _isnt _unset _andif
 	    _self.module_name _isnt _unset
 	_then
-		_self.setup_design_config_view()	
-		ds_config_view << cost_object_library.design_config_view
+		_self.setup_design_config_view()
+		ds_config_view << cost_object_library.design_config_view		
 		module << sw_module_manager.module( _self.module_name )
 		_try
 			co_file << module.get_resource_file(_self.cu_config_file_to_load,"data" )
@@ -731,7 +730,6 @@ _private _method design_manager_test_case.load_required_cos()
 			_self.load_co_dump()
 
 			ds_config_view.commit()
-			ds_config_view.switch(:readonly)	
 
 			# refresh the CO cache
 			_self.refresh_cost_object_library()
@@ -900,7 +898,6 @@ _private _method  design_manager_test_case.int!given_co_definition_with_code( co
 
 	_if cu_def _is _unset
 	_then
-		ds_config_view << cost_object_library.design_config_view	
 		_self.load_required_cos()
 	_endif
 	
@@ -1001,7 +998,7 @@ _method design_manager_test_case.when_creating_child_design( child_design_name )
 	design_name  << write_string( child_design_name, "-", system.host_name )
 	_if ( child_design << _self.get_existing_test_design( _self.project_name, design_name )) _isnt _unset
 	_then
-		swg_dsn_admin_engine.perform_short_transaction(_unset, :|delete_scheme()|, {child_design} )
+		swg_dsn_admin_engine.delete_scheme( child_design )
 	_endif
 	
 	_self.given_a_design( _self.project_name, design_name )

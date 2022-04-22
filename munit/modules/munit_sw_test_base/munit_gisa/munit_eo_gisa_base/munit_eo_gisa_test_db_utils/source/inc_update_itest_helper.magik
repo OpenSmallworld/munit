@@ -191,6 +191,15 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method inc_update_itest_helper.remove_phase(an_inst, phase_name)
+	##
+	phase << an_inst.get_phases(phase_name).an_element()
+	record_transaction.new_delete(phase).run()
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method inc_update_itest_helper.propose_remove_asset(installation, asset)
 	##
 	installation.propose_remove_assets(rwo_set.new_with(asset))
@@ -199,9 +208,34 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method inc_update_itest_helper.propose_abandon_asset(installation, asset)
+	##
+	installation.propose_abandon_assets(rwo_set.new_with(asset))
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method inc_update_itest_helper.propose_remove_installation(installation)
 	##
 	record_transaction.new_update(installation, property_list.new_with(:status, "Proposed Remove")).run()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.propose_abandon_installation(installation)
+	##
+	record_transaction.new_update(installation, property_list.new_with(:status, "Proposed Abandon")).run()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method inc_update_itest_helper.make_installation_as_built(col_name, name)
+	##
+	installation << inc_update_itest_helper.get_named_installation(col_name, name)
+	installation.transition_to_as_built()
 
 _endmethod
 $

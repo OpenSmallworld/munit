@@ -648,7 +648,7 @@ _method eo_dm_test_case.activate_design(design)
 	swg_dsn_admin_engine.activate_design( design )
 	_if design.status ~= _self.writable_design_status
 	_then 
-		swg_dsn_admin_engine.perform_short_transaction(_unset, :|find_and_perform_transition()|, {design, design.status, _self.writable_design_status}, :suppress_auto_locking?, _true)
+		swg_dsn_admin_engine.find_and_perform_transition( design, design.status, _self.writable_design_status )
 	_endif
 _endmethod
 $

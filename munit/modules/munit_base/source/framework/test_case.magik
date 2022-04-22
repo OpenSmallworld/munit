@@ -101,12 +101,6 @@ _pragma(classify_level=restricted)
 test_case.define_shared_constant(:stub_alerts?, _false, :private)
 $
 
-_pragma(classify_level=restricted)
-## Subclass this shared constant if you want avoid intermittent failures where
-## more than one test session tries to get a writable dd extension view
-test_case.define_shared_constant(:stub_get_writable_dd_extension?, _false, :public)
-$
-
 
 _pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
 ## Specifies whether the map should be rendered during the test.
@@ -260,7 +254,6 @@ _method test_case.set_up()
 	_endif
 	
 	_self.stub_map_rendering_if_required()
-	_self.stub_get_writable_dd_extension()
 
 _endmethod
 $
@@ -310,43 +303,6 @@ _private _method test_case.stub_map_rendering_if_required()
 _endmethod
 $
 
-_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
-_private _method test_case.stub_get_writable_dd_extension()
-	## 
-	## When test run in parallel, there could be a clash when two sessions both try
-	## to get a writable dd extension.  Try 5 times with a wait of 100ms between
-	## retries to get a writable dd extension view.
-	##
-	## The method is only stubbed if _self.stub_get_writable_dd_extension? is true.
-	## The default is false
-	##
-	
-	_if _self.stub_get_writable_dd_extension? _is _true
-	_then 
-		stub_method_helper.replace_method(ds_version_view, :|get_writable_dd_extension()|,
-			_proc()
-				_for count _over range(1, 5)
-				_loop 
-					_try _with cond
-						dd_ext << _self.saved!get_writable_dd_extension()
-						_leave
-					_when error
-						# Wait a bit and try again
-						_thisthread.sleep(100)
-						my_error << cond
-					_endtry 
-				_finally 
-					_if my_error _isnt _unset
-					_then 
-						write("Failed to get a writable dd extension")
-						my_error.continue_handling()
-					_endif 
-				_endloop
-				>> dd_ext
-			_endproc)
-	_endif
-_endmethod
-$
 
 _pragma(classify_level=restricted,topic=MUnit,usage=subclassable)
 _private _method test_case.run_test()
