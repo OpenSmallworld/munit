@@ -124,6 +124,15 @@ _method design_manager_test_case.properties
 _endmethod
 $
 
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+_method design_manager_test_case.properties << properties
+	## 
+	##
+
+	.properties << properties
+
+_endmethod
+$
 
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 _method design_manager_test_case.set_up()
@@ -708,7 +717,18 @@ _private _method design_manager_test_case.load_required_cos()
 		_try
 			co_file << module.get_resource_file(_self.cu_config_file_to_load,"data" )
 			ds_config_view.switch(:write)
+			
+			count << 0
+			_while ds_config_view.mode _is :readonly _andif 
+				count < 100
+			_loop 			
+				_thisthread.sleep(100)
+				ds_config_view.switch(:write)
+				count +<< 1
+			_endloop
+
 			_self.load_co_dump()
+
 			ds_config_view.commit()
 
 			# refresh the CO cache
