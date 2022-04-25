@@ -685,8 +685,15 @@ _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_pa
 				_endif
 				y << a_tree_item.int!ypos_for( index ) + renderer.half_row_height
 
-				_self.handle_event(a_tree_item, :button, :left, x, y, :press, modmask.default(0))
-				_self.handle_event(a_tree_item, :button, :left, x, y, :release, modmask.default(0))
+				# Try selecting it a few times
+				_for index _over range(1, 5)
+				_loop 
+					_self.handle_event(a_tree_item, :button, :left, x, y, :press, modmask.default(0))
+					_self.handle_event(a_tree_item, :button, :left, x, y, :release, modmask.default(0))
+					_if _not a_tree_item.selection.empty? _then _leave _endif 
+					_thisthread.sleep(100)
+					show("Try selecting again...")
+				_endloop
 
 				_leave
 			_endif
@@ -1861,7 +1868,8 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 							     _optional second_id, message_dialog_wait_id )
 	##
 	##
-
+	
+	_self.when_the_ui_is_ready(a_canvas)
 	a_canvas.add_dependent( _self )
 
 	(s, m) << system.time_now()
