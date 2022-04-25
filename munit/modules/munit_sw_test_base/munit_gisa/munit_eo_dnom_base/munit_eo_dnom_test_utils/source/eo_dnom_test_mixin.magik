@@ -811,10 +811,17 @@ $
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data(_gather file_names)
 	##
+	## Compares given golden files. Returns true if all contents
+	## except project data are the same.
+	##
+	## Method can be used only on canonicalised files because it
+	## uses text comparison only.
+	##
 
 	streams << rope.new()
 	idx << 0
 
+	# Open all file streams.
 	_for file_name _over file_names.fast_elements()
 	_loop
 		full_name << smallworld_product.get_resource_file(file_name + ".xml",
@@ -824,7 +831,8 @@ _method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data(_gath
 		streams.add_last(external_text_input_stream.new(full_name))
 	_endloop
 
-	_protect 
+	_protect
+		# Compare each line of all files.
 		_loop
 			idx +<< 1
 			value << :not_set
@@ -850,6 +858,7 @@ _method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data(_gath
 			_endif
 		_endloop
 	_protection
+		# Close all file streams.
 		_for stream _over streams.fast_elements()
 		_loop
 			stream.close()
@@ -863,12 +872,17 @@ $
 _pragma(classify_level=debug)
 _private _method eo_dnom_test_mixin.get_line_from_stream(stream)
 	##
+	## Gets next line from file stream. This method automatically
+	## omits project data.
+	##
 
 	line << stream.get_line()
 
 	_if line _isnt _unset _andif
 	    line.index_of_seq("<Project>") _isnt _unset
 	_then
+		# If project data is found then go to the next line just after
+		# the project.
 		_loop
 			line << stream.get_line()
 
