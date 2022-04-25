@@ -283,7 +283,7 @@ _method design_manager_test_case.one_time_tear_down()
 	## 
 	##
 
-	swg_dsn_admin_engine.activate_design( _unset )
+	swg_dsn_admin_engine.clear_current_design()
 	_super.one_time_tear_down()
 	
 _endmethod
@@ -660,7 +660,8 @@ _private _method design_manager_test_case.check_writable_access( design )
 
 		desc << write_string( "Unable to get write access to the design ", scheme.name, ". ",
 				      "Instead, the access mode was ", ac_mode, ". ",
-				      "Failed to get write access because ", act_read_reason_msg )
+				      "Failed to get write access because ", act_read_reason_msg, 
+							". Design status is ", scheme.status )
 		_self.assert_is( :write, ac_mode, desc )
 	_endif
 _endmethod
@@ -998,7 +999,7 @@ _method design_manager_test_case.when_creating_child_design( child_design_name )
 	design_name  << write_string( child_design_name, "-", system.host_name )
 	_if ( child_design << _self.get_existing_test_design( _self.project_name, design_name )) _isnt _unset
 	_then
-		swg_dsn_admin_engine.delete_scheme( child_design )
+		swg_dsn_admin_engine.perform_short_transaction( _unset, :|delete_scheme()|, {child_design} )
 	_endif
 	
 	_self.given_a_design( _self.project_name, design_name )
