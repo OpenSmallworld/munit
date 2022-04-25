@@ -103,23 +103,6 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method database_view.switch(_gather args)
-	##
-	##
-	
-	results << _allresults _super.switch(_scatter args)
-	
-	_if args.an_element() _is :write
-	_then 
-		show(:switching_writable, _self, _self.current_writer)
-	_endif
-	
-	_return _scatter results
-	
-_endmethod
-$
-
-_pragma(classify_level=debug)
 _method design_manager_system_test_mixin.given_a_new_design(project_name, design_name, _optional xmin, ymin, xmax, ymax)
 	##
 	## Create a new design named DESIGN_NAME in project named PROJECT_NAME
@@ -134,7 +117,6 @@ _method design_manager_system_test_mixin.given_a_new_design(project_name, design
 	# try to create the project, but only the first one succeeds.  In this case,
 	# retry creating the design.
 	_try _with cond 
-		show(:current_writer, gis_program_manager.databases[:design_admin].current_writer, gis_program_manager.databases[:design_admin].st_enabled?, gis_program_manager.databases[:design_admin].st_disabled?, gis_program_manager.databases[:design_admin].dsst_server_running?)
 		design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
 			:|int!given_a_new_design()|, {project_name, design_name, parent_design, xmin, ymin, xmax, ymax}, :suppress_auto_locking?, _true)
 	_when error
