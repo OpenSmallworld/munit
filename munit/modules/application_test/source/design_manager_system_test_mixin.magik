@@ -117,12 +117,13 @@ _method design_manager_system_test_mixin.given_a_new_design(project_name, design
 	# try to create the project, but only the first one succeeds.  In this case,
 	# retry creating the design.
 	_try _with cond 
+		_self.properties[:retries] << 0
 		design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
 			:|int!given_a_new_design()|, {project_name, design_name, parent_design, xmin, ymin, xmax, ymax}, :suppress_auto_locking?, _true)
 	_when error
-		_if _self.properties[:retried?] _is _unset 
+		_if _self.properties[:retries] < 10 
 		_then 
-			_self.properties[:retried?] << _true 
+			_self.properties[:retries] +<< 1
 			# Wait 30 seconds to allow the other test to populate the design
 			_thisthread.sleep(30000)
 			_self.given_a_design(project_name, design_name, xmin, ymin, xmax, ymax)
@@ -441,11 +442,12 @@ _private _method design_manager_system_test_mixin.get_or_create_project( project
 		_endif
 		job_attributes << property_list.new_with(:job_type, _self.properties[:state_model_name].default( _self.default_state_model_name ) )
 		_try _with cond
+			_self.properties[:retries] << 0
 			project  << swg_dsn_admin_engine.create_project( project_name, _self.ds_view_names, bounds.as_sector_rope(), job_attributes )
 		_when error 
-			_if _self.properties[:retried_project?] _is _unset 
+			_if _self.properties[:retries] < 0
 			_then 
-				_self.properties[:retried_project?] << _true
+				_self.properties[:retries] +<< 1
 				# Wait 30 seconds to allow the other test to populate the design
 				_thisthread.sleep(30000)
 				project << _self.get_or_create_project( project_name, xmin, ymin, xmax, ymax )
@@ -456,7 +458,7 @@ _private _method design_manager_system_test_mixin.get_or_create_project( project
 		_endtry 
 		
 	_endif
-
+	
 	>> project
 	
 _endmethod
