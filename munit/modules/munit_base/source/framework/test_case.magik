@@ -325,7 +325,7 @@ _private _method test_case.stub_get_writable_dd_extension()
 	_then 
 		stub_method_helper.replace_method(ds_version_view, :|get_writable_dd_extension()|,
 			_proc()
-				_for count _over range(1, 5)
+				_for count _over range(1, 10)
 				_loop 
 					_try _with cond
 						dd_ext << _self.saved!get_writable_dd_extension()
