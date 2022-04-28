@@ -731,6 +731,7 @@ _private _method design_manager_test_case.load_required_cos()
 			_self.load_co_dump()
 
 			ds_config_view.commit()
+			ds_config_view.switch(:readonly)
 
 			# refresh the CO cache
 			_self.refresh_cost_object_library()
