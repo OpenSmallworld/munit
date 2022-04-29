@@ -459,11 +459,11 @@ _pragma(classify_level=debug)
 _method eo_gisa_base_test_case.insert_record( coll_name, rdf_id, _gather attr_and_values )
 	##
 	## Insert a record in the collection called COLL_NAME in the
-	## electric view. RFD_ID is the id that will be used to export
-	## to CIM, and ATTR_AND_VALUES is a pair of keys and values
-	## that will be used in conjunction with the default values to
-	## populate the record to be inserted. The default values are
-	## found in the shared constant .default_values.
+	## electric view. RFD_ID (if not _unset) is the id that will be
+	## used to export to CIM, and ATTR_AND_VALUES is a pair of keys
+	## and values that will be used in conjunction with the default
+	## values to populate the record to be inserted. The default
+	## values are found in the shared constant .default_values.
 	##
 	## If COLL_NAME represents a spec ( *_spec ), then it deals
 	## with frozen storage appropriately
@@ -483,11 +483,11 @@ _pragma(classify_level=debug)
 _private _method eo_gisa_base_test_case.insert_warm_record ( coll_name, rdf_id, _gather attr_and_values )
 	## 
 	## Insert a record in the collection called COLL_NAME in the
-	## electric view. RFD_ID is the id that will be used to export
-	## to CIM, and ATTR_AND_VALUES is a pair of keys and values
-	## that will be used in conjunction with the default values to
-	## populate the record to be inserted. The default values are
-	## found in the shared constant .default_values.
+	## electric view. RFD_ID (if not _unset) is the id that will be
+	## used to export to CIM, and ATTR_AND_VALUES is a pair of keys
+	## and values that will be used in conjunction with the default
+	## values to populate the record to be inserted. The default
+	## values are found in the shared constant .default_values.
 	## 
 
 	_local ev << _self.electric_view
@@ -500,8 +500,12 @@ _private _method eo_gisa_base_test_case.insert_warm_record ( coll_name, rdf_id, 
 				coll_name.write_string )
 	
 	_local rec << ev.run_transaction( trans )
-	_self.assign_id_to_record( rdf_id, rec )
 
+	_if rdf_id _isnt _unset
+	_then 
+		_self.assign_id_to_record( rdf_id, rec )
+	_endif
+	
 	>> rec
 _endmethod
 $
@@ -657,11 +661,12 @@ _pragma(classify_level=debug)
 _private _method eo_gisa_base_test_case.insert_frozen_record ( coll_name, rdf_id, _gather attr_and_values )
 	##
 	## Insert a new record in the collection called
-	## COLL_NAME in the electric view. RFD_ID is the id that will
-	## be used to export to CIM. ATTR_AND_VALUES is a pair of
-	## keys and values that will be used in conjunction with the
-	## default values to populate the spec. The default values are
-	## found in the shared constant .default_values.
+	## COLL_NAME in the electric view. RFD_ID (if not _unset) is
+	## the id that will be used to export to CIM. ATTR_AND_VALUES
+	## is a pair of keys and values that will be used in
+	## conjunction with the default values to populate the
+	## spec. The default values are found in the shared constant
+	## .default_values. 
 	##
 	## This method deals with frozen collections and commits after
 	## the record has been inserted. If at the time of inserting
@@ -690,7 +695,11 @@ _private _method eo_gisa_base_test_case.insert_frozen_record ( coll_name, rdf_id
 		_if rec _isnt _unset
 		_then
 			_self.specs.add( rec )
-			_self.assign_id_to_record( rdf_id, rec )
+
+			_if rdf_id _isnt _unset
+			_then 
+				_self.assign_id_to_record( rdf_id, rec )
+			_endif 
 		_endif
 		ok? << _true
 	_protection
