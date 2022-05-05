@@ -1869,7 +1869,7 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 	##
 	##
 	
-	_self.when_the_ui_is_ready(a_canvas)
+	_self.when_the_ui_is_ready(a_canvas, _unset, _unset, 100)
 	a_canvas.add_dependent( _self )
 
 	(s, m) << system.time_now()
