@@ -254,7 +254,8 @@ $
 
 _pragma(classify_level=debug)
 _method eo_gisa_base_test_case.run_bare()
-        ## Runs the bare test sequence
+	##
+	## Runs the bare test sequence
 
 	# Disable database notifications.
 	_dynamic !notify_database_data_changes?!, !current_application!
@@ -268,21 +269,22 @@ _method eo_gisa_base_test_case.run_bare()
 		swg_dsn_admin_engine.init()
 	_endif
 	
-        _protect
+	_protect
 		_self.set_up()
-		!current_application! << _self.get_current_application() # Must be after set_up() so properties are set
-		
+
+		# Must be after set_up() so properties are set
+		!current_application! << _self.get_current_application()
+
 		_self.setup_design()
 		_self.setup_sub_design()
-
 		_self.setup_deterministic_identifiers()
-		
-                _self.run_test()
-        _protection
-                _self.teardown_design()
-		_self.tear_down()		
+		_self.run_test()
+	_protection
+		_self.teardown_design()
+		_self.tear_down()
+
 		!notify_database_data_changes?! << old_value 
-        _endprotect
+	_endprotect
 _endmethod
 $
 
@@ -346,7 +348,7 @@ _method eo_gisa_base_test_case.setup_deterministic_identifiers()
 	_if id_mode _is :register
 	_then
 		# Initialise the IDs
-		sw_gisa_identifiers_from_register.ids << _self.ids 
+		sw_gisa_identifiers_from_register.ids << _self.ids
 		sw_gisa_identifiers_from_register.replace_identifier_manager()
 	_elif id_mode _is :inc_updates
 	_then
@@ -354,8 +356,14 @@ _method eo_gisa_base_test_case.setup_deterministic_identifiers()
 		# sw_gisa_identifiers_from_register but handles missing IDs.
 		
 		# Initialise the IDs
-		sw_gisa_identifiers_for_update_tests.ids << _self.ids 
-		sw_gisa_identifiers_for_update_tests.replace_identifier_manager()		
+		sw_gisa_identifiers_for_update_tests.ids << _self.ids
+		sw_gisa_identifiers_for_update_tests.replace_identifier_manager()
+	_elif id_mode _is :posting_inc_updates
+	_then
+		# Test that post data have a similar identifier scheme to incremental tests,
+		# but with handling for the record changing when it is posted
+		sw_gisa_identifiers_for_posting_data_tests.ids << _self.ids
+		sw_gisa_identifiers_for_posting_data_tests.replace_identifier_manager()
 	_elif id_mode _is :attributes
 	_then
 		sw_gisa_identifiers_from_attributes.replace_identifier_manager()
