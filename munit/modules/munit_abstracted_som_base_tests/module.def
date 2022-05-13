@@ -1,0 +1,13 @@
+munit_abstracted_som_base_tests 1
+
+description
+	Base module for munit abstracted som base tests
+end
+
+requires
+      munit_base
+      network_builder
+end 
+
+hidden
+language en_gb

@@ -1,0 +1,213 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar (:abstracted_object_itest,
+	{
+		{:source_view, _unset},
+		{:abstracted_view, _unset},
+		{:object_test_data, _unset},
+		{:network_builder, _unset}
+	},
+	{
+		:test_case
+	})
+
+$
+
+_pragma(classify_level=debug)
+_private _method abstracted_object_itest.abstracted_view
+	##
+	##
+	
+	>> .abstracted_view
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.network_builder
+	## 
+	## 
+	>> .network_builder
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.root_alternative_name
+	##
+	## Subclasses could implement this
+	## This will be used to create an alternative tree under Top.
+	## Sub-alternatives will be named after the current system user.
+	## This backstop method returns _self.class_name
+	cn << _self.class_name
+	_if cn.size > 32
+	_then # slice to max length of alternative name
+		cn << cn.slice(1, 32)
+	_endif
+	>> cn
+_endmethod
+$
+
+_pragma(classify_level=subclassable)
+_method abstracted_object_itest.set_up()
+	## 
+	## This method can be subclassed for a specific setup
+	##
+
+	_super.set_up()
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.open_abstracted_view()
+	## Called from set_up()
+	## 
+	
+	.abstracted_view << _self.abstracted_som_helper.create_and_open_abstract_dsm()	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.tear_down()
+	## 
+	##
+	
+	.source_view.commit()
+	.source_view.align()
+	#.source_view.goto_top_alternative()
+	
+	_super.tear_down()
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.apply_method_chain_to_object(obj, methods)
+	##
+	## Iteratively apply METHODS to an object OBJ and return the
+	## final result.
+	##
+	## METHOD is a list (possibly empty) of method names or simple
+	## vectors consisting a method name and arguments.
+	##
+	## The first method is applied to OBJ. Each subsequent method is
+	## applied to the result of the previous method.
+	##
+	## If METHODS is empty, the method returns OBJ.
+	##
+	result << obj
+	_for method_to_apply _over methods.elements()
+	_loop
+		_if method_to_apply.class_name _is :simple_vector 
+		_then
+			#for methods with arguments, the expected input is {meth, arg1, arg2...} 
+			# the code below handles parsing that and converting into a send message
+			
+			method << method_to_apply[1]
+			args_vec << method_to_apply.subseq(2, method_to_apply.size - 1)
+			result << result.perform(method, _scatter args_vec)
+			#write(result, " . ", method, " returns ", result, "  ... args: ", _scatter args_vec)
+		_else
+			result << result.perform(method_to_apply)
+			#write(result, " . ", method_to_apply, " returns ", result)
+		_endif
+	_endloop
+	_return result
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.get_key_field_value(source_obj)
+	##
+	## Returns the value stored in the key field of source_obj.
+	## Key field is defined as the result of calling key_field_names. This allows for
+	## handling of objects where the id field can be either id or rwo_id.
+	## Assumes only a single key field exists
+	##
+	key_field_name << source_obj.key_field_names.an_element()
+	>> source_obj.perform(key_field_name)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+## helper to get spec rec given COLLECTION_NAME and SPEC_NAME
+_method abstracted_object_itest.get_spec(collection_name, spec_name)
+	matching_specs <<  .source_view.collections[collection_name].select(predicate.eq(:spec_name, spec_name))
+	_return matching_specs.an_element()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.world_from_universe(id)
+	## a world from .source_view from universe ID
+	## 
+	>> .source_view.collection(:sw_gis!world).select(predicate.eq(:universe_id,id)).an_element()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.insert_spec(spec_collection_name, spec_name, spec_properties)
+	##
+	## Ensure a spec with SPEC_NAME exists in SPEC_COLLECTION_NAME.
+	## If it doesn't exist, create it using SPEC_PROPERTIES (the
+	## given properties will be copied and SPEC_NAME will be added
+	## to them).
+	## Return the spec.
+	##
+
+	# Note that eo_network_builder.insert_spec() also checks for
+	# existence before inserting a new spec, however it will check
+	# for a record matching all given properties. The spec joins on
+	# abstractions work on the basis of unique spec names, so we
+	# only match on name here. 
+	
+	controller_spec_rec << _self.get_spec(spec_collection_name, spec_name)
+	_if controller_spec_rec _is _unset
+	_then
+		spec_properties << _if spec_properties _is _unset
+				   _then
+					   >> property_list.new()
+				   _else
+					   >> property_list.new_from(spec_properties)
+				   _endif
+		spec_properties[:spec_name] << spec_name
+		controller_spec_rec << _self.network_builder.insert_spec ( spec_collection_name, spec_properties )
+		_if controller_spec_rec _is _unset
+		_then
+			condition.raise(:error, :string, write_string("Failed to create spec: ",
+					spec_collection_name, spec_name))
+		_endif 
+	_endif
+	>> controller_spec_rec
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.get_abstracted_object_for_source_object(source_obj _optional abs_coll_nm)
+	##
+	## Return one RWO corresponding to SOURCE_OBJ
+	##
+	## ABS_COLL_NM can be used to specify the name of the abstract collection
+	##
+		
+	_for abs_col_name, abs_col_data _over .abstracted_view.get_dataset_metadata()[:collections].keys_and_elements()
+	_loop
+		_if abs_coll_nm _isnt _unset _andif
+			abs_coll_nm <> abs_col_name
+		_then 
+			_continue
+		_endif
+
+		source_col_data << abs_col_data[:main_rwo_table]
+		abs_col << .abstracted_view.collections[abs_col_name]
+		_if source_col_data[:name] = source_obj.source_collection.name _andif 			
+			(abs_obj << abs_col.at(_self.get_key_field_value(source_obj))) _isnt _unset
+		_then
+			_return abs_obj
+		_endif
+	_endloop
+
+_endmethod
+$
