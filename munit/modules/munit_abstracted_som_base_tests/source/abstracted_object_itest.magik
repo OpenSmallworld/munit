@@ -60,6 +60,29 @@ _method abstracted_object_itest.set_up()
 _endmethod
 $
 
+_pragma(classify_level=subclassable)
+_method abstracted_object_itest.one_time_set_up()
+	## 
+	## This method can be subclassed for a specific one_time_set_up
+	##
+
+	_super.one_time_set_up()
+
+_endmethod
+$
+
+_pragma(classify_level=subclassable)
+_method abstracted_object_itest.run_test()
+	## 
+	## This method can be subclassed for a specific run_test
+	##
+
+	_super.run_test()
+
+_endmethod
+$
+
+
 _pragma(classify_level=debug)
 _method abstracted_object_itest.open_abstracted_view()
 	## Called from set_up()
@@ -75,7 +98,7 @@ _method abstracted_object_itest.tear_down()
 	##
 	
 	.source_view.commit()
-	.source_view.align()
+	#.source_view.align()
 	#.source_view.goto_top_alternative()
 	
 	_super.tear_down()
@@ -258,7 +281,7 @@ _endmethod
 $
 
 _pragma(classify_level=subclassable)
-_method abstracted_object_itest.write_data_into_source_model( test_key, _optional state )
+_abstract _method abstracted_object_itest.write_data_into_source_model( test_key, _optional state )
 	##
 	##	This method can be subclassed for a specific test object
 	
