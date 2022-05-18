@@ -16,6 +16,14 @@ def_slotted_exemplar (:abstracted_object_itest,
 
 $
 
+_pragma(classify_level=debug, usage={subclassable, redefinable})
+##
+## Defines the application dummy name that will be used for the tests,
+## Subclasses should set a value for this shared constant
+##
+abstracted_object_itest.define_shared_constant(:dummy_application_name, _unset, :public)
+$
+
 _pragma(classify_level=debug)
 _private _method abstracted_object_itest.abstracted_view
 	##
@@ -50,38 +58,22 @@ _endmethod
 $
 
 _pragma(classify_level=subclassable)
-_method abstracted_object_itest.set_up()
-	## 
-	## This method can be subclassed for a specific setup
-	##
-
-	_super.set_up()
-
-_endmethod
-$
-
-_pragma(classify_level=subclassable)
-_method abstracted_object_itest.one_time_set_up()
-	## 
-	## This method can be subclassed for a specific one_time_set_up
-	##
-
-	_super.one_time_set_up()
-
-_endmethod
-$
-
-_pragma(classify_level=subclassable)
 _method abstracted_object_itest.run_test()
 	## 
 	## This method can be subclassed for a specific run_test
 	##
 
-	_super.run_test()
+	_dynamic !current_application!
+	
+	_if _self.dummy_application_name _isnt _unset
+	_then
+		app_def << smallworld_product.application_definition(_self.dummy_application_name)
+		!current_application! << application.new_from_def(app_def)
+	_endif
 
+	_super.run_test()	
 _endmethod
 $
-
 
 _pragma(classify_level=debug)
 _method abstracted_object_itest.open_abstracted_view()
@@ -98,8 +90,6 @@ _method abstracted_object_itest.tear_down()
 	##
 	
 	.source_view.commit()
-	#.source_view.align()
-	#.source_view.goto_top_alternative()
 	
 	_super.tear_down()
 	
@@ -217,11 +207,14 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_abstract _method abstracted_object_itest.get_abstracted_object_for_source_object(source_obj _optional abs_coll_nm)
+_method abstracted_object_itest.get_abstracted_object_for_source_object(source_obj _optional abs_coll_nm)
 	##
-	## Subclasses should implement this
+	## Subclasses can re-implement this
 	## Return one RWO corresponding to SOURCE_OBJ
 	## ABS_COLL_NM can be used to specify the name of the abstract collection
+	
+	>> .abstracted_view.get_abstracted_object_for(source_obj)
+
 _endmethod
 $
 
