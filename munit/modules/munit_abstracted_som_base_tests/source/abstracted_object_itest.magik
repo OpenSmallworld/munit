@@ -16,14 +16,6 @@ def_slotted_exemplar (:abstracted_object_itest,
 
 $
 
-_pragma(classify_level=debug, usage={subclassable, redefinable})
-##
-## Defines the application dummy name that will be used for the tests,
-## Subclasses should set a value for this shared constant
-##
-abstracted_object_itest.define_shared_constant(:dummy_application_name, _unset, :public)
-$
-
 _pragma(classify_level=debug)
 _private _method abstracted_object_itest.abstracted_view
 	##
@@ -65,7 +57,7 @@ _method abstracted_object_itest.run_test()
 
 	_dynamic !current_application!
 	
-	_if _self.dummy_application_name _isnt _unset
+	_if _self.dummy_application_name() _isnt _unset
 	_then
 		app_def << smallworld_product.application_definition(_self.dummy_application_name)
 		!current_application! << application.new_from_def(app_def)
@@ -74,6 +66,17 @@ _method abstracted_object_itest.run_test()
 	_super.run_test()	
 _endmethod
 $
+
+_pragma(classify_level=subclassable)
+_method abstracted_object_itest.dummy_application_name()
+	## 
+	## This method should be subclassed for a specific application name
+	##
+	
+	>> _unset
+_endmethod
+$
+
 
 _pragma(classify_level=debug)
 _method abstracted_object_itest.open_abstracted_view()
