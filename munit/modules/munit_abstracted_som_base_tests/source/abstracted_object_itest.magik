@@ -59,7 +59,7 @@ _method abstracted_object_itest.run_test()
 	
 	_if _self.dummy_application_name() _isnt _unset
 	_then
-		app_def << smallworld_product.application_definition(_self.dummy_application_name)
+		app_def << smallworld_product.application_definition(_self.dummy_application_name())
 		!current_application! << application.new_from_def(app_def)
 	_endif
 
