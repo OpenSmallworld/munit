@@ -50,32 +50,40 @@ _endmethod
 $
 
 _pragma(classify_level=subclassable)
-_method abstracted_object_itest.run_test()
+_abstract _method abstracted_object_itest.run_test()
 	## 
 	## This method can be subclassed for a specific run_test
 	##
-
-	_dynamic !current_application!
-	
-	_if _self.dummy_application_name() _isnt _unset
-	_then
-		app_def << smallworld_product.application_definition(_self.dummy_application_name())
-		!current_application! << application.new_from_def(app_def)
-	_endif
-
-	_super.run_test()	
 _endmethod
 $
 
-_pragma(classify_level=subclassable)
-_method abstracted_object_itest.dummy_application_name()
-	## 
-	## This method should be subclassed for a specific application name
-	##
+# _pragma(classify_level=subclassable)
+# _method abstracted_object_itest.run_test()
+# 	## 
+# 	## This method can be subclassed for a specific run_test
+# 	##
+
+# 	_dynamic !current_application!
 	
-	>> _unset
-_endmethod
-$
+# 	_if _self.dummy_application_name() _isnt _unset
+# 	_then
+# 		app_def << smallworld_product.application_definition(_self.dummy_application_name)
+# 		!current_application! << application.new_from_def(app_def)
+# 	_endif
+
+# 	_super.run_test()	
+# _endmethod
+# $
+
+# _pragma(classify_level=subclassable)
+# _method abstracted_object_itest.dummy_application_name()
+# 	## 
+# 	## This method should be subclassed for a specific application name
+# 	##
+	
+# 	>> _unset
+# _endmethod
+# $
 
 
 _pragma(classify_level=debug)
