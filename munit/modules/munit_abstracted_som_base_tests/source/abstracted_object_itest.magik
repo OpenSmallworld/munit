@@ -92,7 +92,7 @@ _method abstracted_object_itest.tear_down()
 	##
 	
 	.source_view.commit()
-	
+	.source_view.align()
 	_super.tear_down()
 	
 _endmethod
