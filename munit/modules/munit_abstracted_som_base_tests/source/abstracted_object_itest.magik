@@ -146,56 +146,13 @@ _method abstracted_object_itest.get_key_field_value(source_obj)
 _endmethod
 $
 
-_pragma(classify_level=debug)
-## helper to get spec rec given COLLECTION_NAME and SPEC_NAME
-_method abstracted_object_itest.get_spec(collection_name, spec_name)
-	matching_specs <<  .source_view.collections[collection_name].select(predicate.eq(:spec_name, spec_name))
-	_return matching_specs.an_element()
-_endmethod
-$
+
 
 _pragma(classify_level=debug)
 _method abstracted_object_itest.world_from_universe(id)
 	## a world from .source_view from universe ID
 	## 
 	>> .source_view.collection(:sw_gis!world).select(predicate.eq(:universe_id,id)).an_element()
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method abstracted_object_itest.insert_spec(spec_collection_name, spec_name, spec_properties)
-	##
-	## Ensure a spec with SPEC_NAME exists in SPEC_COLLECTION_NAME.
-	## If it doesn't exist, create it using SPEC_PROPERTIES (the
-	## given properties will be copied and SPEC_NAME will be added
-	## to them).
-	## Return the spec.
-	##
-
-	# Note that eo_network_builder.insert_spec() also checks for
-	# existence before inserting a new spec, however it will check
-	# for a record matching all given properties. The spec joins on
-	# abstractions work on the basis of unique spec names, so we
-	# only match on name here. 
-	
-	controller_spec_rec << _self.get_spec(spec_collection_name, spec_name)
-	_if controller_spec_rec _is _unset
-	_then
-		spec_properties << _if spec_properties _is _unset
-				   _then
-					   >> property_list.new()
-				   _else
-					   >> property_list.new_from(spec_properties)
-				   _endif
-		spec_properties[:spec_name] << spec_name
-		controller_spec_rec << _self.network_builder.insert_spec ( spec_collection_name, spec_properties )
-		_if controller_spec_rec _is _unset
-		_then
-			condition.raise(:error, :string, write_string("Failed to create spec: ",
-					spec_collection_name, spec_name))
-		_endif 
-	_endif
-	>> controller_spec_rec
 _endmethod
 $
 
@@ -208,10 +165,9 @@ _abstract _method abstracted_object_itest.network_builder_insert_method_name
 _endmethod
 $
 
-_pragma(classify_level=debug)
+_pragma(classify_level=subclassable)
 _method abstracted_object_itest.get_abstracted_object_for_source_object(source_obj _optional abs_coll_nm)
 	##
-	## Subclasses can re-implement this
 	## Return one RWO corresponding to SOURCE_OBJ
 	## ABS_COLL_NM can be used to specify the name of the abstract collection
 	
