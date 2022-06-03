@@ -8,14 +8,21 @@ _method sw_product.run_test_cases( _optional properties )
 	## Run the test cases in this product
 	##
 
+	failed_test_cases << 0
+
 	_for module _over _self.defined_modules.fast_elements()
 	_loop
 		_if module.loaded? _andif module.test_module?
 		_then
 			
-			module.run_test_cases( properties )
+			was_successful? << module.run_test_cases( properties )
+			_if was_successful?.not
+			_then failed_test_cases +<< 1
+			_endif
 		_endif
 	_endloop
+
+	>> failed_test_cases = 0
 	
 _endmethod
 $
