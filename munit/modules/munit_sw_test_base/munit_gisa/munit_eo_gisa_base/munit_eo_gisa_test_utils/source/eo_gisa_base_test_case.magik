@@ -982,7 +982,6 @@ _method eo_gisa_base_test_case.then_all_files_were_transferred_to_endpoint(endpo
 _endmethod
 $
 
-
 _pragma(classify_level=debug)
 _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional schematic_names)
 	##
@@ -1018,7 +1017,13 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 							  # Sort all objects that need update to order them
 							  # deterministically.
 							  sort_proc << _proc (o1, o2)
-									       >> o1.id < o2.id
+									       id1 << sw_cim_identifier_manager.collection_unique_id_for_rwo(o1)
+									       id2 << sw_cim_identifier_manager.collection_unique_id_for_rwo(o2)
+									       _try 
+										       _return id1 < id2
+									       _when binary_operator_undefined
+										       _return id1.write_string < id2.write_string
+									       _endtry
 								       _endproc
 							  _return _self.saved!update_schematic(objects.as_sorted_collection(sort_proc), schematic)
 						  _endproc)
