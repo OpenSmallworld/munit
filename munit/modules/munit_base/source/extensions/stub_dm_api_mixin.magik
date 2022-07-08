@@ -170,11 +170,13 @@ _method stub_dm_api_mixin.given_a_scheme(pr, dn, init_state _optional with_confl
 	##  
 	##
 	design<< mock( "design" , swg_dsn_scheme)
+	project<<mock("project") 
 	stub( design ).project_and_scheme_name.then_return(pr + " - " + dn)
 	stub( design ).status.then_return( init_state )
 	stub( design ).inf_project.then_return(pr)
 	stub( design ).name.then_return(dn)
 	stub( design ).test!with_conflicts?.then_return(with_conflicts? _is _true)
+	stub( design ).project.then_return(project)
 	_self.properties[:designs].add(design)
 	>> _self 
 _endmethod
