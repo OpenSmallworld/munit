@@ -396,71 +396,86 @@ $
 _pragma(classify_level=debug)
 ## This is a property list indexed by collection name where
 ## default values for the different fields are specified
-eo_gisa_base_test_case.define_shared_variable( :default_values,
+eo_gisa_base_test_case.define_shared_variable(:default_values,
 	property_list.new_with(
-
 		:eo_cable_segment_inst,	property_list.new_with(
-						:status, "Existing",
-						:network_type, "MV",
-						:nominal_voltage_pp, voltage_value.new( 11, :kV ),
-						:owner_type, "Company Owned",
-						:owner_name, "Electric Utility",
-						:mounting, "Underground",
-						:usage, "",
-						:arrangement, "",
-						:alias, "Alias1" ),
-		:eo_isolating_eqpt_inst,	property_list.new_with(
-						:status, "Existing",
-						:network_type, "MV",
-						:nominal_voltage_pp, voltage_value.new( 11, :kV ),
-						:owner_type, "Company Owned",
-						:owner_name, "Electric Utility" ),
-		
+			:status, "Existing",
+			:network_type, "MV",
+			:nominal_voltage, "11 kV",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility",
+			:mounting, "Underground",
+			:usage, "",
+			:arrangement, "",
+			:alias, "Alias1"
+		),
+		:eo_isolating_eqpt_inst, property_list.new_with(
+			:status, "Existing",
+			:network_type, "MV",
+			:nominal_voltage, "11 kV",
+			:mounting, "Underground",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility"
+		),
 		:eo_cable, property_list.new_with(
-				   :alias, "Alias",
-				   :manufacturer, "" ),
-		
-		:eo_power_xfrmr_inst,	property_list.new_with(
-						:status, "Existing",
-						:source_network_type, "MV",
-						:source_nominal_voltage_pp, voltage_value.new( 11, :kV ),
-						:load_network_type, "LV",
-						:load_nominal_voltage_pp, voltage_value.new( 2.4, :kV ),
-						:owner_type, "Company Owned",
-						:owner_name, "Electric Utility",
-						:mounting, "Underground"),
-		
+			:alias, "Alias",
+			:manufacturer, ""
+		),
+		:eo_power_xfrmr_inst, property_list.new_with(
+			:status, "Existing",
+			:source_network_type, "MV",
+			:source_nominal_voltage, "11 kV",
+			:load_network_type, "LV",
+			:load_nominal_voltage, "2.4 kV",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility",
+			:mounting, "Underground"
+		),
+		:eo_3w_power_xfrmr_inst, property_list.new_with(
+			:status, "Existing",
+			:source_network_type, "MV",
+			:source_nominal_voltage, "11 kV",
+			:load_network_type, "LV",
+			:load_nominal_voltage, "2.4 kV",
+			:tertiary_network_type, "LV",
+			:tertiary_nominal_voltage, "240 V",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility",
+			:mounting, "Underground"
+		),
 		:eo_power_xfrmr, property_list.new_with(
-				   :device_type, "Substation"),
-		
+			:device_type, "Substation"
+		),
 		:eo_power_xfrmr_spec, property_list.new_with(
-				   :device_type, "Substation"),
-		
+			:device_type, "Substation"
+		),
 		:eo_circuit, property_list.new_with(
-				     :circuit_id, "1000" ),
-
+			:circuit_id, "1000"
+		),
 		:eo_protective_eqpt_inst, property_list.new_with(
-						  :status, "Existing",
-						  :network_type, "MV",
-						  :nominal_voltage_pp, voltage_value.new( 11, :kV ),
-						  :owner_type, "Company Owned",
-						  :owner_name, "Electric Utility",
-						  :mounting, "Underground"),
-		
+			:status, "Existing",
+			:network_type, "MV",
+			:nominal_voltage, "11 kV",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility",
+			:mounting, "Underground"
+		),
 		:eo_protective_eqpt, property_list.new_with(
-				   :device_type, "Fault Indicator"),
+			:device_type, "Fault Indicator"
+		),
 		:eo_network_hypernode, property_list.new_with(
-					        :status, "Existing" ),
-				   
-		:eo_composite_switch, property_list.new_with(:device_type, "Unknown",
-							     :status, "Existing",
-							     :network_type, "MV",
-							     :phasing, "ABC",
-							     :owner_type, "Company Owned",
-							     :owner_name, "Electric Utility",
-							     :mounting, "Underground" )
-		      ),
-	:public )
+			:status, "Existing"
+		),		   
+		:eo_composite_switch, property_list.new_with(
+			:device_type, "Unknown",
+			:status, "Existing",
+			:network_type, "MV",
+			:phasing, "ABC",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility",
+			:mounting, "Underground"
+		)
+	), :public)
 $
 
 _pragma(classify_level=debug)
