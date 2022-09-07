@@ -39,8 +39,9 @@ _pragma(classify_level=debug, usage={subclassable})
 _private _method slow_tests_first_provider.add_product_test_suite(remote_tests, product_name)
 	## 
 	##
-
-	tests << product_test_suite.new(product_name)
+	
+	exclude_module_names << system.getenv("EXCLUDE_MODULE_NAMES").default("").split_by(",")
+	tests << product_test_suite.new(product_name, exclude_module_names)
 
 	# Allows ant tests/build.xml calls to turn off the slow tests.
 	skip_slow_tests? << _self.skip_slow_tests?()
