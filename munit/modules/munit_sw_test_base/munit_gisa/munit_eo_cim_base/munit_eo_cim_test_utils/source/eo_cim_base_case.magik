@@ -351,8 +351,8 @@ _method eo_cim_base_case.check_emi_file_contains( expected_contents, emi_file_pa
 
 	_for name _over {:gml_file, :job_name, :rdf_file, :source, :target}.fast_elements()
 	_loop
-		expected << expected_contents[name]
-		actual << emi.get_property(name)
+		expected << expected_contents[name].default("")
+		actual << emi.get_property(name).default("")
 		desc << write_string(a_string.default(""),
 				     "Expected the EMI ", name," property to be '",
 				     expected,"' but it was '",actual,"' instead.")

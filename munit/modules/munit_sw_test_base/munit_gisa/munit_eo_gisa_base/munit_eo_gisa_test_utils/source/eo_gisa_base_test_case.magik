@@ -998,14 +998,18 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional schematic_names)
+_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional schematic_names, set_deterministic_ids?)
 	##
 	## Updates all schematics that are exported to DNOM for all
 	## records changed in the design.
 	##
 	## SCHEMATIC_NAMES - when provided then only given schematics
 	##                   will be updated. Defaults to:
-	##                   sw_dnom_properties_helper.schematic_names.keys 
+	##                   sw_dnom_properties_helper.schematic_names.keys
+	##
+	## SET_DETERMINISTIC_IDS? - sets if deterministic ids should be
+	##                          set for schematic objects after
+	##                          schematic update (default is _true). 
 	##
 	
 	sv << _self.get_schematic_validation_tool()
@@ -1018,11 +1022,16 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 	stub_method_helper.replace_method(sv, :|set_progress_counts()|, _proc () _endproc)
 	
 	_self.properties[:schematic_update_transactions] << transactions << rope.new()
-	schematic_names << schematic_names.default(sw_dnom_properties_helper.schematic_names.keys)
+
+	_if schematic_names _is _unset
+	_then 
+		schematic_names << sw_dnom_properties_helper.schematic_names.keys
+	_endif
 	
 	_for schematic_name _over schematic_names.fast_elements()
 	_loop
-		schematic << _self.get_an_eo_object(:schematic, :name, schematic_name)
+		ev << _self.electric_view
+		schematic << ev.collection(:schematic).select(predicate.eq(:name, schematic_name)).an_element()
 		sv.action(:schematic_chooser).value << schematic
 		sv.action(:source_chooser).value << :design_changes
 		sv.populate_lists()
@@ -1047,8 +1056,11 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 		transactions.add(sv.sys!slot(:transaction))
 	_endloop
 
-	_self.set_deterministic_updated_schematic_ids(transactions)
-
+	_if set_deterministic_ids? _isnt _false
+	_then 
+		_self.set_deterministic_updated_schematic_ids(transactions)
+	_endif
+	
 	sv.close()
 	_return _self 
 _endmethod
