@@ -41,7 +41,7 @@ _private _method slow_tests_first_provider.add_product_test_suite(remote_tests, 
 	##
 	
 	excluded_module_names << system.getenv("EXCLUDED_MODULE_NAMES").default("").split_by(",")
-	tests << product_test_suite.new(product_name, excludedS_module_names)
+	tests << product_test_suite.new(product_name, _scatter excluded_module_names)
 
 	# Allows ant tests/build.xml calls to turn off the slow tests.
 	skip_slow_tests? << _self.skip_slow_tests?()
