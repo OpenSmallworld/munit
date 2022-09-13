@@ -48,9 +48,10 @@ _method sw_gisa_identifiers_for_posting_data_tests.collection_unique_id_for_rwo(
 	## deterministic across test runs and posting of data
 	##
 	_local id << _unset
-
+	
 	# Check using source collection and ID for records
-	_if rwo.responds_to?(:id)
+	_if rwo.responds_to?(:id) _andif
+	    _not rwo.is_kind_of?(sw_cim_value_holder)
 	_then 
 		_for stored_rwo, stored_id _over _self.ids.fast_keys_and_elements()
 		_loop
