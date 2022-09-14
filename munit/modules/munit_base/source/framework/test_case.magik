@@ -737,3 +737,23 @@ _method test_case.result_failures_of_type(a_type)
 	_return l_vec	
 _endmethod
 $
+
+_pragma(classify_level=debug, topic={MUnit})
+_method test_case.stub_shared_methods()
+	##
+	##
+	
+	stub_method_helper.replace_method(
+		dd_table,
+		:shared?,
+		_proc() _return _false _endproc
+			   )
+	
+	stub_method_helper.replace_method(
+		dd_field_type,
+		:shared?,
+		_proc() _return _false _endproc
+			   )
+	
+_endmethod
+$
