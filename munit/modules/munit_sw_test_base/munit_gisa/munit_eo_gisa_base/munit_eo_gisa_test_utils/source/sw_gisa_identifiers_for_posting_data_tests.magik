@@ -21,6 +21,12 @@ _pragma(classify_level=debug)
 ## class should only be used when really needed (that is data is being posted and then
 ## exported again.)
 ##
+## The class is also capable to deal with objects created and
+## then deleted in the same design. In order to that the ids
+## property has to store a mapping between a plain id of the
+## deleted object and the assigned deterministic id, e.g.
+## db_id -> deterministic_id_1 , instead of using the rwo as a key.
+##
 ## To register IDs for records, set the IDS shared variable on this class. This
 ## should be an equality_hash_table which maps an RWO to an identifier.
 ##
@@ -48,17 +54,16 @@ _method sw_gisa_identifiers_for_posting_data_tests.collection_unique_id_for_rwo(
 	## deterministic across test runs and posting of data
 	##
 	_local id << _unset
-	
 	# Check using source collection and ID for records
 	_if rwo.responds_to?(:id) _andif
 	    _not rwo.is_kind_of?(sw_cim_value_holder)
-	_then 
+	_then		
 		_for stored_rwo, stored_id _over _self.ids.fast_keys_and_elements()
 		_loop
-			_if stored_rwo.is_valid? _andif
-				stored_rwo.responds_to?(:id) _andif
-				stored_rwo.id = rwo.id _andif 
-				stored_rwo.source_collection.name = rwo.source_collection.name
+			_if stored_rwo.responds_to?(:id) _andif
+			    stored_rwo.is_valid? _andif			    
+			    stored_rwo.id = rwo.id _andif 
+			    stored_rwo.source_collection.name = rwo.source_collection.name
 			_then
 				id << stored_id
 				_leave
@@ -66,15 +71,21 @@ _method sw_gisa_identifiers_for_posting_data_tests.collection_unique_id_for_rwo(
 		_endloop
 	_else
 		id << _self.ids[rwo]
-	_endif
-	
-	# Finally, if not found, return the records actual ID
-	# .perform() is used to enable calling this method with sw_cim_value_holder as parameter
+	_endif	
+
 	_if id _is _unset
 	_then
-		id << rwo.perform(:key_value|()|).an_element()
+		id << rwo.perform(:key_value|()|).an_element() # .perform() is used to enable calling this method with sw_cim_value_holder as parameter
 	_endif
 
+	# Check for stored plain ids in case of objects which has been
+	# created and then deleted in the same design.
+	_if (deleted_id << _self.ids[id]) _isnt _unset
+	_then
+		_return deleted_id
+	_endif	
+
+	# Finally, if not found, return the records actual ID
 	_return id
 _endmethod
 $
@@ -89,17 +100,23 @@ _method sw_gisa_identifiers_for_posting_data_tests.unique_id_for_node(p_node)
 	# Check for nodes using the node ID
 	_for stored_rec, stored_id _over _self.ids.fast_keys_and_elements()
 	_loop
-		_if stored_rec.is_valid? _andif
-			stored_rec.source_collection.name _is :sw_gis!node _andif
-			stored_rec.node_id.unique_id = p_node.node_id.unique_id
+		_if stored_rec.is_kind_of?(node) _andif
+		    stored_rec.is_valid? _andif		    
+		    stored_rec.node_id.unique_id = p_node.node_id.unique_id
 		_then
 			_return stored_id
-		_endif 
+		_endif
 	_endloop
 
+	# Check for stored plain ids in case of objects which has been
+	# created and then deleted in the same design.
+	_if (new_node_id << _self.ids[p_node.node_id.unique_id]) _isnt _unset
+	_then
+		_return new_node_id
+	_endif
+	
 	# Fallback to returning the nodes actual ID
 	_return p_node.node_id.unique_id
-
 _endmethod
 $
 
