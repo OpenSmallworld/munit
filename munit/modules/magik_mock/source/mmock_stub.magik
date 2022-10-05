@@ -18,10 +18,11 @@ _endmethod
 $
 
 _method mmock_stub.init(obj)
-	_if obj.method_table.source_module _isnt _unset 
-	_then 
+	(v, ex?)<< get_global_value(obj.class_name)
+	_if v _isnt _unset _andif ex?
+	_then
 		error_str << write_string("Stubbing a method directly on a real class leads to intermittent test failures.  Methods should only be stubbed on mocked classes.  ",
-			obj, " is a real class")
+			obj, " is a real class defined in " , v.method_table.source_module)
 		condition.raise(:error, :string, error_str)
 	_endif
 	.object << obj
