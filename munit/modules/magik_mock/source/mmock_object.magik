@@ -129,12 +129,19 @@ def_slotted_exemplar(:mmock_object,
 $
 
 _method mmock_object.mmock!new_mock_object(name, _optional super_class)
-	
 	_if name.as_symbol() _is super_class.class_name
 	_then 
-		error_str << write_string("Mocking a class with the same name as the parent class causes intermittent test failures - ", name, " - ", super_class.class_name)
+		error_str << write_string("Mocking a class with the same name as the parent class causes intermittent test failures. Name: ",
+					  name, ", parent class: ", super_class.class_name, " defined in ", v.method_table.source_module)
 		condition.raise(:error, :string, error_str)
 	_endif
+	(v, ex?)<< get_global_value(name)
+	_if v _isnt _unset _andif ex?
+	_then
+		error_str << write_string("Mocking a class with the same name as an existing class causes intermittent test failures. Name: ",
+					  name, ", existing class: ", v.class_name , " defined in ", v.method_table.source_module)
+		condition.raise(:error, :string, error_str)
+	_endif 
 
 	super_method_tables <<
 		_if super_class _is _unset
