@@ -9,9 +9,24 @@ _proc @mock (name, _optional super_class)
 _endproc
 $
 
-
 _global stub <<
 _proc @stub (obj) 
 	_return mmock_stub.new(obj)
+_endproc
+$
+
+_global replace_method<< 
+_proc @replace_method(class, method_name, method_proc)
+	>> stub_method_helper.replace_method(class, method_name, method_proc)
+_endproc
+$
+
+_global replace_method_returning<< 
+_proc @replace_method_returning(class, method_name _gather return_values)
+	returning_proc<< _proc @returning_proc()
+			   _import return_values
+			   >> _scatter return_values
+		   _endproc
+	>> stub_method_helper.replace_method(class, method_name, returning_proc)
 _endproc
 $
