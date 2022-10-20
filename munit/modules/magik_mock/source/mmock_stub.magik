@@ -18,16 +18,19 @@ _endmethod
 $
 
 _method mmock_stub.init(obj)
-	_try 
-		(v, ex?)<< get_global_value(obj.class_name)
-	_when no_such_package
-	_endtry 
-	_if v _isnt _unset _andif ex?
-	_then
-		error_str << write_string("Stubbing a method directly on a real class leads to intermittent test failures.  Methods should only be stubbed on mocked classes.  ",
-			obj, " is a real class defined in " , v.method_table.source_module)
-		condition.raise(:error, :string, error_str)
-	_endif
+	_if !strict_mocking?! _is _true
+	_then 
+		_try 
+			(v, ex?)<< get_global_value(obj.class_name)
+		_when no_such_package
+		_endtry 
+		_if v _isnt _unset _andif ex?
+		_then
+			error_str << write_string("Stubbing a method directly on a real class leads to intermittent test failures.  Methods should only be stubbed on mocked classes.  ",
+						  obj, " is a real class defined in " , v.method_table.source_module)
+			condition.raise(:error, :string, error_str)
+		_endif
+	_endif 
 	.object << obj
 	>> _self 
 _endmethod
