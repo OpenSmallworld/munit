@@ -22,6 +22,12 @@ eo_gisa_base_test_case.define_shared_constant( :max_attempts_for_frozen_file, 20
 $
 
 _pragma(classify_level=debug)
+## Max wait attempts when trying to populate lists 
+## in schematic validator dialog.
+eo_gisa_base_test_case.define_shared_constant( :max_wait_for_populate_lists, 20, :private )
+$
+
+_pragma(classify_level=debug)
 ## This shared constant controls if temp folder created for
 ## currently running test will be deleted in tear down
 ## process.
@@ -1035,6 +1041,18 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 		sv.action(:schematic_chooser).value << schematic
 		sv.action(:source_chooser).value << :design_changes
 		sv.populate_lists()
+
+		#Wait for the task to finish
+		_over 1.upto( _self.max_wait_for_populate_lists )
+		_loop
+			_if sv.sys!slot(:run_task) _isnt _unset _andif
+			    sv.sys!slot(:run_task).status _is :running
+			_then
+				_thisthread.sleep(1000)
+			_else
+				_leave
+			_endif
+		_endloop	
 
 		stub_method_helper.replace_method(sv.sys!perform(:schematic_engine), :|update_schematic()|,
 						  _proc (objects, schematic)
