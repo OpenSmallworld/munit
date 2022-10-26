@@ -151,7 +151,8 @@ _method remote_test_server.listen(queue)
 		_when error
 			show("Error getting client: ", cond.report_contents_string)
                 _endtry
-
+		
+		show(:client, client)
                 _if client _is _unset
 		_then
 			queue.put(:done)
@@ -177,15 +178,18 @@ _pragma(classify_level=debug)
 _private _method remote_test_server.send_test_to_client(client)
 	## 
 	##
-
+	
+	show(:send_test_to_client, client)
 	done? << _false
 	_try
 
 		nchars         << client.input.get_signed_int()
 		client_step_id << client.input.get_ascii_chars(nchars)
+		show(:send_test_to_client, client_step_id, .step_id)
 		_if client_step_id = .step_id
 		_then 
 			test  << _self.get_test_to_run()
+			show(:test, test)
 			done? << test _is :done
 		
 			_if test _isnt :done
@@ -203,6 +207,7 @@ _private _method remote_test_server.send_test_to_client(client)
 				_self.send_name_to_client(test_name, client)
 				
 				.machine_mapping[test_name] << system.get_host_by_addr(client.remote_address).an_element()
+				show(:send_test_to_client, test_name, .machine_mapping[test_name], .remote_tests)
 				
 			_else
 				_self.send_name_to_client("done", client)
@@ -217,6 +222,8 @@ _private _method remote_test_server.send_test_to_client(client)
 			_self.return_test_to_queue(test)
 		_endif
 	_endtry
+	
+	show(:done?, done?)
 
 	>> done?
 	

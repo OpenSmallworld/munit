@@ -554,14 +554,14 @@ _private _method qm_routine_test_mixin.int!make_mock_rwo(collection_name, field_
 	##
 
 	a_mock_rwo << mock(collection_name)
-	a_coll << mock(:collection)
+	a_coll << mock(:collection1)
 	stub(a_coll).name.then_return(collection_name)
 	stub(a_mock_rwo).source_collection.then_return(a_coll)
 
 	_for key,value _over field_values.fast_keys_and_elements()
 	_loop
 		# Make mock field object
-		field << mock(:field)
+		field << mock(:field1)
 		stub(field).external_name.then_return(key)
 		stub(a_mock_rwo).field(key).then_return(field)
 		stub(a_mock_rwo).perform(key).then_return(value)

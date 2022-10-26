@@ -133,7 +133,7 @@ _private _method remote_test_runner.get_new_test(address, port, step_id)
 		
 		module_name << :done
 		connection  << _self.connect(address, port)
-
+		
 		_if connection _isnt _unset
 		_then
 
@@ -152,7 +152,7 @@ _private _method remote_test_runner.get_new_test(address, port, step_id)
 					test_name << _self.get_name_from_connection(connection)
 				_endif
 			_when error
-				show("Got: ", module_name, test_name)
+				show("Got: ", module_name, test_name, error_variable.report_contents_string)
 				_if module_name _isnt :done
 				_then
 					show("Problem getting new test: ", error_variable.report_contents_string)
