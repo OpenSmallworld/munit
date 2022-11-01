@@ -75,8 +75,12 @@ _method sw_job_server_test_mixin.given_job_engine_is_stopped()
 	_while job_server_framework.job_server.running?
 	_loop
 		_thisthread.sleep(100)
-	_endloop 
-
+	_endloop
+	
+	# Wait for the job server to update the log with information that it was
+	# stopped. 
+	_thisthread.yield_processor()
+	
 	_return _self
 _endmethod
 $
