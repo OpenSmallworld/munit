@@ -172,6 +172,12 @@ _method sw_job_server_test_mixin.get_last_four_entries_from_job_server_log_file(
 
 	stream << log_manager.get_loggers[:job_server].sys!slot(:logger).sys!slot(:stream)
 	stream.sys!slot(:stream).flush()
+
+	# Wait a second to let all log content be correctly written to
+	# a file by OS.
+	_thisthread.yield_processor()
+	_thisthread.sleep(1000)
+	
 	current_file << stream.sys!slot(:current_file)
 	
 	four_lines << rope.new()
