@@ -41,18 +41,6 @@ design_manager_system_test_mixin.define_shared_constant( :number_of_steps_to_pos
 $
 
 _pragma(classify_level=debug)
-_method design_manager_system_test_mixin.given_no_active_design()
-	## 
-	##
-	
-	swg_dsn_admin_engine.clear_current_design()
-
-	>> _self
-	
-_endmethod
-$
-
-_pragma(classify_level=debug)
 _method design_manager_system_test_mixin.given_a_state_model( state_model_name )
 	##
 	## STATE_MODEL_NAME is the name of the state model you want to
