@@ -161,7 +161,6 @@ _method sw_job_server_test_mixin.then_log_content_is_correct(file_name)
 	# last 4 lines of log in iterations.
 	iteration << 0
 	_loop
-		current_cond << 
 		_try _with cond
 			act_json << _self.get_last_four_entries_from_job_server_log_file()
 			_self.assert_json_file(file_name, act_json, "Log is incorrect: #1")
@@ -193,7 +192,6 @@ _method sw_job_server_test_mixin.get_last_four_entries_from_job_server_log_file(
 
 	stream << log_manager.get_loggers[:job_server].sys!slot(:logger).sys!slot(:stream)
 	stream.sys!slot(:stream).flush()
-
 	current_file << stream.sys!slot(:current_file)
 	
 	four_lines << rope.new()
