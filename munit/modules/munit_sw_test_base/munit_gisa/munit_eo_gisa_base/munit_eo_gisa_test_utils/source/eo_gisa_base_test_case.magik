@@ -1020,6 +1020,9 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 	stub_method_helper.replace_method(sv, :|initialise_results()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|changed()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|set_progress_counts()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|set_update_progress()|, _proc(percent) _endproc )
+	stub_method_helper.replace_method(sv, :|set_update_label()|, _proc(string) _endproc )
+	stub_method_helper.replace_method(sv, :|prepare_to_run_transactions()|, _proc(trans) _endproc )
 	
 	_self.properties[:schematic_update_transactions] << transactions << rope.new()
 
@@ -1054,6 +1057,7 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 						  _endproc)
 		
 		sv.update()
+		_self.wait_for_task_to_complete(:|update_schematic()|)	
 		transactions.add(sv.sys!slot(:transaction))
 	_endloop
 
