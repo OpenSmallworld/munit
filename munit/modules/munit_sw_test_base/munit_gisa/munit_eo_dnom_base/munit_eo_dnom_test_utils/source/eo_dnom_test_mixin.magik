@@ -115,9 +115,13 @@ _method eo_dnom_test_mixin.create_station_export_request()
 	request.set_property( :export_schematics?,
 			      _self.properties[:export_schematics?].default(_true) )
 
-	# export future network during tests
-	request.set_property( :export_future_network?,
-			      _self.properties[:export_future_network?].default(_false) )
+	# Override export future network property if needed.
+	_if _self.properties[:export_future_network?] _isnt _unset
+	_then 
+		request.set_property(:export_future_network?,
+				     _self.properties[:export_future_network?])
+	_endif
+	
 	_return request 
 _endmethod
 $
@@ -703,7 +707,10 @@ _method eo_dnom_test_mixin.resource_path
 	## Return resource path.
 	## 
 
-	_if _self.use_config_in_resource_path?
+	_if (subfolder_name << _self.properties[:resources_subfolder_name]) _isnt _unset 
+	_then
+		_return "data" + system.pathname_separator + subfolder_name
+	_elif _self.use_config_in_resource_path?
 	_then
 		config_name << sw_dnom_properties_helper.default_config_name
 		subfolder_name << system.validate_as_file_name(config_name).substitute_character(%space, %_)
@@ -712,6 +719,19 @@ _method eo_dnom_test_mixin.resource_path
 	_else
 		_return "data"
 	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_resources_subfolder_name(name)
+	##
+	## Sets the name of subfolder in resources for golden file
+	## comparision.
+	## 
+
+	_self.properties[:resources_subfolder_name] << name
+	
+	_return _self 
 _endmethod
 $
 
