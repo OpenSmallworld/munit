@@ -998,7 +998,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional schematic_names, set_deterministic_ids?)
+_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional schematic_names, set_deterministic_ids?, wait_time)
 	##
 	## Updates all schematics that are exported to DNOM for all
 	## records changed in the design.
@@ -1011,7 +1011,10 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 	##                          set for schematic objects after
 	##                          schematic update (default is _true). 
 	##
-	
+	## WAIT_TIME       - max time to wait for tasks to finish in ms
+	##                   (defaults to 30000 ms)
+	##
+
 	sv << _self.get_schematic_validation_tool()
 
 	stub_method_helper.replace_method(sv, :|show_alert()|, _proc () _endproc)
@@ -1038,18 +1041,21 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 		sv.action(:schematic_chooser).value << schematic
 		sv.action(:source_chooser).value << :design_changes
 		sv.populate_lists()
-		_self.wait_for_task_to_complete(:|sources_for_schematic()|)	
+		_self.wait_for_task_to_complete(:|sources_for_schematic()|, wait_time)	
 
 		# Wait in a loop for a real end of processing in
 		# schematic_validator_tool. This is done because
 		# processing is actually done in two tasks and above
 		# line does not guarantee that it is finished.
+		time_spent << 0
 		_loop
-			_if sv.sys!slot(:run_task).completed?
+			_if sv.sys!slot(:run_task).completed? _orif
+			    time_spent > wait_time.default(30000)
 			_then
 				_leave
 			_endif
-			_thisthread.sleep(100)
+			_thisthread.sleep(200)
+			time_spent +<< 200
 		_endloop
 		
 		stub_method_helper.replace_method(sv.sys!perform(:schematic_engine), :|update_schematic()|,
@@ -1069,7 +1075,7 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 						  _endproc)
 		
 		sv.update()
-		_self.wait_for_task_to_complete(:|update_schematic()|)	
+		_self.wait_for_task_to_complete(:|update_schematic()|, wait_time)	
 		transactions.add(sv.sys!slot(:transaction))
 	_endloop
 
