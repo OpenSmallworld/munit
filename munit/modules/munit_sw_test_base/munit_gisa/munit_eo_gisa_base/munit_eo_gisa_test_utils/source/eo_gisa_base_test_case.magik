@@ -1047,11 +1047,14 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 		# threads started in schematic_validator_tool.
 		time_spent << 0
 		_loop
+			_thisthread.yield_processor()
+			
 			_if sv.action(:run).activate_selector = :populate_lists|()| _orif
 			    time_spent > wait_time.default(30000)
 			_then	
 				_leave
 			_endif
+			
 			_thisthread.sleep(200)
 			time_spent +<< 200
 		_endloop
