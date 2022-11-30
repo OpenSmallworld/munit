@@ -1043,17 +1043,18 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 		sv.populate_lists()
 		_self.wait_for_task_to_complete(:|sources_for_schematic()|, wait_time)	
 
-		# Wait in a loop for a real end of processing in
-		# schematic_validator_tool. This is done because
-		# processing is actually done in two tasks and above
-		# line does not guarantee that it is finished.
+		# Wait for 'Run' button to be enabled in case there are 2
+		# threads started in schematic_validator_tool.
 		time_spent << 0
 		_loop
-			_if sv.sys!slot(:run_task).completed? _orif
+			_thisthread.yield_processor()
+			
+			_if sv.action(:run).activate_selector = :populate_lists|()| _orif
 			    time_spent > wait_time.default(30000)
-			_then
+			_then	
 				_leave
 			_endif
+			
 			_thisthread.sleep(200)
 			time_spent +<< 200
 		_endloop
