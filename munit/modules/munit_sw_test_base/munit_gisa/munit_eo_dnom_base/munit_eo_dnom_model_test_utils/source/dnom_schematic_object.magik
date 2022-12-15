@@ -2,12 +2,19 @@
 _package sw
 
 _pragma(classify_level=debug)
+## An adhoc object with an aim to represent dnom schematic objects from the xml.
+## The object itself does not provides any additional contrains, it purpose is
+## to store various values from the dnom object, with an ease and with a basic
+## validation of existing fields, e.g. dnom_schematic.not_existing_field, 
+## should at least result with a tb.
+## Also used to store some metadata with properties starting at int!.
 def_indexed_exemplar(:dnom_schematic_object, _unset, :pseudo_slotted_list)
 $
 
 _pragma(classify_level=debug)s
 _method dnom_schematic_object.show_on(a_stream)
-	## displays class name and size
+	## Defines a more readable object, and fixes an iisue with a default
+	## show_on which tries toaccess size not avaialble on teh exemplar.
 	tag << _if (xml << _self[:int!xml]) _isnt _unset
 	       _then
 		       >> xml.type

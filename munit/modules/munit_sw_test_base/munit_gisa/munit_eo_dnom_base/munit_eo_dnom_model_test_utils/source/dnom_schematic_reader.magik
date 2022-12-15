@@ -4,14 +4,19 @@ _package sw
 _pragma(classify_level=debug)
 def_slotted_exemplar(:dnom_schematic_reader,
 	##
+	## Reads given DNOM XML with a schematic and creates
+	## an object model using dnom_schematic_objects.
+	##
+	## api: dnom_schematic_reader.new(FILEPATH)
+	## 
 	{
 		{:filepath, _unset},
 		{:xml, _unset},
-		{:types, _unset}, # DNOM types read from the XSD
-		{:refs, _unset}, # stores dnom reference objects keys by dnom_obj_id
-		{:connections, _unset}, # stores sets of object at common coordinates
+		{:types, _unset}, # DNOM types read from the XSD from the sw_dnom_model
+		{:refs, _unset}, # stores dnom reference objects keys by the dnom_obj_id
+		{:connections, _unset}, # stores sets of dnom_obj_ids grouped (connected) with a common coordinate
 		{:substation, _unset} # link to the top level element of the scehamtic model (skips the distribution system as irrelevant)
-	}, :assert )
+	}, _unset )
 $
 
 _pragma(classify_level=debug)
@@ -28,6 +33,10 @@ $
 
 _pragma(classify_level=restricted)
 _method dnom_schematic_reader.magik_name(xml_name)
+	##
+	## Returns a lower cased magik symbol from the given XML_NAME
+	## e.g. maps ReferenceObject to :reference_object for easier
+	## interaction with dnom_schematic_objects
 	##
 	_constant mapping <<
 		equality_property_list.new_with(
@@ -71,6 +80,7 @@ _method dnom_schematic_reader.new(filepath)
 	## 
 	## Create a new instance of the class that will read the XML
 	## file from the FILEPATH
+	## Caches the DNOM model from the XSD.
 	##
 	copy << _clone
 	_if .types _is _unset
@@ -83,7 +93,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method dnom_schematic_reader.read_file(filepath, types)
+_private _method dnom_schematic_reader.read_file(filepath, types)
 	##
 	.types << types
 	.filepath << filepath
@@ -96,6 +106,8 @@ $
 
 _pragma(classify_level=debug)
 _method dnom_schematic_reader.xml_substation
+	##
+	## Return simpole_xml_element for the substation
 	##
 	distribution_system << .xml.top_element
 	_if _self.assert_not_unset(distribution_system, "Cannot read DistributionSystem from the file")
