@@ -566,10 +566,8 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optiona
 		_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
 		reference_ortho_schematic << schem_ref_file_name + "_schem_ortho.xml"	
 		reference_geo_schematic << schem_ref_file_name + "_schem_geo.xml"
-		_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1])
-		_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2])
-		_self.compare_using_dsr(reference_geo_schematic, written_dss[1])
-		_self.compare_using_dsr(reference_ortho_schematic, written_dss[2])
+		_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], _true)
+		_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], _true)
 	_else
 		_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
 	_endif
@@ -605,7 +603,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.assert_xml_files_equals( reference_filename , actual_pathname )
+_method eo_dnom_test_mixin.assert_xml_files_equals( reference_filename , actual_pathname, _optional using_dnom_schematic_comparator? )
 	##
 	## Assert if ACTUAL_PATHNAME (full path and file name) is equivalent to
 	## the REFERENCE_FILENAME that is stored in the resources directory of this
@@ -615,21 +613,26 @@ _method eo_dnom_test_mixin.assert_xml_files_equals( reference_filename , actual_
 	# Forward directly to int!assert_xml_files_equals().
 	# The implementation isn't inlined here so that we can inject the golden file
 	# canonicalizer when we need it.
-	_self.int!assert_xml_files_equals( reference_filename , actual_pathname )
+	_self.int!assert_xml_files_equals( reference_filename , actual_pathname, using_dnom_schematic_comparator? )
 	
 _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.int!assert_xml_files_equals( reference_filename , actual_pathname )
+_method eo_dnom_test_mixin.int!assert_xml_files_equals( reference_filename , actual_pathname, using_dnom_schematic_comparator? )
 	## 
 	##
-	(same_file?, report_file) << _self.compare_xml_files(reference_filename , actual_pathname)
-	
-	desc << write_string( "The output file doesn't match the reference file: ",
-			      reference_filename, "See details here: ", report_file )
-
-	_self.assert_true( same_file?, desc )	
+	_if using_dnom_schematic_comparator? _isnt _true
+	_then
+		(same_file?, report_file) << _self.compare_xml_files(reference_filename , actual_pathname)
+		
+		desc << write_string( "The output file doesn't match the reference file: ",
+				      reference_filename, "See details here: ", report_file )
+		
+		_self.assert_true( same_file?, desc )
+	_else
+		_self.compare_using_dnom_schematic_comparator(reference_filename, actual_pathname)
+	_endif	
 _endmethod
 $
 
@@ -642,7 +645,7 @@ eo_dnom_test_mixin.define_shared_variable( :save_differing_xml_files_dir, _unset
 $
 
 _pragma(classify_level=debug)
-_private _method eo_dnom_test_mixin.compare_using_dsr(reference_filename, actual_pathname)
+_private _method eo_dnom_test_mixin.compare_using_dnom_schematic_comparator(reference_filename, actual_pathname)
 	##
 	expected_pathname << smallworld_product.get_resource_file( reference_filename,
 								   _self.resource_path,
