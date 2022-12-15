@@ -1,4 +1,4 @@
-#% text_encoding = iso8859_1
+ #% text_encoding = iso8859_1
 ##
 _package sw
 
@@ -172,7 +172,7 @@ _method xml_file_comparator_test.test_line_node_order_diffrent1()
 	_self.
 		given_compared_files("compare_line_node_order01.xml", "compare_line_node_order02.xml").
 		when_the_files_are_compared_for_type("dnom").
-		then_the_result_is(_false)
+		then_the_result_is(_true)
 _endmethod
 $
 
@@ -194,7 +194,7 @@ _method xml_file_comparator_test.test_line_node_order_the_same()
 	_self.
 		given_compared_files("compare_line_node_order01.xml", "compare_line_node_order04.xml").
 		when_the_files_are_compared_for_type("dnom").
-		then_the_result_is(_true)
+		then_the_result_is(_false)
 _endmethod
 $
 
