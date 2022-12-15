@@ -568,6 +568,8 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optiona
 		reference_geo_schematic << schem_ref_file_name + "_schem_geo.xml"
 		_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1])
 		_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2])
+		_self.compare_using_dsr(reference_geo_schematic, written_dss[1])
+		_self.compare_using_dsr(reference_ortho_schematic, written_dss[2])
 	_else
 		_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
 	_endif
@@ -637,6 +639,17 @@ _pragma(classify_level=restricted)
 ## makes the files easier to find and analyse, rather than looking through the
 ## temp directory.
 eo_dnom_test_mixin.define_shared_variable( :save_differing_xml_files_dir, _unset, :public )
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_test_mixin.compare_using_dsr(reference_filename, actual_pathname)
+	##
+	expected_pathname << smallworld_product.get_resource_file( reference_filename,
+								   _self.resource_path,
+								   _self.module_name )
+	_self.properties[:dsr] <<
+		dnom_schematic_comparator.compare_files(expected_pathname, actual_pathname)
+_endmethod
 $
 
 _pragma(classify_level=debug)
