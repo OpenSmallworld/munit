@@ -1,0 +1,270 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+def_indexed_exemplar(:dnom_schematic_object, _unset, :pseudo_slotted_list)
+$
+
+_pragma(classify_level=debug)
+## A newly defined exemplar has zero elements, which breaks its
+## .size method, breaking the default write_on.
+## Use a new instance with 10 elements to fix it.
+dnom_schematic_object.new().become_exemplar()
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_object.show_on(a_stream)
+	## displays class name and size
+	tag << _if (xml << _self[:int!xml]) _isnt _unset
+	       _then
+		       >> xml.type
+	       _else
+		       >> :unknown_tag
+	       _endif
+
+	id << _if _self[:dnom_obj_id] _isnt _unset
+	      _then
+		      >> write_string(":(", _self[:dnom_obj_id], %))
+	      _elif _self[:id] _isnt _unset
+	      _then		      
+		      >> write_string(":(", _self[:id], %))
+	      _else
+		      >> ""
+	      _endif	
+	
+	a_stream.write(_self.class_name, "<", tag, ">", id )
+_endmethod
+$
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:dnom_schematic_reader,
+	##
+	{
+		{:filepath, _unset},
+		{:xml, _unset},
+		{:types, _unset}, # DNOM types read from the XSD
+		{:refs, _unset}, # stores dnom reference objects keys by dnom_obj_id
+		{:connections, _unset}, # stores sets of object at common coordinates
+		{:substation, _unset} # link to the top level element of the scehamtic model (skips the distribution system as irrelevant)
+	}, :assert )
+$
+
+_pragma(classify_level=debug)
+dnom_schematic_reader.define_slot_access(:substation, :read, :public)
+$
+
+_pragma(classify_level=debug)
+dnom_schematic_reader.define_slot_access(:refs, :read, :public)
+$
+
+_pragma(classify_level=debug)
+dnom_schematic_reader.define_slot_access(:connections, :read, :public)
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_reader.magik_name(xml_name)
+	##
+	_constant mapping <<
+		equality_property_list.new_with(
+			"Id", :id,
+			"Name", :name,
+			"Substation", :substation,
+			"DnomObjId", :dnom_obj_id,
+			"ObjectType", :object_type,
+			"SymbolPlacement", :symbol_placement,
+			"GeometryType", :geometry_type,
+			"X", :x,
+			"Y", :y,
+			"Rotation", :rotation,
+			"ReferenceObject", :reference_object,
+			"PolyPlacement", :poly_placement,
+			"Vertex", :vertex,
+			"LabelPlacement", :label_placement,
+			"Text", :text,
+			"CharacterRotation", :character_rotation,
+			"ConnectionPoint", :connection_point,
+			"PolyVertex", :poly_vertex,
+			"xs:string", :string,
+			"xs:double", :string,
+			"xs:int", :string,
+			"eLablePlacementConnectionPoint", :string,
+			"PointPlacement", :point_placement
+			)
+	mapped << mapping[xml_name]
+	_if mapped _is _unset
+	_then
+		msg << write_string("Unknown xml to magik name mapping for ", xml_name)
+		_self.assert_not_unset(mapped, msg)
+		condition.raise(:error, :string, msg)
+	_endif	
+	_return mapped
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_reader.new(filepath)
+	## 
+	## Create a new instance of the class that will read the XML
+	## file from the FILEPATH
+	##
+	copy << _clone
+	_if .types _is _unset
+	_then
+		.types << dnom_xsd_parser.get_types()
+	_endif
+	copy.read_file(filepath, .types)
+	_return copy
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_reader.read_file(filepath, types)
+	##
+	.types << types
+	.filepath << filepath
+	.xml << simple_xml.read_document_file(.filepath)
+	.refs << equality_hash_table.new()
+	.connections << equality_hash_table.new()
+	_self.read_substation()
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_reader.xml_substation
+	##
+	distribution_system << .xml.top_element
+	_if _self.assert_not_unset(distribution_system, "Cannot read DistributionSystem from the file")
+	_then
+		substation << distribution_system.elements.an_element()
+		_self.assert_not_unset(	substation, "Cannot read Substation from the file")
+		_return substation
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_reader.read_substation()
+	##
+	.substation << _self.read_xml_element(_self.xml_substation, "Substation")
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_reader.read_xml_element(xml_elem, xsd_typename, _optional parent)
+	##
+	object << dnom_schematic_object.new()
+	xml_type << xml_elem.type
+	object[:int!xml] << xml_elem
+	object[:int!xsd_typename] << _self.magik_name(xsd_typename)
+	object[:int!tag_name] << _self.magik_name(xml_elem.type)
+	object[:int!dsr] << _self
+	_if parent _isnt _unset
+	_then
+		object[:int!parent] << parent
+	_endif
+	
+	_for elem _over xml_elem.elements.fast_elements()
+	_loop
+		field_name << elem.type		
+		magik_field_name << _self.magik_name(field_name)
+		field_xsd_typename << .types.data_type_for_field(xsd_typename, field_name)
+		magik_field_xsd_typename << _self.magik_name(field_xsd_typename)
+		
+		_if magik_field_xsd_typename _is :string
+		_then
+			_self.assert_unset(object[magik_field_name], write_string("Duplicated value for ", field_name))
+			object[magik_field_name] << elem.xml_contents
+
+		_elif magik_field_xsd_typename _is :number
+		_then
+			_self.assert_unset(object[magik_field_name], write_string("Duplicated value for ", field_name))
+			object[magik_field_name] << elem.xml_contents.as_number()
+
+		_else
+			method_name << :read_ + magik_field_xsd_typename + :|()| # e.g. read_reference_object()
+			_if _self.responds_to?(method_name)
+			_then
+				complex_object << _self.perform(method_name, elem, object)
+			_else
+				complex_object << _self.read_xml_element(elem, field_xsd_typename, object)
+			_endif
+			object.at_or_new_if_absent(magik_field_name, rope).add_last(complex_object) # assumes that any complex type has more than one entry
+		_endif		
+	_endloop	
+	_return object
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method dnom_schematic_reader.read_reference_object(xml_elem, parent)
+	##
+	ref << _self.read_xml_element(xml_elem, "ReferenceObject", parent)
+	_if .refs.includes_key?(ref.dnom_obj_id)
+	_then
+		condition.raise(:error, :string, "There is an already a reference object with DnomObjId=", ref.dnom_obj_id)
+	_endif	
+	.refs[ref.dnom_obj_id] << ref
+	_return ref
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_reader.read_poly_vertex(xml_elem, parent)
+	##
+	vertex << _self.read_xml_element(xml_elem, "PolyVertex", parent)
+	_if parent.int!parent.int!tag_name _is :substation
+	_then
+		_return vertex
+
+	_else # reference_object
+		ref << parent.int!parent
+		vertex[:int!reference_object] << ref
+		_self.register_connection(vertex, ref)
+	_endif
+	_return vertex
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_reader.read_point_placement(xml_elem, parent)
+	##
+	point << _self.read_xml_element(xml_elem, "PointPlacement", parent)
+	point[:int!reference_object] << parent
+	_self.register_connection(point, parent)
+	_return point
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_reader.register_connection(geo_object, reference_object)
+	##
+	coord << _self.coordinate(geo_object)
+	.connections.at_or_new_if_absent(coord, equality_set).add(reference_object.dnom_obj_id)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_reader.coordinate(object)
+	##
+	x << (object.x.as_number() * 1000).rounded
+	y << (object.y.as_number() * 1000).rounded
+	_return coordinate.new(x,y)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_reader.connected_reference_object_ids(geo_object)
+	##
+	coord << _self.coordinate(geo_object)
+	own_id << geo_object.int!reference_object.dnom_obj_id
+	refs_at_coordinate << .connections[coord]
+	_if refs_at_coordinate _is _unset
+	_then
+		_return equality_set.new()
+	_endif
+	ids << refs_at_coordinate.copy()
+	ids.remove(own_id)
+	_return ids
+_endmethod
+$
+
