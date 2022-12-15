@@ -1,26 +1,26 @@
 package com.gesmallworld.xml_file_comparator;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.Iterable;
-import java.io.FileWriter;
 import java.io.BufferedWriter;
-
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
+
+import org.w3c.dom.Node;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.builder.Input;
+import org.xmlunit.diff.DefaultNodeMatcher;
+import org.xmlunit.diff.Diff;
+import org.xmlunit.diff.Difference; 
+import org.xmlunit.diff.ElementSelector;
+import org.xmlunit.diff.ElementSelectors;
+import org.xmlunit.util.Predicate;
 
 import com.gesmallworld.magik.commons.interop.annotations.ExemplarInstance;
 import com.gesmallworld.magik.commons.interop.annotations.MagikExemplar;
 import com.gesmallworld.magik.commons.interop.annotations.MagikMethod;
 import com.gesmallworld.magik.commons.interop.annotations.Name;
 import com.gesmallworld.magik.interop.MagikInteropUtils;
-
-import org.xmlunit.diff.Diff;
-import org.xmlunit.builder.DiffBuilder;
-import org.xmlunit.builder.Input;
-import org.xmlunit.diff.Difference;
-import org.xmlunit.diff.ElementSelector;
-import org.xmlunit.diff.DefaultNodeMatcher;
-import org.xmlunit.diff.ElementSelectors;
 
 @MagikExemplar( @Name("xml_file_comparator") )
 public class XmlFileComparator {
@@ -32,7 +32,6 @@ public class XmlFileComparator {
 		String filename2 = MagikInteropUtils.fromMagikString( file2 );
 		String fileType = MagikInteropUtils.fromMagikString(filetype);
 		String differenceFileName = MagikInteropUtils.fromMagikString( outputFilename );
-		
 		
 		Object[] compareResult  = compareFiles(filename1, filename2, fileType, differenceFileName);
 		
@@ -54,10 +53,11 @@ public class XmlFileComparator {
 
         Object[] result = new Object[2];
         Diff myDiff = createDiff( filename1 , filename2 , fileType);
-        result[0] = myDiff.hasDifferences() ;
+        Diff geomDiff = createGeometryDiff( filename1 , filename2 , fileType);
+        result[0] = myDiff.hasDifferences() || geomDiff.hasDifferences();
 		
 		
-		if ( myDiff.hasDifferences() ){
+		if ( myDiff.hasDifferences() || geomDiff.hasDifferences()){
 			try{
 				File outputFile = new File(differenceFilePath);
 				outputFile.createNewFile();
@@ -66,6 +66,11 @@ public class XmlFileComparator {
 
 				Iterable<Difference> diffs = myDiff.getDifferences();
 				for (Difference d : diffs){
+					bw.write( d.toString() );
+					bw.newLine();
+				}
+				Iterable<Difference> geomDiffs = geomDiff.getDifferences();
+				for (Difference d : geomDiffs){
 					bw.write( d.toString() );
 					bw.newLine();
 				}
@@ -127,6 +132,39 @@ public class XmlFileComparator {
 					.ignoreWhitespace()
 					.ignoreComments()
 					.checkForSimilar()
+					.withNodeMatcher( new DefaultNodeMatcher( customElementSelector, ElementSelectors.byNameAndText ))
+					.build();
+					
+		return myDiff;
+	}
+	
+	private static Diff createGeometryDiff( String file1 , String file2 , String fileType){
+		
+		// This method creates the difference builder used to check if two xml files are the same.
+		// This method could be extended to include a custom output format in the future
+		
+		/*This gml Custom ElementSelector is used to parse through a xml file which can be up to 4 layers deep.
+		 * Currently it can recognise if elements are the same, even if they are not in the same order.
+		 * It determines if elements are the same by comparing the Name and Text values of the FIRSTIDENTIFIER
+		 * and SECONDIDENTIFIER.
+		 * FIRSTELEMENTNAME and SECONDELEMENTNAME are used to customise what the parent elements of the identifiers are.
+		 */
+		
+		final HashMap<String, String> NAMESPACES = new HashMap<String, String>();
+		NAMESPACES.put("nmm", "http://www.ge.com/nmm");
+		ElementSelector customElementSelector = ElementSelectors.Default;
+		if ( fileType.equals("dnom") ) {
+			ElementSelector byLinePlacement = ElementSelectors.byXPath("./LinePlacement", ElementSelectors.byNameAndText);
+			customElementSelector = byLinePlacement;
+		}
+		
+		Predicate<Node> isElement = node -> node.getNodeName().equals("LinePlacement");
+		Diff myDiff = DiffBuilder.compare( Input.fromFile( file1 ) )
+					.withTest( Input.fromFile( file2 ) )
+					.ignoreWhitespace()
+					.ignoreComments()
+					.checkForIdentical()
+					.withNodeFilter(isElement)
 					.withNodeMatcher( new DefaultNodeMatcher( customElementSelector, ElementSelectors.byNameAndText ))
 					.build();
 					

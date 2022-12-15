@@ -51,7 +51,7 @@
       <attribute name = "Bundle-ManifestVersion" value="2"/>
       <attribute name = "Bundle-Name" value="XML File Comparator"/>
       <attribute name = "Bundle-SymbolicName" value="xml_file_comparator"/>
-      <attribute name = "Import-Package" value="com.gesmallworld.magik.interop;version=&quot;[1.0,2)&quot;,com.gesmallworld.magik.commons.interop.annotations;version=&quot;[1.0,2)&quot;,org.xmlunit,org.xmlunit.builder,org.xmlunit.diff,org.xmlunit.input,javax.xml.bind,javax.xml.bind.annotation.adapters,javax.xml.datatype"/>
+      <attribute name = "Import-Package" value="com.gesmallworld.magik.interop;version=&quot;[1.0,2)&quot;,com.gesmallworld.magik.commons.interop.annotations;version=&quot;[1.0,2)&quot;,org.xmlunit,org.xmlunit.builder,org.xmlunit.diff,org.xmlunit.input,org.xmlunit.util,javax.xml.bind,javax.xml.bind.annotation.adapters,javax.xml.datatype"/>
       <attribute name = "Export-Package" value="com.gesmallworld.xml_file_comparator"/>
       <attribute name = "Bundle-Activator" value="com.gesmallworld.magik.interop.JavaToMagikActivator"/>
     </manifest>
