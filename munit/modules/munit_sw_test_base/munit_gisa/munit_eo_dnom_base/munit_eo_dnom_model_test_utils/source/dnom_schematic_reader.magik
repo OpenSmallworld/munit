@@ -2,41 +2,6 @@
 _package sw
 
 _pragma(classify_level=debug)
-def_indexed_exemplar(:dnom_schematic_object, _unset, :pseudo_slotted_list)
-$
-
-_pragma(classify_level=debug)
-## A newly defined exemplar has zero elements, which breaks its
-## .size method, breaking the default write_on.
-## Use a new instance with 10 elements to fix it.
-dnom_schematic_object.new().become_exemplar()
-$
-
-_pragma(classify_level=debug)
-_method dnom_schematic_object.show_on(a_stream)
-	## displays class name and size
-	tag << _if (xml << _self[:int!xml]) _isnt _unset
-	       _then
-		       >> xml.type
-	       _else
-		       >> :unknown_tag
-	       _endif
-
-	id << _if _self[:dnom_obj_id] _isnt _unset
-	      _then
-		      >> write_string(":(", _self[:dnom_obj_id], %))
-	      _elif _self[:id] _isnt _unset
-	      _then		      
-		      >> write_string(":(", _self[:id], %))
-	      _else
-		      >> ""
-	      _endif	
-	
-	a_stream.write(_self.class_name, "<", tag, ">", id )
-_endmethod
-$
-
-_pragma(classify_level=debug)
 def_slotted_exemplar(:dnom_schematic_reader,
 	##
 	{

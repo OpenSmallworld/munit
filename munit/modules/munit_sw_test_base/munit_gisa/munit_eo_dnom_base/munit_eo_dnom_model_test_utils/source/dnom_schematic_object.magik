@@ -1,0 +1,30 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+def_indexed_exemplar(:dnom_schematic_object, _unset, :pseudo_slotted_list)
+$
+
+_pragma(classify_level=debug)s
+_method dnom_schematic_object.show_on(a_stream)
+	## displays class name and size
+	tag << _if (xml << _self[:int!xml]) _isnt _unset
+	       _then
+		       >> xml.type
+	       _else
+		       >> :unknown_tag
+	       _endif
+
+	id << _if _self[:dnom_obj_id] _isnt _unset
+	      _then
+		      >> write_string(":(", _self[:dnom_obj_id], %))
+	      _elif _self[:id] _isnt _unset
+	      _then		      
+		      >> write_string(":(", _self[:id], %))
+	      _else
+		      >> ""
+	      _endif	
+	
+	a_stream.write(_self.class_name, "<", tag, ">", id )
+_endmethod
+$
