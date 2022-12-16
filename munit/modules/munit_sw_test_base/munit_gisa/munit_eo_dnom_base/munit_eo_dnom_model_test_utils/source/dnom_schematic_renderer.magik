@@ -28,6 +28,8 @@ $
 _pragma(classify_level=restricted)
 _method dnom_schematic_renderer.draw_ortho_goldenfiles()
 	##
+	_self.set_world("MV ortho-schematic")
+	.geoms << equality_geometry_set.new()
 	_for file _over _self.goldenfiles_ortho.fast_elements()
 	_loop
 		write(%newline, "Reading and drawing ", file)
@@ -39,6 +41,8 @@ $
 _pragma(classify_level=restricted)
 _method dnom_schematic_renderer.draw_geo_goldenfiles()
 	##
+	_self.set_world("1 to 1 Geo-schematic")
+	.geoms << equality_geometry_set.new()
 	_for file _over _self.goldenfiles_geo.fast_elements()
 	_loop
 		write(%newline, "Reading and drawing ", file)
@@ -50,6 +54,8 @@ $
 _pragma(classify_level=restricted)
 _method dnom_schematic_renderer.draw_ortho_collapsed_goldenfiles()
 	##
+	_self.set_world("MV ortho-schematic")
+	.geoms << equality_geometry_set.new()
 	_for file _over _self.goldenfiles_ortho_collapsed.fast_elements()
 	_loop
 		write(%newline, "Reading and drawing ", file)
@@ -93,6 +99,7 @@ _private _method dnom_schematic_renderer.setup_drawing()
 	_endif
 	map_mgr << apps[1].component(:maps)
 	map_mgr.add_post_renderer(_self, 0, :post_render_sets)
+	.already_setup? <<  _true
 _endmethod
 $
 
@@ -154,7 +161,7 @@ $
 _pragma(classify_level=restricted)
 _method dnom_schematic_renderer.drawing_coordinates(geo_object)
 	#
-	i << geo_object.x.as_number() * 1000 + 1e5
+	i << geo_object.x.as_number() * 1000 # + 1e5
 	j << geo_object.y.as_number() * 1000
 	_return coordinate.new(i,j)
 _endmethod
@@ -169,29 +176,29 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method dnom_schematic_renderer.draw(do_not_cleanup?)
+_private _method dnom_schematic_renderer.draw(do_not_cleanup?)
 	##
+	_self.setup_drawing()
 	_if do_not_cleanup? _isnt _true
 	_then
 		.geoms << .geoms.new()
-	_endif	
-	_self.setup_drawing()
+	_endif
 	_self.draw_substation(.dsr.substation)
 _endmethod
 $
 	
 _pragma(classify_level=restricted)
-_method dnom_schematic_renderer.draw_substation(substation)
+_private _method dnom_schematic_renderer.draw_substation(substation)
 	##
-	_for label _over substation.label_placement.default({}).fast_elements()
+	_for label _over substation[:label_placement].default({}).fast_elements()
 	_loop
 		_self.draw_label_placement(label)
 	_endloop
-	_for symbol _over substation.symbol_placement.default({}).fast_elements()
+	_for symbol _over substation[:symbol_placement].default({}).fast_elements()
 	_loop
 		_self.draw_symbol_placement(symbol)
 	_endloop
-	_for ref _over substation.reference_object.fast_elements()
+	_for ref _over substation[:reference_object].default({}).fast_elements()
 	_loop
 		_self.draw_reference_object(ref)
 	_endloop	
@@ -201,15 +208,15 @@ $
 _pragma(classify_level=restricted)
 _method dnom_schematic_renderer.draw_reference_object(ref)
 	##
-	_for symbol _over ref.symbol_placement.fast_elements()
+	_for symbol _over ref[:symbol_placement].default({}).fast_elements()
 	_loop
 		_self.draw_symbol_placement(symbol)
 	_endloop
-	_for label _over ref.label_placement.fast_elements()
+	_for label _over ref[:label_placement].default({}).fast_elements()
 	_loop
 		_self.draw_label_placement(label)
 	_endloop
-	_for poly _over ref.poly_placement.fast_elements()
+	_for poly _over ref[:poly_placement].default({}).fast_elements()
 	_loop
 		_self.draw_poly_placement(poly)
 	_endloop	
