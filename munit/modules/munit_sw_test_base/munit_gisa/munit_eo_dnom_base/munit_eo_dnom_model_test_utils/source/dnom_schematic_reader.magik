@@ -6,6 +6,8 @@ def_slotted_exemplar(:dnom_schematic_reader,
 	##
 	## Reads given DNOM XML with a schematic and creates
 	## an object model using dnom_schematic_objects.
+	## Performs basic sanity check of the file by confronting it
+	## with the DNOM model from the XSD.
 	##
 	## api: dnom_schematic_reader.new(FILEPATH)
 	## 
@@ -14,7 +16,7 @@ def_slotted_exemplar(:dnom_schematic_reader,
 		{:xml, _unset},
 		{:types, _unset}, # DNOM types read from the XSD from the sw_dnom_model
 		{:refs, _unset}, # stores dnom reference objects keys by the dnom_obj_id
-		{:connections, _unset}, # stores sets of dnom_obj_ids grouped (connected) with a common coordinate
+		{:connections, _unset}, # stores sets of dnom_obj_ids grouped by common coordinates in order to find connections between objects
 		{:substation, _unset} # link to the top level element of the scehamtic model (skips the distribution system as irrelevant)
 	}, _unset )
 $
@@ -32,11 +34,13 @@ dnom_schematic_reader.define_slot_access(:connections, :read, :public)
 $
 
 _pragma(classify_level=restricted)
-_method dnom_schematic_reader.magik_name(xml_name)
+_private _method dnom_schematic_reader.magik_name(xml_name)
 	##
 	## Returns a lower cased magik symbol from the given XML_NAME
 	## e.g. maps ReferenceObject to :reference_object for easier
-	## interaction with dnom_schematic_objects
+	## interaction with dnom_schematic_objects.
+	## Does not lists all possible names, only ones which are
+	## actually in use in the current DNOM schematic implementation.
 	##
 	_constant mapping <<
 		equality_property_list.new_with(
@@ -93,8 +97,8 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_private _method dnom_schematic_reader.read_file(filepath, types)
-	##
+_method dnom_schematic_reader.read_file(filepath, types)
+	## Use .new()
 	.types << types
 	.filepath << filepath
 	.xml << simple_xml.read_document_file(.filepath)
@@ -105,29 +109,53 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method dnom_schematic_reader.xml_substation
+_private _method dnom_schematic_reader.assert(cond, _gather cause)
 	##
-	## Return simpole_xml_element for the substation
+	## Check if the COND is valid, if not raises an error condition
+	## with strings combined from the CAUSE
 	##
-	distribution_system << .xml.top_element
-	_if _self.assert_not_unset(distribution_system, "Cannot read DistributionSystem from the file")
+	_if _not cond
 	_then
-		substation << distribution_system.elements.an_element()
-		_self.assert_not_unset(	substation, "Cannot read Substation from the file")
-		_return substation
-	_endif 
+		condition.raise(:error, :string, write_string(_scatter cause))
+	_endif	
 _endmethod
 $
 
 _pragma(classify_level=debug)
-_method dnom_schematic_reader.read_substation()
+_private _method dnom_schematic_reader.xml_substation
+	##
+	## Return simple_xml_element for the substation
+	##
+	distribution_system << .xml.top_element
+	_self.assert(distribution_system _isnt _unset, "Cannot read DistributionSystem from the file")
+
+	substation << distribution_system.elements.an_element()
+	_self.assert(substation _isnt _unset, "Cannot read Substation from the file")
+	
+	_return substation	 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method dnom_schematic_reader.read_substation()
+	##
+	## Reads the xml element for the substation, in recursive reads
+	## the whole whole file, field by field using the .read_xml_element()
 	##
 	.substation << _self.read_xml_element(_self.xml_substation, "Substation")
 _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method dnom_schematic_reader.read_xml_element(xml_elem, xsd_typename, _optional parent)
+_private _method dnom_schematic_reader.read_xml_element(xml_elem, xsd_typename, _optional parent)
+	##
+	## Reads and processes the XML_ELEM into dnom_schematic_object.
+	## XSD_TYPENAME is the DNOM type name from the XSD (which sometimes 
+	## differers from teh xml tag name).
+	## For simple types reads the field value into the object,
+	## for complex types calls the read_xml_element in recurvie or
+	## calls a reflective methods in a form read_sometypenema()
+	## with an aim to extend the read_xml_element().
 	##
 	object << dnom_schematic_object.new()
 	xml_type << xml_elem.type
@@ -149,14 +177,13 @@ _method dnom_schematic_reader.read_xml_element(xml_elem, xsd_typename, _optional
 		
 		_if magik_field_xsd_typename _is :string
 		_then
-			_self.assert_unset(object[magik_field_name], write_string("Duplicated value for ", field_name))
+			_self.assert(object[magik_field_name] _is _unset, write_string("Duplicated value for ", field_name))
 			object[magik_field_name] << elem.xml_contents
 
 		_elif magik_field_xsd_typename _is :number
 		_then
-			_self.assert_unset(object[magik_field_name], write_string("Duplicated value for ", field_name))
+			_self.assert(object[magik_field_name] _is _unset , write_string("Duplicated value for ", field_name))
 			object[magik_field_name] << elem.xml_contents.as_number()
-
 		_else
 			method_name << :read_ + magik_field_xsd_typename + :|()| # e.g. read_reference_object()
 			_if _self.responds_to?(method_name)
@@ -165,20 +192,22 @@ _method dnom_schematic_reader.read_xml_element(xml_elem, xsd_typename, _optional
 			_else
 				complex_object << _self.read_xml_element(elem, field_xsd_typename, object)
 			_endif
-			object.at_or_new_if_absent(magik_field_name, rope).add_last(complex_object) # assumes that any complex type has more than one entry
+			object.at_or_new_if_absent(magik_field_name, rope).add_last(complex_object)
 		_endif		
 	_endloop	
 	_return object
 _endmethod
 $
+
 _pragma(classify_level=restricted)
-_method dnom_schematic_reader.read_reference_object(xml_elem, parent)
+_private _method dnom_schematic_reader.read_reference_object(xml_elem, parent)
+	##
+	## Reads RefererenceObject from the xml element.
+	## Stores reference object inunded  the .refs slot.
 	##
 	ref << _self.read_xml_element(xml_elem, "ReferenceObject", parent)
-	_if .refs.includes_key?(ref.dnom_obj_id)
-	_then
-		condition.raise(:error, :string, "There is an already a reference object with DnomObjId=", ref.dnom_obj_id)
-	_endif	
+	_self.assert(_not .refs.includes_key?(ref.dnom_obj_id), "There is an already a reference object with DnomObjId=", ref.dnom_obj_id)
+
 	.refs[ref.dnom_obj_id] << ref
 	_return ref
 _endmethod
@@ -186,7 +215,11 @@ $
 
 
 _pragma(classify_level=restricted)
-_method dnom_schematic_reader.read_poly_vertex(xml_elem, parent)
+_private _method dnom_schematic_reader.read_poly_vertex(xml_elem, parent)
+	##
+	## Reads PolyVertex
+	## If the PolyVertex belongs to a reference object,
+	## then stores adds its coordinates to the .connections.
 	##
 	vertex << _self.read_xml_element(xml_elem, "PolyVertex", parent)
 	_if parent.int!parent.int!tag_name _is :substation
@@ -203,7 +236,10 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method dnom_schematic_reader.read_point_placement(xml_elem, parent)
+_private _method dnom_schematic_reader.read_point_placement(xml_elem, parent)
+	##
+	## Reads PointPlacement (assumed ReferenceObject location) and
+	## stores it in the .connections.
 	##
 	point << _self.read_xml_element(xml_elem, "PointPlacement", parent)
 	point[:int!reference_object] << parent
@@ -213,7 +249,10 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method dnom_schematic_reader.register_connection(geo_object, reference_object)
+_private _method dnom_schematic_reader.register_connection(geo_object, reference_object)
+	##
+	## Takes given GEO_OBJECT (a dnom_shcematic_object with .x and
+	## .y coordinates), and ats the REFERENCE_OBJECT to the common group
 	##
 	coord << _self.coordinate(geo_object)
 	.connections.at_or_new_if_absent(coord, equality_set).add(reference_object.dnom_obj_id)
@@ -221,7 +260,13 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method dnom_schematic_reader.coordinate(object)
+_private _method dnom_schematic_reader.coordinate(object)
+	##
+	## Given dnom_schematic_object with x, y coordinates
+	## converts them to integer value, rounding the number.
+	## Uses integer as these can be compared without any issues,
+	## when the actual coordinates do not matter for the
+	## connectivity validation.
 	##
 	x << (object.x.as_number() * 1000).rounded
 	y << (object.y.as_number() * 1000).rounded
@@ -232,6 +277,9 @@ $
 _pragma(classify_level=restricted)
 _method dnom_schematic_reader.connected_reference_object_ids(geo_object)
 	##
+	## Returs set of DnomObjIds connected with given
+	## dnom_schematic_object with .x and .y coordinates.
+	## Excludes the ReferenceObject to which the given GEO_OBJECT belongs.
 	coord << _self.coordinate(geo_object)
 	own_id << geo_object.int!reference_object.dnom_obj_id
 	refs_at_coordinate << .connections[coord]
