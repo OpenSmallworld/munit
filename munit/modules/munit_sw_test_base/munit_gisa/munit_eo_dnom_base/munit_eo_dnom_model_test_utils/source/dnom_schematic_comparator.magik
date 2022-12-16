@@ -4,9 +4,19 @@ _package sw
 _pragma(classify_level=debug)
 def_slotted_exemplar(:dnom_schematic_comparator,
 	##
+	## Compares two DNOM schematic xml with two main features:
+	## 1. Does not compares object ids. Uses the
+	##    DNOM Obj Id for R comparing Reference Objects.
+	## 2. Does not compares RefereneObject coodinates directly,
+	##    instead checks connectivity between objects, e.g. two
+	##    objects are the same if all of their fields (besied the
+	##    id) are the same and are connected to the same objects.
+	##
+	## API:dnom_schematic_comparator.compare_files()
+	##
 	## The exemplar behaviour is using reflections with
 	## compare_**s() method istead of using an easier readable code
-	## explicitly calling comparison methods.
+	## and explicitly calling comparison methods.
 	## This is done in order to make sure that future changes on the
 	## schematic structure is going to result with at least a
 	## do_not_understand condition, limiting a chance to silently
@@ -15,22 +25,15 @@ def_slotted_exemplar(:dnom_schematic_comparator,
 	{
 		{:expected_filepath, _unset},
 		{:actual_filepath, _unset},
-		{:expected, _unset}, 
-		{:actual, _unset},
-		{:current_path, _unset}
+		{:expected, _unset}, # dnom_schematic_reader from the expected xml (golden file)
+		{:actual, _unset}
 	}, :assert )
 $
 
 _pragma(classify_level=debug)
-#dnom_schematic_comparator.define_slot_access(:substation, :read, :public)
-$
-
-_pragma(classify_level=debug)
-#dnom_schematic_comparator.define_slot_access(:types, :write, :public)
-$
-
-_pragma(classify_level=debug)
 _method dnom_schematic_comparator.compare_files(expected_filepath, actual_filepath)
+	##
+	## Read and compare two files.
 	##
 	.expected_filepath << expected_filepath
 	.actual_filepath << actual_filepath
@@ -46,30 +49,21 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method dnom_schematic_comparator.compare_substations(expected, actual)
+_private _method dnom_schematic_comparator.compare_substations(expected, actual)
 	##
-	_self.compare_fields(expected, actual)
-
-#	_if _not _self.assert_true(actual.symbol_placement.size <= 1, "Expected no more than one symbol placement in substation #1")
-#	_then
-#		_return
-#	_endif	
-#	expected_symbol << expected.symbol_placement.an_element()
-#	actual_symbol << actual.symbol_placement.an_element()
-#	_if expected_symbol _isnt _unset _andif actual_symbol _isnt _unset
-#	_then
-#		_self.compare_fields(expected_symbol, actual_symbol)
-#		_self.assert_equals(1, actual_symbol.vertex.size, "Expected exactly one vertex in substation #1")
-#		expected_vertex << expected_symbol.vertex.an_element()
-#		actual_vertex << actual_symbol.vertex.an_element()
-#		#_self.compare_fields(expected_vertex, actual_vertex) # exact substation x,y comparison
-#		_self.compare_fields(expected_vertex, actual_vertex, _true) # dont care about substation x,y
-#	_endif	
+	_self.compare_fields(expected, actual)	
 _endmethod
 
 
 _pragma(classify_level=debug)
-_method dnom_schematic_comparator.compare_fields(expected, actual, _optional skip_xy?)
+_private _method dnom_schematic_comparator.compare_fields(expected, actual, _optional skip_xy?)
+	##
+	## Compares fields on the given EXPECTED and ACTUAL dnom_schematic_objects.
+	## In case of simple fields (string, numbers) compares values directly.
+	## For complex types perform methods named in a form compare_TAG_NAME_objects(),
+	## e.g. compare_label_placement_objects()
+	## Assumes that all properties of the dnom_schematic_object are
+	## to be compared, exluding the meta ones starting with :int!
 	##
 	expected_type << expected.int!tag_name
 
@@ -92,7 +86,7 @@ _method dnom_schematic_comparator.compare_fields(expected, actual, _optional ski
 			# Listed types should the same number of elements
 			_if _self.assert_equals(expected_value.size, actual_value.size, expected, "wrong number of elements", field_name)
 			_then
-				cmp_method << :compare_fields_on_tag_ + field_name.with_parentheses
+				cmp_method << :compare_ + field_name + :|_objects()|
 				_self.perform(cmp_method, expected_value, actual_value)
 			_endif			
 		_else
@@ -103,7 +97,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method dnom_schematic_comparator.assert_equals(expected, actual, object, reason, field)
+_private _method dnom_schematic_comparator.assert_equals(expected, actual, object, reason, field)
 	##
 	_if expected = actual
 	_then
@@ -115,7 +109,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method dnom_schematic_comparator.compare_fields_on_tag_symbol_placement(expected_symbols, actual_symbols)
+_method dnom_schematic_comparator.compare_symbol_placement_objects(expected_symbols, actual_symbols)
 	##
 	expected_symbol_placement << expected_symbols.an_element()
 	_if expected_symbols.size >1
@@ -124,7 +118,9 @@ _method dnom_schematic_comparator.compare_fields_on_tag_symbol_placement(expecte
 	_endif
 	actual_symbol_placement << actual_symbols.an_element()	
 	_self.compare_fields(expected_symbol_placement, actual_symbol_placement, _true)
-	
+
+	# Check connectivity for ReferenceObjects (above checks were for
+	# both a Substation and a ReferenceObject types):
 	_if expected_symbol_placement.int!parent.int!tag_name _is :reference_object
 	_then
 		expected_connections << .expected.connected_reference_object_ids(expected_symbol_placement)
@@ -140,8 +136,8 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method dnom_schematic_comparator.compare_fields_on_tag_label_placement(expected_labels, actual_labels)
-	##
+_method dnom_schematic_comparator.compare_label_placement_objects(expected_labels, actual_labels)
+	##	
 	matched_label_indexes << equality_set.new()
 	label_matching_indexes << equality_property_list.new()
 	_for expected_label _over expected_labels.fast_elements()
@@ -178,7 +174,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method dnom_schematic_comparator.compare_fields_on_tag_vertex(expected_vertexes, actual_vertexes)
+_method dnom_schematic_comparator.compare_vertex_objects(expected_vertexes, actual_vertexes)
 	##
 	## There should be nothing to compare here as vertexes should
 	## only have x,y coordinates.
@@ -191,7 +187,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method dnom_schematic_comparator.compare_fields_on_tag_reference_object(expected_reference_objects, actual_reference_objects)
+_method dnom_schematic_comparator.compare_reference_object_objects(expected_reference_objects, actual_reference_objects)
 	##
 	_for expected_ref _over expected_reference_objects.fast_elements()
 	_loop		
@@ -205,7 +201,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method dnom_schematic_comparator.compare_fields_on_tag_poly_placement(expected_poly_placements, actual_poly_placements)
+_method dnom_schematic_comparator.compare_poly_placement_objects(expected_poly_placements, actual_poly_placements)
 	##
 	expected_placement << expected_poly_placements.an_element()
 	_self.assert_true(expected_poly_placements.size <=1, write_string("Expected no more than one poly placement in", expected_placement))
