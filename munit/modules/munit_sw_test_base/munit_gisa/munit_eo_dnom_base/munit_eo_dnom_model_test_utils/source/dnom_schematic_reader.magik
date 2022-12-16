@@ -200,7 +200,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_private _method dnom_schematic_reader.read_reference_object(xml_elem, parent)
+_method dnom_schematic_reader.read_reference_object(xml_elem, parent)
 	##
 	## Reads RefererenceObject from the xml element.
 	## Stores reference object inunded  the .refs slot.
@@ -215,7 +215,7 @@ $
 
 
 _pragma(classify_level=restricted)
-_private _method dnom_schematic_reader.read_poly_vertex(xml_elem, parent)
+_method dnom_schematic_reader.read_poly_vertex(xml_elem, parent)
 	##
 	## Reads PolyVertex
 	## If the PolyVertex belongs to a reference object,
@@ -236,7 +236,7 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_private _method dnom_schematic_reader.read_point_placement(xml_elem, parent)
+_method dnom_schematic_reader.read_point_placement(xml_elem, parent)
 	##
 	## Reads PointPlacement (assumed ReferenceObject location) and
 	## stores it in the .connections.
