@@ -9,14 +9,14 @@ def_slotted_exemplar(:dnom_schematic_renderer,
 	##
 	{
 		{:geoms, _unset},
-		{:dsr, _unset} # dnom_schematic_reader
+		{:dsr, _unset}, # dnom_schematic_reader
+		{:already_setup?, _unset}
 	}, :assert )
 $
 
 _pragma(classify_level=restricted)
 dnom_schematic_renderer.define_slot_access(:geoms, :read, :public )
 $
-
 
 _pragma(classify_level=restricted)
 _method dnom_schematic_renderer.post_render_sets(a_world,a_bounds,render_status)
@@ -75,41 +75,20 @@ _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method dnom_schematic_renderer.new(_optional filepath)
-	## 
-	## Create a new instance of the class that will read the RDF
-	## file FILENAME located in the directory PATH
+_private _method dnom_schematic_renderer.setup_drawing()
 	##
-	condition.raise(:error, :string,  "enot")
-	copy << _clone.init()
-	_if filepath _isnt _unset
+	_if .already_setup? _is _true
 	_then
-		copy.read_file(filepath)
-	_endif
-	_return copy
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_private _method dnom_schematic_renderer.init()
-	## 
-	## Create a cache for lookup of the elements in the RDF file
+		_return
+	_endif	
 	_if .geoms _is _unset
 	_then
 		.geoms << equality_geometry_set.new()
-	_endif
-	_return _self
-_endmethod
-$
-
-_pragma(classify_level=restricted)
-_private _method dnom_schematic_renderer.setup_drawing()
-	##
-	.geoms << equality_geometry_set.new()
+	_endif	
 	apps << smallworld_product.applications.as_simple_vector()
 	_if apps.size ~= 1
 	_then
-		condition.raise(:error, "#Expected one application running")
+		condition.raise(:error, :string, write_string("#Expected exactly one application running when: ", apps.size))
 		_return
 	_endif
 	map_mgr << apps[1].component(:maps)
@@ -175,26 +154,24 @@ $
 _pragma(classify_level=restricted)
 _method dnom_schematic_renderer.drawing_coordinates(geo_object)
 	#
-	i << geo_object.x * 1000 + 1e5
-	j << geo_object.y * 1000
+	i << geo_object.x.as_number() * 1000 + 1e5
+	j << geo_object.y.as_number() * 1000
 	_return coordinate.new(i,j)
 _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method dnom_schematic_renderer.draw_file(filepath)
-	## 
-	## 
+_method dnom_schematic_renderer.draw_file(filepath, _optional do_not_cleanup?)
 	##
 	.dsr << dnom_schematic_reader.new(filepath)
-	_self.draw()
+	_self.draw(do_not_cleanup?)
 _endmethod
 $
 
 _pragma(classify_level=restricted)
-_method dnom_schematic_renderer.draw(do_no_cleanup?)
+_method dnom_schematic_renderer.draw(do_not_cleanup?)
 	##
-	_if do_no_cleanup? _isnt _true
+	_if do_not_cleanup? _isnt _true
 	_then
 		.geoms << .geoms.new()
 	_endif	
@@ -206,11 +183,11 @@ $
 _pragma(classify_level=restricted)
 _method dnom_schematic_renderer.draw_substation(substation)
 	##
-	_for label _over substation.label_placement.fast_elements()
+	_for label _over substation.label_placement.default({}).fast_elements()
 	_loop
 		_self.draw_label_placement(label)
 	_endloop
-	_for symbol _over substation.symbol_placement.fast_elements()
+	_for symbol _over substation.symbol_placement.default({}).fast_elements()
 	_loop
 		_self.draw_symbol_placement(symbol)
 	_endloop
@@ -258,17 +235,24 @@ _pragma(classify_level=restricted)
 _method dnom_schematic_renderer.draw_symbol_placement(object)
 	##
 	string << _unset
-	_if object.parent.int!object_type _is :substation
+	_if object.int!parent.int!tag_name _is :substation
 	_then
 		coords << _self.drawing_coordinates(object.vertex.an_element())
-		string << object.parent.name
+		string << object.int!parent.name
 	_else
 		coords << _self.drawing_coordinates(object)
-		string << object.parent.dnom_obj_id
+		string << object.int!parent.dnom_obj_id
 	_endif
+
+	rotation << _if object.responds_to?(:rotation)
+		    _then
+			    >> object.rotation.as_number().degrees_to_radians
+		    _else
+			    >> 0
+		    _endif
 	
 	string_props << property_list.new_with(:height, 1.5e3,
-					       :orientation, object.rotation.default(0).degrees_to_radians)
+					       :orientation, rotation)
 	string_props[:string] << string
 	geom << pseudo_text.new_for_world(coords, _self.world, string_props)
 	geom.style_info << text_style.new_with_properties(:colour, colour.called(:red))
@@ -284,7 +268,7 @@ _method dnom_schematic_renderer.draw_label_placement(object)
 	##	
 	coords << _self.drawing_coordinates(object)
 	string_props << property_list.new_with(:height, 1e3,
-					       :orientation, object.character_rotation.default(0).degrees_to_radians)
+					       :orientation, object.character_rotation.as_number().degrees_to_radians)
 	string_props[:string] << object.text
 	geom << pseudo_text.new_for_world(coords, _self.world, string_props)
 	geom.style_info << text_style.new_with_properties(:colour, colour.called(:plum))
