@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.Iterable;
 import java.util.HashMap;
 
 import org.xmlunit.builder.DiffBuilder;
