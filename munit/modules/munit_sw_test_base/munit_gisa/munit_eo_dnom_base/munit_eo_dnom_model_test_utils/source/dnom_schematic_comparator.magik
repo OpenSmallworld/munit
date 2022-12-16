@@ -178,6 +178,7 @@ _method dnom_schematic_comparator.compare_vertex_objects(expected_vertexes, actu
 	##
 	## There should be nothing to compare here as vertexes should
 	## only have x,y coordinates.
+	## Runs field validation just in case.
 	##
 	_for i, expected _over expected_vertexes.fast_keys_and_elements()
 	_loop
@@ -188,6 +189,9 @@ $
 
 _pragma(classify_level=debug)
 _method dnom_schematic_comparator.compare_reference_object_objects(expected_reference_objects, actual_reference_objects)
+	##
+	## Attempts to find matching ReferenceObject using the
+	## DnomObjId and compares field values.
 	##
 	_for expected_ref _over expected_reference_objects.fast_elements()
 	_loop		
@@ -202,6 +206,10 @@ $
 
 _pragma(classify_level=debug)
 _method dnom_schematic_comparator.compare_poly_placement_objects(expected_poly_placements, actual_poly_placements)
+	##
+	## Compares PolyPlacement - DNOM ReferenceObject's linear geometries.
+	## Takes the first and last points (Vertex) of the geometry and
+	## matches the list of connected ReferenceObjects at theses points.
 	##
 	expected_placement << expected_poly_placements.an_element()
 	_self.assert_true(expected_poly_placements.size <=1, write_string("Expected no more than one poly placement in", expected_placement))
