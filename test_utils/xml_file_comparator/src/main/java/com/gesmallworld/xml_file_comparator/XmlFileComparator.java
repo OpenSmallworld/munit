@@ -31,6 +31,7 @@ public class XmlFileComparator {
 		String fileType = MagikInteropUtils.fromMagikString(filetype);
 		String differenceFileName = MagikInteropUtils.fromMagikString( outputFilename );
 		
+		
 		Object[] compareResult  = compareFiles(filename1, filename2, fileType, differenceFileName);
 		
 		
@@ -53,7 +54,7 @@ public class XmlFileComparator {
         Diff myDiff = createDiff( filename1 , filename2 , fileType);
         result[0] = myDiff.hasDifferences();
 		
-		if ( myDiff.hasDifferences()){
+		if ( myDiff.hasDifferences() ){
 			try{
 				File outputFile = new File(differenceFilePath);
 				outputFile.createNewFile();
@@ -65,7 +66,6 @@ public class XmlFileComparator {
 					bw.write( d.toString() );
 					bw.newLine();
 				}
-				
 				bw.close();
 				writer.close();
 				
