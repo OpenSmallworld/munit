@@ -537,7 +537,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optional schem_ref_file_name)
+_method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optional schem_ref_file_name, match_schematics_exactly?)
 	## 
 	## Checks if exported files match golden files.
 	##
@@ -546,6 +546,9 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optiona
 	## SCHEM_REF_FILE_NAME - the name of reference golden file for
 	##                       schematics export. If unset then
 	##                       REF_FILE_NAME is used.
+	## MATCH_SCHEMATICS_EXACTLY? - if false than schematic golden
+	##                       files are matched using the general xml comparison,
+	##                       instead of the dnom_schematic_comparator
 	##
 
 	schem_ref_file_name <<  schem_ref_file_name.default(ref_file_name)
@@ -566,8 +569,9 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optiona
 		_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
 		reference_ortho_schematic << schem_ref_file_name + "_schem_ortho.xml"	
 		reference_geo_schematic << schem_ref_file_name + "_schem_geo.xml"
-		_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], _true)
-		_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], _true)
+		match_schematics_exactly? << match_schematics_exactly?.default(_true)
+		_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], match_schematics_exactly?)
+		_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], match_schematics_exactly?)
 	_else
 		_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
 	_endif
