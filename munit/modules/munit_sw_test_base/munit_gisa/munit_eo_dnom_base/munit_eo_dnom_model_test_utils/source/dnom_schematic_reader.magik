@@ -151,7 +151,7 @@ _private _method dnom_schematic_reader.read_xml_element(xml_elem, xsd_typename, 
 	##
 	## Reads and processes the XML_ELEM into dnom_schematic_object.
 	## XSD_TYPENAME is the DNOM type name from the XSD (which sometimes 
-	## differers from teh xml tag name).
+	## differs from the xml tag name).
 	## For simple types reads the field value into the object,
 	## for complex types calls the read_xml_element in recurvie or
 	## calls a reflective methods in a form read_sometypenema()
