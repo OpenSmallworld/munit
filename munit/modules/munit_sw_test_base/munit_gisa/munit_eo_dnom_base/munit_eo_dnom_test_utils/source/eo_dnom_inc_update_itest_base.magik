@@ -462,7 +462,7 @@ _private _method eo_dnom_inc_update_itest_base.check_golden_file_matches_calcula
 		write("Checking ", reference_xml_file, " matches ", calc_diff_file)
 		# We want this step to compare files even when we're running tests with
 		# canonicalization turned on, so we use the int! version of the method.
-		_self.int!assert_xml_files_equals( reference_xml_file, calc_diff_file, _false)
+		_self.int!assert_xml_files_equals(reference_xml_file, calc_diff_file, _false)
 	_else
 		_self.fail(write_string("No calculated differences, but test expects ", reference_xml_file))
 	_endif

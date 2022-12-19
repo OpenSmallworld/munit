@@ -4,10 +4,10 @@ _package sw
 _pragma(classify_level=debug)
 def_slotted_exemplar(:dnom_schematic_comparator,
 	##
-	## Compares two DNOM schematic xml with two main features:
-	## 1. Does not compares object ids. Uses the
+	## Compares two DNOM schematic xmls with two main features:
+	## 1. Does not compare object ids. Uses the
 	##    DNOM Obj Id for R comparing Reference Objects.
-	## 2. Does not compares RefereneObject coodinates directly,
+	## 2. Does not compare ReferenceObject coordinates directly,
 	##    instead checks connectivity between objects, e.g. two
 	##    objects are the same if all of their fields (besied the
 	##    id) are the same and are connected to the same objects.
@@ -15,19 +15,19 @@ def_slotted_exemplar(:dnom_schematic_comparator,
 	## API:dnom_schematic_comparator.compare_files()
 	##
 	## The exemplar behaviour is using reflections with
-	## compare_**s() method istead of using an easier readable code
+	## compare_**s() method instead of using an easier readable code
 	## and explicitly calling comparison methods.
 	## This is done in order to make sure that future changes on the
 	## schematic structure is going to result with at least a
 	## do_not_understand condition, limiting a chance to silently
-	## skipping a comparison on unssuported cases
+	## skipping a comparison on unsupported cases
 	##
 	{
 		{:expected_filepath, _unset},
 		{:actual_filepath, _unset},
 		{:expected, _unset}, # dnom_schematic_reader from the expected xml (golden file)
 		{:actual, _unset}
-	}, :assert )
+	}, :assert)
 $
 
 _pragma(classify_level=debug)
@@ -225,7 +225,7 @@ _method dnom_schematic_comparator.compare_poly_placement_objects(expected_poly_p
 	expected_last_connected << .expected.connected_reference_object_ids(expected_placement.vertex.last)
 
 	actual_first_connected << .actual.connected_reference_object_ids(actual_poly_placement.vertex.first)
-	actual_last_connected << .actual.connected_reference_object_ids( actual_poly_placement.vertex.last)
+	actual_last_connected << .actual.connected_reference_object_ids(actual_poly_placement.vertex.last)
 
 	_if expected_first_connected.intersection(actual_first_connected).empty? _andif
 	    expected_last_connected.intersection(actual_last_connected).empty?

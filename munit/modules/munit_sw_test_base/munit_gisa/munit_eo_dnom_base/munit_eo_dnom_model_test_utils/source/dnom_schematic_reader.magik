@@ -18,7 +18,7 @@ def_slotted_exemplar(:dnom_schematic_reader,
 		{:refs, _unset}, # stores dnom reference objects keys by the dnom_obj_id
 		{:connections, _unset}, # stores sets of dnom_obj_ids grouped by common coordinates in order to find connections between objects
 		{:substation, _unset} # link to the top level element of the scehamtic model (skips the distribution system as irrelevant)
-	}, _unset )
+	}, _unset)
 $
 
 _pragma(classify_level=debug)
@@ -39,7 +39,7 @@ _private _method dnom_schematic_reader.magik_name(xml_name)
 	## Returns a lower cased magik symbol from the given XML_NAME
 	## e.g. maps ReferenceObject to :reference_object for easier
 	## interaction with dnom_schematic_objects.
-	## Does not lists all possible names, only ones which are
+	## Does not list all possible names, only ones which are
 	## actually in use in the current DNOM schematic implementation.
 	##
 	_constant mapping <<
@@ -140,7 +140,7 @@ _pragma(classify_level=debug)
 _private _method dnom_schematic_reader.read_substation()
 	##
 	## Reads the xml element for the substation, in recursive reads
-	## the whole whole file, field by field using the .read_xml_element()
+	## the whole file, field by field using the .read_xml_element()
 	##
 	.substation << _self.read_xml_element(_self.xml_substation, "Substation")
 _endmethod
@@ -202,7 +202,7 @@ $
 _pragma(classify_level=restricted)
 _method dnom_schematic_reader.read_reference_object(xml_elem, parent)
 	##
-	## Reads RefererenceObject from the xml element.
+	## Reads ReferenceObject from the xml element.
 	## Stores reference object inunded  the .refs slot.
 	##
 	ref << _self.read_xml_element(xml_elem, "ReferenceObject", parent)
@@ -277,7 +277,7 @@ $
 _pragma(classify_level=restricted)
 _method dnom_schematic_reader.connected_reference_object_ids(geo_object)
 	##
-	## Returs set of DnomObjIds connected with given
+	## Returns set of DnomObjIds connected with given
 	## dnom_schematic_object with .x and .y coordinates.
 	## Excludes the ReferenceObject to which the given GEO_OBJECT belongs.
 	coord << _self.coordinate(geo_object)

@@ -11,11 +11,11 @@ def_slotted_exemplar(:dnom_schematic_renderer,
 		{:geoms, _unset},
 		{:dsr, _unset}, # dnom_schematic_reader
 		{:already_setup?, _unset}
-	}, :assert )
+	}, :assert)
 $
 
 _pragma(classify_level=restricted)
-dnom_schematic_renderer.define_slot_access(:geoms, :read, :public )
+dnom_schematic_renderer.define_slot_access(:geoms, :read, :public)
 $
 
 _pragma(classify_level=restricted)
