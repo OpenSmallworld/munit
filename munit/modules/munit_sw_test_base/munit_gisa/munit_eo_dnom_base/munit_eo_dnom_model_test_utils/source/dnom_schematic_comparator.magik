@@ -1,0 +1,253 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+def_slotted_exemplar(:dnom_schematic_comparator,
+	##
+	## Compares two DNOM schematic xmls with two main features:
+	## 1. Does not compare object ids. Uses the
+	##    DNOM Obj Id for R comparing Reference Objects.
+	## 2. Does not compare ReferenceObject coordinates directly,
+	##    instead checks connectivity between objects, e.g. two
+	##    objects are the same if all of their fields (besied the
+	##    id) are the same and are connected to the same objects.
+	##
+	## API:dnom_schematic_comparator.compare_files()
+	##
+	## The exemplar behaviour is using reflections with
+	## compare_**s() method instead of using an easier readable code
+	## and explicitly calling comparison methods.
+	## This is done in order to make sure that future changes on the
+	## schematic structure is going to result with at least a
+	## do_not_understand condition, limiting a chance to silently
+	## skipping a comparison on unsupported cases
+	##
+	{
+		{:expected_filepath, _unset},
+		{:actual_filepath, _unset},
+		{:expected, _unset}, # dnom_schematic_reader from the expected xml (golden file)
+		{:actual, _unset}
+	}, :assert)
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_comparator.compare_files(expected_filepath, actual_filepath)
+	##
+	## Read and compare two files.
+	##
+	.expected_filepath << expected_filepath
+	.actual_filepath << actual_filepath
+
+	.expected << expected << dnom_schematic_reader.new(expected_filepath)
+	.actual << actual << dnom_schematic_reader.new(actual_filepath)
+
+	expected_substation << expected.substation
+	actual_substation << actual.substation
+	
+	_self.compare_substations(expected_substation, actual_substation)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method dnom_schematic_comparator.compare_substations(expected, actual)
+	##
+	_self.compare_fields(expected, actual)	
+_endmethod
+
+
+_pragma(classify_level=debug)
+_private _method dnom_schematic_comparator.compare_fields(expected, actual, _optional skip_xy?)
+	##
+	## Compares fields on the given EXPECTED and ACTUAL dnom_schematic_objects.
+	## In case of simple fields (string, numbers) compares values directly.
+	## For complex types perform methods named in a form compare_TAG_NAME_objects(),
+	## e.g. compare_label_placement_objects()
+	## Assumes that all properties of the dnom_schematic_object are
+	## to be compared, exluding the meta ones starting with :int!
+	##
+	expected_type << expected.int!tag_name
+
+	_self.assert_equals(expected_type, actual.int!tag_name, expected, "different object types", "tag name")
+	_self.assert_equals(expected.size, actual.size, expected, "different number of elements", "elements")
+	
+	_for field_name, expected_value _over expected.fast_keys_and_elements()
+	_loop
+		_if field_name.index_of_seq(:int!, _unset, 4) _isnt _unset _orif
+		    (skip_xy? _is _true _andif
+		     (field_name _is :x _orif field_name _is :y)) _orif
+		    field_name _is :id
+		_then
+			_continue
+		_endif
+		
+		actual_value << actual.perform(field_name)		
+		_if expected_value.class_name _is :rope # expects that any complex type is plural
+		_then
+			# Listed types should the same number of elements
+			_if _self.assert_equals(expected_value.size, actual_value.size, expected, "wrong number of elements", field_name)
+			_then
+				cmp_method << :compare_ + field_name + :|_objects()|
+				_self.perform(cmp_method, expected_value, actual_value)
+			_endif			
+		_else
+			_self.assert_equals(expected_value, actual_value, expected, "different value", field_name)
+		_endif
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method dnom_schematic_comparator.assert_equals(expected, actual, object, reason, field)
+	##
+	_if expected = actual
+	_then
+		_return _true
+	_endif
+	msg << write_string("When comparing '", object, "': '", reason, "' on the field '", field, "': #1")
+	_return _super.assert_equals(expected,actual, msg)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_comparator.compare_symbol_placement_objects(expected_symbols, actual_symbols)
+	##
+	expected_symbol_placement << expected_symbols.an_element()
+	_if expected_symbols.size >1
+	_then
+		_self.assert_true(expected_symbols.size <=1)
+	_endif
+	actual_symbol_placement << actual_symbols.an_element()	
+	_self.compare_fields(expected_symbol_placement, actual_symbol_placement, _true)
+
+	# Check connectivity for ReferenceObjects (above checks were for
+	# both a Substation and a ReferenceObject types):
+	_if expected_symbol_placement.int!parent.int!tag_name _is :reference_object
+	_then
+		expected_connections << .expected.connected_reference_object_ids(expected_symbol_placement)
+		actual_connections << .actual.connected_reference_object_ids(actual_symbol_placement)
+		missing_connections << expected_connections.difference(actual_connections)
+		_for missing_connection _over missing_connections.fast_elements()
+		_loop
+			msg << write_string("Missing connection from the ", expected_symbol_placement.int!parent, " to ", missing_connection)
+			_self.assert_true(_false, msg)
+		_endloop		
+	_endif	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_comparator.compare_label_placement_objects(expected_labels, actual_labels)
+	##	
+	matched_label_indexes << equality_set.new()
+	label_matching_indexes << equality_property_list.new()
+	_for expected_label _over expected_labels.fast_elements()
+	_loop
+		matched_label << _unset
+		_for actual_label_index, actual_label _over actual_labels.fast_keys_and_elements()
+		_loop		
+			_if _not matched_label_indexes.includes?(actual_label_index) _andif
+			    _self.matching_label_placements?(expected_label, actual_label)
+			_then
+				matched_label_indexes.add(actual_label_index)
+				matched_label << actual_label
+				_self.compare_fields(expected_label, actual_label, _true)
+				_leave
+			_endif
+		_endloop
+		_self.assert_not_unset(matched_label, write_string("No matching label with a text '", expected_label.text, "' from the ", expected_label.int!parent))
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_comparator.matching_label_placements?(expected_label_placement, actual_label_placement)
+	##
+	_for field_name _over {:geometry_type, :rotation, :text, :character_rotation, :connection_point}.fast_elements()
+	_loop
+		_if expected_label_placement.perform(field_name) ~= actual_label_placement.perform(field_name)
+		_then
+			_return _false
+		_endif
+	_endloop
+	_return _true
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_comparator.compare_vertex_objects(expected_vertexes, actual_vertexes)
+	##
+	## There should be nothing to compare here as vertexes should
+	## only have x,y coordinates.
+	## Runs field validation just in case.
+	##
+	_for i, expected _over expected_vertexes.fast_keys_and_elements()
+	_loop
+		_self.compare_fields(expected, actual_vertexes[i], _true)
+	_endloop 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_comparator.compare_reference_object_objects(expected_reference_objects, actual_reference_objects)
+	##
+	## Attempts to find matching ReferenceObject using the
+	## DnomObjId and compares field values.
+	##
+	_for expected_ref _over expected_reference_objects.fast_elements()
+	_loop		
+		actual_ref << .actual.refs[expected_ref.dnom_obj_id]
+		_if _self.assert_not_unset(actual_ref, write_string("ReferenceObject not found, DnomObjId=", expected_ref.dnom_obj_id))
+		_then
+			_self.compare_fields(expected_ref, actual_ref)
+		_endif
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method dnom_schematic_comparator.compare_poly_placement_objects(expected_poly_placements, actual_poly_placements)
+	##
+	## Compares PolyPlacement - DNOM ReferenceObject's linear geometries.
+	## Takes the first and last points (Vertex) of the geometry and
+	## matches the list of connected ReferenceObjects at theses points.
+	##
+	expected_placement << expected_poly_placements.an_element()
+	_self.assert_true(expected_poly_placements.size <=1, write_string("Expected no more than one poly placement in", expected_placement))
+	_if expected_placement _is _unset
+	_then
+		_return
+	_endif
+	
+	actual_poly_placement << actual_poly_placements.an_element()
+	_self.compare_fields(expected_placement, actual_poly_placement, _true)
+
+	expected_first_connected << .expected.connected_reference_object_ids(expected_placement.vertex.first)
+	expected_last_connected << .expected.connected_reference_object_ids(expected_placement.vertex.last)
+
+	actual_first_connected << .actual.connected_reference_object_ids(actual_poly_placement.vertex.first)
+	actual_last_connected << .actual.connected_reference_object_ids(actual_poly_placement.vertex.last)
+
+	_if expected_first_connected.intersection(actual_first_connected).empty? _andif
+	    expected_last_connected.intersection(actual_last_connected).empty?
+	_then
+		#Try with reversing the order
+		actual_first_connected << actual_last_connected ^<< actual_first_connected
+	_endif	
+
+	_self.assert_equals(expected_first_connected.size, actual_first_connected.size,
+			    actual_poly_placement.int!parent, "wrong number of connections", "first vertex")
+
+	_self.assert_equals(expected_last_connected.size, actual_last_connected.size,
+			    actual_poly_placement.int!parent, "wrong number of connections", "last vertex")
+
+	_for missing_connection _over expected_first_connected.difference(actual_first_connected).fast_elements()
+	_loop
+		_self.assert_true(_false, write_string("Missing connection, first vertex from the ", expected_placement.int!parent, " to ", missing_connection))
+	_endloop
+
+	_for missing_connection _over expected_last_connected.difference(actual_last_connected).fast_elements()
+	_loop		
+		_self.assert_true(_false, write_string("Missing connection, last vertex from the ", expected_placement.int!parent, " to ", missing_connection))
+	_endloop
+_endmethod
+$
