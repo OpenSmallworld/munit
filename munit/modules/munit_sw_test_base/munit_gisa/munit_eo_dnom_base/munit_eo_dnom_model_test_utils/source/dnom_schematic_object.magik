@@ -13,8 +13,8 @@ $
 
 _pragma(classify_level=debug)
 _method dnom_schematic_object.show_on(a_stream)
-	## Defines a more readable object, and fixes an iisue with a default
-	## show_on which tries toaccess size not avaialble on teh exemplar.
+	## Defines a more readable object, and fixes an issue with the default
+	## show_on which tries to access size not yet avaialble on the exemplar.
 	tag << _if (xml << _self[:int!xml]) _isnt _unset
 	       _then
 		       >> xml.type
