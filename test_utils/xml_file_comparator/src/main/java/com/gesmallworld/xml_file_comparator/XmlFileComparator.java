@@ -109,11 +109,18 @@ public class XmlFileComparator {
 		} else if ( fileType.equals("dnom") ) {
 			ElementSelector byId = ElementSelectors.byXPath( "./Id" ,ElementSelectors.byNameAndText);
 			ElementSelector byID = ElementSelectors.byXPath( "./ID" , ElementSelectors.byNameAndText);
-			ElementSelector byLabelPlacementType = ElementSelectors.byXPath( "./GeometryType" ,ElementSelectors.byNameAndText);
-			ElementSelector byLabelPlacementText = ElementSelectors.byXPath( "./Text" ,ElementSelectors.byNameAndText);
-			ElementSelector byLabelPlacementRot = ElementSelectors.byXPath( "./Rotation" ,ElementSelectors.byNameAndText);
-			
-			customElementSelector = ElementSelectors.and(byId,byID,byLabelPlacementType,byLabelPlacementRot,byLabelPlacementText);
+			ElementSelector byGeometryType = ElementSelectors.byXPath( "./GeometryType" ,ElementSelectors.byNameAndText);
+			ElementSelector byText = ElementSelectors.byXPath( "./Text" ,ElementSelectors.byNameAndText);
+			ElementSelector byRotation = ElementSelectors.byXPath( "./Rotation" ,ElementSelectors.byNameAndText);
+			ElementSelector byGeom =  ElementSelectors.conditionalBuilder()
+					.whenElementIsNamed("LabelPlacement")
+					.thenUse(ElementSelectors.and(
+							ElementSelectors.byXPath("./X", ElementSelectors.byNameAndText),
+							ElementSelectors.byXPath("./Y", ElementSelectors.byNameAndText)))
+					.elseUse(ElementSelectors.Default)
+					.build();
+	
+			customElementSelector = ElementSelectors.and(byId,byID,byGeometryType,byText,byRotation,byGeom);
 		} else {
 			throw new java.lang.RuntimeException("This file type is not supported by the xml comparator");
 		}
