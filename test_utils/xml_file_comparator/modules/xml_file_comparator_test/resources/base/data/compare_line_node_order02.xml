@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Substation>
+	<Line>
+		<Id>2149_549-NL.551-NH.552</Id>
+		<Feeder1>DNOM01-01</Feeder1>
+		<FromNode>551</FromNode>
+		<ToNode>552</ToNode>
+		<Phase>ABCN</Phase>
+		<NormallyDeenergized>false</NormallyDeenergized>
+		<ConstructionModel>Box</ConstructionModel>
+		<ConductorModelA>3A_OHL_50_11-OH</ConductorModelA>
+		<ConductorModelB>3A_OHL_50_11-OH</ConductorModelB>
+		<ConductorModelC>3A_OHL_50_11-OH</ConductorModelC>
+		<ConductorModelN>3A_OHL_50_11-OH</ConductorModelN>
+		<Length>32</Length>
+		<NumCircuits>1</NumCircuits>
+		<LinePlacement>
+			<GeometryType>DETAIL</GeometryType>
+			<Vertex>
+				<X>3</X>
+				<Y>3</Y>
+			</Vertex>
+			<Vertex>
+				<X>2</X>
+				<Y>2</Y>
+			</Vertex>
+			<Vertex>
+				<X>1</X>
+				<Y>1</Y>
+			</Vertex>
+		</LinePlacement>
+	</Line>
+</Substation>
