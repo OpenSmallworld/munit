@@ -553,7 +553,7 @@ _private _method qm_routine_test_mixin.int!make_mock_rwo(collection_name, field_
 	## Returns the mock object.
 	##
 
-	a_mock_rwo << mock(collection_name)
+	a_mock_rwo << mock(collection_name + :|1|)
 	a_coll << mock(:collection1)
 	stub(a_coll).name.then_return(collection_name)
 	stub(a_mock_rwo).source_collection.then_return(a_coll)
@@ -594,7 +594,7 @@ _private _method qm_routine_test_mixin.set_up_trace_results(rwo, _gather keys_an
 
 	props << property_list.new_from_gathered(keys_and_values)
 	
-	web << mock(:network_web)
+	web << mock(:network_web1)
 	
 	# If loop_nodes returns an empty container it means there were
 	# no loops in the network.
