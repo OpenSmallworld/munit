@@ -1059,22 +1059,6 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 			time_spent +<< 200
 		_endloop
 		
-		stub_method_helper.replace_method(sv.sys!perform(:schematic_engine), :|update_schematic()|,
-						  _proc (objects, schematic)
-							  # Sort all objects that need update to order them
-							  # deterministically.
-							  sort_proc << _proc (o1, o2)
-									       id1 << sw_cim_identifier_manager.collection_unique_id_for_rwo(o1)
-									       id2 << sw_cim_identifier_manager.collection_unique_id_for_rwo(o2)
-									       _try 
-										       _return id1 < id2
-									       _when binary_operator_undefined
-										       _return id1.write_string < id2.write_string
-									       _endtry
-								       _endproc
-							  _return _self.saved!update_schematic(objects.as_sorted_collection(sort_proc), schematic)
-						  _endproc)
-		
 		sv.update()
 		_self.wait_for_task_to_complete(:|update_schematic()|, wait_time)	
 		transactions.add(sv.sys!slot(:transaction))
