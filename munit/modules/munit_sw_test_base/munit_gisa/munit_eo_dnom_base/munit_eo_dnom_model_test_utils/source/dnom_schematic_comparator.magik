@@ -56,7 +56,7 @@ _endmethod
 
 
 _pragma(classify_level=debug)
-_private _method dnom_schematic_comparator.compare_fields(expected, actual, _optional skip_xy?)
+_private _method dnom_schematic_comparator.compare_fields(expected, actual, _gather to_skip)
 	##
 	## Compares fields on the given EXPECTED and ACTUAL dnom_schematic_objects.
 	## In case of simple fields (string, numbers) compares values directly.
@@ -64,24 +64,25 @@ _private _method dnom_schematic_comparator.compare_fields(expected, actual, _opt
 	## e.g. compare_label_placement_objects()
 	## Assumes that all properties of the dnom_schematic_object are
 	## to be compared, exluding the meta ones starting with :int!
+	## or one listed as TO_SKIP.
 	##
 	expected_type << expected.int!tag_name
 
+	fields_to_skip << equality_set.new_with(:id, _scatter to_skip)
+	
 	_self.assert_equals(expected_type, actual.int!tag_name, expected, "different object types", "tag name")
 	_self.assert_equals(expected.size, actual.size, expected, "different number of elements", "elements")
 	
 	_for field_name, expected_value _over expected.fast_keys_and_elements()
 	_loop
 		_if field_name.index_of_seq(:int!, _unset, 4) _isnt _unset _orif
-		    (skip_xy? _is _true _andif
-		     (field_name _is :x _orif field_name _is :y)) _orif
-		    field_name _is :id
+		    fields_to_skip.includes?(field_name)
 		_then
 			_continue
 		_endif
 		
 		actual_value << actual.perform(field_name)		
-		_if expected_value.class_name _is :rope # expects that any complex type is plural
+		_if expected_value.class_name _is :rope # expects that any complex type is a rope
 		_then
 			# Listed types should the same number of elements
 			_if _self.assert_equals(expected_value.size, actual_value.size, expected, "wrong number of elements", field_name)
@@ -117,7 +118,7 @@ _method dnom_schematic_comparator.compare_symbol_placement_objects(expected_symb
 		_self.assert_true(expected_symbols.size <=1)
 	_endif
 	actual_symbol_placement << actual_symbols.an_element()	
-	_self.compare_fields(expected_symbol_placement, actual_symbol_placement, _true)
+	_self.compare_fields(expected_symbol_placement, actual_symbol_placement, :x, :y, :rotation)
 
 	# Check connectivity for ReferenceObjects (above checks were for
 	# both a Substation and a ReferenceObject types):
@@ -150,7 +151,7 @@ _method dnom_schematic_comparator.compare_label_placement_objects(expected_label
 			_then
 				matched_label_indexes.add(actual_label_index)
 				matched_label << actual_label
-				_self.compare_fields(expected_label, actual_label, _true)
+				_self.compare_fields(expected_label, actual_label, :x, :y)
 				_leave
 			_endif
 		_endloop
@@ -182,7 +183,7 @@ _method dnom_schematic_comparator.compare_vertex_objects(expected_vertexes, actu
 	##
 	_for i, expected _over expected_vertexes.fast_keys_and_elements()
 	_loop
-		_self.compare_fields(expected, actual_vertexes[i], _true)
+		_self.compare_fields(expected, actual_vertexes[i], :x, :y)
 	_endloop 
 _endmethod
 $
@@ -219,7 +220,7 @@ _method dnom_schematic_comparator.compare_poly_placement_objects(expected_poly_p
 	_endif
 	
 	actual_poly_placement << actual_poly_placements.an_element()
-	_self.compare_fields(expected_placement, actual_poly_placement, _true)
+	_self.compare_fields(expected_placement, actual_poly_placement, :vertex) # skip vertex fields, as it will compare the number of vertexes, which should be irrelevant
 
 	expected_first_connected << .expected.connected_reference_object_ids(expected_placement.vertex.first)
 	expected_last_connected << .expected.connected_reference_object_ids(expected_placement.vertex.last)

@@ -235,6 +235,21 @@ _method dnom_schematic_renderer.draw_poly_placement(poly)
 	geom << pseudo_chain.new_for_world(sector.new_from(coords), _self.world)
 	geom.style_info << eo_cim_diagram_reader.line_style
 	.geoms.add(geom)
+
+	text_location << geom.location_for_length(geom.line_length / 2.0)
+	text_orientation << geom.sectors.cs_orientation_at(text_location)
+	string_props << property_list.new_with(:height, 1.5e3, :rotation, 90)
+	string_props[:string] << poly.int!parent.dnom_obj_id
+	text_geom << pseudo_text.new_for_world(text_location, _self.world, string_props)
+	text_geom.style_info << text_style.new_with_properties(:colour, colour.called(:green))
+	.geoms.add(text_geom)
+
+	_for dot_name _over {:first_coord, :last_coord}.fast_elements()
+	_loop
+		dot_geom << pseudo_point.new_for_world(geom.perform(dot_name), _self.world)
+		dot_geom.style_info << eo_cim_diagram_reader.line_point_style
+		.geoms.add(dot_geom)
+	_endloop	
 _endmethod
 $
 
