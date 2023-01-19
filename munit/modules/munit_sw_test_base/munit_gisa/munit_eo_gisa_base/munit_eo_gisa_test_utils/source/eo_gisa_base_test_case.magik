@@ -1107,3 +1107,42 @@ _private _method eo_gisa_base_test_case.set_deterministic_updated_schematic_ids(
 	_endloop
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.given_circuit_building_is_monitored()
+	##
+	## Adds monitoring of circuit building.
+	##
+
+	_local cb_counts << _self.properties[:circuit_building_counts] << equality_hash_table.new()
+
+	stub_method_helper.replace_method(eo_circuit_section_engine,
+					  :|build()|,
+					  _proc (p_circuit, _optional p_section_types, p_build_view)
+						  _import cb_counts
+
+						  _if cb_counts[p_circuit.circuit_id] _is _unset
+						  _then
+							 cb_counts[p_circuit.circuit_id] << 0
+						  _endif
+						  
+						  cb_counts[p_circuit.circuit_id] +<< 1
+						  
+						  _return _self.saved!build(p_circuit, p_section_types, p_build_view)
+					  _endproc)
+	
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.then_circuit_building_counts_are(_gather data)
+	##
+
+	_self.assert_deep_equals(equality_hash_table.new_with(_scatter data),
+				 _self.properties[:circuit_building_counts],
+				 "Wrong circuit building counts: #1")
+	
+	_return _self 
+_endmethod
+$
