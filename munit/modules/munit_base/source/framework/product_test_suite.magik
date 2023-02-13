@@ -83,6 +83,7 @@ _private _method product_test_suite.add_module_test_suites()
 				sw_module_manager.load_module( module_name )
 			_when error
 				write( "Error loading: ", test_module )
+				write( error_var.report_contents_string )
 				_continue
 			_endtry
 		_endif
