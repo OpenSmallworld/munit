@@ -79,7 +79,7 @@ _private _method product_test_suite.add_module_test_suites()
 		_if _not sw_module_manager.module( module_name ).loaded? _andif
 		    sw_module_manager.module( module_name ).test_module?
 		_then 
-			_try
+			_try _with error_var
 				sw_module_manager.load_module( module_name )
 			_when error
 				write( "Error loading: ", test_module )
