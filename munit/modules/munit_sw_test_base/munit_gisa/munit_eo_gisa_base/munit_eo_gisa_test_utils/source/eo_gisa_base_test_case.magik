@@ -254,7 +254,8 @@ $
 
 _pragma(classify_level=debug)
 _method eo_gisa_base_test_case.run_bare()
-        ## Runs the bare test sequence
+	##
+	## Runs the bare test sequence
 
 	# Disable database notifications.
 	_dynamic !notify_database_data_changes?!, !current_application!
@@ -268,21 +269,22 @@ _method eo_gisa_base_test_case.run_bare()
 		swg_dsn_admin_engine.init()
 	_endif
 	
-        _protect
+	_protect
 		_self.set_up()
-		!current_application! << _self.get_current_application() # Must be after set_up() so properties are set
-		
+
+		# Must be after set_up() so properties are set
+		!current_application! << _self.get_current_application()
+
 		_self.setup_design()
 		_self.setup_sub_design()
-
 		_self.setup_deterministic_identifiers()
-		
-                _self.run_test()
-        _protection
-                _self.teardown_design()
-		_self.tear_down()		
+		_self.run_test()
+	_protection
+		_self.teardown_design()
+		_self.tear_down()
+
 		!notify_database_data_changes?! << old_value 
-        _endprotect
+	_endprotect
 _endmethod
 $
 
@@ -346,7 +348,7 @@ _method eo_gisa_base_test_case.setup_deterministic_identifiers()
 	_if id_mode _is :register
 	_then
 		# Initialise the IDs
-		sw_gisa_identifiers_from_register.ids << _self.ids 
+		sw_gisa_identifiers_from_register.ids << _self.ids
 		sw_gisa_identifiers_from_register.replace_identifier_manager()
 	_elif id_mode _is :inc_updates
 	_then
@@ -354,8 +356,14 @@ _method eo_gisa_base_test_case.setup_deterministic_identifiers()
 		# sw_gisa_identifiers_from_register but handles missing IDs.
 		
 		# Initialise the IDs
-		sw_gisa_identifiers_for_update_tests.ids << _self.ids 
-		sw_gisa_identifiers_for_update_tests.replace_identifier_manager()		
+		sw_gisa_identifiers_for_update_tests.ids << _self.ids
+		sw_gisa_identifiers_for_update_tests.replace_identifier_manager()
+	_elif id_mode _is :posting_inc_updates
+	_then
+		# Test that post data have a similar identifier scheme to incremental tests,
+		# but with handling for the record changing when it is posted
+		sw_gisa_identifiers_for_posting_data_tests.ids << _self.ids
+		sw_gisa_identifiers_for_posting_data_tests.replace_identifier_manager()
 	_elif id_mode _is :attributes
 	_then
 		sw_gisa_identifiers_from_attributes.replace_identifier_manager()
@@ -388,82 +396,97 @@ $
 _pragma(classify_level=debug)
 ## This is a property list indexed by collection name where
 ## default values for the different fields are specified
-eo_gisa_base_test_case.define_shared_variable( :default_values,
+eo_gisa_base_test_case.define_shared_variable(:default_values,
 	property_list.new_with(
-
 		:eo_cable_segment_inst,	property_list.new_with(
-						:status, "Existing",
-						:network_type, "MV",
-						:nominal_voltage_pp, voltage_value.new( 11, :kV ),
-						:owner_type, "Company Owned",
-						:owner_name, "Electric Utility",
-						:mounting, "Underground",
-						:usage, "",
-						:arrangement, "",
-						:alias, "Alias1" ),
-		:eo_isolating_eqpt_inst,	property_list.new_with(
-						:status, "Existing",
-						:network_type, "MV",
-						:nominal_voltage_pp, voltage_value.new( 11, :kV ),
-						:owner_type, "Company Owned",
-						:owner_name, "Electric Utility" ),
-		
+			:status, "Existing",
+			:network_type, "MV",
+			:nominal_voltage, "11 kV",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility",
+			:mounting, "Underground",
+			:usage, "",
+			:arrangement, "",
+			:alias, "Alias1"
+		),
+		:eo_isolating_eqpt_inst, property_list.new_with(
+			:status, "Existing",
+			:network_type, "MV",
+			:nominal_voltage, "11 kV",
+			:mounting, "Underground",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility"
+		),
 		:eo_cable, property_list.new_with(
-				   :alias, "Alias",
-				   :manufacturer, "" ),
-		
-		:eo_power_xfrmr_inst,	property_list.new_with(
-						:status, "Existing",
-						:source_network_type, "MV",
-						:source_nominal_voltage_pp, voltage_value.new( 11, :kV ),
-						:load_network_type, "LV",
-						:load_nominal_voltage_pp, voltage_value.new( 2.4, :kV ),
-						:owner_type, "Company Owned",
-						:owner_name, "Electric Utility",
-						:mounting, "Underground"),
-		
+			:alias, "Alias",
+			:manufacturer, ""
+		),
+		:eo_power_xfrmr_inst, property_list.new_with(
+			:status, "Existing",
+			:source_network_type, "MV",
+			:source_nominal_voltage, "11 kV",
+			:load_network_type, "LV",
+			:load_nominal_voltage, "2.4 kV",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility",
+			:mounting, "Underground"
+		),
+		:eo_3w_power_xfrmr_inst, property_list.new_with(
+			:status, "Existing",
+			:source_network_type, "MV",
+			:source_nominal_voltage, "11 kV",
+			:load_network_type, "LV",
+			:load_nominal_voltage, "2.4 kV",
+			:tertiary_network_type, "LV",
+			:tertiary_nominal_voltage, "240 V",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility",
+			:mounting, "Underground"
+		),
 		:eo_power_xfrmr, property_list.new_with(
-				   :device_type, "Substation"),
-		
+			:device_type, "Substation"
+		),
 		:eo_power_xfrmr_spec, property_list.new_with(
-				   :device_type, "Substation"),
-		
+			:device_type, "Substation"
+		),
 		:eo_circuit, property_list.new_with(
-				     :circuit_id, "1000" ),
-
+			:circuit_id, "1000"
+		),
 		:eo_protective_eqpt_inst, property_list.new_with(
-						  :status, "Existing",
-						  :network_type, "MV",
-						  :nominal_voltage_pp, voltage_value.new( 11, :kV ),
-						  :owner_type, "Company Owned",
-						  :owner_name, "Electric Utility",
-						  :mounting, "Underground"),
-		
+			:status, "Existing",
+			:network_type, "MV",
+			:nominal_voltage, "11 kV",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility",
+			:mounting, "Underground"
+		),
 		:eo_protective_eqpt, property_list.new_with(
-				   :device_type, "Fault Indicator"),
+			:device_type, "Fault Indicator"
+		),
 		:eo_network_hypernode, property_list.new_with(
-					        :status, "Existing" ),
-				   
-		:eo_composite_switch, property_list.new_with(:device_type, "Unknown",
-							     :status, "Existing",
-							     :network_type, "MV",
-							     :phasing, "ABC",
-							     :owner_type, "Company Owned",
-							     :owner_name, "Electric Utility",
-							     :mounting, "Underground" )
-		      ),
-	:public )
+			:status, "Existing"
+		),		   
+		:eo_composite_switch, property_list.new_with(
+			:device_type, "Unknown",
+			:status, "Existing",
+			:network_type, "MV",
+			:phasing, "ABC",
+			:owner_type, "Company Owned",
+			:owner_name, "Electric Utility",
+			:mounting, "Underground"
+		)
+	), :public)
 $
 
 _pragma(classify_level=debug)
 _method eo_gisa_base_test_case.insert_record( coll_name, rdf_id, _gather attr_and_values )
 	##
 	## Insert a record in the collection called COLL_NAME in the
-	## electric view. RFD_ID is the id that will be used to export
-	## to CIM, and ATTR_AND_VALUES is a pair of keys and values
-	## that will be used in conjunction with the default values to
-	## populate the record to be inserted. The default values are
-	## found in the shared constant .default_values.
+	## electric view. RFD_ID (if not _unset) is the id that will be
+	## used to export to CIM, and ATTR_AND_VALUES is a pair of keys
+	## and values that will be used in conjunction with the default
+	## values to populate the record to be inserted. The default
+	## values are found in the shared constant .default_values.
 	##
 	## If COLL_NAME represents a spec ( *_spec ), then it deals
 	## with frozen storage appropriately
@@ -483,11 +506,11 @@ _pragma(classify_level=debug)
 _private _method eo_gisa_base_test_case.insert_warm_record ( coll_name, rdf_id, _gather attr_and_values )
 	## 
 	## Insert a record in the collection called COLL_NAME in the
-	## electric view. RFD_ID is the id that will be used to export
-	## to CIM, and ATTR_AND_VALUES is a pair of keys and values
-	## that will be used in conjunction with the default values to
-	## populate the record to be inserted. The default values are
-	## found in the shared constant .default_values.
+	## electric view. RFD_ID (if not _unset) is the id that will be
+	## used to export to CIM, and ATTR_AND_VALUES is a pair of keys
+	## and values that will be used in conjunction with the default
+	## values to populate the record to be inserted. The default
+	## values are found in the shared constant .default_values.
 	## 
 
 	_local ev << _self.electric_view
@@ -500,8 +523,12 @@ _private _method eo_gisa_base_test_case.insert_warm_record ( coll_name, rdf_id, 
 				coll_name.write_string )
 	
 	_local rec << ev.run_transaction( trans )
-	_self.assign_id_to_record( rdf_id, rec )
 
+	_if rdf_id _isnt _unset
+	_then 
+		_self.assign_id_to_record( rdf_id, rec )
+	_endif
+	
 	>> rec
 _endmethod
 $
@@ -657,11 +684,12 @@ _pragma(classify_level=debug)
 _private _method eo_gisa_base_test_case.insert_frozen_record ( coll_name, rdf_id, _gather attr_and_values )
 	##
 	## Insert a new record in the collection called
-	## COLL_NAME in the electric view. RFD_ID is the id that will
-	## be used to export to CIM. ATTR_AND_VALUES is a pair of
-	## keys and values that will be used in conjunction with the
-	## default values to populate the spec. The default values are
-	## found in the shared constant .default_values.
+	## COLL_NAME in the electric view. RFD_ID (if not _unset) is
+	## the id that will be used to export to CIM. ATTR_AND_VALUES
+	## is a pair of keys and values that will be used in
+	## conjunction with the default values to populate the
+	## spec. The default values are found in the shared constant
+	## .default_values. 
 	##
 	## This method deals with frozen collections and commits after
 	## the record has been inserted. If at the time of inserting
@@ -690,7 +718,11 @@ _private _method eo_gisa_base_test_case.insert_frozen_record ( coll_name, rdf_id
 		_if rec _isnt _unset
 		_then
 			_self.specs.add( rec )
-			_self.assign_id_to_record( rdf_id, rec )
+
+			_if rdf_id _isnt _unset
+			_then 
+				_self.assign_id_to_record( rdf_id, rec )
+			_endif 
 		_endif
 		ok? << _true
 	_protection
@@ -960,6 +992,156 @@ _method eo_gisa_base_test_case.then_all_files_were_transferred_to_endpoint(endpo
 	_endloop
 
 	_self.assert_deep_equals(all_files, transferred_files, "Not all files were transferred: #1")
+	
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional schematic_names, set_deterministic_ids?, wait_time)
+	##
+	## Updates all schematics that are exported to DNOM for all
+	## records changed in the design.
+	##
+	## SCHEMATIC_NAMES - when provided then only given schematics
+	##                   will be updated. Defaults to:
+	##                   sw_dnom_properties_helper.schematic_names.keys
+	##
+	## SET_DETERMINISTIC_IDS? - sets if deterministic ids should be
+	##                          set for schematic objects after
+	##                          schematic update (default is _true). 
+	##
+	## WAIT_TIME       - max time to wait for tasks to finish in ms
+	##                   (defaults to 30000 ms)
+	##
+
+	sv << _self.get_schematic_validation_tool()
+
+	stub_method_helper.replace_method(sv, :|show_alert()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|show_results_gui()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|manage_progress_dialog()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|initialise_results()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|changed()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|set_progress_counts()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|set_update_progress()|, _proc(percent) _endproc )
+	stub_method_helper.replace_method(sv, :|set_update_label()|, _proc(string) _endproc )
+	stub_method_helper.replace_method(sv, :|prepare_to_run_transactions()|, _proc(trans) _endproc )
+	
+	_self.properties[:schematic_update_transactions] << transactions << rope.new()
+
+	_if schematic_names _is _unset
+	_then 
+		schematic_names << sw_dnom_properties_helper.schematic_names.keys
+	_endif
+	
+	_for schematic_name _over schematic_names.fast_elements()
+	_loop
+		ev << _self.electric_view
+		schematic << ev.collection(:schematic).select(predicate.eq(:name, schematic_name)).an_element()
+		sv.action(:schematic_chooser).value << schematic
+		sv.action(:source_chooser).value << :design_changes
+		sv.populate_lists()
+		_self.wait_for_task_to_complete(:|sources_for_schematic()|, wait_time)	
+
+		# Wait for 'Run' button to be enabled in case there are 2
+		# threads started in schematic_validator_tool.
+		time_spent << 0
+		_loop
+			_thisthread.yield_processor()
+			
+			_if sv.action(:run).activate_selector = :populate_lists|()| _orif
+			    time_spent > wait_time.default(30000)
+			_then	
+				_leave
+			_endif
+			
+			_thisthread.sleep(200)
+			time_spent +<< 200
+		_endloop
+		
+		sv.update()
+		_self.wait_for_task_to_complete(:|update_schematic()|, wait_time)	
+		transactions.add(sv.sys!slot(:transaction))
+	_endloop
+
+	_if set_deterministic_ids? _isnt _false
+	_then 
+		_self.set_deterministic_updated_schematic_ids(transactions)
+	_endif
+	
+	sv.close()
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.get_schematic_validation_tool()
+	##
+	## Return the schematic validation dialog
+	##
+	_if (sv << _self.properties[:schematic_validator]) _is _unset
+	_then
+		_self.application().sys!slot(:components)[:schematics].action(:validate_schematic).execute_action()
+		sv << _self.application().sys!slot(:components)[:schematics].sys!perform(:|get_dialog()|, :validator)
+	_endif
+	_return sv 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.set_deterministic_updated_schematic_ids(transactions)
+	##
+	## Set deterministic ids for all inserted or cloned schematic
+	## records in TRANSACTIONS
+	##
+	_for ds_tr _over transactions.fast_elements()
+	_loop
+		_for rec_tr _over ds_tr.record_transactions()
+		_loop 
+			_if rec_tr.operation _is :insert _orif
+			    rec_tr.operation _is :clone
+			_then
+				_self.set_id(rec_tr.result)
+			_endif
+		_endloop
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.given_circuit_building_is_monitored()
+	##
+	## Adds monitoring of circuit building.
+	##
+
+	_local cb_counts << _self.properties[:circuit_building_counts] << equality_hash_table.new()
+
+	stub_method_helper.replace_method(eo_circuit_section_engine,
+					  :|build()|,
+					  _proc (p_circuit, _optional p_section_types, p_build_view)
+						  _import cb_counts
+
+						  _if cb_counts[p_circuit.circuit_id] _is _unset
+						  _then
+							 cb_counts[p_circuit.circuit_id] << 0
+						  _endif
+						  
+						  cb_counts[p_circuit.circuit_id] +<< 1
+						  
+						  _return _self.saved!build(p_circuit, p_section_types, p_build_view)
+					  _endproc)
+	
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.then_circuit_building_counts_are(_gather data)
+	##
+
+	_self.assert_deep_equals(equality_hash_table.new_with(_scatter data),
+				 _self.properties[:circuit_building_counts],
+				 "Wrong circuit building counts: #1")
 	
 	_return _self 
 _endmethod

@@ -2,3 +2,7 @@ dnom_xsd_types
 dnom_xsd_parser
 dnom_canonicalizer
 dnom_diff
+dnom_schematic_object
+dnom_schematic_reader
+dnom_schematic_comparator
+dnom_schematic_renderer

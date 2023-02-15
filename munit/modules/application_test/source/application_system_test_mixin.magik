@@ -663,42 +663,14 @@ _method application_system_test_mixin.when_selecting_tree_element( tree_id_or_pa
 	_if selected_dt _isnt _unset
 	_then
 		a_tree_item << _self.get_tree_item( tree_id_or_path )
-		index << 1
-		_for dt _over a_tree_item.tree_manager.fast_visible_trees()
-		_loop
-			_if dt _is selected_dt
-			_then
-				renderer << a_tree_item.tree_renderer
-				x << renderer.headings_holder.row_headings_width + 10
-				_if _not renderer.style_holder.tabular_style?
-				_then
-					# Indent for each level down in the tree
-					current_dt  << dt
-					box_spacing << renderer.style_holder.box_spacing
-					_loop
-						_if ( current_dt << current_dt.parent ) _is _unset
-						_then
-							_leave
-						_endif
-						x +<< box_spacing
-					_endloop
-				_endif
-				y << a_tree_item.int!ypos_for( index ) + renderer.half_row_height
-
-				_self.handle_event(a_tree_item, :button, :left, x, y, :press, modmask.default(0))
-				_self.handle_event(a_tree_item, :button, :left, x, y, :release, modmask.default(0))
-
-				_leave
-			_endif
-			index +<< 1
-		_endloop
+		selected_dt.selected? << _true
 	_endif
 	
 	_if a_tree_item _is _unset _orif 
 		a_tree_item.selection.empty?
 	_then 
 		show("Failed to select", a_string, "in", tree_id_or_path)
-		show("Selected_dt:", selected_dt, "Tree item:", a_tree_item, "(x,y): (", x, ", ", y, ")")
+		show("Selected_dt:", selected_dt, "Tree item:", a_tree_item)
 	_endif 
 
 	>> _self
@@ -1861,7 +1833,8 @@ _private _method application_system_test_mixin.handle_event( a_canvas, category,
 							     _optional second_id, message_dialog_wait_id )
 	##
 	##
-
+	
+	_self.when_the_ui_is_ready(a_canvas, _unset, _unset, 100)
 	a_canvas.add_dependent( _self )
 
 	(s, m) << system.time_now()

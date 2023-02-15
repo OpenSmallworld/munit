@@ -1,0 +1,1 @@
+abstracted_object_itest

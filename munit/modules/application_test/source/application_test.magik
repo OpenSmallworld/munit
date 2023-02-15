@@ -53,7 +53,7 @@ $
 
 _pragma(classify_level=debug)
 ## The application to open, it actually only needs an open database
-application_test.define_shared_constant(:application_name, "swaf_professional", :public)
+application_test.define_shared_constant(:application_name, "test_swaf_professional", :public)
 $
 
 _pragma(classify_level=debug)

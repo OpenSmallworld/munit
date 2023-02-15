@@ -7,12 +7,14 @@ def_mixin( :assert_helper_mixin )
 $
 
 _pragma(classify_level=debug)
-_method assert_helper_mixin.resource_file_as_string(fname _optional encoding)
-	## reads resource file FNAME and returns its content as a string
+_method assert_helper_mixin.resource_file_as_string(fname _optional encoding, module_name)
+	## Reads resource file FNAME from module MODULE_NAME and
+	## returns its content as a string. MODULE_NAME defaults to
+	## _self.module_name.
 	## Note that the resource file is expected to be in ENCODING
-	## which defaults to utf8
-	## A second return value is the full filename
-	full_fname<< smallworld_product.get_resource_file(fname, :data, _self.module_name)
+	## which defaults to utf8.
+	## A second return value is the full filename.
+	full_fname<< smallworld_product.get_resource_file(fname, :data, module_name.default(_self.module_name))
 	in<< external_text_input_stream.new(full_fname, encoding.default(:utf8))
 	_protect
 		out<< internal_text_output_stream.new()
@@ -27,4 +29,3 @@ _method assert_helper_mixin.resource_file_as_string(fname _optional encoding)
 	>> out.string, full_fname
 _endmethod
 $
-

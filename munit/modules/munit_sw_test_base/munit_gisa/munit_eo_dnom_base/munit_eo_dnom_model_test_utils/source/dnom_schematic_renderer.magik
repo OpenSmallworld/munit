@@ -1,0 +1,342 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar(:dnom_schematic_renderer,
+	## 
+	## Reads and draws DNOM schematic xml on the currently running application
+	##
+	{
+		{:geoms, _unset},
+		{:dsr, _unset}, # dnom_schematic_reader
+		{:already_setup?, _unset}
+	}, :assert)
+$
+
+_pragma(classify_level=restricted)
+dnom_schematic_renderer.define_slot_access(:geoms, :read, :public)
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.post_render_sets(a_world,a_bounds,render_status)
+	##
+	_return .geoms.geometry_set_for_world(a_world)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.draw_ortho_goldenfiles()
+	##
+	_self.set_world("MV ortho-schematic")
+	.geoms << equality_geometry_set.new()
+	_for file _over _self.goldenfiles_ortho.fast_elements()
+	_loop
+		write(%newline, "Reading and drawing ", file)
+		_self.draw_file(file, _true)
+	_endloop	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.draw_geo_goldenfiles()
+	##
+	_self.set_world("1 to 1 Geo-schematic")
+	.geoms << equality_geometry_set.new()
+	_for file _over _self.goldenfiles_geo.fast_elements()
+	_loop
+		write(%newline, "Reading and drawing ", file)
+		_self.draw_file(file, _true)
+	_endloop	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.draw_ortho_collapsed_goldenfiles()
+	##
+	_self.set_world("MV ortho-schematic")
+	.geoms << equality_geometry_set.new()
+	_for file _over _self.goldenfiles_ortho_collapsed.fast_elements()
+	_loop
+		write(%newline, "Reading and drawing ", file)
+		_self.draw_file(file, _true)
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.draw_substation_goldenfile(name, _optional collapsed?)
+	##
+	wildname << write_string(%*, name, %*)
+	all_goldenfiles << _if collapsed? _isnt _true
+			   _then
+				   >> _self.goldenfiles_ortho
+			   _else
+				   >> _self.goldenfiles_ortho_collapsed
+			   _endif	
+	filepath << all_goldenfiles.all_elements_satisfying(predicate.wild(:yourself, wildname)).an_element()
+	write(%newline, "Reading and drawing ", filepath)
+	_self.draw_file(filepath)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_schematic_renderer.setup_drawing()
+	##
+	_if .already_setup? _is _true
+	_then
+		_return
+	_endif	
+	_if .geoms _is _unset
+	_then
+		.geoms << equality_geometry_set.new()
+	_endif	
+	apps << smallworld_product.applications.as_simple_vector()
+	_if apps.size ~= 1
+	_then
+		condition.raise(:error, :string, write_string("#Expected exactly one application running when: ", apps.size))
+		_return
+	_endif
+	map_mgr << apps[1].component(:maps)
+	map_mgr.add_post_renderer(_self, 0, :post_render_sets)
+	.already_setup? <<  _true
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.goto
+	##
+	apps << smallworld_product.applications.as_simple_vector()
+	map_mgr << apps[1].component(:maps)
+	map_mgr.goto(.geoms.bounds)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.world
+	##
+	_global !dsr_world!
+	_if !dsr_world! _is _unset
+	_then
+		_return gis_program_manager.databases[:electric].world
+	_else
+		_return !dsr_world!
+	_endif	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.set_world(_optional name)
+	schematics << gis_program_manager.databases[:electric].collection(:schematic)
+	roped << rope.new()
+	named << equality_property_list.new()
+	_for schematic _over schematics.fast_elements()
+	_loop
+		roped.add_last(schematic)
+		named[schematic.name] << schematic
+		_if name _is _unset
+		_then
+			write(roped.size, "   ", schematic.name)
+		_endif
+	_endloop
+	_if name _is _unset
+	_then
+		_return
+	_elif name.is_kind_of?(1)
+	_then
+		world << roped[name].world
+	_else
+		world << named[name].world
+	_endif
+	_global !dsr_world!
+	_if world _isnt _unset
+	_then
+		write("set ", world)
+		!dsr_world! << world
+	_endif
+	_return world
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.drawing_coordinates(geo_object)
+	#
+	i << geo_object.x.as_number() * 1000 # + 1e5
+	j << geo_object.y.as_number() * 1000
+	_return coordinate.new(i,j)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.draw_file(filepath, _optional do_not_cleanup?)
+	##
+	.dsr << dnom_schematic_reader.new(filepath)
+	_self.draw(do_not_cleanup?)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method dnom_schematic_renderer.draw(do_not_cleanup?)
+	##
+	_self.setup_drawing()
+	_if do_not_cleanup? _isnt _true
+	_then
+		.geoms << .geoms.new()
+	_endif
+	_self.draw_substation(.dsr.substation)
+_endmethod
+$
+	
+_pragma(classify_level=restricted)
+_private _method dnom_schematic_renderer.draw_substation(substation)
+	##
+	_for label _over substation[:label_placement].default({}).fast_elements()
+	_loop
+		_self.draw_label_placement(label)
+	_endloop
+	_for symbol _over substation[:symbol_placement].default({}).fast_elements()
+	_loop
+		_self.draw_symbol_placement(symbol)
+	_endloop
+	_for ref _over substation[:reference_object].default({}).fast_elements()
+	_loop
+		_self.draw_reference_object(ref)
+	_endloop	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.draw_reference_object(ref)
+	##
+	_for symbol _over ref[:symbol_placement].default({}).fast_elements()
+	_loop
+		_self.draw_symbol_placement(symbol)
+	_endloop
+	_for label _over ref[:label_placement].default({}).fast_elements()
+	_loop
+		_self.draw_label_placement(label)
+	_endloop
+	_for poly _over ref[:poly_placement].default({}).fast_elements()
+	_loop
+		_self.draw_poly_placement(poly)
+	_endloop	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.draw_poly_placement(poly)
+	##
+	coords << rope.new()
+	_for vertex _over poly.vertex.fast_elements()
+	_loop
+		vertex_coords << _self.drawing_coordinates(vertex)
+		coords.add_last(vertex_coords)
+	_endloop
+	geom << pseudo_chain.new_for_world(sector.new_from(coords), _self.world)
+	geom.style_info << eo_cim_diagram_reader.line_style
+	.geoms.add(geom)
+
+	text_location << geom.location_for_length(geom.line_length / 2.0)
+	text_orientation << geom.sectors.cs_orientation_at(text_location)
+	string_props << property_list.new_with(:height, 1.5e3, :rotation, 90)
+	string_props[:string] << poly.int!parent.dnom_obj_id
+	text_geom << pseudo_text.new_for_world(text_location, _self.world, string_props)
+	text_geom.style_info << text_style.new_with_properties(:colour, colour.called(:green))
+	.geoms.add(text_geom)
+
+	_for dot_name _over {:first_coord, :last_coord}.fast_elements()
+	_loop
+		dot_geom << pseudo_point.new_for_world(geom.perform(dot_name), _self.world)
+		dot_geom.style_info << eo_cim_diagram_reader.line_point_style
+		.geoms.add(dot_geom)
+	_endloop	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.draw_symbol_placement(object)
+	##
+	string << _unset
+	_if object.int!parent.int!tag_name _is :substation
+	_then
+		coords << _self.drawing_coordinates(object.vertex.an_element())
+		string << object.int!parent.name
+	_else
+		coords << _self.drawing_coordinates(object)
+		string << object.int!parent.dnom_obj_id
+	_endif
+
+	rotation << _if object.responds_to?(:rotation)
+		    _then
+			    >> object.rotation.as_number().degrees_to_radians
+		    _else
+			    >> 0
+		    _endif
+	
+	string_props << property_list.new_with(:height, 1.5e3,
+					       :orientation, rotation)
+	string_props[:string] << string
+	geom << pseudo_text.new_for_world(coords, _self.world, string_props)
+	geom.style_info << text_style.new_with_properties(:colour, colour.called(:red))
+	.geoms.add(geom)
+	geom << pseudo_point.new_for_world(coords, _self.world)
+	geom.style_info << eo_cim_diagram_reader.line_point_style
+	.geoms.add(geom)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.draw_label_placement(object)
+	##	
+	coords << _self.drawing_coordinates(object)
+	string_props << property_list.new_with(:height, 1e3,
+					       :orientation, object.character_rotation.as_number().degrees_to_radians)
+	string_props[:string] << object.text
+	geom << pseudo_text.new_for_world(coords, _self.world, string_props)
+	geom.style_info << text_style.new_with_properties(:colour, colour.called(:plum))
+	.geoms.add(geom)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.goldenfiles(scheme_name, _optional subdir)
+	##
+	matching << write_string("*_schem_", scheme_name, ".xml")
+	module << sw_module_manager.module(:eo_dnom_station_tests)
+	_if subdir _is _unset
+	_then
+		files << module.resource_files(:data, _true, _false)
+	_else
+		files << module.resource_files(:data, _true, _true)
+		dir_match << write_string("*", subdir, "*")
+		files << files.all_elements_satisfying(predicate.wild(:yourself, dir_match))
+	_endif	
+	files << files.all_elements_satisfying(predicate.wild(:yourself, matching))
+	_return files
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.goldenfiles_all
+	_return _self.goldenfiles("*")
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.goldenfiles_ortho
+	_return _self.goldenfiles("ortho")
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.goldenfiles_geo
+	_return _self.goldenfiles("geo")
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method dnom_schematic_renderer.goldenfiles_ortho_collapsed
+	_return _self.goldenfiles("ortho", "ADMS_DNOM_collapsible_buses")
+_endmethod
+$

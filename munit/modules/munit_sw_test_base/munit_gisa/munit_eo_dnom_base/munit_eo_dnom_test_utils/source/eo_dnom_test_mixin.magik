@@ -63,6 +63,7 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.when_registering_written_xml_files()
+	##
 	# Store filepaths to wrote xmls, keeping the write order.
 	_local xml_files << equality_property_list.new()
 	_local schematic_files << equality_property_list.new()
@@ -99,6 +100,7 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.create_station_export_request()
+	##
 
 	_local request << sw_dnom_substation_export_helper.create_request_for_substation_export(_self.properties[:station_to_export])
 
@@ -113,15 +115,20 @@ _method eo_dnom_test_mixin.create_station_export_request()
 	request.set_property( :export_schematics?,
 			      _self.properties[:export_schematics?].default(_true) )
 
-	# export future network during tests
-	request.set_property( :export_future_network?,
-			      _self.properties[:export_future_network?].default(_false) )
+	# Override export future network property if needed.
+	_if _self.properties[:export_future_network?] _isnt _unset
+	_then 
+		request.set_property(:export_future_network?,
+				     _self.properties[:export_future_network?])
+	_endif
+	
 	_return request 
 _endmethod
 $
 
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.given_export_station_internals(val)
+	##
 
 	_self.properties[:export_station_internals?] << val
 	
@@ -131,6 +138,7 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.given_export_future_network(val)
+	##
 
 	_self.properties[:export_future_network?] << val
 	
@@ -140,6 +148,7 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.given_export_schematics(val)
+	##
 
 	_self.properties[:export_schematics?] << val
 	
@@ -149,6 +158,7 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.then_station_file_was_written(p_flag?)
+	##
 
 	_return _self.int!then_file_was_written( _false, p_flag? )
 _endmethod
@@ -156,6 +166,7 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.int!then_file_was_written( p_internal?, p_flag? )
+	##
 	xml_files << _self.properties[:written_substations].an_element()
 	_self.assert_false( xml_files.empty?, "No xml files has been written at all.")
 	_if p_internal?
@@ -180,6 +191,7 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.then_zip_file_was_written( p_flag? )
+	##
 
 	request << _self.properties[:export_request]
 	_self.assert_not_unset( request , "No export request cached")
@@ -236,6 +248,7 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.given_an_eo_object( collection_name, _gather field_name_value_keys_elements )
+	##
 	ev << gis_program_manager.cached_dataset( :electric )
 	coll << ev.collections[collection_name]
 	field_values << property_list.new_from_gathered(field_name_value_keys_elements)
@@ -377,6 +390,7 @@ $
 
 _pragma(classify_level=debug)
 _private _iter _method eo_dnom_test_mixin.objects_which_should_be_mapped(a_substation_or_circuit)
+	##
 	objects << equality_set.new()
 	_if a_substation_or_circuit.source.name _is :eo_circuit
 	_then
@@ -523,9 +537,22 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name)
+_method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optional schem_ref_file_name, match_schematics_exactly?)
 	## 
+	## Checks if exported files match golden files.
 	##
+	## REF_FILE_NAME       - the name of reference golden file
+	##                       (without extension).
+	## SCHEM_REF_FILE_NAME - the name of reference golden file for
+	##                       schematics export. If unset then
+	##                       REF_FILE_NAME is used.
+	## MATCH_SCHEMATICS_EXACTLY? - if false than schematic golden
+	##                       files are matched using the general xml comparison,
+	##                       instead of the dnom_schematic_comparator
+	##
+
+	schem_ref_file_name <<  schem_ref_file_name.default(ref_file_name)
+	
 	written_substations << _self.properties[:written_substations].an_element()
 	_self.assert_equals(written_substations.size, 1, "Expected one Substation xml, when got #1")
 	reference_xml_file << ref_file_name + ".xml"
@@ -540,10 +567,11 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name)
 	_if _self.properties[:export_request][:export_schematics?] _is _true
 	_then
 		_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
-		reference_ortho_schematic << ref_file_name + "_schem_ortho.xml"	
-		reference_geo_schematic << ref_file_name + "_schem_geo.xml"
-		_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1])
-		_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2])
+		reference_ortho_schematic << schem_ref_file_name + "_schem_ortho.xml"	
+		reference_geo_schematic << schem_ref_file_name + "_schem_geo.xml"
+		match_schematics_exactly? << match_schematics_exactly?.default(_true)
+		_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], match_schematics_exactly?)
+		_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], match_schematics_exactly?)
 	_else
 		_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
 	_endif
@@ -579,7 +607,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.assert_xml_files_equals( reference_filename , actual_pathname )
+_method eo_dnom_test_mixin.assert_xml_files_equals(reference_filename , actual_pathname, _optional using_dnom_schematic_comparator?)
 	##
 	## Assert if ACTUAL_PATHNAME (full path and file name) is equivalent to
 	## the REFERENCE_FILENAME that is stored in the resources directory of this
@@ -589,21 +617,26 @@ _method eo_dnom_test_mixin.assert_xml_files_equals( reference_filename , actual_
 	# Forward directly to int!assert_xml_files_equals().
 	# The implementation isn't inlined here so that we can inject the golden file
 	# canonicalizer when we need it.
-	_self.int!assert_xml_files_equals( reference_filename , actual_pathname )
+	_self.int!assert_xml_files_equals(reference_filename , actual_pathname, using_dnom_schematic_comparator?)
 	
 _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.int!assert_xml_files_equals( reference_filename , actual_pathname )
+_method eo_dnom_test_mixin.int!assert_xml_files_equals(reference_filename , actual_pathname, using_dnom_schematic_comparator?)
 	## 
 	##
-	(same_file?, report_file) << _self.compare_xml_files(reference_filename , actual_pathname)
-	
-	desc << write_string( "The output file doesn't match the reference file: ",
-			      reference_filename, "See details here: ", report_file )
-
-	_self.assert_true( same_file?, desc )	
+	_if using_dnom_schematic_comparator? _isnt _true
+	_then
+		(same_file?, report_file) << _self.compare_xml_files(reference_filename , actual_pathname)
+		
+		desc << write_string("The output file doesn't match the reference file: ",
+				      reference_filename, "See details here: ", report_file)
+		
+		_self.assert_true(same_file?, desc)
+	_else
+		_self.compare_using_dnom_schematic_comparator(reference_filename, actual_pathname)
+	_endif	
 _endmethod
 $
 
@@ -613,6 +646,17 @@ _pragma(classify_level=restricted)
 ## makes the files easier to find and analyse, rather than looking through the
 ## temp directory.
 eo_dnom_test_mixin.define_shared_variable( :save_differing_xml_files_dir, _unset, :public )
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_test_mixin.compare_using_dnom_schematic_comparator(reference_filename, actual_pathname)
+	##
+	expected_pathname << smallworld_product.get_resource_file(reference_filename,
+								   _self.resource_path,
+								   _self.module_name)
+	_self.properties[:dsr] <<
+		dnom_schematic_comparator.compare_files(expected_pathname, actual_pathname)
+_endmethod
 $
 
 _pragma(classify_level=debug)
@@ -683,7 +727,10 @@ _method eo_dnom_test_mixin.resource_path
 	## Return resource path.
 	## 
 
-	_if _self.use_config_in_resource_path?
+	_if (subfolder_name << _self.properties[:resources_subfolder_name]) _isnt _unset 
+	_then
+		_return "data" + system.pathname_separator + subfolder_name
+	_elif _self.use_config_in_resource_path?
 	_then
 		config_name << sw_dnom_properties_helper.default_config_name
 		subfolder_name << system.validate_as_file_name(config_name).substitute_character(%space, %_)
@@ -692,6 +739,19 @@ _method eo_dnom_test_mixin.resource_path
 	_else
 		_return "data"
 	_endif
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_resources_subfolder_name(name)
+	##
+	## Sets the name of subfolder in resources for golden file
+	## comparision.
+	## 
+
+	_self.properties[:resources_subfolder_name] << name
+	
+	_return _self 
 _endmethod
 $
 
@@ -706,6 +766,7 @@ _endmethod
 $
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.given_custom_field_mapping_config_for_line()
+	##
 	xml_string <<
 	'<cim_associations>' +	
 	'<cim_association name="custom_field_mounting" target_class="dnom_custom_field" register_mapping="false"> ' +
@@ -741,7 +802,7 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.given_station_has_no_related_circuits_and_no_internals(substation_name)
-
+	##
 	provider <<  sw_dnom_properties_helper.station_provider
 	_local sub << provider.get_station(substation_name)
 	
@@ -784,5 +845,99 @@ _method eo_dnom_test_mixin.given_station_has_no_related_circuits_and_no_internal
 						  _endif
 					  _endproc)
 	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data(_gather file_names)
+	##
+	## Compares given golden files. Returns true if all contents
+	## except project data are the same.
+	##
+	## Method can be used only on canonicalised files because it
+	## uses text comparison only.
+	##
+
+	streams << rope.new()
+	idx << 0
+
+	# Open all file streams.
+	_for file_name _over file_names.fast_elements()
+	_loop
+		full_name << smallworld_product.get_resource_file(file_name + ".xml",
+								  _self.resource_path,
+								  _self.module_name)
+		
+		streams.add_last(external_text_input_stream.new(full_name))
+	_endloop
+
+	_protect
+		# Compare each line of all files.
+		_loop
+			idx +<< 1
+			value << :not_set
+			
+			_for stream _over streams.fast_elements()
+			_loop
+				next_value << _self.get_line_from_stream(stream)
+				
+				_if value _isnt :not_set _andif
+				    value <> next_value
+				_then
+					_self.fail("Golden files are different! First difference at line " +
+						   idx.write_string + ".")
+					_return
+				_endif
+				
+				value << next_value
+			_endloop
+
+			_if value _is _unset
+			_then
+				_leave
+			_endif
+		_endloop
+	_protection
+		# Close all file streams.
+		_for stream _over streams.fast_elements()
+		_loop
+			stream.close()
+		_endloop
+	_endprotect
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_test_mixin.get_line_from_stream(stream)
+	##
+	## Gets next line from file stream. This method automatically
+	## omits project data.
+	##
+
+	line << stream.get_line()
+
+	_if line _isnt _unset _andif
+	    line.index_of_seq("<Project>") _isnt _unset
+	_then
+		# If project data is found then go to the next line just after
+		# the project.
+		_loop
+			line << stream.get_line()
+
+			_if line _is _unset
+			_then
+				_return
+			_elif line.index_of_seq("</Project>") _isnt _unset
+			_then
+				_leave
+			_endif
+		_endloop
+
+		line << stream.get_line()
+	_endif
+	
+	_return line
 _endmethod
 $

@@ -421,9 +421,9 @@ _method gui_test_mixin.when_the_dialog_is_suspended(owner, _optional wait_time, 
 	##
 	## Suspends the supplied model or gui_framework and waits for the UI to be
 	## ready.
-
+	
 	>> _self.when_the_dialog_is_closed(owner, wait_time, delay_time, max_attempts, :|suspend()|)
-
+	
 _endmethod
 $
 

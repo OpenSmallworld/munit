@@ -40,7 +40,8 @@ $
 
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method eo_dnom_base_case.given_prop_values(_gather prop_values)
-
+	##
+	
 	.properties[:proposed_values] << property_list.new_with(_scatter prop_values)
 
 	_return _self
@@ -49,7 +50,8 @@ $
 
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method eo_dnom_base_case.given_object_fill_checks(_gather p_checks)
-
+	##
+	
 	l_checks << property_list.new_with(_scatter p_checks)
 
 	_for l_key, l_filled? _over l_checks.fast_keys_and_elements()
@@ -64,7 +66,8 @@ $
 
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method eo_dnom_base_case.given_run_insert_transaction()
-
+	##
+	
 	record_transaction.new_insert(.properties[:collection_of_interest], .properties[:proposed_values]).run()
 
 	_return _self
@@ -73,7 +76,8 @@ $
 
 _pragma(classify_level=debug,topic={MUnit, Test})
 _method eo_dnom_base_case.given_run_update_transaction()
-
+	##
+	
 	record_transaction.new_update(.properties[:object_of_interest], .properties[:proposed_values]).run()
 
 	_return _self
@@ -81,8 +85,27 @@ _endmethod
 $
 
 _pragma(classify_level=debug,topic={MUnit, Test})
-_method eo_dnom_base_case.when_object_is_deleted()
+_method eo_dnom_base_case.given_default_config_name(name)
+	##
+	## Stubs sw_dnom_properties_helper.default_config_name to
+	## return given NAME.
+	##
 
+	stub_method_helper.replace_method(sw_dnom_properties_helper,
+					  :default_config_name,
+					  _proc ()
+						  _import name
+						  _return name
+					  _endproc)
+
+	_return _self
+_endmethod
+$
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_dnom_base_case.when_object_is_deleted()
+	##
+	
 	record_transaction.new_delete(.properties[:object_of_interest]).run()
 
 	_return _self
@@ -91,9 +114,9 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_base_case.export_differences_from_current_design_locally(_optional export_type)
-
 	## Process the circuit request, using the %TEMP% for output and
 	## without messaging
+	
 	request << sw_dnom_substation_export_helper.create_request_to_export_differences(export_type.default(:as_built)) 
 
 	# don't delete xml files for tests
@@ -107,9 +130,12 @@ _method eo_dnom_base_case.export_differences_from_current_design_locally(_option
 	request.set_property( :export_schematics?,
 			      _self.properties[:export_schematics?].default(_true) )
 
-	# Don't export future network unless enabled
-	request.set_property( :export_future_network?,
-			      _self.properties[:export_future_network?].default(_false) )
+	# Override export future network property if needed.
+	_if _self.properties[:export_future_network?] _isnt _unset
+	_then 
+		request.set_property(:export_future_network?,
+				     _self.properties[:export_future_network?])
+	_endif
 	
 	# sw_dnom_split_export_manager now requires exchange_job_id property to be set
 	request.set_property( :exchange_job_id, :dummy_exchange_job_id )
@@ -150,7 +176,8 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_base_case.export_substation_locally( a_substation )
-
+	##
+	
 	_local l_station_provider << sw_dnom_substation_export_helper.get_substation_provider_instance()
 	_local name << l_station_provider.get_sanitized_station_name(a_substation)
 	

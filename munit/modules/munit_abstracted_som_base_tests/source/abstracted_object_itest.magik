@@ -1,0 +1,719 @@
+#% text_encoding = iso8859_1
+_package sw
+$
+
+_pragma(classify_level=restricted)
+def_slotted_exemplar (:abstracted_object_itest,
+	{
+		{:source_view, _unset},
+		{:abstracted_view, _unset},
+		{:object_test_data, _unset},
+		{:network_builder, _unset}
+	},
+	{
+		:test_case
+	})
+
+$
+
+_pragma(classify_level=debug)
+_private _method abstracted_object_itest.abstracted_view
+	##
+	##
+	
+	>> .abstracted_view
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.network_builder
+	## 
+	## 
+	>> .network_builder
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.root_alternative_name
+	##
+	## Subclasses could implement this
+	## This will be used to create an alternative tree under Top.
+	## Sub-alternatives will be named after the current system user.
+	## This backstop method returns _self.class_name
+	cn << _self.class_name
+	_if cn.size > 32
+	_then # slice to max length of alternative name
+		cn << cn.slice(1, 32)
+	_endif
+	>> cn
+_endmethod
+$
+
+_pragma(classify_level=subclassable)
+_method abstracted_object_itest.run_test()
+	## 
+	## This method can be subclassed for a specific run_test
+	##
+
+	_dynamic !current_application!
+	
+	_if _self.dummy_application_name() _isnt _unset
+	_then
+		app_def << smallworld_product.application_definition(_self.dummy_application_name())
+		!current_application! << application.new_from_def(app_def)
+	_endif
+
+	_super.run_test()	
+_endmethod
+$
+
+_pragma(classify_level=subclassable)
+_method abstracted_object_itest.dummy_application_name()
+	## 
+	## This method should be subclassed for a specific application name
+	##
+	
+	>> _unset
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.open_abstracted_view()
+	## Called from set_up()
+	## 
+	
+	.abstracted_view << _self.abstracted_som_helper.create_and_open_abstract_dsm()	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.tear_down()
+	## 
+	##
+	
+	.source_view.commit()
+	
+	_super.tear_down()
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.apply_method_chain_to_object(obj, methods)
+	##
+	## Iteratively apply METHODS to an object OBJ and return the
+	## final result.
+	##
+	## METHOD is a list (possibly empty) of method names or simple
+	## vectors consisting a method name and arguments.
+	##
+	## The first method is applied to OBJ. Each subsequent method is
+	## applied to the result of the previous method.
+	##
+	## If METHODS is empty, the method returns OBJ.
+	##
+	result << obj
+	_for method_to_apply _over methods.elements()
+	_loop
+		_if method_to_apply.class_name _is :simple_vector 
+		_then
+			#for methods with arguments, the expected input is {meth, arg1, arg2...} 
+			# the code below handles parsing that and converting into a send message
+			
+			method << method_to_apply[1]
+			args_vec << method_to_apply.subseq(2, method_to_apply.size - 1)
+			result << result.perform(method, _scatter args_vec)
+			#write(result, " . ", method, " returns ", result, "  ... args: ", _scatter args_vec)
+		_else
+			result << result.perform(method_to_apply)
+			#write(result, " . ", method_to_apply, " returns ", result)
+		_endif
+	_endloop
+	_return result
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.get_key_field_value(source_obj)
+	##
+	## Returns the value stored in the key field of source_obj.
+	## Key field is defined as the result of calling key_field_names. This allows for
+	## handling of objects where the id field can be either id or rwo_id.
+	## Assumes only a single key field exists
+	##
+	key_field_name << source_obj.key_field_names.an_element()
+	>> source_obj.perform(key_field_name)
+_endmethod
+$
+
+
+
+_pragma(classify_level=debug)
+_method abstracted_object_itest.world_from_universe(id)
+	## a world from .source_view from universe ID
+	## 
+	>> .source_view.collection(:sw_gis!world).select(predicate.eq(:universe_id,id)).an_element()
+_endmethod
+$
+
+_pragma(classify_level=subclassable)
+_abstract _method abstracted_object_itest.network_builder_insert_method_name
+	##
+	## Subclasses should implement this
+	## Return a method, defined on a network_builder that will be
+	## used to create the test data
+_endmethod
+$
+
+_pragma(classify_level=subclassable)
+_method abstracted_object_itest.get_abstracted_object_for_source_object(source_obj _optional abs_coll_nm)
+	##
+	## Return one RWO corresponding to SOURCE_OBJ
+	## ABS_COLL_NM can be used to specify the name of the abstract collection
+	
+	>> .abstracted_view.get_abstracted_object_for(source_obj)
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.int!test_read_abstracted_object(test_key)
+	
+	## test using this test method should populate the
+	## .object_test_data slot[TEST_KEY] (a property_list) to provide data to
+	## be written into the source model and tests to read through
+	## the abstracted model.
+	## An example for wire segments is here:
+	##	
+	##	
+	##		.object_test_data[:test_wire_1] << 
+	##		property_list.new_with(
+	##			# :installation_props, :phases & :asset_phase_props are passed
+	##			# to a network_builder API, as defined by :|network_builder_insert_method_name|
+	##			:installation_props,
+	##			property_list.new_with(:network_type, "MV", :route, pseudo_chain.new_for_world(sector.new_with_xy(1000,0,1000,100000), ev.world)),  #FIXME ev
+	##			:phases,
+	##			{{"B"}},
+	##			:asset_phase_props,
+	##			{property_list.new_with(:asset_id, "123")},
+	##			:tests, {
+	##                                      #- A selector can be defined as a sequence of methods to be
+	##                                      #  called on the abstracted object to return an actual result
+	##                                      #- An expected_result can be a single value
+	##					property_list.new_with(:selector,
+	##							       {:network_type},
+	##							       :expected_result,
+	##							       "MV"
+	##							       ),
+	##                                      #- An expected_result can be defined as a sequence of methods
+	##                                      #  to be called on the newly created object in the source
+	##                                      #  view (:source_obj)
+	##					property_list.new_with(:selector,
+	##							       {:network_type},
+	##							       :expected_result,
+	##							       {:source_obj, :network_type}
+	##							       ),	
+	##					property_list.new_with(:selector,
+	##							       {:network_type, :|as_symbol()|},
+	##							       :expected_result,
+	##							       :|MV|
+	##							       )
+	##			}
+	##			      )
+	##
+	
+	#Given - there are some objects 
+	_self.write_data_into_source_model(test_key)
+	
+	#then verify the expected values in the abstracetd object
+	_self.check_reading_of_data_through_abstracted_model(test_key)
+	
+_endmethod
+$
+
+_pragma(classify_level=subclassable)
+_abstract _method abstracted_object_itest.write_data_into_source_model( test_key, _optional state )
+	##
+	##	This method can be subclassed for a specific test object
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.check_reading_of_data_through_abstracted_model(test_key _optional abs_coll_name)
+	##
+	##
+	
+	_if (tests << .object_test_data[test_key][:tests]) _is _unset
+	_then
+		_return
+	_endif
+	
+	source_obj << .object_test_data[test_key][:source_obj]
+	_self.assert_not_unset(source_obj,
+		write_string(test_key, "  No object created in the source model, or cached on the test?")
+	)
+	
+	abstracted_obj << _self.get_abstracted_object_for_source_object(source_obj, abs_coll_name)
+	
+	_self.assert_true(equality_set.new_from_iter(
+			abstracted_obj.source_rwos,
+			:|elements()|).includes?(source_obj),
+		write_string(test_key, "   abstracted_obj not associated with source_obj - weird!")
+	)
+	
+	_for i_test _over tests.elements()
+	_loop
+		_if _not i_test.includes_key?(:selector)
+		_then
+			_self.fail("Test case does not specify :selector")
+			_continue
+		_endif
+		
+		_if _not i_test.includes_key?(:expected_result)
+		_then
+			_self.fail("Test case does not specify :expected_result")
+			_continue
+		_endif			
+		
+		selector << i_test[:selector]
+		expected_result << i_test[:expected_result]
+		
+		_if expected_result.class_name _is :simple_vector _andif
+			(s << expected_result.size) > 1 _andif
+			expected_result[1] _is :source_obj
+		_then
+			# Instead of a given expected result, we compute it from
+			# calling methods on the source object
+			expected_result << _self.apply_method_chain_to_object(source_obj, expected_result.slice_to_end(2))
+		_endif
+		
+		# Instead of a given actual result, we compute it from
+		# calling methods on the source object
+		actual_result << _self.apply_method_chain_to_object(abstracted_obj, selector)
+		
+		selector_str << internal_text_output_stream.new()
+		selector_str.write_list_with_separator(selector, %.)
+		
+		_self.assert_equals(expected_result, actual_result,
+			write_string(test_key, ",field: ", selector_str.string, ", ", expected_result, " <> ", actual_result)
+		)
+	_endloop
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.run_and_verify_update_test(test_key)
+
+	#Given - write via abs to mimic the real use case 
+	_self.write_data_into_abstracted_model( test_key )
+	
+	#When
+	_if .object_test_data[test_key][:update_rec] _isnt _unset #
+	_then
+		#run update Txn
+		_self.update_data_in_abstracted_model(test_key)
+	_else
+		condition.raise(:error, :string, ":update_rec not passed in for running update Tx")
+	_endif
+
+	#then
+	_self.check_writing_of_data_through_abstract_model( test_key, :updated_abstract_obj )
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.update_data_in_abstracted_model( test_key )
+	##
+	## updates record based on whats passed as value for the the :update_rec
+	## the lookup is based on the abstract object 
+	## :update_rec = {} is considered as update request for parent abstract object (i.e abstracted installation)
+	## :update_rec = {meth1,  meth2,...} is considered as update request for object found by 
+	## method chaining using methods passed in. i.e meth1, meth2 on the parent abstract object (i.e abs inst)
+	##
+
+	test_data << .object_test_data[ test_key ]
+	
+	_if (update_rec_val << test_data[:update_rec]).class_name _is :simple_vector 
+	_then
+		abs_obj << test_data[:written_abstract_obj]
+		_if update_rec_val.size _is 0
+		_then
+			#installation rec update
+			update_rec << abs_obj
+		_else
+			#asset rec update
+			update_rec << _self.apply_method_chain_to_object(abs_obj, update_rec_val)
+		_endif
+
+	_endif
+
+	update_properties << test_data[:update_table_properties]
+	
+	result << record_transaction.new_update( update_rec, update_properties ).run()
+
+	
+	_if result _isnt _unset
+	_then
+		test_data[:updated_abstract_obj] << result
+		write("Updated ", result, " in datastore.")
+	_endif
+	
+_endmethod
+$
+
+
+########################################## DELETE helpers##########################################
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.int!run_and_verify_delete_test(test_key)
+
+	#Given - write via abs to mimic the real use case 
+	_self.write_data_into_abstracted_model( test_key )
+	_self.capture_records_to_check_for_deletion(test_key)
+	_self.capture_records_to_check_for_retention(test_key)
+	
+	#When
+	_if .object_test_data[test_key][:delete_rec] _isnt _unset #
+	_then
+		#run delete Txn
+		_self.delete_data_in_abstracted_model(test_key)
+	_else
+		condition.raise(:error, :string, ":delete_rec not passed in for running delete Tx")
+	_endif
+
+	#then
+	_self.check_deleting_of_data_through_abstract_model( test_key, :deleted_abstract_obj )
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.capture_records_to_check_for_retention(test_key)
+	test_data << .object_test_data[ test_key ]
+	_if test_data[:records_expected_to_remain] _isnt _unset
+	_then
+		test_data[:records_to_check_for_retention] << rope.new()
+		_for el _over test_data[:records_expected_to_remain].fast_elements()
+		_loop
+			_if el.class_name _is :simple_vector
+			_then
+				abs_obj << test_data[:written_abstract_obj]
+				rec << _self.apply_method_chain_to_object(abs_obj.master_rwo, el)
+				rec_info << property_list.new_with(
+						    :collection, rec.source_collection,
+						    :id, rec.id
+							  )
+				test_data[:records_to_check_for_retention].add(rec_info)
+				# _else  Implement other cases if needed
+			_endif
+			
+		_endloop
+	_endif
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.capture_records_to_check_for_deletion(test_key)
+	test_data << .object_test_data[ test_key ]
+	_if test_data[:records_expected_to_be_deleted] _isnt _unset
+	_then
+		test_data[:records_to_check_for_deletion] << rope.new()
+		_for el _over test_data[:records_expected_to_be_deleted].fast_elements()
+		_loop
+			_if el.class_name _is :simple_vector
+			_then
+				abs_obj << test_data[:written_abstract_obj]
+				rec << _self.apply_method_chain_to_object(abs_obj.master_rwo, el)
+				rec_info << property_list.new_with(
+						    :collection, rec.source_collection,
+						    :id, rec.id
+							  )
+				test_data[:records_to_check_for_deletion].add(rec_info)
+				# _else  Implement other cases if needed
+			_endif
+			
+		_endloop
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.delete_data_in_abstracted_model( test_key )
+	##
+	## delete record based on whats passed as value for the the :delete_rec
+	## the lookup is based on the abstract object 
+	## :delete_rec = {} is considered as delete request for parent abstract object (i.e abstracted installation)
+	## :delete_rec = {meth1,  meth2,...} is considered as delete request for object found by 
+	## method chaining using methods passed in. i.e meth1, meth2 on the parent abstract object (i.e abs inst)
+	##
+
+	test_data << .object_test_data[ test_key ]
+	
+	_if (delete_rec_val << test_data[:delete_rec]).class_name _is :simple_vector 
+	_then
+		abs_obj << test_data[:written_abstract_obj]
+		_if delete_rec_val.size _is 0
+		_then
+			#installation rec update
+			delete_rec << abs_obj
+		_else
+			#child rec update
+			delete_rec << _self.apply_method_chain_to_object(abs_obj, delete_rec_val)
+		_endif
+
+	_endif
+
+	test_data[:delete_abstract_obj] << delete_rec #the object intended to be deleted
+	write("Going to test delete of object:", delete_rec)
+
+	result << record_transaction.new_delete( delete_rec ).run()
+
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.check_deleting_of_data_through_abstract_model( test_key )
+	##
+	##
+
+	test_data << .object_test_data[ test_key ]
+
+	# Check the object that we asked to be deleted
+	deleted_abstract_obj << test_data[:delete_abstract_obj]
+	_self.assert_record_deleted( deleted_abstract_obj.source_collection, deleted_abstract_obj.id )
+	_self.assert_record_deleted( deleted_abstract_obj.master_rwo.source_collection, deleted_abstract_obj.id )
+
+	# Check deleted records
+	_if test_data[:records_to_check_for_deletion] _isnt _unset
+	_then
+		_for rec _over test_data[:records_to_check_for_deletion].fast_elements()
+		_loop
+			_self.assert_record_deleted( rec[:collection], rec[:id] )
+		_endloop
+	_endif
+	# Check remained records
+	_if test_data[:records_to_check_for_retention] _isnt _unset
+	_then
+		_for rec _over test_data[:records_to_check_for_retention].fast_elements()
+		_loop
+			_self.assert_record_not_deleted( rec[:collection], rec[:id] )
+		_endloop
+	_endif
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.assert_record_deleted( collection, id )
+	##
+	## Assert that COLLECTION does not contain a record with id ID
+	##
+	msg << write_string("Collection ", collection, " has record at id ", id)
+	_self.assert_unset(collection.at(id), msg)
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.assert_record_not_deleted( collection, id )
+	##
+	## Assert that COLLECTION does contain a record with id ID
+	##
+	msg << write_string("Collection ", collection, " has not record at id ", id)
+	_self.assert_not_unset(collection.at(id), msg)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.int!test_complete_inserts_in_single_transactions(test_key)
+	
+	##
+	## test using test method should populate the
+	## .object_test_data slot[TEST_KEY] (a property_list) to provide data to
+	## be written into the source model and tests to read through
+	## the abstracted model.
+	## An example for wire segments is here:
+	##	
+	##	
+	##		.object_test_data[:test_wire_1] << 
+	##		property_list.new_with(
+	##			# :installation_props, :phases & :asset_phase_props are passed
+	##			# to a network_builder API, as defined by :|network_builder_insert_method_name|
+	##			:installation_props,
+	##			property_list.new_with(:network_type, "MV", :route, pseudo_chain.new_for_world(sector.new_with_xy(1000,0,1000,100000), ev.world)),  #FIXME ev
+	##			:phases,
+	##			{{"B"}},
+	##			:asset_phase_props,
+	##			{property_list.new_with(:asset_id, "123")},
+	##			:tests, {
+	##                                      #- A selector can be defined as a sequence of methods to be
+	##                                      #  called on the abstracted object to return an actual result
+	##                                      #- An expected_result can be a single value
+	##					property_list.new_with(:selector,
+	##							       {:network_type},
+	##							       :expected_result,
+	##							       "MV"
+	##							       ),
+	##                                      #- An expected_result can be defined as a sequence of methods
+	##                                      #  to be called on the newly created object in the source
+	##                                      #  view (:source_obj)
+	##					property_list.new_with(:selector,
+	##							       {:network_type},
+	##							       :expected_result,
+	##							       {:source_obj, :network_type}
+	##							       ),	
+	##					property_list.new_with(:selector,
+	##							       {:network_type, :|as_symbol()|},
+	##							       :expected_result,
+	##							       :|MV|
+	##							       )
+	##			}
+	##			      )
+	##
+	
+	#Given
+	_self.write_data_into_abstracted_model(test_key)
+	#When-then
+	_self.check_writing_of_data_through_abstract_model(test_key, :written_abstract_obj)
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.write_data_into_abstracted_model(test_key)
+	##
+	##
+	
+	test_data << .object_test_data[test_key]
+	
+	test_obj_trans << record_transaction.new_insert(
+		.abstracted_view.collections[test_data[:abstracted_table_name]],
+		test_data[:table_properties]
+	)
+	
+	test_obj << test_obj_trans.run()
+	
+	_if test_obj _isnt _unset
+	_then
+		test_data[:written_abstract_obj] << test_obj
+		write("Written ", test_obj, " to the datastore")
+	_endif
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.write_string_for_rwo_set(rwos)
+	rope_of_rwos << rope.new_from(rwos)
+	rope_of_strings << rope_of_rwos.map(_proc (el) _return el.write_string _endproc)
+	_return rope_of_strings.join_as_strings(", ")
+_endmethod
+$
+
+
+_pragma(classify_level=restricted)
+_method abstracted_object_itest.check_writing_of_data_through_abstract_model(test_key, object_key)
+	##
+	## OBJECT_KEY is the key to use to get the actual object from .object_test_data[test_key] to verify results on.
+	## Possible values - :written_abstract_obj,  :updated_abstract_obj
+	##
+	
+	test_data << .object_test_data[test_key]
+	abstracted_obj << test_data[object_key]
+	
+	_if (tests << test_data[:tests]) _is _unset
+	_then
+		_return
+	_endif
+	
+	_self.assert_not_unset(abstracted_obj,
+		write_string(test_key, "  No object created in the source model, or cached on the test?")
+	)
+	
+	source_obj << abstracted_obj.master_rwo
+	
+	_self.assert_true(equality_set.new_from_iter(
+			abstracted_obj.source_rwos,
+			:|elements()|).includes?(source_obj),
+		write_string(test_key, "   abstracted_obj not associated with source_obj - weird!")
+	)
+	
+	_for i_test _over tests.elements()
+	_loop
+		#write_with_spaces("Testing ", _scatter i_test[:actual_result][2])
+		
+		#expected result
+		expected_result << i_test[:expected_result]
+		_if expected_result.class_name _is :simple_vector _andif
+			(s << expected_result.size) > 1
+		_then
+			_if expected_result[1] _is :table_properties
+			_then
+				# Instead of a given expected result, we get it from indexing into the :table_properties
+				## used to create the abstract object
+				fd << expected_result[2]
+				table_prop << test_data[:table_properties][fd]
+				
+				expected_result << _self.apply_method_chain_to_object(table_prop, expected_result.slice_to_end(3))
+				
+			_elif expected_result[1] _is :update_table_properties
+			_then
+				# Instead of a given expected result, we get it from indexing into the :update_table_properties
+				## used to create the abstract object
+				fd << expected_result[2]
+				table_prop << test_data[:update_table_properties][fd]
+				
+				expected_result << _self.apply_method_chain_to_object(table_prop, expected_result.slice_to_end(3))
+				
+			_elif expected_result[1] _is :source_obj
+			_then
+				# Instead of a given expected result, we compute it from
+				# calling methods on the source object
+				expected_result << _self.apply_method_chain_to_object(source_obj, expected_result.slice_to_end(2))
+				
+			_elif expected_result[1] _is :abstracted_obj
+			_then
+				# Instead of a given expected result, we compute it from
+				# calling methods on the abstracted object
+				expected_result << _self.apply_method_chain_to_object(abstracted_obj, expected_result.slice_to_end(2))
+			_endif
+		_endif
+		
+		#actual result
+		actual_result << i_test[:actual_result]
+		test_key_show_string << i_test[:actual_result][2]
+		_if actual_result.class_name _is :simple_vector _andif
+			(s << actual_result.size) > 1
+		_then
+			_if actual_result[1] _is :source_obj
+			_then
+				# Instead of a given actual result, we compute it from
+				# calling methods on the source object
+				actual_result << _self.apply_method_chain_to_object(source_obj, actual_result.slice_to_end(2))
+				
+			_elif actual_result[1] _is :abstracted_obj
+			_then
+				# Instead of a given actual result, we compute it from
+				# calling methods on the abstracted object
+				actual_result << _self.apply_method_chain_to_object(abstracted_obj, actual_result.slice_to_end(2))
+				
+			_elif actual_result[1] _is :table_properties
+			_then
+				fd << actual_result[2]
+				table_prop << test_data[:table_properties][fd]
+				
+				actual_result << _self.apply_method_chain_to_object(table_prop, actual_result.slice_to_end(3))
+			_endif
+			_for el _over i_test[:actual_result].slice_to_end(3).elements()
+			_loop
+				test_key_show_string << test_key_show_string + "." + el.write_string
+			_endloop
+		_endif
+		# allow for 0.001 percent difference when comparing floats
+		# unfortunatelly many migration tests are stupidly write_string float
+		# numbers in hope it will solve rounding errors. therefore
+		# !print_float_precision! should not be higher than 7
+		_self.assert_equals(expected_result, actual_result,
+			write_string(test_key, ", value check for '", test_key_show_string, "', expected:", expected_result, " <> actual:", actual_result),
+			0.00001, _true) 
+	_endloop
+	
+	
+_endmethod
+$

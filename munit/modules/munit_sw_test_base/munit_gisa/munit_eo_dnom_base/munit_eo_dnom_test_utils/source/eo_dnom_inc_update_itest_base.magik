@@ -256,7 +256,8 @@ _method eo_dnom_inc_update_itest_base.then_the_file_sets_are_exported(_gather fi
 			_then
 				_if _self.assert_not_unset(actual_file, write_string("No file written for ", expected_file))
 				_then
-					_self.assert_xml_files_equals(expected_file, actual_file)
+					schematic? << type _is :ortho_schematic _orif type _is :geo_schematic
+					_self.assert_xml_files_equals(expected_file, actual_file, schematic?)
 				_endif
 			_else
 				_if _not _self.assert_unset(actual_file, write_string("Unexpected file written ", actual_file))
@@ -461,7 +462,7 @@ _private _method eo_dnom_inc_update_itest_base.check_golden_file_matches_calcula
 		write("Checking ", reference_xml_file, " matches ", calc_diff_file)
 		# We want this step to compare files even when we're running tests with
 		# canonicalization turned on, so we use the int! version of the method.
-		_self.int!assert_xml_files_equals( reference_xml_file, calc_diff_file)
+		_self.int!assert_xml_files_equals(reference_xml_file, calc_diff_file, _false)
 	_else
 		_self.fail(write_string("No calculated differences, but test expects ", reference_xml_file))
 	_endif
@@ -487,6 +488,18 @@ _pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.int!assert_xml_files_not_equal( reference_filename, actual_pathname)
 	## 
 	##
+
+	_try
+		# Check if reference_filename can be retrieved from resources.
+		smallworld_product.get_resource_file(reference_filename,
+						     _self.resource_path,
+						     _self.module_name)
+	_when resource_not_found_in_module_error
+		# If reference_filename does not exist and actual_pathname is
+		# given then we can assume that files are not equal.
+		_return 
+	_endtry
+	
 	(same_file?, report_file) << _self.compare_xml_files(reference_filename , actual_pathname)
 
 	_self.assert_false( same_file?, "The output file unexpectedly matches the reference file" )	

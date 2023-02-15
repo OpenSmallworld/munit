@@ -4,11 +4,20 @@ $
 
 def_slotted_exemplar(:remote_test_runner,
 	{
-		{:retry?, _unset}
+		{:retry?, _unset},
+		{:done?, _unset}
 	},
 	{:xml_test_runner})
 $
 
+_pragma(classify_level=debug)
+_method remote_test_runner.done? << done?
+	##
+	##
+	
+	.done? << done?
+_endmethod
+$
 
 _pragma(classify_level=debug)
 _method remote_test_runner.run_remote(address, port, step_id)
@@ -58,7 +67,7 @@ _method remote_test_runner.run_remote(address, port, step_id)
 			     new_runner _isnt _unset _andif
 			     new_runner.test_result _isnt _unset _andif 
 			     new_runner.test_result.error_count() = 0 _andif
-			     new_runner.test_result.failure_count() = 0
+					 new_runner.test_result.failure_count() = 0
 				
 	_endloop
 
@@ -124,7 +133,7 @@ _private _method remote_test_runner.get_new_test(address, port, step_id)
 		
 		module_name << :done
 		connection  << _self.connect(address, port)
-
+		
 		_if connection _isnt _unset
 		_then
 

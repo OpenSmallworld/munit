@@ -351,8 +351,8 @@ _method eo_cim_base_case.check_emi_file_contains( expected_contents, emi_file_pa
 
 	_for name _over {:gml_file, :job_name, :rdf_file, :source, :target}.fast_elements()
 	_loop
-		expected << expected_contents[name]
-		actual << emi.get_property(name)
+		expected << expected_contents[name].default("")
+		actual << emi.get_property(name).default("")
 		desc << write_string(a_string.default(""),
 				     "Expected the EMI ", name," property to be '",
 				     expected,"' but it was '",actual,"' instead.")
@@ -435,18 +435,7 @@ _method eo_cim_base_case.export_differences_from_current_design_locally(_optiona
 
 	## Process the circuit request, using the %TEMP% for output and
 	## without messaging
-	request << sw_cim_circuit_export_helper.create_request_to_export_differences( export_type.default(:proposed) ) 
-
-	request.set_property( :test_mode?, _true )
-	
-	# sw_cim_split_export_manager now requires exchange_job_id property to be set
-	request.set_property( :exchange_job_id, :dummy_exchange_job_id )
-	
-	# set design_splitter_class_name if given in .properties slot
-	_if (splitter_name << .properties[:splitter_name]) _isnt _unset 
-	_then 
-		request.set_property( :design_splitter_class_name, splitter_name)
-	_endif 
+	_local request << _self.create_export_request_for_differences_export(export_type)
 
 	process_manager << sw_process_manager_cache.get_cached_instance(sw_cim_properties_helper.installation_type)
 	export_set_process << process_manager.get_process(:cim_difference_export_request)
@@ -467,6 +456,36 @@ _method eo_cim_base_case.export_differences_from_current_design_locally(_optiona
 _endmethod
 $
 
+_pragma(classify_level=debug)
+_method eo_cim_base_case.create_export_request_for_differences_export(_optional export_type)
+	##
+	## Creates an export request for a CIM difference export of type EXPORT_TYPE.
+	## Updates the export request to modify any properties based on the value of
+	## the properties slot.
+	## 
+	request << sw_cim_circuit_export_helper.create_request_to_export_differences(export_type.default(:proposed)) 
+
+	request.set_property(:test_mode?, _true)
+	
+	# sw_cim_split_export_manager now requires exchange_job_id property to be set
+	request.set_property(:exchange_job_id, :dummy_exchange_job_id)
+	
+	# Set design_splitter_class_name if given in .properties slot
+	_if (splitter_name << .properties[:splitter_name]) _isnt _unset 
+	_then 
+		request.set_property(:design_splitter_class_name, splitter_name)
+	_endif
+
+	# Set :export_voltage_type if required
+	_if (export_voltage_type << .properties[:export_voltage_type]) _isnt _unset 
+	_then
+		request.set_property(:export_voltage_type, export_voltage_type)
+	_endif
+
+	_return request
+_endmethod
+$
+
 ## Export design differences helpers END
 
 _pragma(classify_level=debug)
@@ -476,6 +495,18 @@ _method eo_cim_base_case.given_the_export_will_be_split_using(splitter_name)
 	## 
 	
 	.properties[:splitter_name] << splitter_name
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_cim_base_case.given_export_voltage_type_is(export_voltage_type)
+	##
+	## Change the value of export_voltage_type for the current
+	## export
+	## 
+	
+	.properties[:export_voltage_type] << export_voltage_type
 	>> _self
 _endmethod
 $
@@ -541,7 +572,12 @@ _private _method eo_cim_base_case.set_cim_properties(boolean_props)
 	_if boolean_props.includes?(:with_lv_servicepoints)
 	_then
 		props_to_set[:include_lv_servicepoint_in_export?] << _true
-	_endif	
+	_endif
+
+	_if boolean_props.includes?(:with_pn_voltage)
+	_then
+		props_to_set[:export_voltage_type] << :nominal_voltage_pn
+	_endif
 	
 	_for name, value _over props_to_set.fast_keys_and_elements()
 	_loop

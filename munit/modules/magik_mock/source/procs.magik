@@ -3,15 +3,50 @@ _package sw
 $
 
 
+_pragma(classify_level=debug)
+## When _true (default) then it checks that:
+## - Name of a mock created by mock() procedure is not any existing class
+## - Object passed to a stub() procedure is a mock created by mock() procedure
+## and raises an error when not.
+_global !strict_mocking?!<< _true 
+$
+_pragma(classify_level=debug)
+## creates a new mock class NAME which is a subclass of SUPER_CLASS (if given).
+## Note that NAME mustn't be any existing class
 _global mock <<
 _proc @mock (name, _optional super_class)
 	_return mmock_object.mmock!new_mock_object(name, super_class)
 _endproc
 $
 
-
+_pragma(classify_level=debug)
+## Allows to create / replace a method on a MOCK_OBJ.
+## Note that MOCK_OBJ must be a mock created by mock() procedure.
+## Use replace_method() or replace_method_returning() to 
+## create / replace a method on real classes.
 _global stub <<
-_proc @stub (obj) 
-	_return mmock_stub.new(obj)
+_proc @stub (mock_obj) 
+	_return mmock_stub.new(mock_obj)
+_endproc
+$
+
+_pragma(classify_level=debug)
+## calls stub_method_helper.replace_method(). See details in there.
+_global replace_method<< 
+_proc @replace_method(class, method_name, method_proc)
+	>> stub_method_helper.replace_method(class, method_name, method_proc)
+_endproc
+$
+
+_pragma(classify_level=debug)
+## creates a METHOD_PROC which will return RETURN_VALUES and
+## calls stub_method_helper.replace_method(). See details in there.
+_global replace_method_returning<< 
+_proc @replace_method_returning(class, method_name _gather return_values)
+	returning_proc<< _proc @returning_proc()
+			   _import return_values
+			   >> _scatter return_values
+		   _endproc
+	>> stub_method_helper.replace_method(class, method_name, returning_proc)
 _endproc
 $

@@ -1,26 +1,25 @@
 package com.gesmallworld.xml_file_comparator;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.Iterable;
-import java.io.FileWriter;
-import java.io.BufferedWriter;
-
 import java.util.HashMap;
+
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.builder.Input;
+import org.xmlunit.diff.DefaultNodeMatcher;
+import org.xmlunit.diff.Diff;
+import org.xmlunit.diff.Difference; 
+import org.xmlunit.diff.ElementSelector;
+import org.xmlunit.diff.ElementSelectors;
 
 import com.gesmallworld.magik.commons.interop.annotations.ExemplarInstance;
 import com.gesmallworld.magik.commons.interop.annotations.MagikExemplar;
 import com.gesmallworld.magik.commons.interop.annotations.MagikMethod;
 import com.gesmallworld.magik.commons.interop.annotations.Name;
 import com.gesmallworld.magik.interop.MagikInteropUtils;
-
-import org.xmlunit.diff.Diff;
-import org.xmlunit.builder.DiffBuilder;
-import org.xmlunit.builder.Input;
-import org.xmlunit.diff.Difference;
-import org.xmlunit.diff.ElementSelector;
-import org.xmlunit.diff.DefaultNodeMatcher;
-import org.xmlunit.diff.ElementSelectors;
 
 @MagikExemplar( @Name("xml_file_comparator") )
 public class XmlFileComparator {
@@ -54,8 +53,7 @@ public class XmlFileComparator {
 
         Object[] result = new Object[2];
         Diff myDiff = createDiff( filename1 , filename2 , fileType);
-        result[0] = myDiff.hasDifferences() ;
-		
+        result[0] = myDiff.hasDifferences();
 		
 		if ( myDiff.hasDifferences() ){
 			try{
@@ -111,14 +109,18 @@ public class XmlFileComparator {
 		} else if ( fileType.equals("dnom") ) {
 			ElementSelector byId = ElementSelectors.byXPath( "./Id" ,ElementSelectors.byNameAndText);
 			ElementSelector byID = ElementSelectors.byXPath( "./ID" , ElementSelectors.byNameAndText);
-			ElementSelector byLabelPlacementX = ElementSelectors.byXPath( "./X" ,ElementSelectors.byNameAndText);
-			ElementSelector byLabelPlacementY = ElementSelectors.byXPath( "./Y" ,ElementSelectors.byNameAndText);
-			ElementSelector byLabelPlacementType = ElementSelectors.byXPath( "./GeometryType" ,ElementSelectors.byNameAndText);
-			ElementSelector byLabelPlacementText = ElementSelectors.byXPath( "./Text" ,ElementSelectors.byNameAndText);
-			ElementSelector byLabelPlacementRot = ElementSelectors.byXPath( "./Rotation" ,ElementSelectors.byNameAndText);
-			
-			customElementSelector = ElementSelectors.and(byId,byID,
-					byLabelPlacementType,byLabelPlacementX,byLabelPlacementY,byLabelPlacementRot,byLabelPlacementText);
+			ElementSelector byGeometryType = ElementSelectors.byXPath( "./GeometryType" ,ElementSelectors.byNameAndText);
+			ElementSelector byText = ElementSelectors.byXPath( "./Text" ,ElementSelectors.byNameAndText);
+			ElementSelector byRotation = ElementSelectors.byXPath( "./Rotation" ,ElementSelectors.byNameAndText);
+			ElementSelector byGeom =  ElementSelectors.conditionalBuilder()
+					.whenElementIsNamed("LabelPlacement")
+					.thenUse(ElementSelectors.and(
+							ElementSelectors.byXPath("./X", ElementSelectors.byNameAndText),
+							ElementSelectors.byXPath("./Y", ElementSelectors.byNameAndText)))
+					.elseUse(ElementSelectors.Default)
+					.build();
+	
+			customElementSelector = ElementSelectors.and(byId,byID,byGeometryType,byText,byRotation,byGeom);
 		} else {
 			throw new java.lang.RuntimeException("This file type is not supported by the xml comparator");
 		}
