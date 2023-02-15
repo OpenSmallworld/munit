@@ -24,7 +24,10 @@ _pragma(classify_level=restricted,topic=MUnit)
 _method munit_xml_testcase.add_exception(item)
 	## adds a new exception to this testcase
 	##
-	.parent.incr_counter(item.class_name)
+	_if .parent _isnt _unset 
+	_then 
+		.parent.incr_counter(item.class_name)
+	_endif 
 	>> .exceptions.add_last(item)
 _endmethod
 $

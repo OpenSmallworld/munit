@@ -75,8 +75,12 @@ _method sw_job_server_test_mixin.given_job_engine_is_stopped()
 	_while job_server_framework.job_server.running?
 	_loop
 		_thisthread.sleep(100)
-	_endloop 
-
+	_endloop
+	
+	# Wait for the job server to update the log with information that it was
+	# stopped. 
+	_thisthread.yield_processor()
+	
 	_return _self
 _endmethod
 $
@@ -151,11 +155,31 @@ _method sw_job_server_test_mixin.then_log_content_is_correct(file_name)
 	##
 	## FILE_NAME - the file with expected JSON content
 	##
-
-	act_json << _self.get_last_four_entries_from_job_server_log_file()
 	
-	_self.assert_json_file(file_name, act_json, "Log is incorrect: #1")
+	# Because of a possible delay between flushing an output buffer
+	# and actual writing of file by OS we will try to check the
+	# last 4 lines of log in iterations.
+	iteration << 0
+	_loop
+		_try _with cond
+			act_json << _self.get_last_four_entries_from_job_server_log_file()
+			_self.assert_json_file(file_name, act_json, "Log is incorrect: #1")
+		_when assertion_failed_warning
+			_if iteration < 10
+			_then
+				_thisthread.sleep(500)
+				iteration +<< 1
+				_continue
+			_else
+				# If after 10 iterations we still have wrong log entries then
+				# it is a real failure.
+				_self.fail(cond[:message])
+			_endif
+		_endtry
 
+		_leave
+	_endloop
+	
 	_return _self
 _endmethod
 $

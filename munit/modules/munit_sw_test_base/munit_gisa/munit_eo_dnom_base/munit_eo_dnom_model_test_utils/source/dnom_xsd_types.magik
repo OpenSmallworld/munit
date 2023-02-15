@@ -52,7 +52,7 @@ $
 _pragma(classify_level=restricted)
 _method dnom_xsd_types.fields_for_type(type_name)
 	## 
-	## 
+	##
 	type << .types[type_name]
 	base_type_name << type[:base]
 	local_fields << _self.local_fields_for_type(type_name)
@@ -93,9 +93,7 @@ $
 _pragma(classify_level=restricted)
 _method dnom_xsd_types.data_type_for_field(type_name, field_name)
 	## 
-	##
-	type << .types[type_name.write_string]
-	fields << type[:fields]
+	fields << _self.fields_for_type(type_name.write_string)
 	_for field _over fields.fast_elements()
 	_loop
 		_if field[:name] = field_name

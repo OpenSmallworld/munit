@@ -998,16 +998,23 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional schematic_names)
+_method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional schematic_names, set_deterministic_ids?, wait_time)
 	##
 	## Updates all schematics that are exported to DNOM for all
 	## records changed in the design.
 	##
 	## SCHEMATIC_NAMES - when provided then only given schematics
 	##                   will be updated. Defaults to:
-	##                   sw_dnom_properties_helper.schematic_names.keys 
+	##                   sw_dnom_properties_helper.schematic_names.keys
 	##
-	
+	## SET_DETERMINISTIC_IDS? - sets if deterministic ids should be
+	##                          set for schematic objects after
+	##                          schematic update (default is _true). 
+	##
+	## WAIT_TIME       - max time to wait for tasks to finish in ms
+	##                   (defaults to 30000 ms)
+	##
+
 	sv << _self.get_schematic_validation_tool()
 
 	stub_method_helper.replace_method(sv, :|show_alert()|, _proc () _endproc)
@@ -1016,39 +1023,52 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 	stub_method_helper.replace_method(sv, :|initialise_results()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|changed()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|set_progress_counts()|, _proc () _endproc)
+	stub_method_helper.replace_method(sv, :|set_update_progress()|, _proc(percent) _endproc )
+	stub_method_helper.replace_method(sv, :|set_update_label()|, _proc(string) _endproc )
+	stub_method_helper.replace_method(sv, :|prepare_to_run_transactions()|, _proc(trans) _endproc )
 	
 	_self.properties[:schematic_update_transactions] << transactions << rope.new()
-	schematic_names << schematic_names.default(sw_dnom_properties_helper.schematic_names.keys)
+
+	_if schematic_names _is _unset
+	_then 
+		schematic_names << sw_dnom_properties_helper.schematic_names.keys
+	_endif
 	
 	_for schematic_name _over schematic_names.fast_elements()
 	_loop
-		schematic << _self.get_an_eo_object(:schematic, :name, schematic_name)
+		ev << _self.electric_view
+		schematic << ev.collection(:schematic).select(predicate.eq(:name, schematic_name)).an_element()
 		sv.action(:schematic_chooser).value << schematic
 		sv.action(:source_chooser).value << :design_changes
 		sv.populate_lists()
+		_self.wait_for_task_to_complete(:|sources_for_schematic()|, wait_time)	
 
-		stub_method_helper.replace_method(sv.sys!perform(:schematic_engine), :|update_schematic()|,
-						  _proc (objects, schematic)
-							  # Sort all objects that need update to order them
-							  # deterministically.
-							  sort_proc << _proc (o1, o2)
-									       id1 << sw_cim_identifier_manager.collection_unique_id_for_rwo(o1)
-									       id2 << sw_cim_identifier_manager.collection_unique_id_for_rwo(o2)
-									       _try 
-										       _return id1 < id2
-									       _when binary_operator_undefined
-										       _return id1.write_string < id2.write_string
-									       _endtry
-								       _endproc
-							  _return _self.saved!update_schematic(objects.as_sorted_collection(sort_proc), schematic)
-						  _endproc)
+		# Wait for 'Run' button to be enabled in case there are 2
+		# threads started in schematic_validator_tool.
+		time_spent << 0
+		_loop
+			_thisthread.yield_processor()
+			
+			_if sv.action(:run).activate_selector = :populate_lists|()| _orif
+			    time_spent > wait_time.default(30000)
+			_then	
+				_leave
+			_endif
+			
+			_thisthread.sleep(200)
+			time_spent +<< 200
+		_endloop
 		
 		sv.update()
+		_self.wait_for_task_to_complete(:|update_schematic()|, wait_time)	
 		transactions.add(sv.sys!slot(:transaction))
 	_endloop
 
-	_self.set_deterministic_updated_schematic_ids(transactions)
-
+	_if set_deterministic_ids? _isnt _false
+	_then 
+		_self.set_deterministic_updated_schematic_ids(transactions)
+	_endif
+	
 	sv.close()
 	_return _self 
 _endmethod
@@ -1085,5 +1105,44 @@ _private _method eo_gisa_base_test_case.set_deterministic_updated_schematic_ids(
 			_endif
 		_endloop
 	_endloop
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.given_circuit_building_is_monitored()
+	##
+	## Adds monitoring of circuit building.
+	##
+
+	_local cb_counts << _self.properties[:circuit_building_counts] << equality_hash_table.new()
+
+	stub_method_helper.replace_method(eo_circuit_section_engine,
+					  :|build()|,
+					  _proc (p_circuit, _optional p_section_types, p_build_view)
+						  _import cb_counts
+
+						  _if cb_counts[p_circuit.circuit_id] _is _unset
+						  _then
+							 cb_counts[p_circuit.circuit_id] << 0
+						  _endif
+						  
+						  cb_counts[p_circuit.circuit_id] +<< 1
+						  
+						  _return _self.saved!build(p_circuit, p_section_types, p_build_view)
+					  _endproc)
+	
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.then_circuit_building_counts_are(_gather data)
+	##
+
+	_self.assert_deep_equals(equality_hash_table.new_with(_scatter data),
+				 _self.properties[:circuit_building_counts],
+				 "Wrong circuit building counts: #1")
+	
+	_return _self 
 _endmethod
 $

@@ -99,14 +99,6 @@ _method munit_test_case.get_method_name()
 _endmethod
 $
 
-_pragma(classify_level=deprecated,topic=MUnit)
-_method munit_test_case.infrastructure?
-	## Return false for children of test case.
-
-	>> _self _is munit_test_case
-_endmethod
-$
-
 _pragma(classify_level=deprecated, topic=MUnit)
 _method munit_test_case.trace_print(level, a_string, _gather args)
 	## 

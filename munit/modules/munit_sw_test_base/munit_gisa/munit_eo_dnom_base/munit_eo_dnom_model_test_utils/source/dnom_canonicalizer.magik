@@ -169,15 +169,13 @@ _private _method dnom_canonicalizer.get_id_for_element(el)
 	id << _if el.type = "LabelPlacement"
 	      _then
 		      >> _self.get_id_for_label_placement(el)
-	      _elif (id_el << el.element_matching_name("Id")) _isnt _unset
+
+	      _elif (id_el << el.element_matching_name("DnomObjId")) _isnt _unset _orif # schematic ReferenceObject
+		    (id_el << el.element_matching_name("Id")) _isnt _unset _orif
+		    (id_el << el.element_matching_name("ID")) _isnt _unset _orif
+		    (id_el << el.element_matching_name("Name")) _isnt _unset
 	      _then
-		      >> id_el.elements[1]
-	      _elif (id_el << el.element_matching_name("ID")) _isnt _unset
-	      _then
-		      >> id_el.elements[1]
-	      _elif (id_el << el.element_matching_name("Name")) _isnt _unset
-	      _then
-		      >> id_el.elements[1]
+		      >> id_el.elements[1]	      
 	      _endif
 	>> id.default("")
 _endmethod
@@ -199,4 +197,3 @@ _private _method dnom_canonicalizer.get_id_for_label_placement(el)
 	_return ""
 _endmethod
 $
-
