@@ -1016,15 +1016,14 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 	##
 
 	sv << _self.get_schematic_validation_tool()
+	sv.max_iterations << 1
+	sv.iteration << 1
 
 	stub_method_helper.replace_method(sv, :|show_alert()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|show_results_gui()|, _proc () _endproc)
-	stub_method_helper.replace_method(sv, :|manage_progress_dialog()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|initialise_results()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|changed()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|set_progress_counts()|, _proc () _endproc)
-	stub_method_helper.replace_method(sv, :|set_update_progress()|, _proc(percent) _endproc )
-	stub_method_helper.replace_method(sv, :|set_update_label()|, _proc(string) _endproc )
 	stub_method_helper.replace_method(sv, :|prepare_to_run_transactions()|, _proc(trans) _endproc )
 	
 	_self.properties[:schematic_update_transactions] << transactions << rope.new()
@@ -1061,7 +1060,7 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 		
 		sv.update()
 		_self.wait_for_task_to_complete(:|update_schematic()|, wait_time)	
-		transactions.add(sv.sys!slot(:transaction))
+		transactions.add(sv.sys!slot(:transaction)[:transactions])
 	_endloop
 
 	_if set_deterministic_ids? _isnt _false
@@ -1094,9 +1093,9 @@ _private _method eo_gisa_base_test_case.set_deterministic_updated_schematic_ids(
 	## Set deterministic ids for all inserted or cloned schematic
 	## records in TRANSACTIONS
 	##
-	_for ds_tr _over transactions.fast_elements()
+	_for tr_set _over transactions.fast_elements()
 	_loop
-		_for rec_tr _over ds_tr.record_transactions()
+		_for rec_tr _over tr_set.fast_elements()
 		_loop 
 			_if rec_tr.operation _is :insert _orif
 			    rec_tr.operation _is :clone
