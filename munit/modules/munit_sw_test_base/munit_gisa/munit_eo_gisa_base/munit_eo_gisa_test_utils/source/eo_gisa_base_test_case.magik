@@ -1012,9 +1012,9 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 	##                          schematic update (default is _true). 
 	##
 	## WAIT_TIME       - max time to wait for tasks to finish in ms
-	##                   (defaults to 30000 ms)
+	##                   (defaults to 60000 ms)
 	##
-
+	wait_time << wait_time.default(60000)
 	sv << _self.get_schematic_validation_tool()
 	sv.max_iterations << 1
 	sv.iteration << 1
@@ -1049,7 +1049,7 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 			_thisthread.yield_processor()
 			
 			_if sv.action(:run).activate_selector = :populate_lists|()| _orif
-			    time_spent > wait_time.default(30000)
+			    time_spent > wait_time
 			_then	
 				_leave
 			_endif
