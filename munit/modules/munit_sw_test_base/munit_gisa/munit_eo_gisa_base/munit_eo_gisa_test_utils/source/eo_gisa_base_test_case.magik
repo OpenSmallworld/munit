@@ -1117,7 +1117,7 @@ _method eo_gisa_base_test_case.given_circuit_building_is_monitored()
 
 	stub_method_helper.replace_method(eo_circuit_section_engine,
 					  :|build()|,
-					  _proc (p_circuit, _optional p_section_types, p_build_view)
+					  _proc (p_circuit, _optional p_section_types, p_build_view, p_build_configuration)
 						  _import cb_counts
 
 						  _if cb_counts[p_circuit.circuit_id] _is _unset
@@ -1127,7 +1127,7 @@ _method eo_gisa_base_test_case.given_circuit_building_is_monitored()
 						  
 						  cb_counts[p_circuit.circuit_id] +<< 1
 						  
-						  _return _self.saved!build(p_circuit, p_section_types, p_build_view)
+						  _return _self.saved!build(p_circuit, p_section_types, p_build_view, p_build_configuration)
 					  _endproc)
 	
 	_return _self 
