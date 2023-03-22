@@ -157,6 +157,21 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_exclude_lv_from_export?(val)
+	##
+	
+	_local value << val
+	stub_method_helper.replace_method(sw_dnom_properties_helper,
+					  :exclude_lv_from_export?,
+					  _proc ()
+						  _import value 
+						  _return value
+					  _endproc)
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method eo_dnom_test_mixin.then_station_file_was_written(p_flag?)
 	##
 
