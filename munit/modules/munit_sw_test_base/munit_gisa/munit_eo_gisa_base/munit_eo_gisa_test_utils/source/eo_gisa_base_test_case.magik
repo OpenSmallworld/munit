@@ -1060,7 +1060,7 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 		
 		sv.update()
 		_self.wait_for_task_to_complete(:|update_schematic()|, wait_time)	
-		transactions.add(sv.sys!slot(:transaction)[:transactions])
+		transactions.add(sv.sys!slot(:results)[:transactions])
 	_endloop
 
 	_if set_deterministic_ids? _isnt _false
