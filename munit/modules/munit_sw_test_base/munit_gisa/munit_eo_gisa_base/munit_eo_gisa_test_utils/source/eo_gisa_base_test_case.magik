@@ -1137,10 +1137,22 @@ $
 _pragma(classify_level=debug)
 _method eo_gisa_base_test_case.then_circuit_building_counts_are(_gather data)
 	##
-
-	_self.assert_deep_equals(equality_hash_table.new_with(_scatter data),
-				 _self.properties[:circuit_building_counts],
-				 "Wrong circuit building counts: #1")
+	circuit_data << equality_hash_table.new_with(_scatter data)
+	data_to_check << equality_hash_table.new()
+	result_counts << _self.properties[:circuit_building_counts]
+	_for circuit, counts _over circuit_data.fast_keys_and_elements()
+	_loop
+		_if counts = 0
+		_then
+			_self.assert_unset(result_counts[circuit],
+					   write_string("Circuit ", circuit, " should not be built"))
+			_continue
+		_else
+			data_to_check[circuit] << counts
+		_endif 
+	_endloop 
+	
+	_self.assert_deep_equals(data_to_check, result_counts, "Wrong circuit building counts: #1")
 	
 	_return _self 
 _endmethod
