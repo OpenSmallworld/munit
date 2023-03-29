@@ -240,6 +240,25 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.then_the_file_sets_are_exported(_gather file_sets)
+	##
+	##
+	
+	difference_mode << sw_dnom_properties_helper.difference_mode
+	
+	_if difference_mode _is :incremental
+	_then 
+		_return _self.incremental!then_the_file_sets_are_exported(_scatter file_sets)
+	_elif difference_mode _is :batch 
+	_then
+		_return _self.batch!then_the_file_sets_are_exported(_scatter file_sets)
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.incremental!then_the_file_sets_are_exported(_gather file_sets)
+	##
+	##
 	potential_sets << _self.potential_files(file_sets)
 	actual_sets << _self.exported_sets()
 	expected_sets << _self.present_goldenfiles(file_sets)
@@ -271,6 +290,84 @@ _method eo_dnom_inc_update_itest_base.then_the_file_sets_are_exported(_gather fi
 	_endloop	
 
 	_return _self.then_the_calculated_files_match_the_golden_files(_scatter file_sets)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.batch!then_the_file_sets_are_exported(_gather file_sets)
+	##
+	##
+	
+	potential_sets << _self.potential_files(file_sets)
+	expected_sets << _self.present_goldenfiles(file_sets)
+	
+	expected_substation_names << equality_set.new()
+	file_sets.print_on(!terminal!)
+	_for idx, expected_files _over expected_sets.fast_keys_and_elements()
+	_loop
+	
+		_for type, expected_file _over expected_files.fast_keys_and_elements()
+		_loop
+			_if expected_file _isnt _unset
+			_then
+				expected_pathname << smallworld_product.get_resource_file(expected_file,
+									   _self.resource_path,
+									   _self.module_name)
+				write("expected_pathname: ", expected_pathname)				   
+				schematic? << type _is :ortho_schematic _orif type _is :geo_schematic
+				a_substation_name << _self.batch!get_substation_name(expected_pathname, schematic?)
+				
+				_if a_substation_name _isnt _unset 
+				_then 
+					expected_substation_names.add(a_substation_name)
+				_endif
+			_endif
+		_endloop
+	_endloop 
+
+	actual_substation_names << equality_set.new()
+	
+	_for an_urn _over _self.properties[:resulting_request].properties[:related_substations].fast_elements()
+	_loop
+		a_substation << urn_manager.get_object_from_urn(an_urn)
+		actual_substation_names.add(a_substation.name)
+	_endloop 
+	
+	write("DEBUG: expected_substation_names")
+	expected_substation_names.print_on(!terminal!)
+	write("DEBUG: actual_substation_names")
+	actual_substation_names.print_on(!terminal!)
+	
+	_self.assert_deep_equals(actual_substation_names, expected_substation_names, "Actual list of substation names returned by dnom batch process is not same as a list of expected substation names")
+
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.batch!get_substation_name(expected_file, schematic_file?)
+	##
+	##
+
+	a_substation_name << _unset
+	
+	_if schematic_file? _is _true 
+	_then 
+		expected_substation << dnom_schematic_reader.new(expected_file)
+		a_substation_name << expected_substation.substation.name
+	_else 
+		xml_substation_element << simple_xml.read_element_file(expected_file)
+		
+		_if xml_substation_element.type _is :|Substation| 
+		_then 
+			_for xml_elem _over xml_substation_element.elements_matching_name("Name")
+			_loop
+				a_substation_name << xml_elem.xml_result
+				_leave
+			_endloop 
+		_endif 
+	_endif 
+	
+	_return a_substation_name
 _endmethod
 $
 
