@@ -242,7 +242,9 @@ _pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.then_the_file_sets_are_exported(_gather file_sets)
 	##
 	##
-	
+# TODO:
+system.putenv("SW_GISA_DIFFERENCE_MODE", "batch")	
+
 	difference_mode << sw_dnom_properties_helper.difference_mode
 	
 	_if difference_mode _is :incremental
@@ -302,7 +304,10 @@ _private _method eo_dnom_inc_update_itest_base.batch!then_the_file_sets_are_expo
 	expected_sets << _self.present_goldenfiles(file_sets)
 	
 	expected_substation_names << equality_set.new()
+	write("DEBUG: file_sets:")
 	file_sets.print_on(!terminal!)
+	write("----")
+	
 	_for idx, expected_files _over expected_sets.fast_keys_and_elements()
 	_loop
 	
