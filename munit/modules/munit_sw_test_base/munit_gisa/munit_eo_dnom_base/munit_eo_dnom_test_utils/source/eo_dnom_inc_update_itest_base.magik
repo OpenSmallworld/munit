@@ -320,23 +320,17 @@ _private _method eo_dnom_inc_update_itest_base.batch!then_the_file_sets_are_expo
 									   _self.module_name)
 				write("expected_pathname: ", expected_pathname)				   
 				schematic? << type _is :ortho_schematic _orif type _is :geo_schematic
-				a_substation_name << _self.batch!get_substation_name(expected_pathname, schematic?)
+				a_substation_urn << _self.batch!get_substation_urn(expected_pathname, schematic?)
 				
-				_if a_substation_name _isnt _unset 
+				_if a_substation_urn _isnt _unset 
 				_then 
-					expected_substation_names.add(a_substation_name)
+					expected_substation_names.add(a_substation_urn)
 				_endif
 			_endif
 		_endloop
 	_endloop 
 
-	actual_substation_names << equality_set.new()
-	
-	_for an_urn _over _self.properties[:resulting_request].properties[:related_substations].fast_elements()
-	_loop
-		a_substation << urn_manager.get_object_from_urn(an_urn)
-		actual_substation_names.add(a_substation.name)
-	_endloop 
+	actual_substation_names << equality_set.new_from(_self.properties[:resulting_request].properties[:related_substations])
 	
 	write("DEBUG: expected_substation_names")
 	expected_substation_names.print_on(!terminal!)
@@ -349,30 +343,38 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_private _method eo_dnom_inc_update_itest_base.batch!get_substation_name(expected_file, schematic_file?)
+_private _method eo_dnom_inc_update_itest_base.batch!get_substation_urn(expected_file, schematic_file?)
 	##
 	##
 
-	a_substation_name << _unset
+	a_substation_urn << _unset
+	a_substation_id << _unset
 	
 	_if schematic_file? _is _true 
 	_then 
 		expected_substation << dnom_schematic_reader.new(expected_file)
-		a_substation_name << expected_substation.substation.name
+		a_substation_id << expected_substation.substation.id
 	_else 
 		xml_substation_element << simple_xml.read_element_file(expected_file)
 		
 		_if xml_substation_element.type _is :|Substation| 
 		_then 
-			_for xml_elem _over xml_substation_element.elements_matching_name("Name")
+			_for xml_elem _over xml_substation_element.elements_matching_name("Id")
 			_loop
-				a_substation_name << xml_elem.xml_result
+				a_substation_id << xml_elem.xml_result
 				_leave
 			_endloop 
 		_endif 
 	_endif 
 	
-	_return a_substation_name
+	_if a_substation_id _isnt _unset 
+	_then 
+		substation_provider << sw_dnom_properties_helper.station_provider()
+		a_substation << substation_provider.get_station_for_urid(a_substation_id)
+		a_substation_urn << urn_manager.get_urn_from_object(a_substation)
+	_endif 
+	
+	_return a_substation_urn
 _endmethod
 $
 
