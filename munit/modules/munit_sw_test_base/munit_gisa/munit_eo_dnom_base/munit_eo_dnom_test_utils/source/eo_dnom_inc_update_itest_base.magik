@@ -242,11 +242,8 @@ _pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.then_the_file_sets_are_exported(_gather file_sets)
 	##
 	##
-# TODO:
-system.putenv("SW_GISA_DIFFERENCE_MODE", "batch")	
-
-	difference_mode << sw_dnom_properties_helper.difference_mode
 	
+	difference_mode << sw_dnom_properties_helper.difference_mode
 	_if difference_mode _is :incremental
 	_then 
 		_return _self.incremental!then_the_file_sets_are_exported(_scatter file_sets)
