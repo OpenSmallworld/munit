@@ -182,6 +182,15 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.get_module_name
+	## 
+	## Returns _self.module_name 
+	##
+	_return _self.module_name
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.exported_sets()
 	## Creates a list similar with self.potential_files(), filled up
 	## with actually exported files; to be compared with the result
