@@ -161,7 +161,7 @@ _method eo_dnom_inc_update_itest_base.present_goldenfiles(file_sets)
 	## :ortho_schematic 	unset 
 	## :geo_schematic 	unset 
 	##	
-	all_goldenfiles << sw_module_manager.module(_self.module_name).resource_files(_self.resource_path, _true, _false)
+	all_goldenfiles << sw_module_manager.module(_self.get_module_name).resource_files(_self.resource_path, _true, _false)
 	goldenfiles << _self.potential_files(file_sets)	
 	_for file_set _over goldenfiles.fast_elements()
 	_loop
@@ -307,14 +307,14 @@ _private _method eo_dnom_inc_update_itest_base.batch!then_the_file_sets_are_expo
 	
 	_for idx, expected_files _over expected_sets.fast_keys_and_elements()
 	_loop
-	
 		_for type, expected_file _over expected_files.fast_keys_and_elements()
 		_loop
+			write("expected_file=",expected_file)
 			_if expected_file _isnt _unset
 			_then
 				expected_pathname << smallworld_product.get_resource_file(expected_file,
 									   _self.resource_path,
-									   _self.module_name)
+									   _self.get_module_name)
 				write("expected_pathname: ", expected_pathname)				   
 				schematic? << type _is :ortho_schematic _orif type _is :geo_schematic
 				a_substation_urn << _self.batch!get_substation_urn(expected_pathname, schematic?)
