@@ -182,15 +182,6 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_inc_update_itest_base.get_module_name
-	## 
-	## Returns _self.module_name 
-	##
-	_return _self.module_name
-_endmethod
-$
-
-_pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.exported_sets()
 	## Creates a list similar with self.potential_files(), filled up
 	## with actually exported files; to be compared with the result
@@ -604,7 +595,7 @@ _method eo_dnom_inc_update_itest_base.int!assert_xml_files_not_equal( reference_
 		# Check if reference_filename can be retrieved from resources.
 		smallworld_product.get_resource_file(reference_filename,
 						     _self.resource_path,
-						     _self.module_name)
+						     _self.get_module_name)
 	_when resource_not_found_in_module_error
 		# If reference_filename does not exist and actual_pathname is
 		# given then we can assume that files are not equal.
