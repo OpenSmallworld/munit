@@ -161,7 +161,7 @@ _method eo_dnom_inc_update_itest_base.present_goldenfiles(file_sets)
 	## :ortho_schematic 	unset 
 	## :geo_schematic 	unset 
 	##	
-	all_goldenfiles << sw_module_manager.module(_self.module_name).resource_files(_self.resource_path, _true, _false)
+	all_goldenfiles << sw_module_manager.module(_self.get_module_name).resource_files(_self.resource_path, _true, _false)
 	goldenfiles << _self.potential_files(file_sets)	
 	_for file_set _over goldenfiles.fast_elements()
 	_loop
@@ -240,6 +240,24 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.then_the_file_sets_are_exported(_gather file_sets)
+	##
+	##
+	
+	difference_mode << sw_dnom_properties_helper.difference_mode
+	_if difference_mode _is :incremental
+	_then 
+		_return _self.incremental!then_the_file_sets_are_exported(_scatter file_sets)
+	_elif difference_mode _is :batch 
+	_then
+		_return _self.batch!then_the_file_sets_are_exported(_scatter file_sets)
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.incremental!then_the_file_sets_are_exported(_gather file_sets)
+	##
+	##
 	potential_sets << _self.potential_files(file_sets)
 	actual_sets << _self.exported_sets()
 	expected_sets << _self.present_goldenfiles(file_sets)
@@ -271,6 +289,90 @@ _method eo_dnom_inc_update_itest_base.then_the_file_sets_are_exported(_gather fi
 	_endloop	
 
 	_return _self.then_the_calculated_files_match_the_golden_files(_scatter file_sets)
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.batch!then_the_file_sets_are_exported(_gather file_sets)
+	##
+	##
+	
+	potential_sets << _self.potential_files(file_sets)
+	expected_sets << _self.present_goldenfiles(file_sets)
+	
+	expected_substation_names << equality_set.new()
+	write("DEBUG: file_sets:")
+	file_sets.print_on(!terminal!)
+	write("----")
+	
+	_for idx, expected_files _over expected_sets.fast_keys_and_elements()
+	_loop
+		_for type, expected_file _over expected_files.fast_keys_and_elements()
+		_loop
+			write("expected_file=",expected_file)
+			_if expected_file _isnt _unset
+			_then
+				expected_pathname << smallworld_product.get_resource_file(expected_file,
+									   _self.resource_path,
+									   _self.get_module_name)
+				write("expected_pathname: ", expected_pathname)				   
+				schematic? << type _is :ortho_schematic _orif type _is :geo_schematic
+				a_substation_urn << _self.batch!get_substation_urn(expected_pathname, schematic?)
+				
+				_if a_substation_urn _isnt _unset 
+				_then 
+					expected_substation_names.add(a_substation_urn)
+				_endif
+			_endif
+		_endloop
+	_endloop 
+
+	actual_substation_names << equality_set.new_from(_self.properties[:resulting_request].properties[:related_substations])
+	
+	write("DEBUG: expected_substation_names")
+	expected_substation_names.print_on(!terminal!)
+	write("DEBUG: actual_substation_names")
+	actual_substation_names.print_on(!terminal!)
+	
+	_self.assert_deep_equals(actual_substation_names, expected_substation_names, "Actual list of substation names returned by dnom batch process is not same as a list of expected substation names")
+	
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.batch!get_substation_urn(expected_file, schematic_file?)
+	##
+	##
+
+	a_substation_urn << _unset
+	a_substation_id << _unset
+	
+	_if schematic_file? _is _true 
+	_then 
+		expected_substation << dnom_schematic_reader.new(expected_file)
+		a_substation_id << expected_substation.substation.id
+	_else 
+		xml_substation_element << simple_xml.read_element_file(expected_file)
+		
+		_if xml_substation_element.type _is :|Substation| 
+		_then 
+			_for xml_elem _over xml_substation_element.elements_matching_name("Id")
+			_loop
+				a_substation_id << xml_elem.xml_result
+				_leave
+			_endloop 
+		_endif 
+	_endif 
+	
+	_if a_substation_id _isnt _unset 
+	_then 
+		substation_provider << sw_dnom_properties_helper.station_provider()
+		a_substation << substation_provider.get_station_for_urid(a_substation_id)
+		a_substation_urn << urn_manager.get_urn_from_object(a_substation)
+	_endif 
+	
+	_return a_substation_urn
 _endmethod
 $
 
@@ -493,7 +595,7 @@ _method eo_dnom_inc_update_itest_base.int!assert_xml_files_not_equal( reference_
 		# Check if reference_filename can be retrieved from resources.
 		smallworld_product.get_resource_file(reference_filename,
 						     _self.resource_path,
-						     _self.module_name)
+						     _self.get_module_name)
 	_when resource_not_found_in_module_error
 		# If reference_filename does not exist and actual_pathname is
 		# given then we can assume that files are not equal.
