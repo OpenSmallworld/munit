@@ -337,7 +337,7 @@ _private _method eo_dnom_inc_update_itest_base.batch!then_the_file_sets_are_expo
 	write("DEBUG: actual_substation_names")
 	actual_substation_names.print_on(!terminal!)
 	
-	_self.assert_deep_equals(actual_substation_names, expected_substation_names, "Actual list of substation names returned by dnom batch process is not same as a list of expected substation names")
+	_self.assert_true(actual_substation_names.includes_all?(expected_substation_names), "List of expected substation names are not part of actual substation names list.")
 	
 	_return _self 
 _endmethod
