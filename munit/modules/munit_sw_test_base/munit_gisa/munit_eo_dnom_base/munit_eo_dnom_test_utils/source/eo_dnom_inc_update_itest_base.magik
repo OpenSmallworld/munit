@@ -241,7 +241,13 @@ $
 _pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.then_the_file_sets_are_exported(_gather file_sets)
 	##
-	##
+	## FILE_SETS gives a list of names which this method uses to build up the
+	## expected file names xml, schematics....)
+	## If FILE_SETS is not set, then this means that no changes were expected
+	## When difference mode is :incremental, then this means there is really no
+	## difference. When the difference mode is :batch and FILE_SETS is unset, then
+	## we ignore if we have found a substation (this will be a false positive based
+	## off the RWO diffs)
 	
 	difference_mode << sw_dnom_properties_helper.difference_mode
 	_if difference_mode _is :incremental
