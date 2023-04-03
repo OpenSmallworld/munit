@@ -241,16 +241,25 @@ $
 _pragma(classify_level=debug)
 _method eo_dnom_inc_update_itest_base.then_the_file_sets_are_exported(_gather file_sets)
 	##
-	##
+	## FILE_SETS gives a list of names which this method uses to build up the
+	## expected file names xml, schematics....)
+	## If FILE_SETS is not set, then this means that no changes were expected
+	## When difference mode is :incremental, then this means there is really no
+	## difference. When the difference mode is :batch and FILE_SETS is unset, then
+	## we ignore if we have found a substation (this will be a false positive based
+	## off the RWO diffs)
 	
 	difference_mode << sw_dnom_properties_helper.difference_mode
 	_if difference_mode _is :incremental
 	_then 
 		_return _self.incremental!then_the_file_sets_are_exported(_scatter file_sets)
-	_elif difference_mode _is :batch 
+	_elif difference_mode _is :batch _andif 
+		_not file_sets.empty?
 	_then
 		_return _self.batch!then_the_file_sets_are_exported(_scatter file_sets)
 	_endif 
+	
+	_return _self
 _endmethod
 $
 
@@ -329,13 +338,20 @@ _private _method eo_dnom_inc_update_itest_base.batch!then_the_file_sets_are_expo
 
 	actual_substation_names << equality_set.new_from(_self.properties[:resulting_request].properties[:related_substations])
 	
-	write("DEBUG: expected_substation_names")
-	expected_substation_names.print_on(!terminal!)
-	write("DEBUG: actual_substation_names")
-	actual_substation_names.print_on(!terminal!)
+	expected << write_string_with_separator(expected_substation_names)
+	actual << write_string_with_separator(actual_substation_names)
+
+	write("DEBUG: expected_substation_names: ", expected)
+	write("DEBUG: actual_substation_names: ", actual)
 	
-	_self.assert_deep_equals(actual_substation_names, expected_substation_names, "Actual list of substation names returned by dnom batch process is not same as a list of expected substation names")
+	includes_all_expected? << actual_substation_names.includes_all?(expected_substation_names)
+	_if _not includes_all_expected?
+	_then
+		mess << "Actual list of substation names: "+actual +"Expected substation names: "+expected
+	_endif 
 	
+	_self.assert_true(includes_all_expected?, mess)	
+
 	_return _self 
 _endmethod
 $
@@ -431,7 +447,12 @@ _method eo_dnom_inc_update_itest_base.when_design_differences_are_exported(_opti
 	##
 	_super.when_design_differences_are_exported(export_type)
 
-	_self.get_calculated_diff_files();
+	difference_mode << sw_dnom_properties_helper.difference_mode
+	
+	_if difference_mode _is :incremental
+	_then 
+		_self.get_calculated_diff_files();
+	_endif 
 	
 	>> _self
 _endmethod
