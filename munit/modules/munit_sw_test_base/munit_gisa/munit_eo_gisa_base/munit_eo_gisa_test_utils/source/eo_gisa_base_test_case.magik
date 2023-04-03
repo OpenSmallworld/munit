@@ -1141,7 +1141,9 @@ $
 _pragma(classify_level=debug)
 _method eo_gisa_base_test_case.then_circuit_building_counts_are(_gather data)
 	##
-	##
+	## Counts how many circuits have been built.
+	## This is ignored when difference mode is batch because we do not build
+	## circuits in this mode.
 	
 	difference_mode << sw_dnom_properties_helper.difference_mode
 	
