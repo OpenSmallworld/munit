@@ -338,13 +338,20 @@ _private _method eo_dnom_inc_update_itest_base.batch!then_the_file_sets_are_expo
 
 	actual_substation_names << equality_set.new_from(_self.properties[:resulting_request].properties[:related_substations])
 	
-	write("DEBUG: expected_substation_names")
-	expected_substation_names.print_on(!terminal!)
-	write("DEBUG: actual_substation_names")
-	actual_substation_names.print_on(!terminal!)
+	expected << write_string_with_separator(expected_substation_names)
+	actual << write_string_with_separator(actual_substation_names)
+
+	write("DEBUG: expected_substation_names: ", expected)
+	write("DEBUG: actual_substation_names: ", actual)
 	
-	_self.assert_true(actual_substation_names.includes_all?(expected_substation_names), "List of expected substation names are not part of actual substation names list.")
+	includes_all_expected? << actual_substation_names.includes_all?(expected_substation_names)
+	_if _not includes_all_expected?
+	_then
+		mess << "Actual list of substation names: "+actual +"Expected substation names: "+expected
+	_endif 
 	
+	_self.assert_true(includes_all_expected?, mess)	
+
 	_return _self 
 _endmethod
 $
