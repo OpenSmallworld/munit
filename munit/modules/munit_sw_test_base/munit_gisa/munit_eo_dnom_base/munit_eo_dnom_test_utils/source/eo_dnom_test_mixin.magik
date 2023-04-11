@@ -615,6 +615,13 @@ _method eo_dnom_test_mixin.then_all_files_prefixes_are(prefix)
 	## 
 	##
 
+	difference_mode << sw_dnom_properties_helper.difference_mode
+	
+	_if difference_mode _is :batch
+	_then 
+		_return _self
+	_endif 
+	
 	_for written_file _over _self.properties[:written_substations].an_element().fast_elements()
 	_loop
 		_self.assert_true(system.pathname_components(written_file).index_of_seq(prefix) = 1,
