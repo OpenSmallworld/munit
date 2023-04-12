@@ -336,7 +336,8 @@ _private _method eo_dnom_inc_update_itest_base.batch!then_the_file_sets_are_expo
 		_endloop
 	_endloop 
 
-	actual_substation_names << equality_set.new_from(_self.properties[:resulting_request].properties[:related_substations])
+	a_request << _self.properties[:resulting_request].default(_self.properties[:export_request])
+	actual_substation_names << equality_set.new_from(a_request.properties[:related_substations])
 	
 	expected << write_string_with_separator(expected_substation_names)
 	actual << write_string_with_separator(actual_substation_names)
