@@ -113,7 +113,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_base_case.export_differences_from_current_design_locally(_optional export_type)
+_method eo_dnom_base_case.create_request_for_as_built_current_design_locally(_optional export_type)
 	## Process the circuit request, using the %TEMP% for output and
 	## without messaging
 	
@@ -149,10 +149,6 @@ _method eo_dnom_base_case.export_differences_from_current_design_locally(_option
 		request.set_property( :design_splitter_class_name, splitter_name)
 	_endif 
 
-	process_name << request.get_property(:process_name)
-	process_manager << sw_process_manager_cache.get_cached_instance( sw_dnom_properties_helper.installation_type )
-	export_set_process << process_manager.get_process(process_name)
-
 	# Disable exchange job creation
 	stub_method_helper.replace_method(sw_dnom_exchange_job_manager,
 					  :|process_request()|,
@@ -165,6 +161,21 @@ _method eo_dnom_base_case.export_differences_from_current_design_locally(_option
 						  :|process_request()|,
 						  _proc() _endproc)
 	_endif
+	
+	>> request 
+_endmethod 
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_base_case.export_differences_from_current_design_locally(_optional export_type)
+	## Process the circuit request, using the %TEMP% for output and
+	## without messaging
+
+	request << _self.create_request_for_as_built_current_design_locally(export_type)
+
+	process_name << request.get_property(:process_name)
+	process_manager << sw_process_manager_cache.get_cached_instance( sw_dnom_properties_helper.installation_type )
+	export_set_process << process_manager.get_process(process_name)
 
 	_self.when_registering_written_xml_files()					  
 	

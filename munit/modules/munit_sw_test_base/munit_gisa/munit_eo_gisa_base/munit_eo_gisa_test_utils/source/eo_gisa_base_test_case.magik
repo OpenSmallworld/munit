@@ -826,14 +826,21 @@ _pragma(classify_level=debug)
 _method eo_gisa_base_test_case.when_design_differences_are_exported(_optional export_type)
 	##
 	##
-	# Dont stop cloning exchange job records
-	stub_method_helper.replace_method(sw_cim_metadata_engine, :|clone_exchange_job_record()|, :new_exchange_job_id)
-	stub_method_helper.replace_method(sw_cim_metadata_engine, :|update_exchange_job_with_metadata()|, _unset)
-	_self.commit_and_merge_all_views()
+	_self.prepare_for_design_difference_processing()
 	.properties[ :resulting_request ] << _self.export_differences_from_current_design_locally(export_type)
 	>> _self
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.prepare_for_design_difference_processing()
+		# Dont stop cloning exchange job records
+	stub_method_helper.replace_method(sw_cim_metadata_engine, :|clone_exchange_job_record()|, :new_exchange_job_id)
+	stub_method_helper.replace_method(sw_cim_metadata_engine, :|update_exchange_job_with_metadata()|, _unset)
+	_self.commit_and_merge_all_views()
+_endmethod 
+
+
 
 _pragma(classify_level=debug)
 _private _method eo_gisa_base_test_case.commit_and_merge_all_views()
