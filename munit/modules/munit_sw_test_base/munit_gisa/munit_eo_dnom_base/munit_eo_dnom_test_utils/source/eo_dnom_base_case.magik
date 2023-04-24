@@ -210,3 +210,120 @@ _method eo_dnom_base_case.export_substation_locally( a_substation )
 	_return request
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method eo_dnom_base_case.denergised_rwo_names
+	##
+	## TMP method for SWV-22995 testing
+	## Returns the list of rwo names keyed by their circuit_ids.
+	##
+	_if (denergised_rwo_names << _self.properties[:denergised_rwo_names]) _isnt _unset
+	_then
+		_return denergised_rwo_names
+	_endif
+	denergised_rwo_names << _self.properties[:denergised_rwo_names] << equality_property_list.new()
+	
+	denergised_rwo_names["DNOM44_1"] << equality_set.new_with(:d44_mv_bus_10)
+	denergised_rwo_names["DNOM44_2"] << equality_set.new_with(:d44_mv_bus_12, :d44_cbl_2_1, :d44_sw_2_1, :d44_cbl_2_2)
+	denergised_rwo_names["DNOM44_3"] << equality_set.new_with(:d44_cbl_3_2)
+	denergised_rwo_names["DNOM44_4"] << equality_set.new_with(:d44_cbl_4_5, :d44_cbl_4_6, :d44_cbl_4_7, :d44_cbl_4_8, :d44_sw_4_1, :d44_bus_4_1, :d44_lv_4_xfrmr, :d44_bus_4_2)
+	denergised_rwo_names["DNOM44_5"] << equality_set.new_with(:d44_cbl_5_2, :d44_cbl_5_3, :d44_bus_5_1, :d44_lv_5_xfrmr)
+	
+	_return denergised_rwo_names
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_base_case.denergised_rwos(circuit)
+	##
+	## Temporary method SWV-22995,
+	## Returns set of de-energised rwo for the given CIRCUIT (works
+	## for replicas too)
+	## 
+	rwo_names << _self.denergised_rwo_names[circuit.circuit_id]
+	_if rwo_names _is _unset
+	_then
+		_return {}
+	_endif
+	
+	collections << rope.new() # collections to seek rwos
+	collections_names << {:eo_connector_segment_inst, :eo_isolating_eqpt_inst, :eo_cable_segment_inst, :eo_power_xfrmr_inst, :eo_3w_power_xfrmr_inst}
+	_for coll_name _over collections_names.fast_elements()
+	_loop
+		collections.add_last(circuit.source_view.collection(coll_name))
+	_endloop	
+
+	rwos << rwo_set.new()
+
+	_for rwo_name _over rwo_names.fast_elements()
+	_loop
+		name_pred << predicate.eq(:name, rwo_name)
+		found_rwos << rope.new()
+		_for collection _over collections.fast_elements()
+		_loop
+			found_rwos.add_all_last(collection.select(name_pred))
+		_endloop
+		_if found_rwos.size =1
+		_then
+			rwos.add(found_rwos[1])
+		_endif		
+		_self.assert_true(found_rwos.size <=1, write_string("Multiple rwos named ", rwo_name, " found: ", _scatter found_rwos))
+	_endloop
+	_return rwos
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_base_case.denergised_rwo_circuits(rwo)
+	##
+	## TMP method for SWV-22995 testing
+	## Returns sets of circuits for which the RWO should belong
+	## too, if it is de-energised.
+	## For rwos not listed in the denergised_rwo_names returns _unset
+	##
+	_if _not rwo.responds_to?(:name)
+	_then
+		_return _unset
+	_endif	
+	_for circuit_id, rwo_names _over _self.denergised_rwo_names.fast_keys_and_elements()
+	_loop
+		_if rwo_names.includes?(rwo.name)
+		_then
+			circuit << rwo.source_view.collection(:eo_circuit).select(predicate.eq(:circuit_id, circuit_id)).an_element()
+			_return rwo_set.new_with(circuit)
+		_endif
+	_endloop	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_base_case.given_substation_provider_with_denergised_rwos()
+	##
+	## TMP method for SWV-22995 testing
+	## Stubs substation provider to list de-energised rwos as
+	## belonging to circuits based on the the denergised_rwo_names
+	## method.
+	## Extends the circuit_objects_to_export() and get_circuits() methods.
+	##
+	_local me << _self
+	stub_method_helper.replace_method(eo_dnom_substation_provider, :|circuit_objects_to_export()|,
+					  _proc@stubbed_circuit_objects_to_export(circ, rwos)
+						  _import me
+						  _self.perform(:|saved!circuit_objects_to_export()|, circ, rwos)
+						  rwos.add_all(me.denergised_rwos(circ))
+						  _return rwos
+					  _endproc)
+	
+	stub_method_helper.replace_method(eo_dnom_substation_provider, :|get_circuits()|,
+					  _proc@stubbed_get_circuits(rwo)
+						  _import me
+						  _if (circuits << me.denergised_rwo_circuits(rwo)) _isnt _unset
+						  _then
+							  _return circuits
+						  _else							  
+							  _return _self.saved!get_circuits(rwo)
+						  _endif						  
+					  _endproc)
+	_return _self
+_endmethod
+$
