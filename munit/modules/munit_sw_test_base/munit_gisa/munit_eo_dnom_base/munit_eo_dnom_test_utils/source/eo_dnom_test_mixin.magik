@@ -140,6 +140,7 @@ _method eo_dnom_test_mixin.when_registering_written_xml_files()
 		_proc(ss, filepath)
 			file << _self.saved!print_distribution_system(ss, filepath)
 			_import schematic_files
+			
 			name << _if ss.substation _isnt _unset
 				_then
 					>> ss.substation.name.write_string
@@ -657,6 +658,50 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optional schem_ref_file_name, match_schematics_exactly?)
+	## 
+	## Checks if exported files match golden files.
+	##
+	## REF_FILE_NAME       - the name of reference golden file
+	##                       (without extension).
+	## SCHEM_REF_FILE_NAME - the name of reference golden file for
+	##                       schematics export. If unset then
+	##                       REF_FILE_NAME is used.
+	## MATCH_SCHEMATICS_EXACTLY? - if false than schematic golden
+	##                       files are matched using the general xml comparison,
+	##                       instead of the dnom_schematic_comparator
+	##
+
+	schem_ref_file_name <<  schem_ref_file_name.default(ref_file_name)
+	
+	written_substations << _self.properties[:written_substations].an_element()
+	_self.assert_equals(written_substations.size, 1, "Expected one Substation xml, when got #1")
+	reference_xml_file << ref_file_name + ".xml"
+	_self.assert_xml_files_equals( reference_xml_file, written_substations[1])
+	
+	_if _self.using_previous_dnom_version?
+	_then
+		_return _self 
+	_endif
+
+	written_dss << _self.properties[:written_distribution_systems].an_element()
+	_if _self.properties[:export_request][:export_schematics?] _is _true
+	_then
+		_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
+		reference_ortho_schematic << schem_ref_file_name + "_schem_ortho.xml"	
+		reference_geo_schematic << schem_ref_file_name + "_schem_geo.xml"
+		match_schematics_exactly? << match_schematics_exactly?.default(_true)
+		_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], match_schematics_exactly?)
+		_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], match_schematics_exactly?)
+	_else
+		_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
+	_endif	
+
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
 _method eo_dnom_test_mixin.then_the_exported_batch_files_match(references_files_list)
 	## 
 	## Checks if exported files match golden files.
@@ -674,27 +719,30 @@ _method eo_dnom_test_mixin.then_the_exported_batch_files_match(references_files_
 		written_substation_files << _self.properties[:written_substations][i_subkey]
 		dnom_substation_file << written_substation_files[1] 
 		
-		# user:break_point.break(:then_the_exported_files_match,:|self|,_self,
-		# 	:reference_dnom_xml_file, reference_dnom_xml_file,
-		# 	:dnom_substation_file,dnom_substation_file)
 		_self.assert_xml_files_equals( reference_dnom_xml_file, dnom_substation_file)
 
-		_if _not _self.using_previous_dnom_version? _andif 
-		 	_self.properties[:export_request][:export_schematics?] _is _true _andif 
-		 	(schematic_file_name << i_ref_list[2]) _isnt _unset 
+		_if _not _self.using_previous_dnom_version?
 		_then
-			schematic_file_name << references_files_list[2]
-			written_dss << _self.properties[:written_distribution_systems].an_element()
-			_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
+			written_dss << _self.properties[:written_distribution_systems][i_subkey]
+			
+			_if _self.properties[:export_request][:export_schematics?] _is _true
+			_then 
+				_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
 
-			reference_ortho_schematic << i_ref_list[2].default(i_ref_list[1]) + "_schem_ortho.xml"	
-			reference_geo_schematic   << i_ref_list[2].default(i_ref_list[1]) + "_schem_geo.xml"
-			match_schematics_exactly? << i_ref_list[3].default(_true)
-			_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], match_schematics_exactly?)
-			_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], match_schematics_exactly?)
-			# _else
-			#  	_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
-			# _endif
+				reference_ortho_schematic << i_ref_list[2].default(i_ref_list[1]) + "_schem_ortho.xml"	
+				reference_geo_schematic   << i_ref_list[2].default(i_ref_list[1]) + "_schem_geo.xml"
+				match_schematics_exactly? << i_ref_list[3].default(_true)
+				user:break_point.break(:then_the_exported_files_match,:|self|,_self,
+					:i_ref_list, i_ref_list, 
+					:written_dss,written_dss,
+					:reference_ortho_schematic, reference_ortho_schematic,
+					:reference_geo_schematic, reference_geo_schematic)
+				
+				_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], match_schematics_exactly?)
+				_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], match_schematics_exactly?)
+			_else
+			  	_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
+			 _endif
 		_endif
 	_endloop
 
