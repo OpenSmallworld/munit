@@ -732,11 +732,6 @@ _method eo_dnom_test_mixin.then_the_exported_batch_files_match(references_files_
 				reference_ortho_schematic << i_ref_list[2].default(i_ref_list[1]) + "_schem_ortho.xml"	
 				reference_geo_schematic   << i_ref_list[2].default(i_ref_list[1]) + "_schem_geo.xml"
 				match_schematics_exactly? << i_ref_list[3].default(_true)
-				user:break_point.break(:then_the_exported_files_match,:|self|,_self,
-					:i_ref_list, i_ref_list, 
-					:written_dss,written_dss,
-					:reference_ortho_schematic, reference_ortho_schematic,
-					:reference_geo_schematic, reference_geo_schematic)
 				
 				_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], match_schematics_exactly?)
 				_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], match_schematics_exactly?)
