@@ -15,42 +15,23 @@ def_mixin( :eo_dnom_test_mixin, { :application_system_test_mixin } )
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.given_a_station( name_or_number )
+_method eo_dnom_test_mixin.given_a_station(_gather names_or_numbers)
 	##
-	## Asserts that the station with NAME_OR_NUMBER exists and
-	## caches it as :station_to_export property
-	##
-
-	provider <<  sw_dnom_properties_helper.station_provider
-	station << provider.get_station( name_or_number )
-	_self.assert_not_unset(station, write_string("Cannot find station ", name_or_number ))
-	_self.properties[:station_to_export] << station
-
-	>> _self
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method eo_dnom_test_mixin.given_a_multistation_list( _gather name_or_number_list )
-	##
-	## Asserts that the station with NAME_OR_NUMBER exists and
-	## caches it as :station_to_export property
+	## Asserts that the station(s) with NAME_OR_NUMBER exists and
+	## caches it as :stations_to_export property
 	##
 
 	provider <<  sw_dnom_properties_helper.station_provider
-	
-	_for name_or_number _over name_or_number_list.fast_elements()
-	_loop 
-		station << provider.get_station( name_or_number )
-		_self.assert_not_unset(station, write_string("Cannot find station ", name_or_number ))
-		
-		_if _self.properties[:station_batch_to_export] _is _unset 
-		_then
-			_self.properties[:station_batch_to_export] << set.new()
-		_endif
-		
-		_self.properties[:station_batch_to_export].add(station)
+	station_list << rope.new()
+
+	_for a_station_name_or_number _over names_or_numbers.fast_elements()
+	_loop
+		station << provider.get_station(a_station_name_or_number)
+		_self.assert_not_unset(station, write_string("Cannot find station ", a_station_name_or_number))
+		station_list.add(station)
 	_endloop
+
+	_self.properties[:stations_to_export] << station_list
 
 	>> _self
 _endmethod
@@ -59,7 +40,7 @@ $
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.when_the_station_is_exported( _gather request_properties )
 	##
-	## Create and process a station export request, cacheing the
+	## Create and process a station export request, caching the
 	## request in the :export_request property
 	## REQUEST_PROPERTIES is a list of request property key and
 	## value pairs which can be used to override default properties
@@ -84,35 +65,6 @@ _method eo_dnom_test_mixin.when_the_station_is_exported( _gather request_propert
 	
 	_return _self 
 
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method eo_dnom_test_mixin.when_the_station_batch_is_exported( _gather request_properties )
-	##
-	## Create and process a station export request, cacheing the
-	## request in the :export_request property
-	## REQUEST_PROPERTIES is a list of request property key and
-	## value pairs which can be used to override default properties
-	## on the request
-	
-	request << _self.create_multistation_export_request()
-	request.set_property(:substation_provider, sw_dnom_properties_helper.station_provider)
-	request.set_properties(_scatter request_properties)
-	_self.properties[:export_request] << request
-
-	p_cache << sw_process_manager_cache.get_cached_instance(
-					    request.get_property(:installation_type) )
-
-	# Disable SOAP messaging
-	stub_method_helper.replace_method( sw_dnom_message_manager, :|process_request()|, _proc() _return _endproc )
-
-	_self.when_registering_written_xml_files()
-		
-	export_process << p_cache.get_process( :dnom_station_export_request )
-	export_process.execute(request)
-	
-	_return _self 
 _endmethod
 $
 
@@ -157,43 +109,19 @@ $
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.create_station_export_request()
 	##
-
-	_local request << sw_dnom_substation_export_helper.create_request_for_substation_export(_self.properties[:station_to_export])
-
-	# don't delete xml files for tests
-	request.set_property( :test_mode?, _true )
-
-	# write the internals files for tests
-	request.set_property( :export_station_internals?,
-			      _self.properties[:export_station_internals?].default(_true) )
-
-	# write the schematics files for tests
-	request.set_property( :export_schematics?,
-			      _self.properties[:export_schematics?].default(_true) )
-
-	# Override export future network property if needed.
-	_if _self.properties[:export_future_network?] _isnt _unset
-	_then 
-		request.set_property(:export_future_network?,
-				     _self.properties[:export_future_network?])
-	_endif
-	
-	_return request 
-_endmethod
-$
-
-_pragma(classify_level=debug)
-_method eo_dnom_test_mixin.create_multistation_export_request( )
 	##
-	_local unrs_list << set.new()
-	_local substation_list << _self.properties[:station_batch_to_export]
-	_local request << sw_dnom_substation_export_helper.create_request_for_substation_export (substation_list.an_element())
+	_local stations_to_export << _self.properties[:stations_to_export]
 	
-	_for a_substation _over _self.properties[:station_batch_to_export].fast_elements()
-	_loop 
-		unrs_list.add(sw_dnom_substation_export_helper.get_urn_from_object(a_substation))
-	_endloop	
-	request.set_property(:related_substations, unrs_list)
+	_local request << sw_dnom_substation_export_helper.create_request_for_substation_export(stations_to_export[1])
+
+	# FIXME: For now, lets add the URNs manually. Eventually, this should probably be handled
+	# by the export helper
+	_for i _over 2.upto(stations_to_export.size)
+	_loop
+		_local station_urn << sw_dnom_substation_export_helper.get_urn_from_object(stations_to_export[i])
+		_local urn_list << request.get_property(:related_substations).new_appending(station_urn)
+		request.set_property(:related_substations, urn_list)
+	_endloop
 
 	# don't delete xml files for tests
 	request.set_property( :test_mode?, _true )
@@ -702,42 +630,60 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.then_the_exported_batch_files_match(references_files_list)
+# FIXME: I think we can merge this with the above method, just need to work out how we
+# handle the selection of the schematics comparison mode
+_method eo_dnom_test_mixin.then_the_multiple_exported_files_match(_gather references_files_list)
 	## 
 	## Checks if exported files match golden files.
 	##
-	## REFERENCES_FILES_LIST - A property list keyed on the DNOM Substation name
-	##                       with value a vector listing the corresponding DNOM
-	##                       reference file name, the schematic reference file name
-	## 	                     and the boolean flag as to whether to match schematics
-	##                       exactly
-	## 
-	
-	_for i_subkey, i_ref_list _over references_files_list.fast_keys_and_elements()
-	_loop 
-		reference_dnom_xml_file << i_ref_list[1] + ".xml"		
-		written_substation_files << _self.properties[:written_substations][i_subkey]
-		dnom_substation_file << written_substation_files[1] 
-		
-		_self.assert_xml_files_equals( reference_dnom_xml_file, dnom_substation_file)
+	## REFERENCES_FILES_LIST - A list of either strings or simple vectors to identify the
+	## 							golden files to which the exported files should be compared.
+	##							There should be one entry for each set of exported files.
+	##							If a string is provided, this is used as the name for both
+	##							the geographic and schematic files. If the schematic file
+	##							name is different, a vector can be provided in the format
+	##							{geo_file_name, schematic_file_name}
+	##
+	substation_names << equality_set.new_from(_self.properties[:written_substations].keys)
 
+	_self.assert_equals(substation_names.size, references_files_list.size,
+		write_string("Expected ", references_files_list.size, " substations to have been exported, but got #1")
+	)
+
+	_for idx, substation_name _over substation_names.as_sorted_collection().fast_keys_and_elements()
+	_loop
+		_if references_files_list[idx].class_name _is :simple_vector
+		_then
+			geo_ref_file << references_files_list[idx][1]
+			sch_ref_file << references_files_list[idx][2]
+		_else
+			geo_ref_file << references_files_list[idx]
+			sch_ref_file << references_files_list[idx]
+		_endif
+
+		# Compare geographic files
+		substation_files << _self.properties[:written_substations][substation_name]
+		_self.assert_equals(substation_files.size, 1, "Expected one Substation xml, but got #1")
+
+		reference_xml_file << geo_ref_file + ".xml"
+		_self.assert_xml_files_equals(reference_xml_file, substation_files[1])
+		
 		_if _not _self.using_previous_dnom_version?
 		_then
-			written_dss << _self.properties[:written_distribution_systems][i_subkey]
-			
-			_if _self.properties[:export_request][:export_schematics?] _is _true
-			_then 
-				_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
+			# Compare schematic files
+			written_dss << _self.properties[:written_distribution_systems][substation_name]
 
-				reference_ortho_schematic << i_ref_list[2].default(i_ref_list[1]) + "_schem_ortho.xml"	
-				reference_geo_schematic   << i_ref_list[2].default(i_ref_list[1]) + "_schem_geo.xml"
-				match_schematics_exactly? << i_ref_list[3].default(_true)
-				
-				_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], match_schematics_exactly?)
-				_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], match_schematics_exactly?)
+			_if _self.properties[:export_request][:export_schematics?] _is _true
+			_then
+				_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xml files, but got #1")
+				reference_ortho_schematic << sch_ref_file + "_schem_ortho.xml"	
+				reference_geo_schematic << sch_ref_file + "_schem_geo.xml"
+
+				_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], _true)
+				_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], _true)
 			_else
-			  	_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
-			 _endif
+				_self.assert_unset(written_dss, "Schematics files were written where they should not have been")
+			_endif
 		_endif
 	_endloop
 
