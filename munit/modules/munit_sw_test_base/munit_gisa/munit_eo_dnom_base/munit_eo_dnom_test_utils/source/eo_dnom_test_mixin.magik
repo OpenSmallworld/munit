@@ -362,17 +362,22 @@ _private _method eo_dnom_test_mixin.get_mapped_objects_for(p_object)
 	## each substation.
 	## 
 	request << _self.properties[:export_request]
-	dnom_substations << request.get_property(:dnom_substations)
-	
-	_for dnom_substation _over dnom_substations.fast_elements()
+
+	_for sub_request _over request.get_property(:sub_requests).fast_elements()
 	_loop
-		dnom_model << dnom_substation[:dnom_model]
-		mapped_objs << dnom_model.get_mapping_for( p_object )
-		_if mapped_objs _isnt _unset
-		_then
-			_return mapped_objs
-		_endif
+		dnom_substations << sub_request.get_property(:dnom_substations)
+		
+		_for dnom_substation _over dnom_substations.fast_elements()
+		_loop
+			dnom_model << dnom_substation[:dnom_model]
+			mapped_objs << dnom_model.get_mapping_for( p_object )
+			_if mapped_objs _isnt _unset
+			_then
+				_return mapped_objs
+			_endif
+		_endloop
 	_endloop
+
 	_return _unset
 _endmethod
 $
