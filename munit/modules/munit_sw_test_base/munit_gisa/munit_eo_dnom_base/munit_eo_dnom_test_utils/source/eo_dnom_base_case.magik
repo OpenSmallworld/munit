@@ -139,6 +139,9 @@ _method eo_dnom_base_case.create_request_for_as_built_current_design_locally(_op
 	
 	# sw_dnom_split_export_manager now requires exchange_job_id property to be set
 	request.set_property( :exchange_job_id, :dummy_exchange_job_id )
+	stub_method_helper.replace_method(sw_gisa_logger,
+					  :|get_export_job_id()|,
+					  _proc() >> 123 _endproc)
 	
 	# sw_dnom_message_manager now requires :ds_version_timestamp property to be set
 	request.set_property( :ds_version_timestamp, :dummy_ds_version_timestamp )
