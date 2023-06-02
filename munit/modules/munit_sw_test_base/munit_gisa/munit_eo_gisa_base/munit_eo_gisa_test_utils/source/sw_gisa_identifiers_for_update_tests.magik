@@ -37,8 +37,14 @@ _method sw_gisa_identifiers_for_update_tests.collection_unique_id_for_rwo ( rwo 
 	##
 	## Return an ID for RWO which is unique within its collection
 	##
-
-	_if (id << _self.ids[rwo]) _is _unset 
+	
+	_try 
+		id << _self.ids[rwo]
+	_when error 
+		# Do nothing.  Ignore stale record handles
+	_endtry
+		
+	_if id _is _unset 
 	_then
 		# .perform() is used to enable calling this method with
 		# sw_cim_value_holder as parameter
