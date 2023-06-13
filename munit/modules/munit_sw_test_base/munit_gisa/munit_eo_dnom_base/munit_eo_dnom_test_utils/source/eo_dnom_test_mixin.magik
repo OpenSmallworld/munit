@@ -591,7 +591,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optional schem_ref_file_name, match_schematics_exactly?)
+_private _method eo_dnom_test_mixin.int!then_the_exported_files_match(ref_file_name, _optional schem_ref_file_name, match_schematics_exactly?)
 	## 
 	## Checks if exported files match golden files.
 	##
@@ -635,64 +635,38 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-# FIXME: I think we can merge this with the above method, just need to work out how we
-# handle the selection of the schematics comparison mode
-_method eo_dnom_test_mixin.then_the_multiple_exported_files_match(_gather references_files_list)
+_method eo_dnom_test_mixin.then_the_exported_files_match(_gather references_files_list_to_compare)
 	## 
 	## Checks if exported files match golden files.
 	##
-	## REFERENCES_FILES_LIST - A list of either strings or simple vectors to identify the
-	## 							golden files to which the exported files should be compared.
-	##							There should be one entry for each set of exported files.
-	##							If a string is provided, this is used as the name for both
-	##							the geographic and schematic files. If the schematic file
-	##							name is different, a vector can be provided in the format
-	##							{geo_file_name, schematic_file_name}
-	##
-	substation_names << equality_set.new_from(_self.properties[:written_substations].keys)
-
-	_self.assert_equals(substation_names.size, references_files_list.size,
+	## REFERENCES_FILES_LIST_TO_COMPARE - A list of either strings or simple vectors to identify the
+	## golden files to which the exported files should be compared.
+	## There should be one entry for each set of exported files.
+	## If a string is provided, this is used as the name for both
+	## the geographic and schematic files. If the schematic file
+	## name is different, a vector can be provided in the format
+	## {geo_file_name, schematic_file_name}
+	##	
+	
+	references_files_list << _if references_files_list_to_compare.an_element().is_kind_of?(char16_vector)
+		_then
+			# Legacy
+			>> {references_files_list_to_compare}
+		_else
+			# Assume a vector of vectors
+			>> references_files_list_to_compare
+		_endif 
+	
+	_self.assert_equals(_self.properties[:written_substations].size, references_files_list.size,
 		write_string("Expected ", references_files_list.size, " substations to have been exported, but got #1")
 	)
-
-	_for idx, substation_name _over substation_names.as_sorted_collection().fast_keys_and_elements()
-	_loop
-		_if references_files_list[idx].class_name _is :simple_vector
-		_then
-			geo_ref_file << references_files_list[idx][1]
-			sch_ref_file << references_files_list[idx][2]
-		_else
-			geo_ref_file << references_files_list[idx]
-			sch_ref_file << references_files_list[idx]
-		_endif
-
-		# Compare geographic files
-		substation_files << _self.properties[:written_substations][substation_name]
-		_self.assert_equals(substation_files.size, 1, "Expected one Substation xml, but got #1")
-
-		reference_xml_file << geo_ref_file + ".xml"
-		_self.assert_xml_files_equals(reference_xml_file, substation_files[1])
-		
-		_if _not _self.using_previous_dnom_version?
-		_then
-			# Compare schematic files
-			written_dss << _self.properties[:written_distribution_systems][substation_name]
-
-			_if _self.properties[:export_request][:export_schematics?] _is _true
-			_then
-				_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xml files, but got #1")
-				reference_ortho_schematic << sch_ref_file + "_schem_ortho.xml"	
-				reference_geo_schematic << sch_ref_file + "_schem_geo.xml"
-
-				_self.assert_xml_files_equals(reference_geo_schematic, written_dss[1], _true)
-				_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], _true)
-			_else
-				_self.assert_unset(written_dss, "Schematics files were written where they should not have been")
-			_endif
-		_endif
+	
+	_for ref_files _over references_files_list.fast_elements()
+	_loop 
+		_self.int!then_the_exported_files_match(_scatter ref_files)
 	_endloop
-
-	_return _self 
+	
+	_return _self
 _endmethod
 $
 
