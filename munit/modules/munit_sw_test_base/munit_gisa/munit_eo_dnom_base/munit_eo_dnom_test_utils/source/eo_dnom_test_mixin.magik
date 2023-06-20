@@ -607,17 +607,19 @@ _private _method eo_dnom_test_mixin.int!then_the_exported_files_match(ref_file_n
 
 	schem_ref_file_name <<  schem_ref_file_name.default(ref_file_name)
 	
-	written_substations << _self.properties[:written_substations].an_element()
-	_self.assert_equals(written_substations.size, 1, "Expected one Substation xml, when got #1")
+	written_substation_files << _self.properties[:written_substations][ref_file_name]
+
+	_self.assert_equals(written_substation_files.size, 1, "Expected one Substation xml, when got #1")
+	
 	reference_xml_file << ref_file_name + ".xml"
-	_self.assert_xml_files_equals( reference_xml_file, written_substations[1])
+	_self.assert_xml_files_equals( reference_xml_file, written_substation_files[1])
 	
 	_if _self.using_previous_dnom_version?
 	_then
 		_return _self 
 	_endif
 
-	written_dss << _self.properties[:written_distribution_systems].an_element()
+	written_dss << _self.properties[:written_distribution_systems][ref_file_name]
 	_if _self.properties[:export_request][:export_schematics?] _is _true
 	_then
 		_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
@@ -647,7 +649,6 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(_gather references_file
 	## name is different, a vector can be provided in the format
 	## {geo_file_name, schematic_file_name}
 	##	
-	
 	references_files_list << _if references_files_list_to_compare.an_element().is_kind_of?(char16_vector)
 		_then
 			# Legacy
