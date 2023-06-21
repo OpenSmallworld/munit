@@ -591,7 +591,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_private _method eo_dnom_test_mixin.int!then_the_exported_files_match(ref_file_name, _optional schem_ref_file_name, match_schematics_exactly?)
+_private _method eo_dnom_test_mixin.int!then_the_exported_files_match(written_substation, ref_file_name, _optional schem_ref_file_name, match_schematics_exactly?)
 	## 
 	## Checks if exported files match golden files.
 	##
@@ -607,7 +607,7 @@ _private _method eo_dnom_test_mixin.int!then_the_exported_files_match(ref_file_n
 
 	schem_ref_file_name <<  schem_ref_file_name.default(ref_file_name)
 	
-	written_substation_files << _self.properties[:written_substations][ref_file_name]
+	written_substation_files << _self.properties[:written_substations][written_substation]
 
 	_self.assert_equals(written_substation_files.size, 1, "Expected one Substation xml, when got #1")
 	
@@ -619,7 +619,7 @@ _private _method eo_dnom_test_mixin.int!then_the_exported_files_match(ref_file_n
 		_return _self 
 	_endif
 
-	written_dss << _self.properties[:written_distribution_systems][ref_file_name]
+	written_dss << _self.properties[:written_distribution_systems][written_substation]
 	_if _self.properties[:export_request][:export_schematics?] _is _true
 	_then
 		_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
@@ -641,30 +641,32 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(_gather references_file
 	## 
 	## Checks if exported files match golden files.
 	##
-	## REFERENCES_FILES_LIST_TO_COMPARE - A list of either strings or simple vectors to identify the
-	## golden files to which the exported files should be compared.
-	## There should be one entry for each set of exported files.
-	## If a string is provided, this is used as the name for both
-	## the geographic and schematic files. If the schematic file
-	## name is different, a vector can be provided in the format
-	## {geo_file_name, schematic_file_name}
-	##	
-	references_files_list << _if references_files_list_to_compare.an_element().is_kind_of?(char16_vector)
-		_then
-			# Legacy
-			>> {references_files_list_to_compare}
-		_else
-			# Assume a vector of vectors
-			>> references_files_list_to_compare
-		_endif 
+	## REFERENCES_FILES_LIST_TO_COMPARE - A list of either a list of strings a list
+	## list with an equality_property_list of vector of strings keyed on (exported)
+	## substation_names. 
+	## The vectors of strings lists the golden files to which the exported files
+	## should be compared. If just one string element is provided, this is used as
+	## the name for both the geographic and schematic files. If a second string
+	## element is provided then it is used when a the schematic file name is
+	## different than the file name reference provided in the first element.
 	
-	_self.assert_equals(_self.properties[:written_substations].size, references_files_list.size,
-		write_string("Expected ", references_files_list.size, " substations to have been exported, but got #1")
+	_local substations_and_references_files
+	_if (substations_and_references_files << references_files_list_to_compare.an_element()).is_kind_of?(char16_vector)
+	_then
+		# In this scenario we must assume that there is/was a single substation export, so
+		# that we support pre-533 MUnits
+		substations_and_references_files << equality_property_list.new_with(
+			_self.properties[:written_substations].a_key(), references_files_list_to_compare
+		)
+	_endif 
+	
+	_self.assert_equals(_self.properties[:written_substations].size, substations_and_references_files.size,
+		write_string("Expected ", substations_and_references_files.size, " substations to have been exported, but got #1")
 	)
 	
-	_for ref_files _over references_files_list.fast_elements()
+	_for a_sub, file_references_per_sub _over substations_and_references_files.fast_keys_and_elements()
 	_loop 
-		_self.int!then_the_exported_files_match(_scatter ref_files)
+		_self.int!then_the_exported_files_match(a_sub, _scatter file_references_per_sub)
 	_endloop
 	
 	_return _self
