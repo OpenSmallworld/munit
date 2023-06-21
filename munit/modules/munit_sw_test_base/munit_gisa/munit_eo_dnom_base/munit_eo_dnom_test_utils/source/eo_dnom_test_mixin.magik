@@ -642,13 +642,14 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(_gather references_file
 	## Checks if exported files match golden files.
 	##
 	## REFERENCES_FILES_LIST_TO_COMPARE - A list of either a list of strings a list
-	## list with an equality_property_list of vector of strings keyed on (exported)
-	## substation_names. 
-	## The vectors of strings lists the golden files to which the exported files
-	## should be compared. If just one string element is provided, this is used as
-	## the name for both the geographic and schematic files. If a second string
-	## element is provided then it is used when a the schematic file name is
-	## different than the file name reference provided in the first element.
+	## list with an equality_property_list of strings or vector of strings keyed on
+	## (exported) substation_names. 
+	## The string or vectors of strings lists value is the golden file(s) to which
+	## the exported file should be compared to. If just one string element is
+	## provided, this is used as  the name for both the geographic and schematic
+	## files. If a second string element is provided then it is used as the
+	## schematic file name to compare to -this is useful when the schematic file
+	## name is different than the file name reference provided in the first element.
 	
 	_local substations_and_references_files
 	_if (substations_and_references_files << references_files_list_to_compare.an_element()).is_kind_of?(char16_vector)
@@ -666,6 +667,11 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(_gather references_file
 	
 	_for a_sub, file_references_per_sub _over substations_and_references_files.fast_keys_and_elements()
 	_loop 
+		ref_files << _if file_references_per_sub.is_kind_of?(char16_vector)
+			_then >> {file_references_per_sub}
+			_else >> file_references_per_sub
+			_endif 
+		
 		_self.int!then_the_exported_files_match(a_sub, _scatter file_references_per_sub)
 	_endloop
 	
