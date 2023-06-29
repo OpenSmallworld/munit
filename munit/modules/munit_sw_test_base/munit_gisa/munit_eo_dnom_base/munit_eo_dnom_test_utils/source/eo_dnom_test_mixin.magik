@@ -119,7 +119,8 @@ _method eo_dnom_test_mixin.create_station_export_request()
 	_for i _over 2.upto(stations_to_export.size)
 	_loop
 		_local station_urn << sw_dnom_substation_export_helper.get_urn_from_object(stations_to_export[i])
-		_local urn_list << request.get_property(:related_substations).new_appending(station_urn)
+		urn_list << rope.new_from(request.get_property(:related_substations))
+		urn_list.add(station_urn)
 		request.set_property(:related_substations, urn_list)
 	_endloop
 
