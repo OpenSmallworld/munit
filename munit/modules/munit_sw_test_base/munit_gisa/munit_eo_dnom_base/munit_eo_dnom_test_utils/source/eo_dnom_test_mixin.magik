@@ -15,16 +15,23 @@ def_mixin( :eo_dnom_test_mixin, { :application_system_test_mixin } )
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.given_a_station( name_or_number )
+_method eo_dnom_test_mixin.given_a_station(_gather names_or_numbers)
 	##
-	## Asserts that the station with NAME_OR_NUMBER exists and
-	## caches it as :station_to_export property
+	## Asserts that the station(s) with NAME_OR_NUMBER exists and
+	## caches it as :stations_to_export property
 	##
 
 	provider <<  sw_dnom_properties_helper.station_provider
-	station << provider.get_station( name_or_number )
-	_self.assert_not_unset(station, write_string("Cannot find station ", name_or_number ))
-	_self.properties[:station_to_export] << station
+	station_list << rope.new()
+
+	_for a_station_name_or_number _over names_or_numbers.fast_elements()
+	_loop
+		station << provider.get_station(a_station_name_or_number)
+		_self.assert_not_unset(station, write_string("Cannot find station ", a_station_name_or_number))
+		station_list.add(station)
+	_endloop
+
+	_self.properties[:stations_to_export] << station_list
 
 	>> _self
 _endmethod
@@ -33,7 +40,7 @@ $
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.when_the_station_is_exported( _gather request_properties )
 	##
-	## Create and process a station export request, cacheing the
+	## Create and process a station export request, caching the
 	## request in the :export_request property
 	## REQUEST_PROPERTIES is a list of request property key and
 	## value pairs which can be used to override default properties
@@ -85,6 +92,7 @@ _method eo_dnom_test_mixin.when_registering_written_xml_files()
 		_proc(ss, filepath)
 			file << _self.saved!print_distribution_system(ss, filepath)
 			_import schematic_files
+			
 			name << _if ss.substation _isnt _unset
 				_then
 					>> ss.substation.name.write_string
@@ -101,8 +109,20 @@ $
 _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.create_station_export_request()
 	##
+	##
+	_local stations_to_export << _self.properties[:stations_to_export]
+	
+	_local request << sw_dnom_substation_export_helper.create_request_for_substation_export(stations_to_export[1])
 
-	_local request << sw_dnom_substation_export_helper.create_request_for_substation_export(_self.properties[:station_to_export])
+	# FIXME: For now, lets add the URNs manually. Eventually, this should probably be handled
+	# by the export helper
+	_for i _over 2.upto(stations_to_export.size)
+	_loop
+		_local station_urn << sw_dnom_substation_export_helper.get_urn_from_object(stations_to_export[i])
+		urn_list << rope.new_from(request.get_property(:related_substations))
+		urn_list.add(station_urn)
+		request.set_property(:related_substations, urn_list)
+	_endloop
 
 	# don't delete xml files for tests
 	request.set_property( :test_mode?, _true )
@@ -152,6 +172,36 @@ _method eo_dnom_test_mixin.given_export_schematics(val)
 
 	_self.properties[:export_schematics?] << val
 	
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_exclude_lv_from_export?(val)
+	##
+	
+	_local value << val
+	stub_method_helper.replace_method(sw_dnom_properties_helper,
+					  :exclude_lv_from_export?,
+					  _proc ()
+						  _import value 
+						  _return value
+					  _endproc)
+	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.given_exclude_hv_internals_from_export?(val)
+	##
+	
+	_local value << val
+	stub_method_helper.replace_method(sw_dnom_properties_helper,
+					  :exclude_hv_from_internals?,
+					  _proc ()
+						  _import value 
+						  _return value
+					  _endproc)
 	_return _self 
 _endmethod
 $
@@ -313,17 +363,22 @@ _private _method eo_dnom_test_mixin.get_mapped_objects_for(p_object)
 	## each substation.
 	## 
 	request << _self.properties[:export_request]
-	dnom_substations << request.get_property(:dnom_substations)
-	
-	_for dnom_substation _over dnom_substations.fast_elements()
+
+	_for sub_request _over request.get_property(:sub_requests).fast_elements()
 	_loop
-		dnom_model << dnom_substation[:dnom_model]
-		mapped_objs << dnom_model.get_mapping_for( p_object )
-		_if mapped_objs _isnt _unset
-		_then
-			_return mapped_objs
-		_endif
+		dnom_substations << sub_request.get_property(:dnom_substations)
+		
+		_for dnom_substation _over dnom_substations.fast_elements()
+		_loop
+			dnom_model << dnom_substation[:dnom_model]
+			mapped_objs << dnom_model.get_mapping_for( p_object )
+			_if mapped_objs _isnt _unset
+			_then
+				_return mapped_objs
+			_endif
+		_endloop
 	_endloop
+
 	_return _unset
 _endmethod
 $
@@ -537,7 +592,7 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optional schem_ref_file_name, match_schematics_exactly?)
+_private _method eo_dnom_test_mixin.int!then_the_exported_files_match(written_substation, ref_file_name, _optional schem_ref_file_name, match_schematics_exactly?)
 	## 
 	## Checks if exported files match golden files.
 	##
@@ -553,17 +608,19 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optiona
 
 	schem_ref_file_name <<  schem_ref_file_name.default(ref_file_name)
 	
-	written_substations << _self.properties[:written_substations].an_element()
-	_self.assert_equals(written_substations.size, 1, "Expected one Substation xml, when got #1")
+	written_substation_files << _self.properties[:written_substations][written_substation]
+
+	_self.assert_equals(written_substation_files.size, 1, "Expected one Substation xml, when got #1")
+	
 	reference_xml_file << ref_file_name + ".xml"
-	_self.assert_xml_files_equals( reference_xml_file, written_substations[1])
+	_self.assert_xml_files_equals( reference_xml_file, written_substation_files[1])
 	
 	_if _self.using_previous_dnom_version?
 	_then
 		_return _self 
 	_endif
 
-	written_dss << _self.properties[:written_distribution_systems].an_element()
+	written_dss << _self.properties[:written_distribution_systems][written_substation]
 	_if _self.properties[:export_request][:export_schematics?] _is _true
 	_then
 		_self.assert_equals(written_dss.size, 2, "Expected two DistributionSystem xmls, when got #1")
@@ -574,9 +631,52 @@ _method eo_dnom_test_mixin.then_the_exported_files_match(ref_file_name, _optiona
 		_self.assert_xml_files_equals(reference_ortho_schematic, written_dss[2], match_schematics_exactly?)
 	_else
 		_self.assert_unset(written_dss, "Schematics files were written while they should not be.")
-	_endif
+	_endif	
 
 	_return _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_the_exported_files_match(_gather references_files_list_to_compare)
+	## 
+	## Checks if exported files match golden files.
+	##
+	## REFERENCES_FILES_LIST_TO_COMPARE - A list of either a list of strings a list
+	## list with an equality_property_list of strings or vector of strings keyed on
+	## (exported) substation_names. 
+	## The string or vectors of strings lists value is the golden file(s) to which
+	## the exported file should be compared to. If just one string element is
+	## provided, this is used as  the name for both the geographic and schematic
+	## files. If a second string element is provided then it is used as the
+	## schematic file name to compare to -this is useful when the schematic file
+	## name is different than the file name reference provided in the first element.
+	
+	_local substations_and_references_files
+	_if (substations_and_references_files << references_files_list_to_compare.an_element()).is_kind_of?(char16_vector)
+	_then
+		# In this scenario we must assume that there is/was a single substation export, so
+		# that we support pre-533 MUnits
+		substations_and_references_files << equality_property_list.new_with(
+			_self.properties[:written_substations].a_key(), references_files_list_to_compare
+		)
+	_endif 
+	
+	_self.assert_equals(_self.properties[:written_substations].size, substations_and_references_files.size,
+		write_string("Expected ", substations_and_references_files.size, " substations to have been exported, but got #1")
+	)
+	
+	_for a_sub, file_references_per_sub _over substations_and_references_files.fast_keys_and_elements()
+	_loop 
+		ref_files << _if file_references_per_sub.is_kind_of?(char16_vector)
+			_then >> {file_references_per_sub}
+			_else >> file_references_per_sub
+			_endif 
+		
+		_self.int!then_the_exported_files_match(a_sub, _scatter file_references_per_sub)
+	_endloop
+	
+	_return _self
 _endmethod
 $
 
@@ -585,6 +685,13 @@ _method eo_dnom_test_mixin.then_all_files_prefixes_are(prefix)
 	## 
 	##
 
+	difference_mode << sw_dnom_properties_helper.difference_mode
+	
+	_if difference_mode _is :batch
+	_then 
+		_return _self
+	_endif 
+	
 	_for written_file _over _self.properties[:written_substations].an_element().fast_elements()
 	_loop
 		_self.assert_true(system.pathname_components(written_file).index_of_seq(prefix) = 1,
@@ -653,7 +760,7 @@ _private _method eo_dnom_test_mixin.compare_using_dnom_schematic_comparator(refe
 	##
 	expected_pathname << smallworld_product.get_resource_file(reference_filename,
 								   _self.resource_path,
-								   _self.module_name)
+								   _self.get_module_name)
 	_self.properties[:dsr] <<
 		dnom_schematic_comparator.compare_files(expected_pathname, actual_pathname)
 _endmethod
@@ -665,7 +772,7 @@ _private _method eo_dnom_test_mixin.compare_xml_files(reference_filename , actua
 	## 
 	expected_pathname << smallworld_product.get_resource_file( reference_filename,
 								   _self.resource_path,
-								   _self.module_name )
+								   _self.get_module_name )
 
 	report_file << actual_pathname + ".diffs.txt"
 	
@@ -866,7 +973,7 @@ _method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data(_gath
 	_loop
 		full_name << smallworld_product.get_resource_file(file_name + ".xml",
 								  _self.resource_path,
-								  _self.module_name)
+								  _self.get_module_name)
 		
 		streams.add_last(external_text_input_stream.new(full_name))
 	_endloop
@@ -939,5 +1046,14 @@ _private _method eo_dnom_test_mixin.get_line_from_stream(stream)
 	_endif
 	
 	_return line
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.get_module_name
+	## 
+	## Returns _self.module_name 
+	##
+	_return _self.module_name
 _endmethod
 $

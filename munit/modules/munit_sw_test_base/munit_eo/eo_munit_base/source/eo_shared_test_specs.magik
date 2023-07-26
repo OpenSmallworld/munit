@@ -219,6 +219,35 @@ eo_shared_tests_specs.define_shared_constant(:spec_properties, hash_table.new_wi
 				       :ehv, _false,
 				       :sub, _false,
 				       :real_spec, _true)
+	},
+	:eo_dac_spec,
+	{
+		property_list.new_with(
+			:spec_name,      "DAC_1",
+			:manufacturer,   "GE",
+			:manufacturer_code,      _unset,
+			:device_type,    _unset,
+			:description,    "DAC 1",
+			:obsolete,       _false,
+			:real_spec,      _true
+			)
+	},
+	:eo_composite_switch_spec,
+	{
+		property_list.new_with(
+			:spec_name,     "RMU_1",
+			:manufacturer,   _unset,
+			:manufacturer_code,      _unset,
+			:device_type,    "Ring Main Unit",
+			:description,   "RMU_11 2 Switch - 1 CB",
+			:configuration,  "2-Way",
+			:obsolete,      _false,
+			:lv,    _false,
+			:mv,     _true,
+			:hv,     _true,
+			:ehv,    _false,
+			:sub,    _false,
+			:real_spec,   _true)
 	}),
 	:private)
 $

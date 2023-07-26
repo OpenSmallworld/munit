@@ -74,7 +74,7 @@ _method dnom_schematic_renderer.draw_substation_goldenfile(name, _optional colla
 			   _else
 				   >> _self.goldenfiles_ortho_collapsed
 			   _endif	
-	filepath << all_goldenfiles.all_elements_satisfying(predicate.wild(:yourself, wildname)).an_element()
+	filepath << all_goldenfiles.all_elements_satisfying(predicate.wild(:yourself, wildname, :ci)).an_element()
 	write(%newline, "Reading and drawing ", filepath)
 	_self.draw_file(filepath)
 _endmethod

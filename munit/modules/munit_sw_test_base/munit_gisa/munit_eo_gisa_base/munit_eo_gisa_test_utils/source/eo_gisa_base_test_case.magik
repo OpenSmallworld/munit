@@ -826,14 +826,21 @@ _pragma(classify_level=debug)
 _method eo_gisa_base_test_case.when_design_differences_are_exported(_optional export_type)
 	##
 	##
-	# Dont stop cloning exchange job records
-	stub_method_helper.replace_method(sw_cim_metadata_engine, :|clone_exchange_job_record()|, :new_exchange_job_id)
-	stub_method_helper.replace_method(sw_cim_metadata_engine, :|update_exchange_job_with_metadata()|, _unset)
-	_self.commit_and_merge_all_views()
+	_self.prepare_for_design_difference_processing()
 	.properties[ :resulting_request ] << _self.export_differences_from_current_design_locally(export_type)
 	>> _self
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_private _method eo_gisa_base_test_case.prepare_for_design_difference_processing()
+		# Dont stop cloning exchange job records
+	stub_method_helper.replace_method(sw_cim_metadata_engine, :|clone_exchange_job_record()|, :new_exchange_job_id)
+	stub_method_helper.replace_method(sw_cim_metadata_engine, :|update_exchange_job_with_metadata()|, _unset)
+	_self.commit_and_merge_all_views()
+_endmethod 
+
+
 
 _pragma(classify_level=debug)
 _private _method eo_gisa_base_test_case.commit_and_merge_all_views()
@@ -1012,19 +1019,18 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 	##                          schematic update (default is _true). 
 	##
 	## WAIT_TIME       - max time to wait for tasks to finish in ms
-	##                   (defaults to 30000 ms)
+	##                   (defaults to 60000 ms)
 	##
-
+	wait_time << wait_time.default(60000)
 	sv << _self.get_schematic_validation_tool()
+	sv.max_iterations << 1
+	sv.iteration << 1
 
 	stub_method_helper.replace_method(sv, :|show_alert()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|show_results_gui()|, _proc () _endproc)
-	stub_method_helper.replace_method(sv, :|manage_progress_dialog()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|initialise_results()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|changed()|, _proc () _endproc)
 	stub_method_helper.replace_method(sv, :|set_progress_counts()|, _proc () _endproc)
-	stub_method_helper.replace_method(sv, :|set_update_progress()|, _proc(percent) _endproc )
-	stub_method_helper.replace_method(sv, :|set_update_label()|, _proc(string) _endproc )
 	stub_method_helper.replace_method(sv, :|prepare_to_run_transactions()|, _proc(trans) _endproc )
 	
 	_self.properties[:schematic_update_transactions] << transactions << rope.new()
@@ -1050,7 +1056,7 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 			_thisthread.yield_processor()
 			
 			_if sv.action(:run).activate_selector = :populate_lists|()| _orif
-			    time_spent > wait_time.default(30000)
+			    time_spent > wait_time
 			_then	
 				_leave
 			_endif
@@ -1061,7 +1067,7 @@ _method eo_gisa_base_test_case.given_updated_schematics_in_design(_optional sche
 		
 		sv.update()
 		_self.wait_for_task_to_complete(:|update_schematic()|, wait_time)	
-		transactions.add(sv.sys!slot(:transaction))
+		transactions.add(sv.sys!slot(:results)[:transactions])
 	_endloop
 
 	_if set_deterministic_ids? _isnt _false
@@ -1094,9 +1100,9 @@ _private _method eo_gisa_base_test_case.set_deterministic_updated_schematic_ids(
 	## Set deterministic ids for all inserted or cloned schematic
 	## records in TRANSACTIONS
 	##
-	_for ds_tr _over transactions.fast_elements()
+	_for tr_set _over transactions.fast_elements()
 	_loop
-		_for rec_tr _over ds_tr.record_transactions()
+		_for rec_tr _over tr_set.fast_elements()
 		_loop 
 			_if rec_tr.operation _is :insert _orif
 			    rec_tr.operation _is :clone
@@ -1114,21 +1120,25 @@ _method eo_gisa_base_test_case.given_circuit_building_is_monitored()
 	## Adds monitoring of circuit building.
 	##
 
-	_local cb_counts << _self.properties[:circuit_building_counts] << equality_hash_table.new()
+	_self.properties[:circuit_building_counts] << equality_hash_table.new()
+	_local props << _self.properties
 
 	stub_method_helper.replace_method(eo_circuit_section_engine,
 					  :|build()|,
-					  _proc (p_circuit, _optional p_section_types, p_build_view)
-						  _import cb_counts
-
+					  _proc (p_circuit, _optional p_section_types, p_build_view, p_build_configuration)
+						  _import props
+						  cb_counts << props[:circuit_building_counts]
+						  
 						  _if cb_counts[p_circuit.circuit_id] _is _unset
 						  _then
 							 cb_counts[p_circuit.circuit_id] << 0
 						  _endif
 						  
 						  cb_counts[p_circuit.circuit_id] +<< 1
+
+						  props[:build_configuration] << p_build_configuration
 						  
-						  _return _self.saved!build(p_circuit, p_section_types, p_build_view)
+						  _return _self.saved!build(p_circuit, p_section_types, p_build_view, p_build_configuration)
 					  _endproc)
 	
 	_return _self 
@@ -1138,10 +1148,42 @@ $
 _pragma(classify_level=debug)
 _method eo_gisa_base_test_case.then_circuit_building_counts_are(_gather data)
 	##
+	## Counts how many circuits have been built.
+	## This is ignored when difference mode is batch because we do not build
+	## circuits in this mode.
+	
+	difference_mode << sw_dnom_properties_helper.difference_mode
+	
+	_if difference_mode _is :incremental
+	_then 
+		circuit_data << equality_hash_table.new_with(_scatter data)
+		data_to_check << equality_hash_table.new()
+		result_counts << _self.properties[:circuit_building_counts]
+		_for circuit, counts _over circuit_data.fast_keys_and_elements()
+		_loop
+			_if counts = 0
+			_then
+				_self.assert_unset(result_counts[circuit],
+						   write_string("Circuit ", circuit, " should not be built"))
+				_continue
+			_else
+				data_to_check[circuit] << counts
+			_endif 
+		_endloop 
+		
+		_self.assert_deep_equals(data_to_check, result_counts, "Wrong circuit building counts: #1")
+	_endif 
+	
+	_return _self 
+_endmethod
+$
 
-	_self.assert_deep_equals(equality_hash_table.new_with(_scatter data),
-				 _self.properties[:circuit_building_counts],
-				 "Wrong circuit building counts: #1")
+_pragma(classify_level=debug)
+_method eo_gisa_base_test_case.then_circuit_building_configuration_was(class)
+	##
+
+	_self.assert_equals(class, _self.properties[:build_configuration],
+			    "Wrong circuit building configuration: #1")
 	
 	_return _self 
 _endmethod
