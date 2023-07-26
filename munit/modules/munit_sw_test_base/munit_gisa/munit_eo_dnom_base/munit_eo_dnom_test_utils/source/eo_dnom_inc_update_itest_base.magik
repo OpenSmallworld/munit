@@ -43,6 +43,10 @@ _method eo_dnom_inc_update_itest_base.set_up()
 	.properties[:not_alive_substations] << rope.new()
 	.properties[:alive_substations] << rope.new()
 	
+	
+	.properties[:dont_want_increments_substations] << rope.new()
+	.properties[:want_increments_substations] << rope.new()
+	
 	_self.set_properties_to_export_everything()
 
 	.properties[:deterministic_identifiers_mode] << :inc_updates
@@ -67,6 +71,16 @@ _method eo_dnom_inc_update_itest_base.tear_down()
 		eo_dnom_test_helper.set_substation_live_status_in_metadata( i_substation_id, _false )
 	_endloop
 	
+	_for i_substation_id _over .properties[:dont_want_increments_substations].fast_elements()
+	_loop
+		eo_dnom_test_helper.set_substation_live_status_in_metadata( i_substation_id, _true , _true)
+	_endloop
+	
+	_for i_substation_id _over .properties[:want_increments_substations].fast_elements()
+	_loop
+		eo_dnom_test_helper.set_substation_live_status_in_metadata( i_substation_id, _true, _false )
+	_endloop
+	
 _endmethod
 $
 
@@ -79,6 +93,22 @@ _method eo_dnom_inc_update_itest_base.given_substations_are_not_alive(_gather su
 	_loop
 		eo_dnom_test_helper.set_substation_live_status_in_metadata( i_substation_id, _false )
 		.properties[:not_alive_substations].add(i_substation_id)
+	_endloop
+	
+	>> _self 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.given_substations_dont_want_increments(_gather substation_ids)
+	## 
+	## 
+
+	_for i_substation_id _over substation_ids.fast_elements()
+	_loop
+		eo_dnom_test_helper.set_substation_live_status_in_metadata( i_substation_id, _true, _false )
+		.properties[:dont_want_increments_substations].add(i_substation_id)
 	_endloop
 	
 	>> _self 
