@@ -388,6 +388,11 @@ _method test_case.tear_down()
 	_self.stubbed_alerts.empty()	
 	
 	stub_method_helper.restore_stubbed_methods()
+	_if swg_dsn_user_alternative_control.sys!slot(:view_status)[:gis].scheme_path _is _unset _andif 
+		swg_dsn_admin_engine.active_design _isnt _unset 
+	_then 
+		show(:problem_after_teardown, _self, .name)
+	_endif
 	
 _endmethod
 $
