@@ -107,42 +107,43 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
+
 _method eo_dnom_test_mixin.create_station_export_request()
-	##
-	##
-	_local stations_to_export << _self.properties[:stations_to_export]
-	
-	_local request << sw_dnom_substation_export_helper.create_request_for_substation_export(stations_to_export[1])
+    ##
+    ##
+    _local stations_to_export << _self.properties[:stations_to_export]
+    _local request << sw_dnom_substation_export_helper.create_request_for_substation_export(stations_to_export[1])
 
-	# FIXME: For now, lets add the URNs manually. Eventually, this should probably be handled
-	# by the export helper
-	_for i _over 2.upto(stations_to_export.size)
-	_loop
-		_local station_urn << sw_dnom_substation_export_helper.get_urn_from_object(stations_to_export[i])
-		urn_list << rope.new_from(request.get_property(:related_substations))
-		urn_list.add(station_urn)
-		request.set_property(:related_substations, urn_list)
-	_endloop
+    # FIXME: For now, lets add the URNs manually. Eventually, this should probably be handled
+    # by the export helper
+    urn_list << rope.new()
+    _for station _over stations_to_export.fast_elements()
+    _loop
+        _local station_urn << sw_dnom_substation_export_helper.get_urn_from_object(station)
+        urn_list.add(station_urn)
+    _endloop
 
-	# don't delete xml files for tests
-	request.set_property( :test_mode?, _true )
+    request.set_property(:related_substations, urn_list)
 
-	# write the internals files for tests
-	request.set_property( :export_station_internals?,
-			      _self.properties[:export_station_internals?].default(_true) )
+    # don't delete xml files for tests
+    request.set_property( :test_mode?, _true )
 
-	# write the schematics files for tests
-	request.set_property( :export_schematics?,
-			      _self.properties[:export_schematics?].default(_true) )
+    # write the internals files for tests
+    request.set_property( :export_station_internals?,
+                  _self.properties[:export_station_internals?].default(_true) )
 
-	# Override export future network property if needed.
-	_if _self.properties[:export_future_network?] _isnt _unset
-	_then 
-		request.set_property(:export_future_network?,
-				     _self.properties[:export_future_network?])
-	_endif
-	
-	_return request 
+    # write the schematics files for tests
+    request.set_property( :export_schematics?,
+                  _self.properties[:export_schematics?].default(_true) )
+
+    # Override export future network property if needed.
+    _if _self.properties[:export_future_network?] _isnt _unset
+    _then
+        request.set_property(:export_future_network?,
+                     _self.properties[:export_future_network?])
+    _endif
+
+    _return request
 _endmethod
 $
 
