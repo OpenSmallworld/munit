@@ -11,11 +11,6 @@ def_slotted_exemplar(:db_test_case,
 $
 
 _pragma(classify_level=advanced, usage={subclassable})
-## Used in subclasses to ignore certain tests.
-db_test_case.define_shared_variable(:ignored_tests, {}, :private)
-$
-
-_pragma(classify_level=advanced, usage={subclassable})
 ## Set this to true if you want all the CASE tool views opened
 ## up as well as the normal collection of views
 db_test_case.define_shared_variable(:open_case_views?, _false, :private)
@@ -33,7 +28,7 @@ _pragma(classify_level=restricted, usage={subclassable})
 ##
 ## The default is a :geometric dataset called :gis which will
 ## end up in the memory::/ds/ds_gis directory.
-db_test_case.define_shared_constant(:default_create_dataset_args, {{:type, :vmsql, :name, :gis, :vmsql!recreate_database?, _true}}, :private)
+db_test_case.define_shared_constant(:default_create_dataset_args, {{:type, :geometric, :name, :gis}}, :private)
 $
 
 _pragma(classify_level=advanced, usage={subclassable})
@@ -227,35 +222,6 @@ _method db_test_case.one_time_set_up()
 	_endif 
 _endmethod
 $
-
-_method db_test_case.set_up()
-	_super.set_up()
-	_self.ignore_tests()
-_endmethod
-$
-
-_private _method db_test_case.ignore_tests()
-	_if _self.ignored_tests.empty? 
-	_then
-		_return
-	_endif
-
-	_for ignored_test _over _self.ignored_tests.fast_elements()
-	_loop
-		_if (method << _self.method(ignored_test)) _isnt _unset
-		_then
-			owning_class << method.owner.meta_at(:exemplar_global).value
-			_local msg << write_string("Test case ", _self.class_name," is ignoring ",ignored_test, " (defined in ",owning_class.class_name,")")
-			ignore_test_proc << _proc @ignore_test()
-					_import msg
-					write(msg)
-			_endproc
-			stub_method_helper.replace_method(_self, ignored_test, ignore_test_proc)
-		_endif
-	_endloop
-_endmethod
-$
-
 _pragma(classify_level=restricted,topic=MUnit)
 _method db_test_case.run_bare()
 	## Runs the bare test sequence
