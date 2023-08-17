@@ -969,6 +969,10 @@ _method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data(_gath
 	streams << rope.new()
 	idx << 0
 
+	_if file_names.empty?
+	_then
+		_return _self
+	_endif 
 	# Open all file streams.
 	_for file_name _over file_names.fast_elements()
 	_loop
