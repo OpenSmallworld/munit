@@ -957,7 +957,17 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data(_gather file_names)
+_method eo_dnom_test_mixin.tags_to_skip
+	##
+	## list of the tags that should be skipped while running
+	## then_golden_files_are_equal_except_project_data()
+	
+	_return {}
+_endmethod
+$
+	
+_pragma(classify_level=debug)
+_method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data_and_tags_to_skip(_gather file_names)
 	##
 	## Compares given golden files. Returns true if all contents
 	## except project data are the same.
@@ -969,6 +979,10 @@ _method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data(_gath
 	streams << rope.new()
 	idx << 0
 
+	_if file_names.empty?
+	_then
+		_return _self
+	_endif 
 	# Open all file streams.
 	_for file_name _over file_names.fast_elements()
 	_loop
@@ -1026,24 +1040,37 @@ _private _method eo_dnom_test_mixin.get_line_from_stream(stream)
 
 	line << stream.get_line()
 
-	_if line _isnt _unset _andif
-	    line.index_of_seq("<Project>") _isnt _unset
-	_then
-		# If project data is found then go to the next line just after
-		# the project.
-		_loop
+	_if line _isnt _unset
+	_then 
+		_if line.index_of_seq("<Project>") _isnt _unset
+		_then
+			# If project data is found then go to the next line just after
+			# the project.
+			_loop
+				line << stream.get_line()
+				
+				_if line _is _unset
+				_then
+					_return
+				_elif line.index_of_seq("</Project>") _isnt _unset
+				_then
+					_leave
+				_endif
+			_endloop
+
 			line << stream.get_line()
-
-			_if line _is _unset
+		_endif
+		_for tag _over _self.tags_to_skip.fast_elements()
+		_loop
+			_if line.index_of_seq(tag) _isnt _unset
 			_then
-				_return
-			_elif line.index_of_seq("</Project>") _isnt _unset
-			_then
-				_leave
+				line << stream.get_line()
+				_if line _is _unset
+				_then
+					_return
+				_endif 
 			_endif
-		_endloop
-
-		line << stream.get_line()
+		_endloop 
 	_endif
 	
 	_return line
