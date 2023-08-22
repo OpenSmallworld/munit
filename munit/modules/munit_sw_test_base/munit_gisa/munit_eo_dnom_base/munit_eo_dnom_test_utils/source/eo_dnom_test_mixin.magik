@@ -967,7 +967,7 @@ _endmethod
 $
 	
 _pragma(classify_level=debug)
-_method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data(_gather file_names)
+_method eo_dnom_test_mixin.then_golden_files_are_equal_except_project_data_and_tags_to_skip(_gather file_names)
 	##
 	## Compares given golden files. Returns true if all contents
 	## except project data are the same.
