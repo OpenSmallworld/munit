@@ -165,6 +165,12 @@ _method eo_dnom_base_case.create_request_for_as_built_current_design_locally(_op
 						  _proc() _endproc)
 	_endif
 	
+	_if (active_scheme << swg_dsn_admin_engine.active_scheme) _isnt _unset
+	_then
+		scheme_id << active_scheme.id
+		request.set_property(:scheme_id, scheme_id)
+	_endif
+	
 	>> request 
 _endmethod 
 $
