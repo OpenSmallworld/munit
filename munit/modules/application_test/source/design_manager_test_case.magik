@@ -284,6 +284,15 @@ _method design_manager_test_case.one_time_tear_down()
 	##
 
 	swg_dsn_admin_engine.clear_current_design()
+
+	_if (ds_view << _self.ds_views[:gis]) _isnt _unset _andif 
+		ds_view.responds_to?(:template_view) _andif 
+		(temp_view << ds_view.template_view) _isnt _unset
+	_then 
+		temp_view.rollback()
+		temp_view.switch(:readonly)
+	_endif 
+
 	_super.one_time_tear_down()
 	
 _endmethod

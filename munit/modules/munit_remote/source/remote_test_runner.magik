@@ -59,6 +59,11 @@ _method remote_test_runner.run_remote(address, port, step_id)
 			time << date_time.now(:milliseconds) - test_start
 			test_time << write_string("Test ", module_name, "___", test_name, " ran in ", time)
 			test_times.add_last(test_time)
+			_if time > time_interval.new_seconds(120) _andif 
+				test.slow_test? _is _false
+			_then 
+				condition.raise(:warning, :string, write_string(test, " is not defined as a slow test, but it took ", time))
+			_endif
 		_protection
 			a_stream.close()
 		_endprotect

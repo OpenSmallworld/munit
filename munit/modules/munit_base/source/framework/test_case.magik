@@ -233,7 +233,8 @@ _private _method test_case.one_time_behaviour()
         ## test, call one_time_tear_down() on the previous test_class,
         ## then one_time_set_up() on this class.
         ##
-        _if _self.prev_test_class.is_class_of?(_self)
+        _if _self.prev_test_class.is_class_of?(_self) _andif 
+				  _self.prev_test_class.suite_name() = _self.suite_name()
         _then _return
         _endif
         
@@ -243,6 +244,19 @@ _private _method test_case.one_time_behaviour()
 
         _self.prev_test_class << _self 
         _self.prev_test_class.one_time_set_up()
+_endmethod
+$
+
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_case.suite_name()
+	##
+	## Return the owning suite's name.  This can be subclassed to implement
+	## different behavior, e.g. for conflict tests in PNI where the suite's name is
+	## the same for different conflict tests.
+	##
+	
+	>> _self.suite().get_name()
+	
 _endmethod
 $
 
