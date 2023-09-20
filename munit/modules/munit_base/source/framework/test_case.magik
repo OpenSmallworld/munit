@@ -309,20 +309,32 @@ _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _private _method test_case.stub_map_rendering_if_required()
 	## 
 	## Turn off map view rendering to speed up the test and prevent
-	## race conditions
+	## race conditions if self.map_rendering_required? is _false.
 	##
 	
 	_if _not _self.map_rendering_required?
 	_then
-		stub_method_helper.replace_method(map_view, :|run_controlled_render()|, _proc() _endproc)
-		stub_method_helper.replace_method(map_view, :|trigger_post_render()|, _proc() _endproc)
-		stub_method_helper.replace_method(render_controller, :|enqueue()|, _proc() _endproc)
-		stub_method_helper.replace_method(map, :|draw_geometry()|, _proc() _endproc)
+		_self.stub_map_rendering()
 	_endif
 	
 _endmethod
 $
 
+_pragma(classify_level=basic,topic=MUnit,usage=subclassable)
+_method test_case.stub_map_rendering()
+	## 
+	## Turn off map view rendering to speed up the test and prevent
+	## race conditions.
+	##
+	
+	stub_method_helper.replace_method(map_view, :|run_controlled_render()|, _proc() _endproc)
+	stub_method_helper.replace_method(map_view, :|trigger_post_render()|, _proc() _endproc)
+	stub_method_helper.replace_method(render_controller, :|enqueue()|, _proc() _endproc)
+	stub_method_helper.replace_method(map, :|draw_geometry()|, _proc() _endproc)
+	stub_method_helper.replace_method(map, :|undraw_geometry()|, _proc() _endproc)
+	
+_endmethod
+$
 
 _pragma(classify_level=basic,topic=MUnit,usage=subclassable)
 _private _method test_case.stub_get_writable_dd_extension()
