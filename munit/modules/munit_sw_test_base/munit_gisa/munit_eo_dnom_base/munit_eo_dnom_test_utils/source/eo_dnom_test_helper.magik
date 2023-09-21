@@ -94,3 +94,14 @@ _method eo_dnom_test_helper.set_output_path(output_path, application)
 	pl.output_path << output_path
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method eo_dnom_test_helper.get_exchange_job_for_request(request)
+	##
+	##
+	metadata_engine << sw_cim_metadata_engine.get_instance()
+	
+	_return metadata_engine.get_exchange_job_for_request(request)
+_endmethod
+$
+
