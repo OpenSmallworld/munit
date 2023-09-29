@@ -621,7 +621,7 @@ _private _method eo_cim_base_case.determine_the_configuration_and_validate_expor
 	_then
 		_self.assert_equals(2, request[:profile_names].size, "Expected exactly two profiles, when #1")
 		# XML + optional GML for the main export		
-		_self.validate_exported_files(request, job_name, reference_gml_file, reference_rdf_file, "EO_DCIM_Standard_v2")
+		_self.validate_exported_files(request, job_name, reference_gml_file, reference_rdf_file, "EO_DCIM_Standard_v3")
 		# + the diagram xml alone
 		diagram_name << reference_rdf_file.truncate(reference_rdf_file.size - 4) + "_diagram.xml"
 		_self.validate_exported_files(request, job_name, _unset, diagram_name, "EO_DiagramLayout")
