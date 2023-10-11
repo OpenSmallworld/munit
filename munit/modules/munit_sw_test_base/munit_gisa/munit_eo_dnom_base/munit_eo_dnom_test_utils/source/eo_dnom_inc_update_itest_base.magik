@@ -472,10 +472,15 @@ _endmethod
 $
 
 _pragma(classify_level=debug)
-_method eo_dnom_inc_update_itest_base.when_design_differences_are_exported_via_proposed_export()
+_method eo_dnom_inc_update_itest_base.when_design_differences_are_exported_via_proposed_export(_gather circuit_ids_to_update_future_objects)
 	##
 	## Export design differences using the proposed export workflow
 	##
+	_for circuit_id _over circuit_ids_to_update_future_objects.fast_elements()
+	_loop
+		circuit << inc_update_itest_helper.get_circuit(circuit_id)
+		eo_circuit_builder_engine_for_future_objects_alone.new().run(circuit)
+	_endloop
 	>> _self.when_design_differences_are_exported(:proposed)
 _endmethod
 $
@@ -675,3 +680,4 @@ _method eo_dnom_inc_update_itest_base.int!assert_xml_files_not_equal( reference_
 	_self.assert_false( same_file?, "The output file unexpectedly matches the reference file" )	
 _endmethod
 $
+
