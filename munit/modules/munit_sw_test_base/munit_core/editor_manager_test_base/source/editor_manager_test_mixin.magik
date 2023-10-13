@@ -1,0 +1,49 @@
+#% text_encoding = iso8859_1
+_package sw
+
+_pragma(classify_level=debug)
+def_mixin(:editor_manager_test_mixin)
+$
+
+_pragma(classify_level=debug)
+_method editor_manager_test_mixin.given_an_editor_manager()
+	##
+	##
+	
+	_local viewer
+	_self.properties[:viewer] << viewer << editor_viewer.new("viewer")
+	
+	replace_method(editor_manager, :|get_editable_collection()|, _proc(col) >> col _endproc)
+	replace_method_returning(editor_manager, :|get_viewer_for_collection()|, viewer)
+	replace_method_returning(editor_manager, :|set_viewer_width()|, _unset)
+	replace_method_returning(editor_manager, :|set_viewer_height()|, _unset)
+	
+	replace_method_returning(sw_component, :top_frame, _self.mocked_frame(:top_frame))
+	
+	replace_method_returning(editor_viewer, :|edit_record()|, _unset)
+	replace_method(editor_viewer, :|edit_collection()|, _proc()
+			_import viewer
+			>> obj(:|unlock_fields()|, _unset, :viewer, viewer)
+		_endproc)
+	replace_method_returning(editor_viewer, :|ignore_dialog_minimum_size?<<|, _unset)
+	replace_method_returning(editor_viewer, :|build_framework_gui()|, _unset)
+	replace_method_returning(dialog_frame, :|do_realise()|, _unset)
+	replace_method_returning(frame, :|active?<<|, _unset)
+	
+	_self.properties[:editor_manager] << editor_manager.new()
+	>> _self 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method editor_manager_test_mixin.mocked_frame(id)
+	##
+	##
+
+	>> obj(:id, id, 
+		:actual, obj(:|translate_coords()|, _proc() >> 200, 200 _endproc),
+		:|add_dialog_child()|, _unset)
+
+_endmethod 
+$
