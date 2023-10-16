@@ -6,7 +6,7 @@ def_mixin(:editor_manager_test_mixin)
 $
 
 _pragma(classify_level=debug)
-_method editor_manager_test_mixin.given_an_editor_manager()
+_method editor_manager_test_mixin.given_an_editor_manager(_optional manager_class)
 	##
 	##
 	
@@ -19,18 +19,35 @@ _method editor_manager_test_mixin.given_an_editor_manager()
 	replace_method_returning(editor_manager, :|set_viewer_height()|, _unset)
 	
 	replace_method_returning(sw_component, :top_frame, _self.mocked_frame(:top_frame))
-	
-	replace_method_returning(editor_viewer, :|edit_record()|, _unset)
-	replace_method(editor_viewer, :|edit_collection()|, _proc()
+
+  editor_proc << _proc()
 			_import viewer
-			>> obj(:|unlock_fields()|, _unset, :viewer, viewer)
-		_endproc)
+			>> obj(:|unlock_fields()|, _unset, 
+				:viewer, viewer, 
+				:|clear()|, _unset,
+			  :|has_action?()|, _false)
+		_endproc
+	
+	replace_method(editor_viewer, :|edit_record()|, editor_proc)
+	replace_method(editor_viewer, :|edit_collection()|, editor_proc)
 	replace_method_returning(editor_viewer, :|ignore_dialog_minimum_size?<<|, _unset)
 	replace_method_returning(editor_viewer, :|build_framework_gui()|, _unset)
 	replace_method_returning(dialog_frame, :|do_realise()|, _unset)
 	replace_method_returning(frame, :|active?<<|, _unset)
 	
-	_self.properties[:editor_manager] << editor_manager.new()
+	_self.properties[:editor_manager] << manager_class.default(editor_manager).new()
+	>> _self 
+	
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method editor_manager_test_mixin.given_a_rwo()
+	##
+	##
+	
+	_self.properties[:rwo] << rwo << obj(:source_collection, obj())
+	rwo[:|source_rwo_records()|] << {rwo}
 	>> _self 
 	
 _endmethod
