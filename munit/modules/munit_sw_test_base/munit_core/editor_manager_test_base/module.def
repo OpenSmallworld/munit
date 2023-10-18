@@ -1,7 +1,7 @@
 editor_manager_test_base 1
 
 description
-	Test Base for logging modules
+	Test Base for editor_manager module
 end
 
 requires
