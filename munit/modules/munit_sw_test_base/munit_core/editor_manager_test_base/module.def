@@ -1,0 +1,11 @@
+editor_manager_test_base 1
+
+description
+	Test Base for editor_manager module
+end
+
+requires
+	munit_base
+end
+
+language en_gb
