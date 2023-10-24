@@ -1119,7 +1119,10 @@ _method eo_gisa_base_test_case.when_zip_file_is_extracted(_optional request)
 	##
 	## Extracting request output zip file to request output_path 
 	##
-	
+
+	# The best approach would be using some magik API to extract the export file,
+	# but there is not possible for now. Code below is a workaround and should be
+	# replaced with safer solution when possible. 
 	request << request.default(_self.properties[:export_request])
 	output_path << request[:output_path]
 	zip_file << request[:output_files][1]
