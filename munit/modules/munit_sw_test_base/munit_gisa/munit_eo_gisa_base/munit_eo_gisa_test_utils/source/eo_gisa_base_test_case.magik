@@ -1113,3 +1113,21 @@ _private _method eo_gisa_base_test_case.set_deterministic_updated_schematic_ids(
 	_endloop
 _endmethod
 $
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.when_zip_file_is_extracted(_optional request)
+	##
+	## Extracting request output zip file to request output_path 
+	##
+	
+	request << request.default(_self.properties[:export_request])
+	output_path << request[:output_path]
+	zip_file << request[:output_files][1]
+	java_home << system.getenv("JAVA_HOME")
+	java_bin << system.pathname_down(java_home,"bin")
+	jar_ex << write_string(%", system.pathname_from_components("jar.exe", java_bin), %")
+	cmd << write_string("cd /d ", %",output_path, %"," & ", jar_ex, " -xvf ", zip_file)
+	system.do_command("cmd /c "+cmd)
+	_return _self
+_endmethod
+$
