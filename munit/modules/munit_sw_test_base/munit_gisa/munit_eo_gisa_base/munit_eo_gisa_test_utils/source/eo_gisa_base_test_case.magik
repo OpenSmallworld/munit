@@ -1113,3 +1113,38 @@ _private _method eo_gisa_base_test_case.set_deterministic_updated_schematic_ids(
 	_endloop
 _endmethod
 $
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.then_gisa_dnom_export_zip_match_expected(_gather references_files_list_to_compare)
+	##
+	## Veryfing if zip file xmls match golden files
+	##
+
+	request << _self.properties[:export_request]
+	_self.extract_request_zip_file(request)
+	_return _self.then_the_exported_files_match(_scatter references_files_list_to_compare)
+_endmethod
+
+
+
+_pragma(classify_level=debug,topic={MUnit, Test})
+_method eo_gisa_base_test_case.extract_request_zip_file(request)
+	##
+	## Extracting request output zip file to request output_path 
+	##
+
+	# The best approach would be using some magik API to extract the export file,
+	# but there is not possible for now. Code below is a workaround and should be
+	# replaced with safer solution when possible. Right now is using external jar
+	# tool from java installation to extract the zip file. Ideal would have been to
+	# use the magik methods or some zip input stream to extract that data. 
+	
+	output_path << request[:output_path]
+	zip_file << request[:output_files][1]
+	java_home << system.getenv("JAVA_HOME")
+	java_bin << system.pathname_down(java_home,"bin")
+	jar_ex << write_string(%", system.pathname_from_components("jar.exe", java_bin), %")
+	cmd << write_string("cd /d ", %",output_path, %"," & ", jar_ex, " -xvf ", zip_file)
+	system.do_command("cmd /c "+cmd)
+	_return _self
+_endmethod
+$
