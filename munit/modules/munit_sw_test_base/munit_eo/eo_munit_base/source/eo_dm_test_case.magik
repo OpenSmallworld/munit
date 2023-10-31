@@ -53,6 +53,18 @@ eo_dm_test_case.define_shared_constant( :state_transitions_to_posted,
 	:private )
 $
 
+_pragma(classify_level=debug,topic=MUnit,usage=subclassable)
+## Return a hash table keyed on the current design state and
+## the value being the state to transition to.  This is
+## configured as the shortest path from "In Design" to "Posted"
+eo_dm_test_case.define_shared_constant( :state_transitions_to_posted_using_pp_state_model,
+	equality_hash_table.new_with( "In Design",        "Design Complete",
+				      "Design Complete",  "As Built Changes",
+				      "As Built Changes", "As Built Changes Complete",
+				      "As Built Changes Complete", "Post Pending" ),
+	:private )
+$
+
 
 _pragma(classify_level=debug,topic=MUnit,usage=subclassable)
 ## Return a hash table keyed on the current design state and
@@ -472,7 +484,12 @@ _private _method eo_dm_test_case.post_design(use_state_transition?)
 
 	_if use_state_transition?
 	_then
-		_self.transition_design( _self.state_transitions_to_posted, "Posted" )
+		transitions << _self.state_transitions_to_posted
+		_if _self.default_state_model_name.index_of_seq( "Publish" ) _isnt _unset 
+		_then 
+			transitions << _self.state_transitions_to_posted_using_pp_state_model
+		_endif 
+		_self.transition_design( transitions, "Posted" )
 	_else
 		_self.run_merge_and_post_scheme(_false)
 	_endif
