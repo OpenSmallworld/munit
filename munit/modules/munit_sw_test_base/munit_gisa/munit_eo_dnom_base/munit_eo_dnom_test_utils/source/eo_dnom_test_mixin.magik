@@ -615,7 +615,6 @@ _private _method eo_dnom_test_mixin.int!then_the_exported_files_match(written_su
 	
 	reference_xml_file << ref_file_name + ".xml"
 	_self.assert_xml_files_equals( reference_xml_file, written_substation_files[1])
-	comparison_utils.sys!perform(:|files_equal?()|, reference_xml_file, written_substation_files[1])
 	
 	_if _self.using_previous_dnom_version?
 	_then
