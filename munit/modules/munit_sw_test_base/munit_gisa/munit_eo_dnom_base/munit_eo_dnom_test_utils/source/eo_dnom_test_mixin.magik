@@ -72,6 +72,7 @@ _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.when_registering_written_xml_files()
 	##
 	# Store filepaths to wrote xmls, keeping the write order.
+	
 	_local xml_files << equality_property_list.new()
 	_local schematic_files << equality_property_list.new()
 	_self.properties[:written_substations] << xml_files
@@ -685,24 +686,11 @@ _pragma(classify_level=debug)
 _method eo_dnom_test_mixin.then_all_files_prefixes_are(prefix)
 	## 
 	##
-
-	difference_mode << sw_dnom_properties_helper.difference_mode
-	
-	_if difference_mode _is :batch
-	_then 
-		_return _self
-	_endif 
-	
 	_for written_file _over _self.properties[:written_substations].an_element().fast_elements()
 	_loop
 		_self.assert_true(system.pathname_components(written_file).index_of_seq(prefix) = 1,
 				  "Wrong prefix for: " + written_file)
 	_endloop
-
-	_if _self.using_previous_dnom_version?
-	_then
-		_return _self
-	_endif
 
 	_for written_file _over _self.properties[:written_distribution_systems].an_element().fast_elements()
 	_loop

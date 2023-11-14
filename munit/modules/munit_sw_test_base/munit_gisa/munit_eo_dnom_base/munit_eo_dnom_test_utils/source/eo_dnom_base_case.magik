@@ -177,20 +177,37 @@ $
 
 _pragma(classify_level=debug)
 _method eo_dnom_base_case.export_differences_from_current_design_locally(_optional export_type)
-	## Process the circuit request, using the %TEMP% for output and
-	## without messaging
-
-	request << _self.create_request_for_as_built_current_design_locally(export_type)
-
-	process_name << request.get_property(:process_name)
+	##
+	## Does not actually exports differences (this feature has been
+	## removed in GISA DNOM), but peforms a batch export process to
+	## find affected substations and then exports substations.
+	## This method is rather a temporary solution for "incremental tests"
+	## These tests are probably going to be removed and replaced.
+	##
+	
+	# Creates a request to find affected substations	
+	changes_request << _self.create_request_for_as_built_current_design_locally(export_type)
+	process_name << changes_request.get_property(:process_name)
 	process_manager << sw_process_manager_cache.get_cached_instance( sw_dnom_properties_helper.installation_type )
 	export_set_process << process_manager.get_process(process_name)
+	export_set_process.execute(changes_request)
+	.properties[:changes_request] << changes_request
 
-	_self.when_registering_written_xml_files()					  
-	
-	export_set_process.execute(request)
-	
-	_return request
+	# Perform full substation export for all affected substations
+	.properties[:affected_substation_requests] << substation_requests << equality_property_list.new()
+	_for substations_group _over changes_request[:affected_substations].fast_elements()
+	_loop
+		_for substation_urn _over substations_group.fast_elements()
+		_loop
+			substation << urn_manager.get_object_from_urn(substation_urn)
+			.properties[:stations_to_export] << {substation}
+			_self.when_the_station_is_exported()
+			request << .properties[:export_request]
+			request << request[:sub_requests].an_element()
+			substation_requests[request[:dnom_substation_name]] << request
+		_endloop
+	_endloop
+	_return changes_request
 _endmethod
 $
 
@@ -205,9 +222,8 @@ _method eo_dnom_base_case.export_substation_locally( a_substation )
 	## without messaging
 	request << sw_dnom_substation_export_helper.create_request_for_substation_export( a_substation )
 
-	request.set_property( :job_name, name )
-	request.set_property( :station_urn ,  urn_manager.get_urn_from_object( a_substation ))
-
+	request.set_property(:job_name, name)
+	request.set_property(:station_urn ,  urn_manager.get_urn_from_object(a_substation))
 	process_manager << sw_process_manager_cache.get_cached_instance( sw_dnom_properties_helper.installation_type )
 	export_set_process << process_manager.get_process(:dnom_station_export_request)
 
