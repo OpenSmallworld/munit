@@ -18,9 +18,9 @@ _method dnom_change_isolating_equipment_type_itest.test_change_fuse_to_switch()
 		given_substations_are_alive("Saxon Way SS").
 		given_an_eo_object(:eo_isolating_eqpt_inst, :name, "VikingWay_BH_Fuse01").
 		given_object_assets_new_specification("ID_SW_AIS_630A").
-		when_design_differences_are_exported().
-		then_the_exported_file_set_matches("change_fuse_to_switch")
-
+		when_design_differences_are_processed().
+		then_standalone_substations_for_reExport_are("Saxon Way SS"). 
+		then_grouped_substations_for_reExport_are()
 _endmethod
 $
 

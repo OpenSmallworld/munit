@@ -11,18 +11,21 @@ def_slotted_exemplar(:dnom_change_conductor_length_itest,
 	{:eo_dnom_inc_update_itest_base})
 $
 
+
+
 _pragma(classify_level=debug)
 _method dnom_change_conductor_length_itest.test_populate_actual_length()
-
+	## 
+	##	
 	_self.
 		given_substations_are_alive("Villa Road Primary").
 		given_an_eo_object(:eo_cable_segment_inst, :id, 1172408).
 		given_object_fill_checks(:actual_length, _false).
 		given_prop_values(:actual_length, unit_value.new(160.000, :m)).
 		given_run_update_transaction().
-		given_object_fill_checks(:actual_length, _true).
-		when_design_differences_are_exported().
-		then_the_file_sets_are_exported("populate_actual_length")
-
+		given_object_fill_checks(:actual_length, _true).		
+		when_design_differences_are_processed().
+		then_standalone_substations_for_reExport_are("Villa Road Primary"). 
+		then_grouped_substations_for_reExport_are()	
 _endmethod
 $

@@ -409,3 +409,140 @@ _private _method eo_dnom_inc_update_itest_base.get_initial_export_file_for_stati
 	>> before_file
 _endmethod
 $
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.when_design_differences_are_processed(_optional export_type)
+	##
+	## Subclassed because for a batch process we do not actually export files, but
+	## instead we populate properties on a request
+	##
+	
+	_local start_time << date_time.now(:milliseconds)
+	_self.prepare_for_design_difference_processing()
+	
+	request << _self.create_request_for_as_built_current_design_locally(export_type)
+	
+	process_name << request.get_property(:process_name)
+	process_manager << sw_process_manager_cache.get_cached_instance(sw_dnom_properties_helper.installation_type)
+	export_set_process << process_manager.get_process(process_name)
+	export_set_process.execute(request)
+	
+	_self.properties[:resulting_request] << request
+	
+	_local end_time << date_time.now(:milliseconds)
+	sw_gisa_logger.log_as_json_export_summary_stats(start_time, end_time, request)
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.then_standalone_substations_for_reexport_are(_gather substation_names)
+	##
+	## Check that each of the given SUBSTATION_NAMES are included in the expected
+	## properties 
+	##	
+	
+	filter_proc << _proc(sub_urns) >> sub_urns.size = 1 _endproc
+	expected_substations << rope.new()
+	
+	_for sub _over substation_names.fast_elements()
+	_loop
+		expected_substations.add(equality_set.new_with(sub))
+	_endloop 
+	
+	_self.int!substations_for_reexport_are(filter_proc, _scatter expected_substations)
+	
+	>> _self 
+_endmethod 
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.then_grouped_substations_for_reexport_are(_gather expected_load_swaps)
+	##
+	## Check that each of the given EXPECTED_LOAD_SWAPS are included in the expected
+	## properties 
+	##
+
+	filter_proc << _proc(sub_urns) >> sub_urns.size > 1 _endproc
+	_self.int!substations_for_reexport_are(filter_proc, _scatter expected_load_swaps)
+	
+	>> _self 
+_endmethod 
+$
+
+_pragma(classify_level=debug)
+_method eo_dnom_inc_update_itest_base.then_the_exchange_job_relevant_flag_is(expected_val)
+	##
+	##
+	a_request << _self.properties[:resulting_request].default(_self.properties[:export_request])	
+	ex_job << eo_dnom_test_helper.get_exchange_job_for_request(a_request)
+	
+	_self.assert_is(expected_val, ex_job.relevant,
+		write_string("The Exchange Job's Relevant flag is ", ex_job.relevant, " whereas, ", expected_val, " was expected"))
+	
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=debug)
+_private _method eo_dnom_inc_update_itest_base.int!substations_for_reexport_are(filter_proc, _gather expected_substations)
+	##
+	## Check that each of the given SUBSTATION_NAMES are included in the expected
+	## properties 
+	##	
+	
+	_local a_request << _self.properties[:resulting_request].default(_self.properties[:export_request])	
+	_local affected_subs << a_request.get_property(:affected_substations)
+	_self.assert_not_unset(affected_subs, "Expected property :affected_substations is not set on the request")
+	
+	expected << rope.new_from(expected_substations.map(_proc(sub_names) >> equality_set.new_from(sub_names) _endproc))
+	actual << affected_subs.filter(filter_proc).map(
+	_proc(sub_urns)
+		substations << equality_set.new()
+		_for a_sub_urn _over sub_urns.fast_elements()
+		_loop
+			substations.add(urn_manager.get_object_from_urn(a_sub_urn).name)
+		_endloop
+		_return substations
+	_endproc)
+	
+	ok? << _true 
+	_for act _over actual.fast_elements()
+	_loop
+		_if _not expected.includes_by_equality?(act)
+		_then 
+			ok? << _false 
+			_leave
+		_endif 
+	_endloop 
+	
+	_for subs _over expected.fast_elements()
+	_loop
+		_if _not actual.includes_by_equality?(subs)
+		_then 
+			ok? << _false 
+			_leave
+		_endif 
+	_endloop 
+	
+	# Compose the reporting string in case of mismatch to report on assert
+	_local itos << internal_text_output_stream.new()
+	itos.write("Detected a mismatch between the expected vs. produced substation exports:", newline_char)
+	itos.write("Actual:", newline_char)
+	_for act _over actual.fast_elements()
+	_loop
+		act_sorted << rope.new_from(act.as_sorted_collection())
+		itos.write(act_sorted.join_as_strings(","), newline_char)
+	_endloop 
+	itos.write(newline_char, "Expected:", newline_char)
+	_for exp _over expected.fast_elements()
+	_loop
+		exp_sorted << rope.new_from(exp.as_sorted_collection())
+		itos.write(exp_sorted.join_as_strings(","), newline_char)
+	_endloop 	
+	
+	_self.assert_true(ok?, itos.string)
+_endmethod 
+$
+

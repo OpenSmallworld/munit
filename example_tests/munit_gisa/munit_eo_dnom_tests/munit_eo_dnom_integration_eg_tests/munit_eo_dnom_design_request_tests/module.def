@@ -1,7 +1,7 @@
-munit_eo_dnom_inc_update_tests	1
+munit_eo_dnom_design_request_tests	1
 
 description
-	Incremental update integration tests for DNOM
+	Design changes integration tests for DNOM
 end
 
 requires

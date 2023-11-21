@@ -117,7 +117,7 @@ _method eo_dnom_base_case.create_request_for_as_built_current_design_locally(_op
 	## Process the circuit request, using the %TEMP% for output and
 	## without messaging
 	
-	request << sw_dnom_substation_export_helper.create_request_to_export_differences(export_type.default(:as_built)) 
+	request << sw_dnom_substation_export_helper.create_request_for_current_design(export_type.default(:as_built)) 
 
 	# don't delete xml files for tests
 	request.set_property( :test_mode?, _true )
