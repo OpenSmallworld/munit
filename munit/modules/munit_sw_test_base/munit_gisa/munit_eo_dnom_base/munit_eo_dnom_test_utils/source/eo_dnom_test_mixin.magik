@@ -790,18 +790,6 @@ _private _method eo_dnom_test_mixin.compare_xml_files(reference_filename , actua
 		_self.save_file(actual_pathname, output_dir, filestem, "actual", suffix)
 	_endif
 	
-	_if _not same_file?
-	_then 
-		str1 << external_text_input_stream.new(report_file)
-		_protect 
-			my_line << str1.get_line()
-			_if my_line _is _unset _then _leave _endif 
-			show(my_line)
-		_protection 
-			str1.close()
-		_endprotect 
-	_endif
-	
 	>> same_file?, report_file
 _endmethod
 $
