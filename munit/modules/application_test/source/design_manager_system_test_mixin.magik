@@ -105,7 +105,7 @@ _method design_manager_system_test_mixin.given_a_new_design(project_name, design
 	# try to create the project, but only the first one succeeds.  In this case,
 	# retry creating the design.
 	_try _with cond 
-		_self.properties[:retries] << 0
+		_self.properties[:retries] << _self.properties[:retries].default(0)
 		design << swg_dsn_admin_engine.perform_short_transaction(property_list.new_with(:receiver, _self),
 			:|int!given_a_new_design()|, {project_name, design_name, parent_design, xmin, ymin, xmax, ymax}, :suppress_auto_locking?, _true)
 	_when error
