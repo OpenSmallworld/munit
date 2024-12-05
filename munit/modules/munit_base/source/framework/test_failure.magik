@@ -89,7 +89,10 @@ _private _method test_failure.init_traceback_text()
 							 a_stream.string )
 		_endif
 	_endtry 
-	
+	_if .raised_condition _isnt _unset
+	_then
+		.traceback_text << write_string(.raised_condition.report_string, newline_char, .traceback_text)
+	_endif
 _endmethod
 $
 
