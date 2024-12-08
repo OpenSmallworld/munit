@@ -44,10 +44,19 @@ _method sw_module.run_test_cases( _optional properties )
 	run_method     << run_properties[:test_runner_method].default( :|run_in_foreground()| )
 	run_args       << run_properties[:test_runner_args].default( {} )
 
+	failed_test_cases << 0
+
 	_for a_test _over _self.test_cases()
 	_loop
-		run_class.perform( run_method, a_test, _scatter run_args )
+		was_successful? << run_class.perform( run_method, a_test, _scatter run_args )
+
+		_if was_successful? _isnt _unset _andif
+		    was_successful?.not
+		_then failed_test_cases +<< 1
+		_endif
 	_endloop 
+
+	>> failed_test_cases = 0
 			
 _endmethod
 $

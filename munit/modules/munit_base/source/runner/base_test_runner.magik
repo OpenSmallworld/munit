@@ -154,18 +154,25 @@ _method base_test_runner.run_in_new_stream( a_test, _gather suite_args )
 	## external_text_output stream based on the properties set on
 	## the current test runner and A_TEST.
 	## 
+	
+	was_successful? << _false
 
-	_if a_test.runnable?()
-	_then
-		a_stream << _self.new_stream( a_test )
-		_protect
-			new_runner << _self.new( a_stream, _scatter .properties.for_scatter() )
-			new_runner.int!run( a_test, _scatter suite_args )
-			a_stream.flush()
-		_protection
-			a_stream.close()
-		_endprotect
-	_endif 
+	_if a_test.runnable?().not
+	_then _return _true
+	_endif
+
+	a_stream << _self.new_stream( a_test )
+	_protect
+		new_runner << _self.new( a_stream, _scatter .properties.for_scatter() )
+		new_runner.int!run( a_test, _scatter suite_args )
+		was_successful? << (test_result << new_runner.test_result) _isnt _unset _andif
+				   test_result.was_successful?()
+		a_stream.flush()
+	_protection
+		a_stream.close()
+	_endprotect
+	
+	>> was_successful?
 		
 _endmethod
 $

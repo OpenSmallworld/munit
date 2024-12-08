@@ -21,10 +21,17 @@ _method smallworld_product.run_test_cases( _optional properties )
 	## :test_runner_args ( no default )
 	##
 
+	failed_products << 0
+
 	_for a_product _over smallworld_product.products.fast_elements()
 	_loop
-		a_product.run_test_cases( properties )
+		was_successful? << a_product.run_test_cases( properties )
+		_if was_successful?.not
+		_then failed_products +<< 1
+		_endif
 	_endloop
+
+	>> failed_products = 0
 
 _endmethod
 $
