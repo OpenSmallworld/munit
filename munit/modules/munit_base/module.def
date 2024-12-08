@@ -5,6 +5,7 @@ description
 end
 
 requires
+	datamodel_engine
 	magik_mock
 end
 
