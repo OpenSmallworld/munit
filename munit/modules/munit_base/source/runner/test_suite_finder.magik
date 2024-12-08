@@ -72,6 +72,7 @@ _private _method test_suite_finder.find_all_suitable_suites()
 	>> .test_suites
 _endmethod
 $
+
 _pragma(classify_level=restricted,topic=MUnit)
 _method test_suite_finder.find_classes_for_module( module_name )
 	##
@@ -81,10 +82,8 @@ _method test_suite_finder.find_classes_for_module( module_name )
 	
 	result << rope.new()
 		
-	_for a_test_suite_owner_name _over .test_suites.keys()
+	_for a_test_suite_owner_name, a_class _over .test_suites.keys_and_elements()
 	_loop
-		a_class << _self.find_class(a_test_suite_owner_name)
-		
 		_if a_class _isnt _unset _andif
 		    a_class.module_name _is module_name
 		_then
