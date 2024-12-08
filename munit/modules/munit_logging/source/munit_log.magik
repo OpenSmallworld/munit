@@ -31,9 +31,7 @@ $
 _pragma(classify_level=restricted, usage={redefinable}, topic={logging})
 ## Defines the filename and path for the migration log
 munit_log.define_shared_constant(:log_filepath,
-	system.pathname_down(
-		system.pathname_down(system.pathname_up(system.temp_directory_name), "Smallworld"),
-		"munit_log.json"),	
+	system.temp_file_name("munit_log.json"),
 	:private)
 $
 
