@@ -331,6 +331,7 @@ _private _method db_test_case.go_to_alternative(a_ds_view, alternative_name)
 	##
 	##
 
+	alternative_name << alternative_name.subseq(1, 32.min(alternative_name.size))
 	_if _not a_ds_view.has_alternative?(alternative_name)
 	_then
 		_try
